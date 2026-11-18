@@ -2,6 +2,7 @@ import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=56';
 import { decorateBroadcastDome } from './broadcast-dome.js?v=56';
 import { loadMatchModel } from './match-models.js?v=56';
+import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
 import {
  createStadiumEnvMap,
  createContactShadowTexture,
@@ -41,13 +42,14 @@ export class StadiumRenderer {
   this.rimLight=new T.DirectionalLight(0x94d0ff,1.10);this.rimLight.position.set(0,32,96);this.scene.add(this.rimLight);
   this.clubImages=new Map();if(typeof Image==='function')for(const club of (NightTeams.playable||NightTeams.all)){const img=new Image();img.src=club.logo;this.clubImages.set(club.id,img);}
   this.cameraFocus=new T.Vector3();this.fieldPosition=new T.Vector3();this.fieldFocus=new T.Vector3();
-  this.materials=new Map();this.geometries={sphere:new T.SphereGeometry(1,20,14),lowSphere:new T.SphereGeometry(1,10,7),box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,12)};
+  this.materials=new Map();this.geometries={sphere:new T.SphereGeometry(1,32,24),lowSphere:new T.SphereGeometry(1,10,7),box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,12)};
   this.contactShadowTex=this.gl.isSoftwareRenderer?null:createContactShadowTexture();
   this.vfx=new StadiumVFX(this);
   this.makeSky();this.makeGround();this.makeStadium();
   this.pitcher=this.makePlayer('pitcher','away',18);this.batter=this.makePlayer('batter','home',8);this.catcher=this.makePlayer('catcher','away',2);
   this.fielders=Array.from({length:9},(_,i)=>this.makePlayer('fielder','away',i+1));this.runners=Array.from({length:4},(_,i)=>this.makePlayer('runner','home',i+1));
   this.players=[this.pitcher,this.batter,this.catcher,...this.fielders,...this.runners];
+  for(const player of this.players)decorateChibiPlayer(this,player);
   this.loadUniforms();
   this.ball=new T.Group();this.ball.userData.dynamic=true;const leather=this.mesh(new T.SphereGeometry(.078,20,14),this.mat('ball',0xfffdf2,.42,.02),this.ball);leather.castShadow=true;
   for(const turn of [0,Math.PI]){const ps=[];for(let i=0;i<=28;i++){const a=-1.3+i/28*2.6;ps.push(new T.Vector3(Math.cos(a)*.057,Math.sin(a)*.066,.042).applyAxisAngle(Y,turn));}this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(ps),28,.0032,4,false),this.mat('seam',0xc94232,.65),this.ball);}
@@ -201,6 +203,7 @@ export class StadiumRenderer {
    const wing=this.box(this.wallGroup,[.46,10.5,.04],[point.x-sign*.24,9.0,point.z+sign*.24],screenMat);
    wing.rotation.y=sign*Math.PI/4;
   }
+  buildPremiumPark(this,park);
  }
  loadParkModel(park){
   this.parkModel.clear();
