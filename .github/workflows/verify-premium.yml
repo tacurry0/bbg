@@ -1,4 +1,4 @@
-name: Verify NIGHTBALL premium graphics
+name: Verify NIGHTBALL graphics and baseball gameplay
 
 on:
   push:
@@ -28,9 +28,11 @@ jobs:
           node --check dist/stadium-premium.js
           node --check dist/stadium3d.js
           node --check dist/app.js
+          node --check dist/game.js
           node --check dist/sw.js
-          test -s dist/menu-premium.css
-          grep -q 'menu-premium.css?v=57' dist/index.html
+          test -s dist/menu-polish.css
+          grep -q 'menu-polish.css?v=58' dist/index.html
+          grep -q 'game.js?v=58' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
           grep -q 'stadium3d.js?v=57' dist/app.js
       - name: Test real 3D construction and player details
@@ -47,3 +49,4 @@ jobs:
           node tests/rules-v16.cjs
           node tests/thumb-controls.cjs
           node tests/career-overseas-v54.mjs
+          node tests/realistic-field-v58.cjs
