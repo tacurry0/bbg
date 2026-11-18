@@ -34,7 +34,11 @@ Grandstands, scoreboards, canopies, and fence colors are simplified scene models
 
 ## Tokyo Dome interior
 
-The [official dimensions](https://www.tokyo-dome.co.jp/dome/about/) give a roof height of 61.69 m above the field, 100 m down both lines, 122 m to center and a 4 m fence. The [venue equipment guide](https://www.tokyo-dome.co.jp/dome/about/facility/) lists the 125.6 m main LED vision and outfield ribbon visions. The game builds the air-supported canopy, cable grid, seating sections and curved displays as 3D geometry. The roof profile and seat layout are visual estimates.
+The [official dimensions](https://www.tokyo-dome.co.jp/dome/about/) give a roof height of 61.69 m above the field, 100 m down both lines, 122 m to center and a 4 m fence. The [venue equipment guide](https://www.tokyo-dome.co.jp/dome/about/facility/) lists the 125.6 m main LED vision and outfield ribbon visions. The game builds the air-supported canopy, cable grid, seating sections and curved displays as 3D geometry. The green roof-level sign and the black live baseball display are based on the supplied APBC reference.
+
+## Taoyuan and Taipei models
+
+The supplied reference photos guide the venue geometry and displays. Taoyuan has the open outfield, split rose stands, blue infield sections and two purple LED boards. Taipei has a dark diagonal steel lattice, white and gray seating, white concourse fascia and a high center-field blue LED board. Seating and structure positions are visual estimates. All three screens use the active teams, lineups and scores; player art uses the game's stylized proportions.
 
 ## Derby
 

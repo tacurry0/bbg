@@ -119,19 +119,33 @@ renderer.render(domePlate, 0);
 assert(renderer.scene.userData.broadcastDome);
 assert.equal(renderer.canvas.dataset.parkModel, 'tokyo-dome');
 assert(!renderer.board.visible, 'generic central board is replaced by the Tokyo Dome vision');
-assert(renderer.parkDecor.getObjectByName('Live line score')?.material.map === renderer.boardTexture);
-assert(renderer.parkDecor.getObjectByName('Curved 125 m wide main vision')?.geometry.index.count > 12);
+const vision=renderer.parkDecor.getObjectByName('Curved 125 m wide main vision');
+assert.equal(vision.material.map,renderer.venueVisionCache.get('tokyo-dome').material.map);
+assert(vision.geometry.index.count>12);
+assert(renderer.parkDecor.getObjectByName('TOKYO DOME'));
 renderer.scene.updateMatrixWorld(true);
-for (const [targetY, targetZ, name] of [[14,-141,'Live line score'],[21,-144,'Curved 125 m wide main vision']]) {
+for (const [targetY,targetZ] of [[17,-144],[21,-144],[25,-144]]) {
   const from = renderer.camera.position;
   const view = new T.Raycaster(from, new T.Vector3(0,targetY,targetZ).sub(from).normalize());
   const [closest] = view.intersectObjects(renderer.parkDecor.children,true);
-  assert.equal(closest?.object.name, name, 'center display stays in front of the batter’s eye');
+  assert.equal(closest?.object,vision,'the entire center display stays visible from the plate');
 }
 assert(renderer.tokyoCutouts.every(mesh => mesh.visible));
 assert(renderer.infieldSkin.every(mesh => !mesh.visible));
 assert.notEqual(renderer.grassMaterial.map, outdoorTurf);
 assert.notEqual(renderer.dirt.map, outdoorDirt);
+for (const [parkId,model,names] of [
+ ['dome','taoyuan',['Taoyuan left field vision','Taoyuan right field vision','Taoyuan rose outfield pavilions','Taoyuan sky blue infield stands']],
+ ['taipei-dome','taipei-dome',['Taipei centralized main vision','Taipei Dome dark ceiling','Taipei gray and white upper seating']]
+]) {
+ const match=new NightGame('match','standard',()=>{},{park:parkId});
+ renderer.render(match,0);
+ assert.equal(renderer.canvas.dataset.parkModel,model);
+ assert(!renderer.board.visible);
+ for(const name of names)assert(renderer.parkDecor.getObjectByName(name),name);
+ const display=renderer.parkDecor.getObjectByName('Live stadium vision');
+ assert.equal(display.material,renderer.venueVisionCache.get(parkId).material);
+}
 
 renderer.render(plateGame, 0);
 assert.equal(renderer.scene.fog.density, 0.0036);
@@ -241,11 +255,12 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v59.1-tokyo-dome'));
+assert(swCode.includes('nightball-v60-venues'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=56'));
+assert(swCode.includes('./stadium-fx.js?v=60'));
+assert(swCode.includes('./venue-vision.js?v=60'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);
 const swFiles = JSON.parse('[' + filesMatch[1].replace(/'/g, '"') + ']');

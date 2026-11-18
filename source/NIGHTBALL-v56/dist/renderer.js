@@ -143,7 +143,9 @@ window.NightRenderer=class NightRenderer{
     for(let i=0;i<f.trail.length;i++){const p=f.trail[i],q=project(p.x,p.y,p.z);c.globalAlpha=(i/f.trail.length)*.3;this.ellipse(c,q.x,q.y,2.2,2.2,'#fff3bf');}c.globalAlpha=1;
     const shadow=project(b.x,b.y),bp=project(b.x,b.y,b.z);this.ellipse(c,shadow.x,shadow.y,3+Math.min(5,b.z*.12),1.8,'#00150f99');
     c.strokeStyle='#eff9b52e';c.setLineDash([2,4]);c.beginPath();c.moveTo(shadow.x,shadow.y);c.lineTo(bp.x,bp.y);c.stroke();c.setLineDash([]);
-    this.drawBall(c,bp.x,bp.y,4,t,g.hit?.kind==='hr');
+    if(!(g.phase==='result'&&f.outcome==='hr'&&!g.derby)){
+     this.drawBall(c,bp.x,bp.y,4*NightGame.ballVisualScale(b.z,Math.hypot(b.x,b.y)),t,g.hit?.kind==='hr');
+    }
     if(!g.replayView){
      const chaser=f.fielders[f.chaser];c.fillStyle='#d5e5c0';c.textAlign='left';c.font='bold 8px Arial';c.fillText(f.throw?'THROW TO BASE':f.resolved?'PLAY COMPLETE':'LIVE BALL',20,70);c.font='8px Arial';c.fillStyle='#a9bd9f';c.fillText(f.throw?'捕球 → 送球':`${chaser?.player||''}${chaser?' / '+chaser.name:''}`,20,84);
      c.textAlign='right';c.fillText(`${Math.round(f.maxTravel)} m`,460,70);

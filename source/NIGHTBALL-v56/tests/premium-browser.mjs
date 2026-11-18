@@ -52,7 +52,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=59.1');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=60');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game)window.testDomeMatch={renderer:this,game};
@@ -75,7 +75,7 @@ try{
   const {renderer}=window.testDomeMatch;
   return {
    membrane:!!renderer.parkDecor.getObjectByName('Tokyo Dome air-supported membrane'),
-   liveScore:renderer.parkDecor.getObjectByName('Live line score').material.map===renderer.boardTexture,
+   liveScore:renderer.parkDecor.getObjectByName('Curved 125 m wide main vision').material===renderer.venueVisionCache.get('tokyo-dome').material,
    seats:renderer.parkDecor.getObjectByName('Blue stadium seats').count
   };
  });
@@ -94,8 +94,36 @@ try{
   return !game.field.foul&&renderer.fieldMode&&camera.y<NightPlayers.roofSurface(game.park,camera.x,-camera.z);
  }),'outfield fly follows the ball below the roof');
  await page.screenshot({path:'tests/screenshots/tokyo-dome-field.png'});
+ for(const [parkId,model,parts] of [
+  ['dome','taoyuan',['Taoyuan left field vision','Taoyuan right field vision','Taoyuan sky blue infield stands']],
+  ['taipei-dome','taipei-dome',['Taipei centralized main vision','Taipei Dome dark ceiling','Taipei gray and white upper seating']]
+ ]){
+  const status=await page.evaluate(({parkId,parts})=>{
+   const {renderer,game}=window.testDomeMatch;
+   game.park=NightPlayers.parks.find(park=>park.id===parkId);
+   game.field=null;game.setPhase('aim');renderer.render(game,game.time);
+   return {id:renderer.canvas.dataset.parkModel,all:parts.every(name=>renderer.parkDecor.getObjectByName(name)),
+    live:renderer.parkDecor.getObjectByName('Live stadium vision').material===renderer.venueVisionCache.get(parkId).material};
+  },{parkId,parts});
+  assert.deepEqual(status,{id:model,all:true,live:true});
+  await page.screenshot({path:'tests/screenshots/'+model+'-plate.png'});
+ }
+ const before=await page.evaluate(()=>{
+  const {game}=window.testDomeMatch;
+  game.half='bottom';game.paused=false;
+  const score=game.homeScore;
+  game.startField(56,35,0,false);
+  for(let i=0;i<900&&game.phase==='field';i++)game.updateField(.01);
+  return score;
+ });
+ await page.locator('#game.replay-active').waitFor({state:'visible',timeout:15000});
+ await page.touchscreen.tap(25,70);
+ await page.locator('#replay-skip[data-mode="home-run"]').waitFor({state:'visible',timeout:8000});
+ await page.touchscreen.tap(27,86);
+ await page.waitForFunction(()=>window.testDomeMatch.game.phase!=='result');
+ assert.equal(await page.evaluate(()=>window.testDomeMatch.game.homeScore),before+1,'skip advances play without double-counting the HR');
  assert.deepEqual(errors,[],'no page JavaScript errors');
- console.log('PASS: mobile Chromium, team selection, lineup, Tokyo Dome live score and fly-ball camera ('+graphics+').');
+ console.log('PASS: mobile Chromium, three live venue visions, fly-ball camera and separate taps for replay and the home-run run ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
  await context.close();
 }finally{

@@ -17,7 +17,7 @@ const parkDesigns={
  harbor:{leftCenter:113.8,rightCenter:113.8,board:[-14,14,139,27,11],stands:[[-1.23,-.27,.65],[.25,1.23,.65]],seats:0x226778,wall:0x164459,rail:0xefe084},
  dome:{leftCenter:114.2,rightCenter:114.2,theme:'taoyuan',board:[0,15,142,37,12],stands:[[-1.2,-.26,.72],[.26,1.2,.72]],seats:0x91384d,wall:0x164e5d,rail:0xe7ca57},
  river:{leftCenter:115.2,rightCenter:115.2,board:[9,15,144,33,12],stands:[[-1.32,-.17,.95],[.17,1.32,.95]],seats:0x2b6a76,wall:0x135356,rail:0xecd36f},
- 'taipei-dome':{leftCenter:108.5,rightCenter:108.5,wallHeight:3.5,board:[0,22,150,43,14],stands:[[-1.42,1.42,1.18]],seats:0x4e6070,wall:0x294654,rail:0xf5d54a,roofHeight:68},
+ 'taipei-dome':{leftCenter:108.5,rightCenter:108.5,wallHeight:3.5,board:[0,22,150,43,14],stands:[[-1.42,1.42,1.18]],seats:0xa9afb4,wall:0x333339,rail:0xc0b8a7,roofHeight:68},
  'tokyo-dome':{leftCenter:110,rightCenter:110,alleysVerified:true,wallHeight:4,board:[0,22,148,48,12],stands:[[-1.42,1.42,1.16]],seats:0x303d71,wall:0x184835,rail:0x42654d,roofHeight:61.69},
  toyama:{leftCenter:114,rightCenter:114,board:[0,11,139,31,11],stands:[[-1.20,-.30,.52],[.30,1.20,.52]],seats:0x3d6289,wall:0x214c63,rail:0xeddb75}
 };
@@ -42,12 +42,9 @@ NightPlayers.schoolPark=(round,variant=0,tryout=false)=>tryout?schoolParks[varia
  round<2?schoolParks[2+(variant+round)%2][0]:'toyama';
 NightPlayers.roofSurface=(park,x,z)=>{
  if(!park.roofHeight)return Infinity;
- if(park.id==='tokyo-dome'){
-  const radiusSquared=(x/116)**2+((z-48)/116)**2;
-  return 33+(park.roofHeight-33)*Math.pow(Math.max(0,1-radiusSquared),.65);
- }
- const inside=1-(x/170)**2-((z-55)/168)**2;
- return 20+(park.roofHeight-20)*Math.sqrt(Math.max(0,inside));
+ const taipei=park.id==='taipei-dome',radius=taipei?128:116,edge=taipei?40:33;
+ const radiusSquared=(x/radius)**2+((z-48)/radius)**2;
+ return edge+(park.roofHeight-edge)*Math.pow(Math.max(0,1-radiusSquared),.65);
 };
 for(const park of NightPlayers.parks)Object.assign(park,parkDesigns[park.id]);
 NightPlayers.fenceHeight=park=>park.wallHeight??2.8;

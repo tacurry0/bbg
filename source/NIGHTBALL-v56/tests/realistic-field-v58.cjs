@@ -14,15 +14,15 @@ function match(mask=0,outs=0){
  return g;
 }
 try{
- // Old vertical physics gave a 50m/s, 45° ball about 7.2 seconds in the air.
- // The revised game ball should be airborne under 6 seconds and still carry.
+ // A 50m/s, 45° fly should reach center field without hanging for 5+ seconds.
  const g=match();
  g.startField(50,45,0,false);
  const landing=g.field.landing;
- assert(landing.time>5.0&&landing.time<6.0,'normal strong fly time: '+landing.time);
+ assert(landing.time>3.3&&landing.time<4.0,'normal strong fly time: '+landing.time);
  assert(Math.hypot(landing.x,landing.y)>125,'retain long-fly carry');
  const light=match();light.startField(35,55,0,false);
- assert(light.field.landing.time<5.1,'ordinary fly no longer hangs: '+light.field.landing.time);
+ assert(light.field.landing.time<3.4,'ordinary fly no longer hangs: '+light.field.landing.time);
+ assert(NightGame.ballVisualScale(28,60)<NightGame.ballVisualScale(0,116),'ball shrinks on ascent and grows towards landing');
  // Make the fielders unreachable to inspect the actual live integrated ball.
  const sample=match();sample.startField(38,40,0,false);
  for(const p of sample.field.fielders){p.x=p.y=p.startX=p.startY=999;}
@@ -34,6 +34,21 @@ try{
  assert(bounced,'real ball must land');
  assert(Math.abs(realTime-sample.field.landingTime)<.031,
   'predicted and rendered live landing times match');
+
+ const homer=match(3,1);homer.startField(56,35,0,false);
+ let crossedFenceInFlight=false;
+ for(let i=0;i<1100&&homer.phase==='field';i++){
+  homer.updateField(.01);
+  if(homer.field.overFence&&!homer.field.ball.bounces)crossedFenceInFlight=true;
+ }
+ assert(crossedFenceInFlight,'home run keeps flying after clearing the fence');
+ assert.equal(homer.hit.kind,'hr');
+ assert.equal(homer.field.ball.z,0,'home run reaches the ground before the result');
+ assert(homer.homeRunRunning);
+ assert(homer.skipHomeRunRun());
+ assert(!homer.skipHomeRunRun());
+ assert.equal(homer.homeScore,3);
+ assert(homer.field.runners.every(r=>r.progress===4&&!r.running));
 
  // One out, men on first + second. A second-baseman grounder must pivot to
  // second for a 4-6-3 attempt; third base is not a default first target.

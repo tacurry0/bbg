@@ -765,8 +765,9 @@ export class StadiumVFX {
         }
       }
       const hot = isHR || f.perfect || (g.hit?.exitKmh >= 152);
-      const pts = f.trail.slice(-RIBBON_POINTS).map(p => ({ x: p.x, y: p.z + 0.08, z: p.y }));
-      pts.push({ x: f.ball.x, y: f.ball.z + 0.08, z: f.ball.y });
+      const runningAfterHomer=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
+      const pts = runningAfterHomer?[]:f.trail.slice(-RIBBON_POINTS).map(p => ({ x: p.x, y: p.z + 0.08, z: p.y }));
+      if(!runningAfterHomer)pts.push({ x: f.ball.x, y: f.ball.z + 0.08, z: f.ball.y });
       this.updateRibbonFromPoints(
         pts,
         hot ? 0.15 : 0.095,

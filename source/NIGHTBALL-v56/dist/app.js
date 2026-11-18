@@ -5,7 +5,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=56';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=56';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=56';
-import { StadiumRenderer } from './stadium3d.js?v=59.1';
+import { StadiumRenderer } from './stadium3d.js?v=60';
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
@@ -1031,6 +1031,7 @@ import { StadiumRenderer } from './stadium3d.js?v=59.1';
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
   playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
+  $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
  function tickPlayFeedback(dt){
   playFeedback.scoreTime=Math.max(0,playFeedback.scoreTime-dt);
@@ -1068,16 +1069,30 @@ import { StadiumRenderer } from './stadium3d.js?v=59.1';
  }
  function launchReplay(){
   if(!game||review.playback||!$('modal').hidden||!review.open(game))return;
-  $('game').classList.add('replay-active');$('replay-label').hidden=false;$('replay-skip').hidden=false;
+  $('game').classList.add('replay-active');$('replay-label').hidden=false;updatePlaySkip();
   updatePlayTools();updateChallenge();
  }
  function stopReplay(){
   if(!review.playback)return;
-  review.close();$('game').classList.remove('replay-active');$('replay-label').hidden=true;$('replay-skip').hidden=true;
+  review.close();$('game').classList.remove('replay-active');$('replay-label').hidden=true;updatePlaySkip();
   updatePlayTools();
   if(game?.challenge){updateChallenge(game.outs>=3);closeChallengeResult();}
  }
- $('replay-skip').onclick=stopReplay;
+ function updatePlaySkip(){
+  const btn=$('replay-skip');
+  const trot=screen==='game'&&game?.homeRunRunning&&!game.paused&&!playFeedback.pendingReplay&&$('modal').hidden;
+  const mode=review.playback?'replay':trot?'home-run':'';
+  if(btn.dataset.mode===mode)return;
+  btn.dataset.mode=mode;btn.hidden=!mode;
+  btn.setAttribute('aria-label',mode==='home-run'?'ホームランの走塁をスキップ':'リプレイをスキップ');
+ }
+ $('replay-skip').onclick=()=>{
+  if(review.playback)stopReplay();
+  else if(game?.skipHomeRunRun()){
+   playFeedback.scoreTime=0;$('scoring-chip').hidden=true;
+   updatePlaySkip();
+  }
+ };
  function onEvent(type,data){
    if(type==='message'){
      $('message-en').textContent=data.en;$('message-ja').textContent=data.ja;$('message-sub').textContent=data.sub||'';
@@ -1418,6 +1433,7 @@ import { StadiumRenderer } from './stadium3d.js?v=59.1';
   syncAudio();
   const dt=now-last;last=now;
   if(screen==='game'&&game){
+   updatePlaySkip();
    if(review.playback){
     const state=review.frame(document.hidden?0:dt);
     if(state)renderer.render(state.game,state.time);

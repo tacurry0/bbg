@@ -37,14 +37,14 @@ function catchType(player,ball,distance,special=true){
  return null;
 }
 function moveBattedBall(b,dt,wind){
- // Airborne fly balls now come down sooner, without sacrificing realistic power
- // distances. Prediction and live simulation share precisely this integrator.
- const airborne=b.z>.1&&!b.bounces;
- const drag=Math.max(0,1-(airborne?.15:.85)*dt);
- b.vx*=drag;b.vy=(b.vy+wind*dt)*drag;
- b.vz-=(airborne?11.25:9.81)*dt;
- if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*dt);
- b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
+ const airborne=!b.bounces&&(b.z>.1||b.vz>0);
+ // Compress and lower the first flight, keeping its horizontal carry. Ground
+ // rolls, bounces and throws still run at their normal speed.
+ const step=airborne?dt*(b.flightRate??1):dt,drag=Math.max(0,1-(airborne?.15:.85)*step);
+ b.vx*=drag;b.vy=(b.vy+wind*step)*drag;
+ b.vz-=(airborne?11.25*(b.flightLift??1):9.81)*step;
+ if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*step);
+ b.x+=b.vx*step;b.y+=b.vy*step;b.z+=b.vz*step;
  if(b.z>=0)return false;
  const impact=b.vz<-1.8;
  b.z=0;
@@ -64,6 +64,9 @@ const conditions=[
  {label:'絶好調',color:'#ff70c4',mouth:'M6 13H18Q17 20 12 20T6 13Z'}
 ];
 window.NightGame=class NightGame{
+ static ballVisualScale(height,distance){
+  return clamp(1.22-Math.max(0,height-1)*.035-Math.max(0,distance-12)*.0034,.34,1.22);
+ }
  static conditionInfo(level=0){return conditions[clamp(Math.round(Number(level)||0),-2,2)+2];}
  static TYPES=TYPES;
  static POS=POS;
@@ -350,6 +353,19 @@ window.NightGame=class NightGame{
  message(en,ja,sub='',kind=''){if(this.log){this.log.push({inning:this.inning,half:this.half,en,ja,sub,kind,batter:this.batter?.name||''});if(this.log.length>80)this.log.shift();}this.emit('message',{en,ja,sub,kind});}
  notify(){this.emit('update',this);}
  setPhase(p){this.phase=p;this.phaseTime=0;}
+ get homeRunRunning(){
+  return !this.derby&&this.phase==='result'&&this.field?.outcome==='hr'&&
+   this.field.runners.some(r=>!r.out&&r.progress<3.99);
+ }
+ skipHomeRunRun(){
+  if(!this.homeRunRunning||this.paused)return false;
+  for(const runner of this.field.runners){
+   if(runner.out)continue;
+   Object.assign(runner,{target:4,progress:4,x:BASES[4].x,y:BASES[4].y,running:false});
+  }
+  this.phaseTime=Math.max(this.phaseTime,this.runningDemo?3301:621);
+  return true;
+ }
  setCursor(x,y){if(this.paused)return;this.cursor={x:clamp(x,-1.55,1.55),y:clamp(y,-1.55,1.55)};}
  update(dt,holdResult=false){
   if(dt<=0||this.paused||['ended','change','derby-break','career-pregame','career-ready'].includes(this.phase))return;
@@ -743,7 +759,9 @@ window.NightGame=class NightGame{
  }
  startField(speed,launch,spray,cpu,perfect=false){
   this.playEvents=[];const a=launch*Math.PI/180,flat=speed*Math.cos(a);
-  const ball={x:0,y:0,z:1,vx:Math.sin(spray)*flat,vy:Math.cos(spray)*flat,vz:Math.sin(a)*speed,bounces:0};
+  const fly=clamp((launch-12)/30,0,1),flightLift=1-.28*fly;
+  const ball={x:0,y:0,z:1,vx:Math.sin(spray)*flat,vy:Math.cos(spray)*flat,
+   vz:Math.sin(a)*speed*flightLift,bounces:0,flightRate:1+.53*fly,flightLift};
   const landing=this.predictLanding(ball);const foul=Math.abs(spray)>Math.PI/4;
   const fielders=this.derby?[]:NightGame.positions(this.park).map(([name,x,y],i)=>{const profile=this.fielder(name);
    if((this.defending||this.challenge)&&this.defense==='in')y-=i>=6?9:i>1?5:0;if(this.defending&&this.defense==='deep')y+=i>=6?10:0;
@@ -906,14 +924,17 @@ window.NightGame=class NightGame{
   if(!f.foul&&!f.overFence&&travel>=wall){
    const clearsWall=!f.wallHit&&b.z>NightPlayers.fenceHeight(this.park);
    if(clearsWall&&b.bounces&&!this.derby){f.groundRule=true;this.finishBall('double');return;}
-   if(clearsWall&&!b.bounces){
-    if(this.derby)f.overFence=true;
-    else{f.maxTravel=Math.max(f.maxTravel,Math.hypot(f.landing.x,f.landing.y));this.hit.distance=Math.round(f.maxTravel);this.finishBall('hr');return;}
-   }else{
+   if(clearsWall&&!b.bounces)f.overFence=true;
+   else{
     this.emit('sound','wall');f.impact={type:'wall',x:b.x,y:b.y,time:f.elapsed};f.wallHit=true;f.groundRead=null;f.wallAt=f.elapsed;const ratio=(wall-.25)/travel;b.x*=ratio;b.y*=ratio;b.vx*=-.25;b.vy*=-.25;
     if(this.derby){const landing=this.predictLanding(b);f.landing=landing;f.landingTime=f.elapsed+landing.time;}
     else f.landing={x:b.x,y:b.y};
    }
+  }
+  if(f.overFence&&!this.derby){
+   f.trail.push({x:b.x,y:b.y,z:b.z});if(f.trail.length>14)f.trail.shift();
+   if(b.bounces>0)this.finishBall('hr');
+   return;
   }
   if(!this.derby&&!f.foul&&!f.airReaction&&f.maxTravel>48&&b.z>3&&Math.hypot(f.landing.x,f.landing.y)>80){
    f.airReaction=true;this.emit('sound','flight');

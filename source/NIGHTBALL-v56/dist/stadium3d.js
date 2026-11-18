@@ -1,6 +1,7 @@
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=56';
-import { decorateBroadcastDome } from './broadcast-dome.js?v=59.1';
+import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=60';
+import { drawVenueVision } from './venue-vision.js?v=60';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
 import {
@@ -12,7 +13,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=56';
+} from './stadium-fx.js?v=60';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const FENCE_SEGMENTS=96;
@@ -23,6 +24,7 @@ const GRASS_PALETTES={
  broadcast:['#a2b97a','#869f60','#9caf70']
 };
 const PILOT_PARKS={night:'intercontinental'};
+const VENUE_VISION_PARKS=new Set(['tokyo-dome','dome','taipei-dome']);
 const skinColors=[0xd3a383,0xba896a,0xe0ae8d,0xb78367];
 
 export class StadiumRenderer {
@@ -211,7 +213,7 @@ export class StadiumRenderer {
    const wing=this.box(this.wallGroup,[.46,10.5,.04],[point.x-sign*.24,9.0,point.z+sign*.24],screenMat);
    wing.rotation.y=sign*Math.PI/4;
   }
-  if(!tokyo)buildPremiumPark(this,park);
+  if(!VENUE_VISION_PARKS.has(park.id))buildPremiumPark(this,park);
  }
  loadParkModel(park){
   this.parkModel.clear();
@@ -265,12 +267,13 @@ export class StadiumRenderer {
    if(o.userData.disposeMaterial)o.material.dispose();
    if(o.isInstancedMesh)o.dispose();
   });this.parkDecor.clear();
-  const theme=park.theme||park.id,indoors=theme==='dome',day=!!park.school||theme==='sky'||theme==='brick'||theme==='toyama';
+  const theme=park.theme||park.id,indoors=theme==='dome',day=!!park.school||['sky','brick','toyama','taoyuan'].includes(theme);
   this.grassMaterial.color.setHex(park.turf||0x487e4d);
   const broadcast=park.id==='tokyo-dome';
-  this.board.visible=!broadcast;
-  for(const mesh of this.infieldSkin)mesh.visible=!broadcast;
-  for(const mesh of this.tokyoCutouts)mesh.visible=broadcast;
+  const customVenue=VENUE_VISION_PARKS.has(park.id),cutouts=customVenue&&indoors;
+  this.board.visible=!customVenue;
+  for(const mesh of this.infieldSkin)mesh.visible=!cutouts;
+  for(const mesh of this.tokyoCutouts)mesh.visible=cutouts;
   const surface=broadcast?'broadcast':indoors?'dome':park.school?'school':'outdoor';
   this.turfTextures||={outdoor:this.grassMaterial.map};
   this.turfTextures[surface]||=this.noiseTexture('grass',surface);
@@ -303,10 +306,12 @@ export class StadiumRenderer {
   if(this.lightBeams)for(const b of this.lightBeams)b.visible=this.lightsLit;
   if(this.bulbMat)this.bulbMat.color.setHex(this.lightsLit?0xfff9e2:0xbfcbd2);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
-  if(broadcast){
-   for(const light of this.lights)light.visible=false;
-   decorateBroadcastDome(this,park);
-   this.canvas.dataset.parkModel='tokyo-dome';
+  if(customVenue){
+   for(const light of this.lights)light.visible=!indoors;
+   if(broadcast)decorateBroadcastDome(this,park);
+   else decorateTaiwanPark(this,park);
+   this.canvas.dataset.parkModel=park.id==='dome'?'taoyuan':park.id;
+   this.boardKey=null;
    return;
   }
   const group=this.parkDecor,concrete=this.mat('concrete',0x8694a0),seats=this.mat(park.id+'seats',park.seats);seats.side=T.DoubleSide;concrete.side=T.DoubleSide;
@@ -439,6 +444,10 @@ export class StadiumRenderer {
  }
  drawBoard(g){
   this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
+  if(VENUE_VISION_PARKS.has(this.parkKey)){
+   drawVenueVision(this,this.parkKey,g);
+   return;
+  }
   const c=this.boardCanvas.getContext('2d'),w=1024;
   const bg=c.createLinearGradient(0,0,0,448);
   bg.addColorStop(0,'#071320');bg.addColorStop(1,'#040b14');
@@ -717,10 +726,12 @@ export class StadiumRenderer {
   this.poseArm(player,0,[-.245,.94,0],glove.position.toArray());
  }
  followPlay(g,time){
-  const f=g.field,b=f.ball,th=f.throw,manual=f.manual;
+  const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
+  const th=trot?null:f.throw,manual=f.manual;
   const selected=manual?.selection;
   const runner=f.runners.find(r=>r.id===selected&&!r.out&&!r.scored)
    ||f.runners.find(r=>r.batter&&!r.out&&!r.scored&&r.progress<3.999);
+  const b=trot?{x:runner?.x??0,y:runner?.y??0,z:0,bounces:1}:f.ball;
   const returning=!!th||!!manual?.secured||b.bounces>0||f.wallHit;
   let x=b.x,z=b.y,span=0;
   if(th){
@@ -733,7 +744,7 @@ export class StadiumRenderer {
    span=Math.max(span,Math.hypot(runner.x-x,runner.y-z)*(returning?1.26:1.05));
   }
   const portrait=this.camera.aspect<.95,park=g.park;
-  const infield=f.trajectory==='ground'&&f.maxTravel<44&&!f.wallHit&&(!th||th.base===1);
+  const infield=trot||f.trajectory==='ground'&&f.maxTravel<44&&!f.wallHit&&(!th||th.base===1);
   const replay=g.replayView,broadcast=park.id==='tokyo-dome';
   const height=clamp((infield?18:29)+span*(portrait?.57:.37)+b.z*.20,infield?16:28,68);
   const centerZ=clamp(z+Math.min(5,Math.max(0,b.vy||0)*.12),2,g.derby?140:park.center+3);
@@ -889,7 +900,9 @@ export class StadiumRenderer {
   this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
-   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id].join('/'):'hero';
+   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
+   ...(VENUE_VISION_PARKS.has(g.park.id)?[g.balls,g.strikes,g.outs,g.batter.id,g.pitcher.id,
+    g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
   const boardCall=g?.phase==='result'?g?.hit?.kind:g?.pitch?.speed?Math.round(g.pitch.speed):null;
   if(this.boardKey!==boardKey||this.boardCall!==boardCall){this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;}
   if(field)this.followPlay(g,time);
@@ -926,9 +939,14 @@ export class StadiumRenderer {
     if((r.out||r.progress>=3.999)&&!sliding){actor.root.visible=false;actor.shadow.visible=false;}
     actor.lastX=r.x;actor.lastZ=r.y;
    });
-   this.ball.position.set(f.ball.x,f.ball.z+.08,f.ball.y);this.ball.visible=true;this.ballHalo.visible=true;this.ballShadow.position.set(f.ball.x,.05,f.ball.y);this.ballShadow.visible=true;this.ballShadow.scale.setScalar(1+f.ball.z*.035);
+   const showBall=!(g.phase==='result'&&f.outcome==='hr'&&!g.derby);
+   const ballSize=NightGame.ballVisualScale(f.ball.z,Math.hypot(f.ball.x,f.ball.y));
+   this.ball.position.set(f.ball.x,f.ball.z+.08,f.ball.y);this.ball.scale.setScalar(ballSize);
+   this.ball.visible=showBall;this.ballHalo.visible=showBall;
+   this.ballHalo.scale.set(.40*ballSize,.40*ballSize,1);
+   this.ballShadow.position.set(f.ball.x,.05,f.ball.y);this.ballShadow.visible=showBall&&f.ball.z<20;this.ballShadow.scale.setScalar(1+f.ball.z*.020);
    const pos=this.trail.geometry.attributes.position;const ps=f.trail;for(let i=0;i<14;i++){const p=ps[Math.max(0,ps.length-14+i)]||f.ball;pos.setXYZ(i,p.x,p.z+.08,p.y);}pos.needsUpdate=true;
-   this.trail.visible=this.gl.isSoftwareRenderer&&ps.length>1;
+   this.trail.visible=showBall&&this.gl.isSoftwareRenderer&&ps.length>1;
    const indicator=g.replayView?null:g.landingIndicator();this.landing.visible=!!indicator;this.landingInner.visible=indicator?.kind==='fly';
    if(indicator){
     const ground=indicator.kind==='ground',fly=indicator.kind==='fly';
@@ -949,6 +967,7 @@ export class StadiumRenderer {
    if(g&&['pitch','miss'].includes(g.phase)&&g.pitch){
     const u=Math.min(1.24,g.pitch.progress+(g.phase==='miss'?g.phaseTime/g.pitch.duration:0)),p=g.pitchAt(u);
     this.ball.position.set(p.x*.68,2.10-.85*u-p.y*.62,17.2*(1-u)+.6);
+    this.ball.scale.setScalar(1);this.ballHalo.scale.set(.48,.48,1);
     this.ball.visible=true;this.ballHalo.visible=true;
     this.ballShadow.position.set(this.ball.position.x,.05,this.ball.position.z);
     this.ballShadow.scale.setScalar(.88);this.ballShadow.visible=true;
