@@ -25,20 +25,25 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Unpack latest NIGHTBALL ZIP
+      - name: Prepare editable NIGHTBALL source (ZIP fallback)
         shell: bash
         run: |
           set -euo pipefail
-          shopt -s nullglob
-          archives=(NIGHTBALL*.zip)
-          if (( ${#archives[@]} == 0 )); then
-            echo "::error::No NIGHTBALL*.zip file was found in the repository root."
-            exit 1
-          fi
-          zip_file=$(printf '%s\n' "${archives[@]}" | sort -V | tail -n 1)
-          echo "Using archive: $zip_file"
           mkdir -p extracted _site
-          unzip -q "$zip_file" -d extracted
+          if [[ -d source ]]; then
+            echo "Publishing checked-in editable files from source/"
+            cp -a source/. extracted/
+          else
+            shopt -s nullglob
+            archives=(NIGHTBALL*.zip)
+            if (( ${#archives[@]} == 0 )); then
+              echo "::error::Neither source/ nor NIGHTBALL*.zip exists."
+              exit 1
+            fi
+            zip_file=$(printf '%s\n' "${archives[@]}" | sort -V | tail -n 1)
+            echo "Fallback to archive: $zip_file"
+            unzip -q "$zip_file" -d extracted
+          fi
 
           # Select a website root even when the ZIP contains an enclosing folder.
           # Existing dist/build outputs take priority over unbuilt source files.
