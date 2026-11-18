@@ -1,0 +1,82 @@
+name: Bootstrap editable NIGHTBALL source
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/bootstrap-nightball-source.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract-source:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Extract latest NIGHTBALL ZIP without overwriting existing source
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          from pathlib import Path, PurePosixPath
+          from zipfile import ZipFile
+          import stat
+
+          target = Path("source")
+          if target.exists():
+              print("source/ already exists; leaving edited files unchanged.")
+              raise SystemExit(0)
+
+          archives = sorted(Path(".").glob("NIGHTBALL*.zip"), key=lambda p: int("".join(c for c in p.stem.split("-v")[-1] if c.isdigit()) or "0"))
+          if not archives:
+              raise SystemExit("No NIGHTBALL*.zip found")
+          archive = archives[-1]
+          print(f"Extracting {archive} into source/")
+
+          with ZipFile(archive) as z:
+              entries = z.infolist()
+              if len(entries) > 10000 or sum(x.file_size for x in entries) > 500_000_000:
+                  raise SystemExit("Archive exceeds safety limits")
+              for item in entries:
+                  name = item.filename.replace("\\", "/")
+                  parts = PurePosixPath(name).parts
+                  if not parts or name.startswith("/") or ".." in parts:
+                      raise SystemExit(f"Unsafe archive entry: {name}")
+                  if any(p in {".git", "__MACOSX"} for p in parts) or parts[-1] == ".DS_Store":
+                      continue
+                  if stat.S_IFMT(item.external_attr >> 16) == stat.S_IFLNK:
+                      raise SystemExit(f"Symlink not allowed: {name}")
+                  if item.is_dir():
+                      continue
+                  if item.file_size > 95_000_000:
+                      raise SystemExit(f"File exceeds GitHub limit: {name}")
+                  out = target.joinpath(*parts)
+                  out.parent.mkdir(parents=True, exist_ok=True)
+                  with z.open(item) as src, out.open("wb") as dest:
+                      while block := src.read(1024 * 1024):
+                          dest.write(block)
+          print(f"Extracted {sum(p.is_file() for p in target.rglob('*'))} files")
+          PY
+
+      - name: Commit extracted files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d source ]]; then
+            echo "source/ missing"; exit 1
+          fi
+          git add -f source
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: unpack NIGHTBALL source into editable files"
+          git push origin HEAD:main
