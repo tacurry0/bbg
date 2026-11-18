@@ -98,7 +98,7 @@ function roof(group, park, materials, software) {
 
  const cables = [];
  for (const alongZ of [false, true]) {
-  const step = software ? CABLE_SPACING * 2 : CABLE_SPACING;
+  const step = software ? CABLE_SPACING * 1.5 : CABLE_SPACING;
   for (let offset = -108; offset <= 108; offset += step) {
    const end = Math.sqrt(ROOF_RADIUS ** 2 - offset ** 2);
    const steps = software ? 22 : 56;
@@ -159,7 +159,7 @@ function seating(group, materials, software) {
   const profile = profileFor(tier);
   // The center-field batter's eye replaces the lower seats. The upper outfield hosts the vision.
   const gap = level === 0 ? EYE_EDGE : VISION_END + .035;
-  strip(group, 'Stepped concrete seating bowl', materials.concrete, profile, gap, TAU - gap, software ? 27 : 100);
+  strip(group, 'Stepped seating bowl', materials.seats, profile, gap, TAU - gap, software ? 45 : 100);
   strip(group, 'Balcony fascia', materials.fascia,
    [[width,depth,floor-1.15], [width-.36,depth-.36,floor+.28]],
    gap, TAU-gap, software ? 28 : 90);
@@ -259,7 +259,7 @@ function visionTexture(software) {
  c.fillStyle = '#fff0d1';
  c.textAlign = 'center';
  c.font = '900 98px sans-serif';
- c.fillText('WELCOME TO TOKYO DOME',1024,110,1880);
+ c.fillText('WELCOME TO TOKYO DOME',1024,110,1340);
  if (!software) {
   c.fillStyle = '#04101b35';
   for (let y = 5; y < 160; y += 4) c.fillRect(0,y,2048,1);
@@ -271,7 +271,7 @@ function visionTexture(software) {
 
 function vision(group, renderer, materials, software) {
  const span = software ? 14 : 52;
- strip(group, 'Center-field batter’s eye', materials.eye, [[86,77.5,4],[86,77.5,19]], -EYE_EDGE,EYE_EDGE,14);
+ strip(group, 'Center-field batter’s eye', materials.eye, [[107,97,3.9],[107,97,18.5]], -EYE_EDGE,EYE_EDGE,14);
  strip(group, 'Main vision structure', materials.shadow,
   [[108,97,16.8],[108,97,26],[112,101,26],[112,101,16.8]],
   VISION_START-.02,VISION_END+.02,span);

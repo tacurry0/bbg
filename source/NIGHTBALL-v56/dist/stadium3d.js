@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=56';
-import { decorateBroadcastDome } from './broadcast-dome.js?v=59';
+import { decorateBroadcastDome } from './broadcast-dome.js?v=59.1';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
 import {

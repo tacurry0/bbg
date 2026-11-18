@@ -121,6 +121,13 @@ assert.equal(renderer.canvas.dataset.parkModel, 'tokyo-dome');
 assert(!renderer.board.visible, 'generic central board is replaced by the Tokyo Dome vision');
 assert(renderer.parkDecor.getObjectByName('Live line score')?.material.map === renderer.boardTexture);
 assert(renderer.parkDecor.getObjectByName('Curved 125 m wide main vision')?.geometry.index.count > 12);
+renderer.scene.updateMatrixWorld(true);
+for (const [targetY, targetZ, name] of [[14,-141,'Live line score'],[21,-144,'Curved 125 m wide main vision']]) {
+  const from = renderer.camera.position;
+  const view = new T.Raycaster(from, new T.Vector3(0,targetY,targetZ).sub(from).normalize());
+  const [closest] = view.intersectObjects(renderer.parkDecor.children,true);
+  assert.equal(closest?.object.name, name, 'center display stays in front of the batter’s eye');
+}
 assert(renderer.tokyoCutouts.every(mesh => mesh.visible));
 assert(renderer.infieldSkin.every(mesh => !mesh.visible));
 assert.notEqual(renderer.grassMaterial.map, outdoorTurf);
@@ -234,7 +241,7 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v59-tokyo-dome'));
+assert(swCode.includes('nightball-v59.1-tokyo-dome'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
