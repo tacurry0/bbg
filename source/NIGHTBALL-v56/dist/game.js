@@ -37,8 +37,13 @@ function catchType(player,ball,distance,special=true){
  return null;
 }
 function moveBattedBall(b,dt,wind){
- const drag=Math.max(0,1-(b.z>.1?.22:.85)*dt);
- b.vx*=drag;b.vy=(b.vy+wind*dt)*drag;b.vz-=9.81*dt;
+ // Airborne fly balls now come down sooner, without sacrificing realistic power
+ // distances. Prediction and live simulation share precisely this integrator.
+ const airborne=b.z>.1&&!b.bounces;
+ const drag=Math.max(0,1-(airborne?.15:.85)*dt);
+ b.vx*=drag;b.vy=(b.vy+wind*dt)*drag;
+ b.vz-=(airborne?11.25:9.81)*dt;
+ if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*dt);
  b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
  if(b.z>=0)return false;
  const impact=b.vz<-1.8;
@@ -251,7 +256,7 @@ window.NightGame=class NightGame{
  runnerRating(p){return p?.run??65;}
  get runnerSpeed(){return RUNNER_SPEED(this.runnerRating(this.batter));}
  batterStats(){return this.box[this.batter.id]||(this.box[this.batter.id]={pa:0,ab:0,h:0,hr:0,rbi:0,k:0,bb:0,r:0,doubles:0,triples:0});}
- endAtBat(kind,runs=0,simulated=false){this.pitcherRecord().batters++;const b=this.batterStats();b.pa++;if(!['walk','sacrifice'].includes(kind))b.ab++;if(kind==='sacrifice')b.sac=(b.sac||0)+1;if(kind==='doubleplay')b.gidp=(b.gidp||0)+1;if(['single','double','triple','hr'].includes(kind))b.h++;if(kind==='hr')b.hr++;if(kind==='double')b.doubles=(b.doubles||0)+1;if(kind==='triple')b.triples=(b.triples||0)+1;if(kind==='strikeout'){b.k++;this.pitcherRecord().k=(this.pitcherRecord().k||0)+1;}if(kind==='walk'){b.bb++;this.pitcherRecord().bb=(this.pitcherRecord().bb||0)+1;}b.rbi+=runs;this.batFinished=true;
+ endAtBat(kind,runs=0,simulated=false){this.pitcherRecord().batters++;const b=this.batterStats();b.pa++;if(!['walk','sacrifice','sacrificefly'].includes(kind))b.ab++;if(kind==='sacrifice')b.sac=(b.sac||0)+1;if(kind==='sacrificefly')b.sf=(b.sf||0)+1;if(kind==='doubleplay')b.gidp=(b.gidp||0)+1;if(['single','double','triple','hr'].includes(kind))b.h++;if(kind==='hr')b.hr++;if(kind==='double')b.doubles=(b.doubles||0)+1;if(kind==='triple')b.triples=(b.triples||0)+1;if(kind==='strikeout'){b.k++;this.pitcherRecord().k=(this.pitcherRecord().k||0)+1;}if(kind==='walk'){b.bb++;this.pitcherRecord().bb=(this.pitcherRecord().bb||0)+1;}b.rbi+=runs;this.batFinished=true;
   if(this.career?.rivalId&&(this.pitcher.id===this.career.rivalId||this.batter.id===this.career.rivalId)){
    if(!simulated||this.batter.id===this.career.playerId||this.pitcher.id===this.career.playerId){
     const r=this.career.rivalStats||={pa:0,h:0,hr:0,k:0};
@@ -774,11 +779,10 @@ window.NightGame=class NightGame{
  predictLanding(initial){
   const b={...initial};
   for(let i=1;i<=1600;i++){
-   const dt=.01;b.vx*=1-.22*dt;b.vy=(b.vy+(this.park.wind||0)*dt)*(1-.22*dt);b.vz-=9.81*dt;
-   b.x+=b.vx*dt;b.y+=b.vy*dt;b.z+=b.vz*dt;
-   if(b.z<=0)return{x:b.x,y:b.y,time:i*dt};
+   moveBattedBall(b,.01,this.park.wind||0);
+   if(b.bounces)return{x:b.x,y:b.y,time:i*.01};
   }
-  return{x:b.x,y:b.y};
+  return{x:b.x,y:b.y,time:16};
  }
  readGroundBall(){
   const f=this.field;
@@ -1137,9 +1141,13 @@ window.NightGame=class NightGame{
    if(next>4||r.batter&&next===4)continue;
    if(f.runners.some(other=>other.start>r.start&&!other.out&&!other.scored&&other.progress<=next&&(other.command??other.base)<=next))continue;
    if(m.fly){
-    if(!m.secured||f.outsAtContact>=2||r.didTag||r.base<2||depth<(r.base===3?73:95))continue;
-    const returnTime=Math.max(0,m.recovery)+this.baseThrow(m.holder,next,.31).duration;
-    if(returnTime>runTime(r,next)+.17){r.command=next;r.didTag=true;}
+    if(!m.secured||f.outsAtContact>=2||r.didTag)continue;
+    // Decision after retouch: depth, arm and fielder transfer versus runner's ETA.
+    const minimum=r.start===3?54:r.start===2?73:91;
+    if(depth<minimum)continue;
+    const throwTime=Math.max(0,m.recovery)+this.baseThrow(m.holder,next,.38).duration;
+    const margin=r.start===3?-.08:r.start===2?.10:.24;
+    if(throwTime>runTime(r,next)+margin){r.command=next;r.didTag=true;r.waiting=false;}
     continue;
    }
    if(!down||!deep||depth<(r.batter&&next===3?87:next===4?57:51))continue;
@@ -1203,7 +1211,7 @@ window.NightGame=class NightGame{
   const cover=this.secondBaseCover(index,f.ball);
   if(cover!==null)f.fielders[cover].target=BASES[2];
   const player=f.fielders[index],acrobatics=['dive','jump'].includes(player.action?.type);
-  m.recovery=(m.outfield&&!fly?.88:.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
+  m.recovery=(fly?(m.outfield?.80:.26):m.outfield?.88:.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
   f.ball.vx=f.ball.vy=f.ball.vz=0;f.trail=[];this.playEvents.push({type:fly?'catch':'pickup',fielder:index,time:f.elapsed});
   if(fly){
    this.emit('sound','catch');this.manualOut(f.runners.find(r=>r.batter),'catch');
@@ -1342,7 +1350,8 @@ window.NightGame=class NightGame{
   const eligible=this.manualRuns(),needed=this.awayScore-this.homeScore+1;
   const walkoff=(this.isFixture||this.career?.continuous)&&this.half==='bottom'&&this.inning>=this.totalInnings&&needed>0&&eligible.length>=needed;
   const scorers=walkoff?eligible.slice(0,needed):eligible;
-  let kind=m.fly?'flyout':m.outs.some(o=>o.type==='force')?(outs>=2?'doubleplay':'forceout'):batter.furthest<1?(outs>=2?'doubleplay':'groundout'):['','single','double','triple'][Math.min(3,batter.furthest)];
+  const sacFly=m.fly&&scorers.length>0&&this.outs<3;
+  let kind=m.fly?(sacFly?'sacrificefly':'flyout'):m.outs.some(o=>o.type==='force')?(outs>=2?'doubleplay':'forceout'):batter.furthest<1?(outs>=2?'doubleplay':'groundout'):['','single','double','triple'][Math.min(3,batter.furthest)];
   const hit=['single','double','triple'].includes(kind);
   this.bases=[false,false,false];this.baseIds=[null,null,null];this.basePitcherIds=[null,null,null];
   for(const r of f.runners){
@@ -1353,7 +1362,7 @@ window.NightGame=class NightGame{
   if(hit&&!this.runningDemo){this[this.side+'Hits']++;this.pitcherRecord().h=(this.pitcherRecord().h||0)+1;if(!this.defending)this.session.hits++;this.session.maxDistance=Math.max(this.session.maxDistance,distance);}
   this.completePitch(kind);if(this.inMatch){this.endAtBat(kind,scorers.length);this.resetCount();this.checkEnd();}
   f.resolved=true;f.outcome=kind;this.hit.kind=kind;this.hit.contactType=this.contactType(kind);
-  const label=outs>=2?['DOUBLE PLAY','ダブルプレー']:m.fly?['FLY OUT',scorers.length?'タッチアップで生還':'フライアウト']:hit?[kind.toUpperCase(),{single:'ヒット',double:'ツーベース',triple:'スリーベース'}[kind]]:['OUT',m.lastOut?.type==='tag'?'タッチアウト':m.lastOut?.type==='force'?'フォースアウト':'アウト'];
+  const label=outs>=2?['DOUBLE PLAY','ダブルプレー']:m.fly?[sacFly?'SACRIFICE FLY':'FLY OUT',scorers.length?'タッチアップで生還':'フライアウト']:hit?[kind.toUpperCase(),{single:'ヒット',double:'ツーベース',triple:'スリーベース'}[kind]]:['OUT',m.lastOut?.type==='tag'?'タッチアウト':m.lastOut?.type==='force'?'フォースアウト':'アウト'];
   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${this.contactType(kind)} · ${distance} m · ${this.outs}アウト${scorers.length?' · '+scorers.length+'点':''}`,hit?'hit':'out');
   this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
