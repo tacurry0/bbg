@@ -1,0 +1,5 @@
+NIGHTBALL v56
+Web版をPCで開くには、展開先で python -m http.server 8000 --directory dist を実行し、
+ブラウザーで http://localhost:8000/ を開きます。
+android/NIGHTBALL-Online.apk は公開版に接続するAndroid用APKです。
+端末に保存されているプレイデータとAndroid署名用の秘密鍵は含まれません。

@@ -1,0 +1,55 @@
+{
+  "asOf": "2026-11-13",
+  "officialExclusions": {
+    "apbc-taipei": ["陳世嘉", "鄭澔", "李欣穎", "何品室融", "張皓崴"]
+  },
+  "officialOverrides": {
+    "apbc-taipei": {
+      "董子恩": {"no": 78, "pos": "3B", "positions": ["3B", "LF", "1B"], "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_tpe.html", "numberBasis": "侍ジャパン公式 APBC2026 大会背番号"}
+    },
+    "apbc-korea": {
+      "パク・シウォン": {"no": 11},
+      "ウ・ガンフン": {"no": 14},
+      "イ・ロウン": {"no": 16},
+      "キム・ミンジュン": {"no": 41},
+      "キム・フィジプ": {"no": 1},
+      "イ・ジェヒョン": {"no": 13},
+      "ムン・ジョンビン": {"no": 22},
+      "アン・ジェソク": {"no": 52},
+      "パク・ジェヒョン": {"no": 47}
+    }
+  },
+  "candidates": {
+    "apbc-japan": {
+      "selectionSource": "https://www.nikkansports.com/baseball/news/202610070000689.html?mode=all",
+      "players": [
+        {"key":"maeda", "name":"前田 悠伍", "club":"福岡ソフトバンクホークス", "pos":"P", "hand":"L", "statsUrl":"https://npb.jp/bis/players/13115159.html", "statsLevel":"NPB一軍", "stats":{"games":19,"ipText":"111.2","ip":111.6666666667,"h":95,"hr":9,"bb":28,"k":95,"er":26,"era":2.10,"gs":19}, "speedUrl":"https://npbdata.jp/2026/players/1402/stats", "fastMax":151, "pitchSpeeds":{"fast":144.5,"fork":132.6,"slider":130,"curve":121,"change":125.4}},
+        {"key":"tatsu", "name":"達 孝太", "club":"北海道日本ハムファイターズ", "pos":"P", "hand":"R", "statsUrl":"https://npb.jp/bis/players/01205155.html", "statsLevel":"NPB一軍", "stats":{"games":27,"ipText":"124.2","ip":124.6666666667,"h":95,"hr":12,"bb":29,"k":126,"er":41,"era":2.96,"saves":2,"gs":17}, "speedUrl":"https://npbdata.jp/2026/players/1008/stats", "fastMax":156, "pitchSpeeds":{"fast":150.3,"fork":138.8,"curve":128.4,"slider":135.1,"cutter":143.4,"change":131.7,"sinker":146.8}, "pitchLabels":{"sinker":"ツーシーム"}},
+        {"key":"kudo", "name":"工藤 泰成", "club":"阪神タイガース", "pos":"P", "hand":"R", "statsUrl":"https://npb.jp/bis/players/81785150.html", "statsLevel":"NPB一軍", "stats":{"games":57,"ipText":"60","ip":60,"h":45,"hr":0,"bb":15,"k":80,"er":7,"era":1.05,"saves":12}, "speedUrl":"https://npbdata.jp/players/1606/stats", "fastMax":161, "pitchSpeeds":{"fast":156.7,"fork":142.8,"slider":133.3,"cutter":140}},
+        {"key":"kinoshita", "name":"木下 里都", "club":"阪神タイガース", "pos":"P", "hand":"R", "statsUrl":"https://npb.jp/bis/players/41745150.html", "statsLevel":"NPB一軍", "stats":{"games":45,"ipText":"51.1","ip":51.3333333333,"h":45,"hr":2,"bb":19,"k":53,"er":9,"era":1.58,"gs":1}, "speedUrl":"https://npbdata.jp/players/1607/stats", "fastMax":161, "pitchSpeeds":{"fast":155.5,"sinker":149,"fork":143.9,"slider":137.4,"cutter":138,"curve":125.4,"change":137}, "pitchLabels":{"sinker":"ツーシーム"}},
+        {"key":"takizawa", "name":"滝澤 夏央", "club":"埼玉西武ライオンズ", "pos":"2B", "positions":["SS","3B"], "hand":"L", "throwHand":"R", "statsUrl":"https://npb.jp/bis/2026/stats/idb1_l.html", "identityUrl":"https://npb.jp/bis/players/51255155.html", "fieldingSource":"https://www.npb.or.jp/bis/2026/stats/idf1_l.html", "fieldingAppearances":{"2B":86,"SS":70,"3B":9}, "statsLevel":"NPB一軍", "stats":{"games":123,"pa":470,"ab":398,"h":110,"triples":3,"hr":1,"tb":124,"sb":13,"cs":9,"bb":41,"so":55,"avg":0.276,"obp":0.350,"slg":0.312}},
+        {"key":"maegawa", "name":"前川 右京", "club":"阪神タイガース", "pos":"LF", "hand":"L", "throwHand":"L", "statsUrl":"https://npb.jp/bis/players/21825155.html", "statsLevel":"NPB一軍", "selectionNote":"年齢条件を満たすゲーム独自候補", "stats":{"games":76,"pa":214,"ab":188,"h":41,"triples":0,"hr":5,"tb":67,"sb":0,"cs":0,"bb":19,"so":45,"avg":0.218,"obp":0.304,"slg":0.356}},
+        {"key":"hori", "name":"堀 柊那", "club":"オリックス・バファローズ", "pos":"C", "hand":"R", "throwHand":"R", "statsUrl":"https://npb.jp/bis/players/81885159.html", "statsLevel":"NPB一軍", "selectionNote":"年齢条件を満たすゲーム独自候補", "stats":{"games":12,"pa":25,"ab":25,"h":4,"triples":0,"hr":0,"tb":4,"sb":0,"cs":0,"bb":0,"so":9,"avg":0.160,"obp":0.160,"slg":0.160}}
+      ]
+    },
+    "apbc-korea": {
+      "selectionSource": "https://www.koreabaseball.com/MediaNews/News/KboPhoto/View.aspx?bdSe=558121",
+      "players": [
+        {"key":"jang-chanhee", "name":"チャン・チャンヒ", "nativeName":"장찬희", "club":"サムスン・ライオンズ", "pos":"P", "hand":"R", "statsUrl":"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId=56460", "statsLevel":"KBO一軍", "selectionNote":"APBC予備登録・韓国シリーズ出場で最終選外", "stats":{"games":41,"ipText":"76","ip":76,"h":77,"hr":14,"bb":29,"k":57,"er":38,"era":4.50}},
+        {"key":"bae-chanseung", "name":"ペ・チャンスン", "nativeName":"배찬승", "club":"サムスン・ライオンズ", "pos":"P", "hand":"L", "statsUrl":"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId=55455", "statsLevel":"KBO一軍", "selectionNote":"APBC予備登録・韓国シリーズ出場で最終選外", "stats":{"games":56,"ipText":"44","ip":44,"h":37,"hr":5,"bb":36,"k":41,"er":11,"era":2.25,"saves":1}},
+        {"key":"choi-minseok", "name":"チェ・ミンソク", "nativeName":"최민석", "club":"斗山ベアーズ", "pos":"P", "hand":"R", "statsUrl":"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId=55268", "statsLevel":"KBO一軍", "selectionNote":"APBC予備登録・実大会は負傷により辞退", "stats":{"games":27,"ipText":"146 1/3","ip":146.3333333333,"h":143,"hr":8,"bb":54,"k":129,"er":52,"era":3.20}},
+        {"key":"shin-youngwoo", "name":"シン・ヨンウ", "nativeName":"신영우", "club":"NCダイノス", "pos":"P", "hand":"R", "statsUrl":"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId=53919", "statsLevel":"KBO一軍", "selectionNote":"APBC予備登録・実大会は負傷により辞退", "stats":{"games":42,"ipText":"34 2/3","ip":34.6666666667,"h":18,"hr":1,"bb":47,"k":54,"er":11,"era":2.86,"saves":1}},
+        {"key":"kwak-dogyu", "name":"クァク・ドギュ", "nativeName":"곽도규", "club":"起亜タイガース", "pos":"P", "hand":"L", "statsUrl":"https://www.koreabaseball.com/Record/Player/PitcherDetail/Basic.aspx?playerId=53609", "statsLevel":"KBO一軍", "selectionNote":"APBC予備登録・実大会は負傷により辞退", "stats":{"games":44,"ipText":"32","ip":32,"h":29,"hr":2,"bb":14,"k":36,"er":10,"era":2.81,"saves":2}},
+        {"key":"park-junsoon", "name":"パク・ジュンスン", "nativeName":"박준순", "club":"斗山ベアーズ", "pos":"2B", "positions":["3B","SS"], "hand":"R", "throwHand":"R", "statsUrl":"https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=55252", "statsLevel":"KBO一軍", "selectionNote":"年齢条件を満たすゲーム独自候補", "stats":{"games":98,"pa":413,"ab":378,"h":114,"triples":5,"hr":16,"tb":188,"sb":3,"cs":2,"bb":25,"so":82,"avg":0.302,"obp":0.356,"slg":0.497}},
+        {"key":"han-taeyang", "name":"ハン・テヤン", "nativeName":"한태양", "club":"ロッテ・ジャイアンツ", "pos":"2B", "positions":["SS"], "hand":"R", "throwHand":"R", "statsUrl":"https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=52568", "statsLevel":"KBO一軍", "selectionNote":"年齢条件を満たすゲーム独自候補", "stats":{"games":80,"pa":210,"ab":181,"h":43,"triples":1,"hr":1,"tb":56,"sb":9,"cs":0,"bb":26,"so":49,"avg":0.238,"obp":0.337,"slg":0.309}}
+      ]
+    },
+    "apbc-taipei": {
+      "selectionSource": "https://www.cna.com.tw/news/aspt/202611010083.aspx",
+      "players": [
+        {"key":"lin-chaoen", "name":"林詔恩", "club":"統一ライオンズ", "pos":"P", "hand":"L", "existingClub":"falcons", "selectionNote":"APBC集訓名簿入り・実大会は辞退"},
+        {"key":"kung-nienen", "name":"孔念恩", "club":"富邦ガーディアンズ", "pos":"RF", "hand":"L", "throwHand":"R", "existingClub":"mariners", "selectionNote":"APBC集訓名簿入り・実大会は辞退"}
+      ]
+    }
+  }
+}

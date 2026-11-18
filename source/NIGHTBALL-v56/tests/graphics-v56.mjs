@@ -1,0 +1,240 @@
+// Comprehensive verification of NIGHTBALL v56 3D graphics upgrades & scene invariants.
+import assert from 'node:assert/strict';
+import { existsSync, readFileSync } from 'node:fs';
+import vm from 'node:vm';
+import * as T from '../dist/vendor/three.module.min.js';
+import { StadiumRenderer } from '../dist/stadium3d.js';
+import { decodeMatchModel } from '../dist/match-models.js';
+import {
+  createSkyMaterial,
+  enhanceGrassMaterial,
+  enhanceDirtMaterial,
+  enhanceCrowdMaterial,
+  StadiumVFX
+} from '../dist/stadium-fx.js';
+
+globalThis.window = globalThis;
+globalThis.devicePixelRatio = 1;
+const gradient = { addColorStop() {} };
+const context = new Proxy(
+  { createLinearGradient: () => gradient, createRadialGradient: () => gradient },
+  { get: (o, k) => o[k] || (() => {}) }
+);
+const canvas = () => ({
+  width: 0,
+  height: 0,
+  dataset: {},
+  style: {},
+  setAttribute() {},
+  addEventListener() {},
+  removeEventListener() {},
+  getContext: type => (type === '2d' ? context : null),
+  getBoundingClientRect: () => ({ width: 390, height: 640 }),
+  parentElement: { appendChild() {} }
+});
+globalThis.document = { createElement: canvas };
+
+for (const name of ['ratings-data', 'players', 'pennant', 'derby', 'game']) {
+  vm.runInThisContext(readFileSync('dist/' + name + '.js', 'utf8'));
+}
+
+const origError = console.error;
+let renderer;
+try {
+  console.error = () => {};
+  renderer = new StadiumRenderer(canvas());
+} finally {
+  console.error = origError;
+}
+
+// 1. Software fallback compatibility & all parks/clubs construction
+for (const park of NightPlayers.parks) renderer.setPark(park);
+assert.equal(renderer.canvas.dataset.graphics, 'canvas-3d');
+assert(renderer.batter.head.children.length > 12);
+assert(renderer.batter.bat.children.length >= 6, 'Pro two-tone wood bat has barrel, tip, trademark ring, taper, grip, and knob');
+assert(renderer.batter.elbowGuard, 'Batter has protective lead-arm elbow guard');
+assert.equal(renderer.batter.cuffs.length, 2);
+assert.equal(renderer.batter.socks.length, 2);
+assert.equal(renderer.batter.eyes.length, 2);
+
+for (const club of NightTeams.all) {
+  const order = club.batters.slice(0, 9).map(p => p.id).reverse();
+  for (const userHome of [true, false]) {
+    const g = new NightGame('pennant', 'standard', () => {}, {
+      homeTeamId: userHome ? club.id : 'foxes',
+      awayTeamId: userHome ? 'foxes' : club.id,
+      userHome,
+      order,
+      pitcher: 1
+    });
+    assert.deepEqual(g.lineups[g.userSide].map(p => p.id), order);
+    g.beginHalf();
+    if (!g.defending) { g.half = 'bottom'; g.beginHalf(); }
+    assert.equal(g.pitcher.id, club.pitchers[1].id);
+    renderer.render(g, 0);
+  }
+}
+console.log('PASS 1: All parks, 6 clubs, upgraded player gear/two-tone bat, and software fallback render cleanly.');
+
+// 2. Standing & live runners, player scales, and bunt pose
+const standing = new NightGame('match', 'standard', () => {});
+standing.half = 'bottom';
+standing.setPhase('aim');
+standing.bases = [true, false, true];
+standing.baseIds = [standing.lineups.home[5].id, null, standing.lineups.home[7].id];
+renderer.render(standing, 10);
+assert.equal(renderer.runners.filter(p => p.root.visible).length, 2);
+for (const p of [renderer.batter, renderer.pitcher, ...renderer.fielders, ...renderer.runners]) {
+  assert.equal(p.root.scale.x, 2);
+}
+assert.equal(renderer.catcher.root.scale.x, 1.7);
+standing.field = null;
+standing.hit = null;
+standing.setPhase('pitch');
+standing.bunt = true;
+renderer.render(standing, 30);
+assert.equal(renderer.batter.bat.rotation.z, standing.batter.hand === 'L' ? Math.PI / 2 : -Math.PI / 2);
+console.log('PASS 2: Runner visibility, actor scales (2.0 / catcher 1.7), and bunt override preserved.');
+
+// 3. Plate alignment, Tokyo Dome unobstructed scoreboard & non-mirrored fence panels
+const plateGame = new NightGame('match', 'standard', () => {});
+plateGame.half = 'bottom';
+plateGame.setPhase('aim');
+renderer.render(plateGame, 0);
+assert.deepEqual(renderer.camera.position.toArray(), [0.18, 3.6, 8.8]);
+assert.equal(renderer.homePlate.scale.x, 2.2);
+assert.equal(Math.abs(renderer.batter.root.position.x), 1.65);
+
+// Verify fence distance signs are NOT horizontally mirrored (scale.x === 1)
+const markers = renderer.wallGroup.children.filter(m => m.userData.parkMarker);
+assert(markers.length >= 5, 'Outfield wall has distance markers');
+for (const m of markers) {
+  assert.equal(m.scale.x, 1, 'Fence distance marker must not mirror text backwards');
+}
+
+const outdoorTurf = renderer.grassMaterial.map, outdoorDirt = renderer.dirt.map;
+const domePlate = new NightGame('practice', 'standard', () => {}, { park: 'tokyo-dome' });
+domePlate.setPhase('aim');
+renderer.render(domePlate, 0);
+assert(renderer.scene.userData.broadcastDome);
+assert(renderer.board.position.z < 146, 'Tokyo Dome scoreboard sits cleanly in front of r=149 ceiling light rigs');
+assert.notEqual(renderer.grassMaterial.map, outdoorTurf);
+assert.notEqual(renderer.dirt.map, outdoorDirt);
+
+renderer.render(plateGame, 0);
+assert.equal(renderer.scene.fog.density, 0.0036);
+console.log('PASS 3: Non-mirrored fence distance panels, unobstructed Tokyo Dome scoreboard, and park surface swaps verified.');
+
+// 4. Pitcher release hand accuracy at t=0 AND living idle/waggle animations at t>0
+const throwing = new NightGame('match', 'standard', () => {});
+throwing.pitchingStaff = { ...throwing.pitchingStaff, home: throwing.pitchingStaff.home.map(p => ({ ...p })) };
+for (const hand of ['R', 'L']) {
+  throwing.pitchingStaff.home[0].hand = hand;
+  throwing.createPitch(NightGame.TYPES[1], { x: 0, y: 0 });
+  throwing.setPhase('pitch');
+  renderer.render(throwing, 0);
+  renderer.scene.updateMatrixWorld(true);
+  const arm = hand === 'L' ? 0 : 1;
+  const pos = renderer.pitcher.hands[arm].position.clone();
+  renderer.pitcher.hands[arm].getWorldPosition(pos);
+  assert(Math.abs(pos.x - renderer.ball.position.x) < 1e-6);
+  assert(Math.abs(pos.y - renderer.ball.position.y) < 1e-6);
+  assert(Math.abs(-pos.z - renderer.ball.position.z) < 1e-6);
+}
+
+const poses = {};
+for (const hand of ['R', 'L']) {
+  const club = NightTeams.get('owls');
+  const batter = club.batters.find(p => p.hand === hand);
+  const g = new NightGame('derby', 'standard', () => {}, { practiceBatter: batter.id });
+  g.setPhase('aim');
+  renderer.render(g, 0);
+  assert(Math.abs(renderer.batter.bat.rotation.z) < 0.20);
+  poses[hand] = { x: renderer.batter.bat.position.x, tilt: renderer.batter.bat.rotation.z };
+  // At t > 0 in aim phase, rhythmic bat-waggle animates the bat
+  renderer.render(g, 420);
+  assert(Math.abs(renderer.batter.bat.rotation.z - poses[hand].tilt) > 0.01, 'Bat waggle animates when time > 0');
+}
+assert.equal(poses.L.x, -poses.R.x);
+assert.equal(poses.L.tilt, -poses.R.tilt);
+console.log('PASS 4: Exact pitcher release hand at t=0, symmetric stance, and living bat-waggle at t>0 verified.');
+
+// 5. GLB shadowSide fix & roof clearance
+for (const name of ['jersey', 'intercontinental', 'tokyo-dome', 'broadcast-dome']) {
+  const bytes = readFileSync('dist/assets/3d/' + name + '.glb');
+  const model = decodeMatchModel(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength));
+  assert(model.children.length >= 2);
+  for (const mesh of model.children) {
+    assert.equal(mesh.material.shadowSide, T.FrontSide, 'GLB materials cast FrontSide shadows to prevent waist shadow acne');
+  }
+}
+for (const park of ['tokyo-dome', 'taipei-dome']) {
+  const dome = new NightGame('match', 'standard', () => {}, { park, userHome: false });
+  dome.startField(50, 55, 0.65, false);
+  renderer.camera.aspect = 0.61;
+  renderer.lastTime = 0;
+  for (let i = 1; i <= 900 && dome.phase === 'field'; i++) {
+    dome.updateField(0.01);
+    if (i % 4) continue;
+    renderer.followPlay(dome, i * 10);
+    renderer.lastTime = i * 10;
+    const { x, y, z } = renderer.camera.position;
+    assert(y <= NightPlayers.roofSurface(dome.park, x, -z) - 3.49);
+  }
+}
+console.log('PASS 5: GLB FrontSide shadow fix and dome roof camera clearance verified.');
+
+// 6. WebGL shader hooks & StadiumVFX simulation (3D ball ribbon, swing arc, sparks, dust, HR fireworks)
+const skyMat = createSkyMaterial();
+assert(skyMat.uniforms.uNight && skyMat.uniforms.uRural && skyMat.uniforms.uTime);
+const mockGl = { isSoftwareRenderer: false };
+const grassMat = new T.MeshStandardMaterial();
+const grassUniforms = enhanceGrassMaterial(grassMat, mockGl);
+assert(grassUniforms.uFenceAnchors && typeof grassMat.onBeforeCompile === 'function');
+const dirtMat = new T.MeshStandardMaterial();
+enhanceDirtMaterial(dirtMat, mockGl);
+assert(typeof dirtMat.onBeforeCompile === 'function');
+const crowdMat = new T.MeshStandardMaterial();
+const mockScene = new T.Scene();
+mockScene.scale.z = -1;
+const vfx = new StadiumVFX({ gl: mockGl, scene: mockScene, camera: renderer.camera, sky: { material: skyMat }, batter: renderer.batter });
+enhanceCrowdMaterial(crowdMat, mockGl, vfx.crowdUniforms);
+assert(typeof crowdMat.onBeforeCompile === 'function');
+
+// Simulate pitch ribbon, swing arc, contact flash, and outdoor HR fireworks
+const vfxGame = new NightGame('match', 'standard', () => {}, { park: 'harbor', userHome: true });
+vfxGame.half = 'bottom';
+vfxGame.power = true;
+vfxGame.createPitch(NightGame.TYPES[0], { x: 0, y: 0 });
+vfxGame.setPhase('pitch');
+vfxGame.pitch.progress = 0.75;
+vfxGame.swingAge = 90;
+vfx.update(vfxGame, 1000, false);
+assert.equal(vfx.ribbon.visible, true, '3D ball ribbon visible on incoming pitch');
+assert.equal(vfx.swingArc.visible, true, '3D bat-swing arc visible during swing');
+
+vfxGame.startField(51, 30, 0.05, false, true);
+vfx.update(vfxGame, 1050, true);
+assert(vfx.shockRing.visible, 'Contact shockwave ring triggers on clean hit');
+assert(vfx.sparkMesh.count > 0, 'Contact sparks emitted');
+for (let i = 0; i < 340; i++) {
+  if (vfxGame.phase === 'field') vfxGame.updateField(0.016);
+  vfx.update(vfxGame, 1100 + i * 16, vfxGame.phase === 'field');
+}
+assert.equal(vfxGame.hit.kind, 'hr', 'Ball cleared the fence for a Home Run');
+assert(vfx.crowdUniforms.uCrowdExcite.value > 0.5, 'Crowd excitement rises on Home Run');
+console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, shockwave, sparks, crowd excitement) verified.');
+
+// 7. Service Worker v56 asset manifest integrity check
+const swCode = readFileSync('dist/sw.js', 'utf8');
+assert(swCode.includes('nightball-v56-graphics'));
+assert(swCode.includes('./stadium-fx.js?v=56'));
+const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
+assert(filesMatch);
+const swFiles = JSON.parse('[' + filesMatch[1].replace(/'/g, '"') + ']');
+for (const entry of swFiles) {
+  if (entry === './') continue;
+  const clean = entry.split('?')[0].replace(/^\.\//, '');
+  assert(existsSync('dist/' + clean), 'Missing SW cached file: dist/' + clean);
+}
+console.log('PASS 7: Service Worker v56 cache manifest verified (' + swFiles.length + ' offline-ready assets).');

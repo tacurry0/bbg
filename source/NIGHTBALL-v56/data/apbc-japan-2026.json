@@ -1,0 +1,2314 @@
+{
+  "country": "japan",
+  "label": "日本",
+  "rosterStatus": "2026年10月7日発表のAPBC2026日本代表28人（2026年11月6日確認）",
+  "asOf": "2026-11-06",
+  "rosterSources": [
+    "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+    "https://www.japan-baseball.jp/jp/team/topteam/2026/apbc/player.html"
+  ],
+  "recommendedStarterNo": 19,
+  "notes": [
+    "野手15人・投手13人。大会背番号・投打・所属は侍ジャパン公式出場メンバー。",
+    "全28人ともNPB公式2026一軍シーズン最終成績を収録。球速・球種速度はスポーツナビ2026投球データの平均/最高。",
+    "左右中の外野割当・守備範囲・肩力など未測定の能力はゲーム用推定。"
+  ],
+  "players": [
+    {
+      "name": "吉田 聖弥",
+      "nativeName": "吉田 聖弥",
+      "no": 11,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "中日ドラゴンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_d.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 52,
+        "era": 2.44,
+        "h": 27,
+        "hr": 1,
+        "bb": 31,
+        "k": 50,
+        "er": 13,
+        "saves": 0,
+        "holds": 27,
+        "gs": 0,
+        "ip": 48.0,
+        "ipText": "48",
+        "whip": 1.208
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2105295/",
+      "velocity": 146.5,
+      "velocityKind": "average",
+      "velocityMax": 149,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2105295/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2105295/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 146.5,
+          "max": 149
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 134.5
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 124.1
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 127.7
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 108.8
+        }
+      ],
+      "pitches": [
+        "fast",
+        "cutter",
+        "change",
+        "slider",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "cutter": "カットボール",
+        "change": "チェンジアップ",
+        "slider": "スライダー",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 146.5,
+        "cutter": 134.5,
+        "change": 124.1,
+        "slider": 127.7,
+        "curve": 108.8
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2105295/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 146.5,
+        "fastMax": 149,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "竹丸 和幸",
+      "nativeName": "竹丸 和幸",
+      "no": 12,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "読売ジャイアンツ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_g.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 22,
+        "era": 3.27,
+        "h": 121,
+        "hr": 14,
+        "bb": 40,
+        "k": 142,
+        "er": 46,
+        "saves": 0,
+        "holds": 0,
+        "gs": 22,
+        "ip": 126.66666666666667,
+        "ipText": "126 2/3",
+        "whip": 1.271
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2118993/",
+      "velocity": 147.2,
+      "velocityKind": "average",
+      "velocityMax": 153,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2118993/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2118993/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 147.2,
+          "max": 153
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 126.4
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.1
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 135.2
+        },
+        {
+          "label": "シンカー",
+          "id": "sinker",
+          "average": 133.0
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 115.4
+        }
+      ],
+      "pitches": [
+        "fast",
+        "change",
+        "slider",
+        "cutter",
+        "sinker",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "change": "チェンジアップ",
+        "slider": "スライダー",
+        "cutter": "カットボール",
+        "sinker": "シンカー",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 147.2,
+        "change": 126.4,
+        "slider": 129.1,
+        "cutter": 135.2,
+        "sinker": 133.0,
+        "curve": 115.4
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2118993/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 147.2,
+        "fastMax": 153,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "石田 裕太郎",
+      "nativeName": "石田 裕太郎",
+      "no": 14,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "横浜DeNAベイスターズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_db.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 20,
+        "era": 2.91,
+        "h": 110,
+        "hr": 7,
+        "bb": 29,
+        "k": 117,
+        "er": 39,
+        "saves": 0,
+        "holds": 0,
+        "gs": 20,
+        "ip": 120.66666666666667,
+        "ipText": "120 2/3",
+        "whip": 1.152
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2112182/",
+      "velocity": 147.1,
+      "velocityKind": "average",
+      "velocityMax": 152,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2112182/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2112182/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 147.1,
+          "max": 152
+        },
+        {
+          "label": "シンカー",
+          "id": "sinker",
+          "average": 132.4
+        },
+        {
+          "label": "ツーシーム",
+          "id": "shoot",
+          "average": 143.5
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 138.5
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 117.1
+        }
+      ],
+      "pitches": [
+        "fast",
+        "sinker",
+        "shoot",
+        "cutter",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "sinker": "シンカー",
+        "shoot": "ツーシーム",
+        "cutter": "カットボール",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 147.1,
+        "sinker": 132.4,
+        "shoot": 143.5,
+        "cutter": 138.5,
+        "curve": 117.1
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2112182/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 147.1,
+        "fastMax": 152,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "武内 夏暉",
+      "nativeName": "武内 夏暉",
+      "no": 16,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "埼玉西武ライオンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_l.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 23,
+        "era": 3.27,
+        "h": 131,
+        "hr": 12,
+        "bb": 27,
+        "k": 108,
+        "er": 52,
+        "saves": 0,
+        "holds": 0,
+        "gs": 23,
+        "ip": 143.0,
+        "ipText": "143",
+        "whip": 1.105
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2105080/",
+      "velocity": 146.5,
+      "velocityKind": "average",
+      "velocityMax": 151,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2105080/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2105080/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 146.5,
+          "max": 151
+        },
+        {
+          "label": "ツーシーム",
+          "id": "sinker",
+          "average": 137.6
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 125.9
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 117.6
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.3
+        }
+      ],
+      "pitches": [
+        "fast",
+        "sinker",
+        "change",
+        "curve",
+        "slider"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "sinker": "ツーシーム",
+        "change": "チェンジアップ",
+        "curve": "カーブ",
+        "slider": "スライダー"
+      },
+      "pitchSpeeds": {
+        "fast": 146.5,
+        "sinker": 137.6,
+        "change": 125.9,
+        "curve": 117.6,
+        "slider": 129.3
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2105080/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 146.5,
+        "fastMax": 151,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "髙橋 宏斗",
+      "nativeName": "髙橋 宏斗",
+      "no": 19,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "中日ドラゴンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_d.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 19,
+        "era": 2.62,
+        "h": 97,
+        "hr": 4,
+        "bb": 37,
+        "k": 135,
+        "er": 36,
+        "saves": 0,
+        "holds": 0,
+        "gs": 19,
+        "ip": 123.66666666666667,
+        "ipText": "123 2/3",
+        "whip": 1.084
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2000042/",
+      "velocity": 153.8,
+      "velocityKind": "average",
+      "velocityMax": 158,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2000042/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2000042/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 153.8,
+          "max": 158
+        },
+        {
+          "label": "スプリット",
+          "id": "split",
+          "average": 144.6
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 139.7
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 128.8
+        }
+      ],
+      "pitches": [
+        "fast",
+        "split",
+        "cutter",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "split": "スプリット",
+        "cutter": "カットボール",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 153.8,
+        "split": 144.6,
+        "cutter": 139.7,
+        "curve": 128.8
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2000042/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 153.8,
+        "fastMax": 158,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "金丸 夢斗",
+      "nativeName": "金丸 夢斗",
+      "no": 21,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "中日ドラゴンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_d.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 25,
+        "era": 2.91,
+        "h": 159,
+        "hr": 16,
+        "bb": 34,
+        "k": 146,
+        "er": 52,
+        "saves": 0,
+        "holds": 0,
+        "gs": 24,
+        "ip": 160.66666666666666,
+        "ipText": "160 2/3",
+        "whip": 1.201
+      },
+      "gsSource": "https://www.dragons.jp/teamdata/players/player.php?num=21&posi=pitcher",
+      "velocity": 149.3,
+      "velocityKind": "average",
+      "velocityMax": 154,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2108462/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2108462/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 149.3,
+          "max": 154
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.5
+        },
+        {
+          "label": "スプリット",
+          "id": "split",
+          "average": 135.4
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 109.8
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 122.6
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 135.3
+        }
+      ],
+      "pitches": [
+        "fast",
+        "slider",
+        "split",
+        "curve",
+        "change",
+        "cutter"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "slider": "スライダー",
+        "split": "スプリット",
+        "curve": "カーブ",
+        "change": "チェンジアップ",
+        "cutter": "カットボール"
+      },
+      "pitchSpeeds": {
+        "fast": 149.3,
+        "slider": 129.5,
+        "split": 135.4,
+        "curve": 109.8,
+        "change": 122.6,
+        "cutter": 135.3
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2108462/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 149.3,
+        "fastMax": 154,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ],
+      "gsNote": "球団公式選手名鑑の当初24とスポーツナビ先発25が不一致。球団公式24を採用。"
+    },
+    {
+      "name": "髙 太一",
+      "nativeName": "髙 太一",
+      "no": 22,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "広島東洋カープ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_c.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 56,
+        "era": 1.9,
+        "h": 39,
+        "hr": 2,
+        "bb": 17,
+        "k": 53,
+        "er": 11,
+        "saves": 0,
+        "holds": 24,
+        "gs": 0,
+        "ip": 52.0,
+        "ipText": "52",
+        "whip": 1.077
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/1950429/",
+      "velocity": 148.0,
+      "velocityKind": "average",
+      "velocityMax": 154,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/1950429/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/1950429/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 148.0,
+          "max": 154
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.7
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 137.4
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 138.1
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 134.0
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 121.6
+        }
+      ],
+      "pitches": [
+        "fast",
+        "slider",
+        "fork",
+        "cutter",
+        "change",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "slider": "スライダー",
+        "fork": "フォーク",
+        "cutter": "カットボール",
+        "change": "チェンジアップ",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 148.0,
+        "slider": 129.7,
+        "fork": 137.4,
+        "cutter": 138.1,
+        "change": 134.0,
+        "curve": 121.6
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950429/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 148.0,
+        "fastMax": 154,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "鈴木 豪太",
+      "nativeName": "鈴木 豪太",
+      "no": 26,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "福岡ソフトバンクホークス",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_h.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 40,
+        "era": 1.74,
+        "h": 29,
+        "hr": 3,
+        "bb": 9,
+        "k": 40,
+        "er": 9,
+        "saves": 0,
+        "holds": 5,
+        "gs": 0,
+        "ip": 46.666666666666664,
+        "ipText": "46 2/3",
+        "whip": 0.814
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2102969/",
+      "velocity": 144.9,
+      "velocityKind": "average",
+      "velocityMax": 148,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2102969/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2102969/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 144.9,
+          "max": 148
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 139.2
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 135.9
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.0
+        }
+      ],
+      "pitches": [
+        "fast",
+        "cutter",
+        "fork",
+        "slider"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "cutter": "カットボール",
+        "fork": "フォーク",
+        "slider": "スライダー"
+      },
+      "pitchSpeeds": {
+        "fast": 144.9,
+        "cutter": 139.2,
+        "fork": 135.9,
+        "slider": 129.0
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2102969/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 144.9,
+        "fastMax": 148,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "松本 健吾",
+      "nativeName": "松本 健吾",
+      "no": 28,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "東京ヤクルトスワローズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_s.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 23,
+        "era": 4.14,
+        "h": 113,
+        "hr": 10,
+        "bb": 27,
+        "k": 88,
+        "er": 48,
+        "saves": 0,
+        "holds": 0,
+        "gs": 17,
+        "ip": 104.33333333333333,
+        "ipText": "104 1/3",
+        "whip": 1.342
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/1750696/",
+      "velocity": 145.9,
+      "velocityKind": "average",
+      "velocityMax": 151,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/1750696/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/1750696/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 145.9,
+          "max": 151
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 132.3
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 127.8
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 136.9
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 115.1
+        },
+        {
+          "label": "シュート",
+          "id": "shoot",
+          "average": 143.1
+        }
+      ],
+      "pitches": [
+        "fast",
+        "fork",
+        "slider",
+        "cutter",
+        "curve",
+        "shoot"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "fork": "フォーク",
+        "slider": "スライダー",
+        "cutter": "カットボール",
+        "curve": "カーブ",
+        "shoot": "シュート"
+      },
+      "pitchSpeeds": {
+        "fast": 145.9,
+        "fork": 132.3,
+        "slider": 127.8,
+        "cutter": 136.9,
+        "curve": 115.1,
+        "shoot": 143.1
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/1750696/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 145.9,
+        "fastMax": 151,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "九谷 瑠",
+      "nativeName": "九谷 瑠",
+      "no": 45,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "東北楽天ゴールデンイーグルス",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_e.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 39,
+        "era": 1.94,
+        "h": 27,
+        "hr": 2,
+        "bb": 15,
+        "k": 44,
+        "er": 9,
+        "saves": 0,
+        "holds": 16,
+        "gs": 0,
+        "ip": 41.666666666666664,
+        "ipText": "41 2/3",
+        "whip": 1.008
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2121018/",
+      "velocity": 147.6,
+      "velocityKind": "average",
+      "velocityMax": 154,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2121018/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2121018/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 147.6,
+          "max": 154
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 121.6
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 129.3
+        },
+        {
+          "label": "シュート",
+          "id": "shoot",
+          "average": 144.5
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 135.8
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 138.5
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 111.7
+        }
+      ],
+      "pitches": [
+        "fast",
+        "change",
+        "slider",
+        "shoot",
+        "fork",
+        "cutter",
+        "curve"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "change": "チェンジアップ",
+        "slider": "スライダー",
+        "shoot": "シュート",
+        "fork": "フォーク",
+        "cutter": "カットボール",
+        "curve": "カーブ"
+      },
+      "pitchSpeeds": {
+        "fast": 147.6,
+        "change": 121.6,
+        "slider": 129.3,
+        "shoot": 144.5,
+        "fork": 135.8,
+        "cutter": 138.5,
+        "curve": 111.7
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2121018/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 147.6,
+        "fastMax": 154,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "森田 駿哉",
+      "nativeName": "森田 駿哉",
+      "no": 47,
+      "pos": "P",
+      "hand": "L",
+      "throwHand": "L",
+      "club": "読売ジャイアンツ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_g.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 33,
+        "era": 3.38,
+        "h": 35,
+        "hr": 3,
+        "bb": 12,
+        "k": 33,
+        "er": 15,
+        "saves": 0,
+        "holds": 12,
+        "gs": 1,
+        "ip": 40.0,
+        "ipText": "40",
+        "whip": 1.175
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/1450977/",
+      "velocity": 147.6,
+      "velocityKind": "average",
+      "velocityMax": 153,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/1450977/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/1450977/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 147.6,
+          "max": 153
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 135.7
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 140.3
+        },
+        {
+          "label": "ツーシーム",
+          "id": "sinker",
+          "average": 147.0
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 130.2
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 126.6
+        }
+      ],
+      "pitches": [
+        "fast",
+        "cutter",
+        "fork",
+        "sinker",
+        "change",
+        "slider"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "cutter": "カットボール",
+        "fork": "フォーク",
+        "sinker": "ツーシーム",
+        "change": "チェンジアップ",
+        "slider": "スライダー"
+      },
+      "pitchSpeeds": {
+        "fast": 147.6,
+        "cutter": 135.7,
+        "fork": 140.3,
+        "sinker": 147.0,
+        "change": 130.2,
+        "slider": 126.6
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/1450977/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 147.6,
+        "fastMax": 153,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "篠原 響",
+      "nativeName": "篠原 響",
+      "no": 52,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "埼玉西武ライオンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_l.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 46,
+        "era": 2.22,
+        "h": 33,
+        "hr": 2,
+        "bb": 19,
+        "k": 50,
+        "er": 11,
+        "saves": 1,
+        "holds": 31,
+        "gs": 0,
+        "ip": 44.666666666666664,
+        "ipText": "44 2/3",
+        "whip": 1.164
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2117734/",
+      "velocity": 152.8,
+      "velocityKind": "average",
+      "velocityMax": 158,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2117734/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2117734/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 152.8,
+          "max": 158
+        },
+        {
+          "label": "スライダー",
+          "id": "slider",
+          "average": 141.3
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 136.8
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 146.2
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 122.1
+        },
+        {
+          "label": "ツーシーム",
+          "id": "sinker",
+          "average": 152.3
+        }
+      ],
+      "pitches": [
+        "fast",
+        "slider",
+        "change",
+        "cutter",
+        "curve",
+        "sinker"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "slider": "スライダー",
+        "change": "チェンジアップ",
+        "cutter": "カットボール",
+        "curve": "カーブ",
+        "sinker": "ツーシーム"
+      },
+      "pitchSpeeds": {
+        "fast": 152.8,
+        "slider": 141.3,
+        "change": 136.8,
+        "cutter": 146.2,
+        "curve": 122.1,
+        "sinker": 152.3
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2117734/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 152.8,
+        "fastMax": 158,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "中森 俊介",
+      "nativeName": "中森 俊介",
+      "no": 56,
+      "pos": "P",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "千葉ロッテマリーンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idp1_m.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 42,
+        "era": 2.4,
+        "h": 32,
+        "hr": 4,
+        "bb": 11,
+        "k": 38,
+        "er": 11,
+        "saves": 1,
+        "holds": 19,
+        "gs": 0,
+        "ip": 41.333333333333336,
+        "ipText": "41 1/3",
+        "whip": 1.04
+      },
+      "gsSource": "https://baseball.yahoo.co.jp/npb/player/2000088/",
+      "velocity": 149.4,
+      "velocityKind": "average",
+      "velocityMax": 155,
+      "velocitySource": "https://baseball.yahoo.co.jp/npb/player/2000088/",
+      "velocitySeason": 2026,
+      "velocityEstimated": false,
+      "pitchingSource": "https://baseball.yahoo.co.jp/npb/player/2000088/",
+      "pitchingSeason": 2026,
+      "pitchTracking": [
+        {
+          "label": "ストレート",
+          "id": "fast",
+          "average": 149.4,
+          "max": 155
+        },
+        {
+          "label": "フォーク",
+          "id": "fork",
+          "average": 136.1
+        },
+        {
+          "label": "カットボール",
+          "id": "cutter",
+          "average": 138.7
+        },
+        {
+          "label": "カーブ",
+          "id": "curve",
+          "average": 117.0
+        },
+        {
+          "label": "チェンジアップ",
+          "id": "change",
+          "average": 131.0
+        }
+      ],
+      "pitches": [
+        "fast",
+        "fork",
+        "cutter",
+        "curve",
+        "change"
+      ],
+      "pitchLabels": {
+        "fast": "ストレート",
+        "fork": "フォーク",
+        "cutter": "カットボール",
+        "curve": "カーブ",
+        "change": "チェンジアップ"
+      },
+      "pitchSpeeds": {
+        "fast": 149.4,
+        "fork": 136.1,
+        "cutter": 138.7,
+        "curve": 117.0,
+        "change": 131.0
+      },
+      "velocityEvidence": {
+        "source": "https://baseball.yahoo.co.jp/npb/player/2000088/",
+        "publisher": "スポーツナビ（データスタジアム提供データ）",
+        "season": 2026,
+        "kind": "average",
+        "fastAvg": 149.4,
+        "fastMax": 155,
+        "fastSamples": null,
+        "retrieved": "2026-11-06",
+        "note": "2026投球データ表のストレート平均・最高。投球数は表に表示されておらずnull。各球種の速度も同じ表の平均。"
+      },
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。投球回の小数部1・2はアウト数として換算。",
+        "WHIPはNPB公式の被安打・四球・投球回から計算。先発数は登板・投球回がNPB公式に一致するスポーツナビ2026シーズン成績表。"
+      ]
+    },
+    {
+      "name": "松尾 汐恩",
+      "nativeName": "松尾 汐恩",
+      "no": 5,
+      "pos": "C",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "横浜DeNAベイスターズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_db.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 89,
+        "pa": 300,
+        "ab": 274,
+        "h": 68,
+        "doubles": 14,
+        "triples": 1,
+        "hr": 4,
+        "tb": 96,
+        "rbi": 19,
+        "sb": 1,
+        "cs": 1,
+        "bb": 20,
+        "hbp": 2,
+        "k": 34,
+        "avg": 0.248,
+        "slg": 0.35,
+        "obp": 0.303,
+        "so": 34,
+        "ops": 0.653
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "C",
+          "games": 80,
+          "putouts": 586,
+          "assists": 55,
+          "errors": 2,
+          "pct": 0.997
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_db.html",
+      "positions": [
+        "C"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "小島 大河",
+      "nativeName": "小島 大河",
+      "no": 7,
+      "pos": "C",
+      "hand": "L",
+      "throwHand": "R",
+      "club": "埼玉西武ライオンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_l.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 99,
+        "pa": 367,
+        "ab": 341,
+        "h": 91,
+        "doubles": 10,
+        "triples": 0,
+        "hr": 9,
+        "tb": 128,
+        "rbi": 40,
+        "sb": 0,
+        "cs": 0,
+        "bb": 22,
+        "hbp": 1,
+        "k": 36,
+        "avg": 0.267,
+        "slg": 0.375,
+        "obp": 0.311,
+        "so": 36,
+        "ops": 0.686
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "C",
+          "games": 85,
+          "putouts": 574,
+          "assists": 67,
+          "errors": 1,
+          "pct": 0.998
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_l.html",
+      "positions": [
+        "C"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "進藤 勇也",
+      "nativeName": "進藤 勇也",
+      "no": 33,
+      "pos": "C",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "北海道日本ハムファイターズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_f.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 66,
+        "pa": 160,
+        "ab": 142,
+        "h": 30,
+        "doubles": 6,
+        "triples": 2,
+        "hr": 8,
+        "tb": 64,
+        "rbi": 18,
+        "sb": 0,
+        "cs": 1,
+        "bb": 11,
+        "hbp": 1,
+        "k": 44,
+        "avg": 0.211,
+        "slg": 0.451,
+        "obp": 0.273,
+        "so": 44,
+        "ops": 0.724
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "C",
+          "games": 64,
+          "putouts": 379,
+          "assists": 32,
+          "errors": 0,
+          "pct": 1.0
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_f.html",
+      "positions": [
+        "C"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "宗山 塁",
+      "nativeName": "宗山 塁",
+      "no": 1,
+      "pos": "SS",
+      "hand": "L",
+      "throwHand": "R",
+      "club": "東北楽天ゴールデンイーグルス",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_e.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 68,
+        "pa": 272,
+        "ab": 245,
+        "h": 68,
+        "doubles": 17,
+        "triples": 1,
+        "hr": 8,
+        "tb": 111,
+        "rbi": 27,
+        "sb": 5,
+        "cs": 5,
+        "bb": 23,
+        "hbp": 2,
+        "k": 30,
+        "avg": 0.278,
+        "slg": 0.453,
+        "obp": 0.342,
+        "so": 30,
+        "ops": 0.795
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "SS",
+          "games": 68,
+          "putouts": 100,
+          "assists": 168,
+          "errors": 4,
+          "pct": 0.985
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_e.html",
+      "positions": [
+        "SS"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "渡部 聖弥",
+      "nativeName": "渡部 聖弥",
+      "no": 8,
+      "pos": "3B",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "埼玉西武ライオンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_l.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 129,
+        "pa": 515,
+        "ab": 482,
+        "h": 123,
+        "doubles": 22,
+        "triples": 1,
+        "hr": 12,
+        "tb": 183,
+        "rbi": 48,
+        "sb": 3,
+        "cs": 0,
+        "bb": 23,
+        "hbp": 6,
+        "k": 92,
+        "avg": 0.255,
+        "slg": 0.38,
+        "obp": 0.296,
+        "so": 92,
+        "ops": 0.676
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "3B",
+          "games": 105,
+          "putouts": 63,
+          "assists": 167,
+          "errors": 11,
+          "pct": 0.954
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_l.html",
+      "positions": [
+        "3B"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "佐々木 泰",
+      "nativeName": "佐々木 泰",
+      "no": 10,
+      "pos": "3B",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "広島東洋カープ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_c.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 121,
+        "pa": 421,
+        "ab": 389,
+        "h": 99,
+        "doubles": 12,
+        "triples": 1,
+        "hr": 6,
+        "tb": 131,
+        "rbi": 26,
+        "sb": 3,
+        "cs": 3,
+        "bb": 27,
+        "hbp": 3,
+        "k": 55,
+        "avg": 0.254,
+        "slg": 0.337,
+        "obp": 0.307,
+        "so": 55,
+        "ops": 0.644
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "1B",
+          "games": 12,
+          "putouts": 52,
+          "assists": 0,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "3B",
+          "games": 69,
+          "putouts": 33,
+          "assists": 120,
+          "errors": 4,
+          "pct": 0.975
+        },
+        {
+          "pos": "OF",
+          "games": 43,
+          "putouts": 77,
+          "assists": 2,
+          "errors": 1,
+          "pct": 0.988
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_c.html",
+      "positions": [
+        "1B",
+        "3B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "庄子 雄大",
+      "nativeName": "庄子 雄大",
+      "no": 25,
+      "pos": "SS",
+      "hand": "L",
+      "throwHand": "R",
+      "club": "福岡ソフトバンクホークス",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_h.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 108,
+        "pa": 304,
+        "ab": 266,
+        "h": 65,
+        "doubles": 5,
+        "triples": 3,
+        "hr": 1,
+        "tb": 79,
+        "rbi": 26,
+        "sb": 22,
+        "cs": 4,
+        "bb": 24,
+        "hbp": 1,
+        "k": 76,
+        "avg": 0.244,
+        "slg": 0.297,
+        "obp": 0.307,
+        "so": 76,
+        "ops": 0.604
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "2B",
+          "games": 20,
+          "putouts": 36,
+          "assists": 49,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "3B",
+          "games": 1,
+          "putouts": 0,
+          "assists": 0,
+          "errors": 0,
+          "pct": 0.0
+        },
+        {
+          "pos": "SS",
+          "games": 81,
+          "putouts": 94,
+          "assists": 171,
+          "errors": 5,
+          "pct": 0.981
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_h.html",
+      "positions": [
+        "2B",
+        "3B",
+        "SS"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "正木 智也",
+      "nativeName": "正木 智也",
+      "no": 31,
+      "pos": "1B",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "福岡ソフトバンクホークス",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_h.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 101,
+        "pa": 478,
+        "ab": 409,
+        "h": 112,
+        "doubles": 13,
+        "triples": 1,
+        "hr": 28,
+        "tb": 211,
+        "rbi": 59,
+        "sb": 0,
+        "cs": 0,
+        "bb": 60,
+        "hbp": 6,
+        "k": 89,
+        "avg": 0.274,
+        "slg": 0.516,
+        "obp": 0.372,
+        "so": 89,
+        "ops": 0.888
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "1B",
+          "games": 68,
+          "putouts": 416,
+          "assists": 29,
+          "errors": 2,
+          "pct": 0.996
+        },
+        {
+          "pos": "OF",
+          "games": 53,
+          "putouts": 84,
+          "assists": 0,
+          "errors": 1,
+          "pct": 0.988
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_h.html",
+      "positions": [
+        "1B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "山口 航輝",
+      "nativeName": "山口 航輝",
+      "no": 51,
+      "pos": "RF",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "千葉ロッテマリーンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_m.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 113,
+        "pa": 447,
+        "ab": 412,
+        "h": 114,
+        "doubles": 18,
+        "triples": 1,
+        "hr": 38,
+        "tb": 248,
+        "rbi": 81,
+        "sb": 0,
+        "cs": 1,
+        "bb": 27,
+        "hbp": 6,
+        "k": 107,
+        "avg": 0.277,
+        "slg": 0.602,
+        "obp": 0.329,
+        "so": 107,
+        "ops": 0.931
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "1B",
+          "games": 11,
+          "putouts": 51,
+          "assists": 5,
+          "errors": 2,
+          "pct": 0.966
+        },
+        {
+          "pos": "OF",
+          "games": 54,
+          "putouts": 89,
+          "assists": 0,
+          "errors": 0,
+          "pct": 1.0
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_m.html",
+      "positions": [
+        "1B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "山縣 秀",
+      "nativeName": "山縣 秀",
+      "no": 54,
+      "pos": "2B",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "北海道日本ハムファイターズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_f.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 61,
+        "pa": 107,
+        "ab": 97,
+        "h": 22,
+        "doubles": 4,
+        "triples": 0,
+        "hr": 0,
+        "tb": 26,
+        "rbi": 5,
+        "sb": 2,
+        "cs": 0,
+        "bb": 5,
+        "hbp": 0,
+        "k": 16,
+        "avg": 0.227,
+        "slg": 0.268,
+        "obp": 0.265,
+        "so": 16,
+        "ops": 0.533
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "2B",
+          "games": 27,
+          "putouts": 28,
+          "assists": 49,
+          "errors": 2,
+          "pct": 0.975
+        },
+        {
+          "pos": "3B",
+          "games": 25,
+          "putouts": 10,
+          "assists": 13,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "SS",
+          "games": 18,
+          "putouts": 14,
+          "assists": 25,
+          "errors": 0,
+          "pct": 1.0
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_f.html",
+      "positions": [
+        "2B",
+        "3B",
+        "SS"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ]
+    },
+    {
+      "name": "度会 隆輝",
+      "nativeName": "度会 隆輝",
+      "no": 4,
+      "pos": "RF",
+      "hand": "L",
+      "throwHand": "R",
+      "club": "横浜DeNAベイスターズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_db.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 134,
+        "pa": 516,
+        "ab": 471,
+        "h": 129,
+        "doubles": 21,
+        "triples": 1,
+        "hr": 9,
+        "tb": 179,
+        "rbi": 51,
+        "sb": 6,
+        "cs": 6,
+        "bb": 34,
+        "hbp": 9,
+        "k": 73,
+        "avg": 0.274,
+        "slg": 0.38,
+        "obp": 0.334,
+        "so": 73,
+        "ops": 0.714
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "3B",
+          "games": 11,
+          "putouts": 6,
+          "assists": 13,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "OF",
+          "games": 114,
+          "putouts": 183,
+          "assists": 5,
+          "errors": 0,
+          "pct": 1.0
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_db.html",
+      "positions": [
+        "3B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "西川 史礁",
+      "nativeName": "西川 史礁",
+      "no": 6,
+      "pos": "LF",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "千葉ロッテマリーンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_m.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 136,
+        "pa": 586,
+        "ab": 534,
+        "h": 155,
+        "doubles": 28,
+        "triples": 1,
+        "hr": 8,
+        "tb": 209,
+        "rbi": 53,
+        "sb": 2,
+        "cs": 2,
+        "bb": 41,
+        "hbp": 11,
+        "k": 109,
+        "avg": 0.29,
+        "slg": 0.391,
+        "obp": 0.353,
+        "so": 109,
+        "ops": 0.744
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "OF",
+          "games": 134,
+          "putouts": 297,
+          "assists": 1,
+          "errors": 4,
+          "pct": 0.987
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_m.html",
+      "positions": [
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "佐々木 俊輔",
+      "nativeName": "佐々木 俊輔",
+      "no": 44,
+      "pos": "CF",
+      "hand": "L",
+      "throwHand": "R",
+      "club": "読売ジャイアンツ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_g.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 123,
+        "pa": 385,
+        "ab": 348,
+        "h": 88,
+        "doubles": 21,
+        "triples": 0,
+        "hr": 10,
+        "tb": 139,
+        "rbi": 39,
+        "sb": 9,
+        "cs": 8,
+        "bb": 29,
+        "hbp": 4,
+        "k": 85,
+        "avg": 0.253,
+        "slg": 0.399,
+        "obp": 0.318,
+        "so": 85,
+        "ops": 0.717
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "OF",
+          "games": 114,
+          "putouts": 169,
+          "assists": 4,
+          "errors": 1,
+          "pct": 0.994
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_g.html",
+      "positions": [
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "長谷川 信哉",
+      "nativeName": "長谷川 信哉",
+      "no": 63,
+      "pos": "CF",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "埼玉西武ライオンズ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_l.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 86,
+        "pa": 307,
+        "ab": 274,
+        "h": 73,
+        "doubles": 18,
+        "triples": 0,
+        "hr": 13,
+        "tb": 130,
+        "rbi": 39,
+        "sb": 7,
+        "cs": 1,
+        "bb": 18,
+        "hbp": 7,
+        "k": 63,
+        "avg": 0.266,
+        "slg": 0.474,
+        "obp": 0.327,
+        "so": 63,
+        "ops": 0.801
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "1B",
+          "games": 30,
+          "putouts": 196,
+          "assists": 14,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "OF",
+          "games": 66,
+          "putouts": 101,
+          "assists": 2,
+          "errors": 1,
+          "pct": 0.99
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_l.html",
+      "positions": [
+        "1B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    },
+    {
+      "name": "辰見 鴻之介",
+      "nativeName": "辰見 鴻之介",
+      "no": 69,
+      "pos": "CF",
+      "hand": "R",
+      "throwHand": "R",
+      "club": "広島東洋カープ",
+      "season": 2026,
+      "statsLevel": "NPB一軍",
+      "statsAsOf": "2026シーズン終了",
+      "statsUrl": "https://npb.jp/bis/2026/stats/idb1_c.html",
+      "identityUrl": "https://www.japan-baseball.jp/jp/games/apbc2026/player_jpn.html",
+      "stats": {
+        "games": 71,
+        "pa": 25,
+        "ab": 22,
+        "h": 3,
+        "doubles": 1,
+        "triples": 0,
+        "hr": 0,
+        "tb": 4,
+        "rbi": 2,
+        "sb": 28,
+        "cs": 7,
+        "bb": 1,
+        "hbp": 0,
+        "k": 9,
+        "avg": 0.136,
+        "slg": 0.182,
+        "obp": 0.174,
+        "so": 9,
+        "ops": 0.356
+      },
+      "fieldingAppearances": [
+        {
+          "pos": "1B",
+          "games": 1,
+          "putouts": 1,
+          "assists": 0,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "2B",
+          "games": 1,
+          "putouts": 0,
+          "assists": 1,
+          "errors": 0,
+          "pct": 1.0
+        },
+        {
+          "pos": "3B",
+          "games": 4,
+          "putouts": 0,
+          "assists": 0,
+          "errors": 0,
+          "pct": 0.0
+        },
+        {
+          "pos": "OF",
+          "games": 17,
+          "putouts": 11,
+          "assists": 1,
+          "errors": 1,
+          "pct": 0.923
+        }
+      ],
+      "fieldingSource": "https://npb.jp/bis/2026/stats/idf1_c.html",
+      "positions": [
+        "1B",
+        "2B",
+        "3B",
+        "LF",
+        "CF",
+        "RF"
+      ],
+      "statsNotes": [
+        "NPB公式の球団別2026一軍シーズン最終成績。OPSは出塁率+長打率で計算。"
+      ],
+      "positionNote": "NPB公式の外野守備出場はOF一括集計。ゲーム用の左右中割当は推定。"
+    }
+  ]
+}

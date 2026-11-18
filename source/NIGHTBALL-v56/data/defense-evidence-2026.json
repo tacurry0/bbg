@@ -1,0 +1,96 @@
+{
+  "source": "https://www.ltsports.com.tw/article/187117",
+  "awards": {
+    "宋嘉翔": {
+      "winner": true,
+      "points": 180,
+      "caughtStealingRate": 0.526,
+      "source": "https://www.cna.com.tw/news/aspt/202610220294.aspx"
+    },
+    "高宇杰": {
+      "points": 91
+    },
+    "蔣少宏": {
+      "points": 40
+    },
+    "戴培峰": {
+      "points": 24
+    },
+    "陳重羽": {
+      "points": 7
+    },
+    "范國宸": {
+      "winner": true,
+      "points": 199
+    },
+    "朱育賢": {
+      "points": 93
+    },
+    "林子豪": {
+      "points": 32
+    },
+    "李凱威": {
+      "winner": true,
+      "points": 185
+    },
+    "岳東華": {
+      "points": 119
+    },
+    "林澤彬": {
+      "points": 35
+    },
+    "林子偉": {
+      "points": 6
+    },
+    "劉基鴻": {
+      "winner": true,
+      "points": 160
+    },
+    "吳念庭": {
+      "points": 57
+    },
+    "潘傑楷": {
+      "points": 43
+    },
+    "王念好": {
+      "points": 5
+    },
+    "江坤宇": {
+      "winner": true,
+      "points": 192
+    },
+    "陳聖平": {
+      "points": 42
+    },
+    "馬傑森": {
+      "points": 4
+    },
+    "曾子祐": {
+      "points": 4
+    },
+    "郭天信": {
+      "winner": true,
+      "points": 175,
+      "assists": 13
+    },
+    "陳文杰": {
+      "winner": true,
+      "points": 101,
+      "assists": 4
+    },
+    "宋晟睿": {
+      "winner": true,
+      "points": 58,
+      "assists": 5
+    },
+    "陳傑憲": {
+      "points": 4
+    },
+    "王柏融": {
+      "points": 3
+    },
+    "陳晨威": {
+      "points": 3
+    }
+  }
+}

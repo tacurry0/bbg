@@ -1,0 +1,5573 @@
+{
+  "schema": 1,
+  "retrieved": "2026-11-06",
+  "season": 2026,
+  "scope": "日本15野手・韓国14野手の2026左右別実成績。台湾の未取得左右成績はnull。既存の公式守備位置・日本の実球種証拠も併記。",
+  "notes": [
+    "打撃実数は公開統計表から抽出。NPBは既存NPB公式シーズンAB/H/HR/K/BBと合計を照合。",
+    "日本の左右表にPA・二塁打・三塁打がなく、PA・SLGはnull（推定で埋めない）。",
+    "KBOの左右表はU区分を別保存。ゲームR用は公式RとUの合計とし、総数が公式シーズン成績に一致することを照合。",
+    "韓国の犠打・犠飛は左右表に掲載がないためPA・OBPは算出しない。",
+    "未取得とゼロ成績を区別する。実測データがない選手に左右の実績差や球種を捏造しない。"
+  ],
+  "players": {
+    "松尾 汐恩": {
+      "name": "松尾 汐恩",
+      "nativeName": "松尾 汐恩",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.212,
+            "ab": 156,
+            "h": 33,
+            "hr": 1,
+            "rbi": 9,
+            "k": 26,
+            "bb": 9,
+            "hbp": 2,
+            "sh": 2,
+            "sf": 1,
+            "paFromListedFields": 170,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2100277/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.297,
+            "ab": 118,
+            "h": 35,
+            "hr": 3,
+            "rbi": 10,
+            "k": 8,
+            "bb": 11,
+            "hbp": 0,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 129,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2100277/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2100277/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "C",
+            "games": 80,
+            "putouts": 586,
+            "assists": 55,
+            "errors": 2,
+            "pct": 0.997
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_db.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "小島 大河": {
+      "name": "小島 大河",
+      "nativeName": "小島 大河",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.283,
+            "ab": 265,
+            "h": 75,
+            "hr": 7,
+            "rbi": 34,
+            "k": 27,
+            "bb": 14,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 1,
+            "paFromListedFields": 281,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2050145/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.211,
+            "ab": 76,
+            "h": 16,
+            "hr": 2,
+            "rbi": 6,
+            "k": 9,
+            "bb": 8,
+            "hbp": 0,
+            "sh": 1,
+            "sf": 1,
+            "paFromListedFields": 86,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2050145/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2050145/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "C",
+            "games": 85,
+            "putouts": 574,
+            "assists": 67,
+            "errors": 1,
+            "pct": 0.998
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_l.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "進藤 勇也": {
+      "name": "進藤 勇也",
+      "nativeName": "進藤 勇也",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.214,
+            "ab": 98,
+            "h": 21,
+            "hr": 5,
+            "rbi": 13,
+            "k": 30,
+            "bb": 7,
+            "hbp": 1,
+            "sh": 4,
+            "sf": 0,
+            "paFromListedFields": 110,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950486/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.205,
+            "ab": 44,
+            "h": 9,
+            "hr": 3,
+            "rbi": 5,
+            "k": 14,
+            "bb": 4,
+            "hbp": 0,
+            "sh": 2,
+            "sf": 0,
+            "paFromListedFields": 50,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950486/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950486/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "C",
+            "games": 64,
+            "putouts": 379,
+            "assists": 32,
+            "errors": 0,
+            "pct": 1.0
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_f.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "宗山 塁": {
+      "name": "宗山 塁",
+      "nativeName": "宗山 塁",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.278,
+            "ab": 169,
+            "h": 47,
+            "hr": 8,
+            "rbi": 26,
+            "k": 22,
+            "bb": 17,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 1,
+            "paFromListedFields": 188,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1851157/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.276,
+            "ab": 76,
+            "h": 21,
+            "hr": 0,
+            "rbi": 1,
+            "k": 8,
+            "bb": 6,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 1,
+            "paFromListedFields": 84,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1851157/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1851157/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "SS",
+            "games": 68,
+            "putouts": 100,
+            "assists": 168,
+            "errors": 4,
+            "pct": 0.985
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_e.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "渡部 聖弥": {
+      "name": "渡部 聖弥",
+      "nativeName": "渡部 聖弥",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.247,
+            "ab": 344,
+            "h": 85,
+            "hr": 5,
+            "rbi": 30,
+            "k": 68,
+            "bb": 17,
+            "hbp": 5,
+            "sh": 1,
+            "sf": 3,
+            "paFromListedFields": 370,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950417/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.275,
+            "ab": 138,
+            "h": 38,
+            "hr": 7,
+            "rbi": 18,
+            "k": 24,
+            "bb": 6,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 145,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950417/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950417/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "3B",
+            "games": 105,
+            "putouts": 63,
+            "assists": 167,
+            "errors": 11,
+            "pct": 0.954
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_l.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "佐々木 泰": {
+      "name": "佐々木 泰",
+      "nativeName": "佐々木 泰",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.223,
+            "ab": 215,
+            "h": 48,
+            "hr": 2,
+            "rbi": 15,
+            "k": 32,
+            "bb": 15,
+            "hbp": 2,
+            "sh": 0,
+            "sf": 1,
+            "paFromListedFields": 233,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2050203/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.293,
+            "ab": 174,
+            "h": 51,
+            "hr": 4,
+            "rbi": 11,
+            "k": 23,
+            "bb": 12,
+            "hbp": 1,
+            "sh": 1,
+            "sf": 0,
+            "paFromListedFields": 188,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2050203/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2050203/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "1B",
+            "games": 12,
+            "putouts": 52,
+            "assists": 0,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "3B",
+            "games": 69,
+            "putouts": 33,
+            "assists": 120,
+            "errors": 4,
+            "pct": 0.975
+          },
+          {
+            "pos": "OF",
+            "games": 43,
+            "putouts": 77,
+            "assists": 2,
+            "errors": 1,
+            "pct": 0.988
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_c.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "庄子 雄大": {
+      "name": "庄子 雄大",
+      "nativeName": "庄子 雄大",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.243,
+            "ab": 169,
+            "h": 41,
+            "hr": 1,
+            "rbi": 19,
+            "k": 58,
+            "bb": 18,
+            "hbp": 1,
+            "sh": 4,
+            "sf": 1,
+            "paFromListedFields": 193,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950149/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.247,
+            "ab": 97,
+            "h": 24,
+            "hr": 0,
+            "rbi": 7,
+            "k": 18,
+            "bb": 6,
+            "hbp": 0,
+            "sh": 7,
+            "sf": 1,
+            "paFromListedFields": 111,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950149/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950149/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "2B",
+            "games": 20,
+            "putouts": 36,
+            "assists": 49,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "3B",
+            "games": 1,
+            "putouts": 0,
+            "assists": 0,
+            "errors": 0,
+            "pct": 0.0
+          },
+          {
+            "pos": "SS",
+            "games": 81,
+            "putouts": 94,
+            "assists": 171,
+            "errors": 5,
+            "pct": 0.981
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_h.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "正木 智也": {
+      "name": "正木 智也",
+      "nativeName": "正木 智也",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.275,
+            "ab": 251,
+            "h": 69,
+            "hr": 14,
+            "rbi": 32,
+            "k": 52,
+            "bb": 37,
+            "hbp": 5,
+            "sh": 0,
+            "sf": 3,
+            "paFromListedFields": 296,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2103735/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.272,
+            "ab": 158,
+            "h": 43,
+            "hr": 14,
+            "rbi": 27,
+            "k": 37,
+            "bb": 23,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 182,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2103735/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2103735/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "1B",
+            "games": 68,
+            "putouts": 416,
+            "assists": 29,
+            "errors": 2,
+            "pct": 0.996
+          },
+          {
+            "pos": "OF",
+            "games": 53,
+            "putouts": 84,
+            "assists": 0,
+            "errors": 1,
+            "pct": 0.988
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_h.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "山口 航輝": {
+      "name": "山口 航輝",
+      "nativeName": "山口 航輝",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.283,
+            "ab": 276,
+            "h": 78,
+            "hr": 26,
+            "rbi": 57,
+            "k": 78,
+            "bb": 21,
+            "hbp": 5,
+            "sh": 0,
+            "sf": 2,
+            "paFromListedFields": 304,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1800053/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.265,
+            "ab": 136,
+            "h": 36,
+            "hr": 12,
+            "rbi": 24,
+            "k": 29,
+            "bb": 6,
+            "hbp": 1,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 143,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1800053/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1800053/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "1B",
+            "games": 11,
+            "putouts": 51,
+            "assists": 5,
+            "errors": 2,
+            "pct": 0.966
+          },
+          {
+            "pos": "OF",
+            "games": 54,
+            "putouts": 89,
+            "assists": 0,
+            "errors": 0,
+            "pct": 1.0
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_m.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "山縣 秀": {
+      "name": "山縣 秀",
+      "nativeName": "山縣 秀",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.19,
+            "ab": 58,
+            "h": 11,
+            "hr": 0,
+            "rbi": 5,
+            "k": 12,
+            "bb": 2,
+            "hbp": 0,
+            "sh": 4,
+            "sf": 0,
+            "paFromListedFields": 64,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2114529/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.282,
+            "ab": 39,
+            "h": 11,
+            "hr": 0,
+            "rbi": 0,
+            "k": 4,
+            "bb": 3,
+            "hbp": 0,
+            "sh": 1,
+            "sf": 0,
+            "paFromListedFields": 43,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2114529/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2114529/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "2B",
+            "games": 27,
+            "putouts": 28,
+            "assists": 49,
+            "errors": 2,
+            "pct": 0.975
+          },
+          {
+            "pos": "3B",
+            "games": 25,
+            "putouts": 10,
+            "assists": 13,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "SS",
+            "games": 18,
+            "putouts": 14,
+            "assists": 25,
+            "errors": 0,
+            "pct": 1.0
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_f.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "度会 隆輝": {
+      "name": "度会 隆輝",
+      "nativeName": "度会 隆輝",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.268,
+            "ab": 299,
+            "h": 80,
+            "hr": 6,
+            "rbi": 24,
+            "k": 46,
+            "bb": 16,
+            "hbp": 7,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 322,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1850873/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.285,
+            "ab": 172,
+            "h": 49,
+            "hr": 3,
+            "rbi": 27,
+            "k": 27,
+            "bb": 18,
+            "hbp": 2,
+            "sh": 1,
+            "sf": 1,
+            "paFromListedFields": 194,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1850873/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1850873/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "3B",
+            "games": 11,
+            "putouts": 6,
+            "assists": 13,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "OF",
+            "games": 114,
+            "putouts": 183,
+            "assists": 5,
+            "errors": 0,
+            "pct": 1.0
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_db.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "西川 史礁": {
+      "name": "西川 史礁",
+      "nativeName": "西川 史礁",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.286,
+            "ab": 360,
+            "h": 103,
+            "hr": 6,
+            "rbi": 35,
+            "k": 79,
+            "bb": 26,
+            "hbp": 6,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 392,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950286/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.299,
+            "ab": 174,
+            "h": 52,
+            "hr": 2,
+            "rbi": 18,
+            "k": 30,
+            "bb": 15,
+            "hbp": 5,
+            "sh": 0,
+            "sf": 0,
+            "paFromListedFields": 194,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/1950286/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950286/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "OF",
+            "games": 134,
+            "putouts": 297,
+            "assists": 1,
+            "errors": 4,
+            "pct": 0.987
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_m.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "佐々木 俊輔": {
+      "name": "佐々木 俊輔",
+      "nativeName": "佐々木 俊輔",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.28,
+            "ab": 246,
+            "h": 69,
+            "hr": 8,
+            "rbi": 32,
+            "k": 55,
+            "bb": 14,
+            "hbp": 0,
+            "sh": 2,
+            "sf": 0,
+            "paFromListedFields": 262,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2106178/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.186,
+            "ab": 102,
+            "h": 19,
+            "hr": 2,
+            "rbi": 7,
+            "k": 30,
+            "bb": 15,
+            "hbp": 4,
+            "sh": 2,
+            "sf": 0,
+            "paFromListedFields": 123,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2106178/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2106178/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "OF",
+            "games": 114,
+            "putouts": 169,
+            "assists": 4,
+            "errors": 1,
+            "pct": 0.994
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_g.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "長谷川 信哉": {
+      "name": "長谷川 信哉",
+      "nativeName": "長谷川 信哉",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.265,
+            "ab": 185,
+            "h": 49,
+            "hr": 6,
+            "rbi": 23,
+            "k": 43,
+            "bb": 13,
+            "hbp": 7,
+            "sh": 6,
+            "sf": 0,
+            "paFromListedFields": 211,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2000075/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.27,
+            "ab": 89,
+            "h": 24,
+            "hr": 7,
+            "rbi": 16,
+            "k": 20,
+            "bb": 5,
+            "hbp": 0,
+            "sh": 1,
+            "sf": 1,
+            "paFromListedFields": 96,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2000075/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2000075/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "1B",
+            "games": 30,
+            "putouts": 196,
+            "assists": 14,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "OF",
+            "games": 66,
+            "putouts": 101,
+            "assists": 2,
+            "errors": 1,
+            "pct": 0.99
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_l.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "辰見 鴻之介": {
+      "name": "辰見 鴻之介",
+      "nativeName": "辰見 鴻之介",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "R": {
+            "avg": 0.125,
+            "ab": 8,
+            "h": 1,
+            "hr": 0,
+            "rbi": 2,
+            "k": 4,
+            "bb": 1,
+            "hbp": 0,
+            "sh": 1,
+            "sf": 0,
+            "paFromListedFields": 10,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2107887/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "L": {
+            "avg": 0.143,
+            "ab": 14,
+            "h": 2,
+            "hr": 0,
+            "rbi": 0,
+            "k": 5,
+            "bb": 0,
+            "hbp": 0,
+            "sh": 1,
+            "sf": 0,
+            "paFromListedFields": 15,
+            "pa": null,
+            "tb": null,
+            "slg": null,
+            "source": "https://baseball.yahoo.co.jp/npb/player/2107887/top",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://baseball.yahoo.co.jp/npb/player/2107887/top",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "basis": "2026一軍・対左右別成績表",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。"
+      },
+      "positionEvidence": {
+        "season": 2026,
+        "appearances": [
+          {
+            "pos": "1B",
+            "games": 1,
+            "putouts": 1,
+            "assists": 0,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "2B",
+            "games": 1,
+            "putouts": 0,
+            "assists": 1,
+            "errors": 0,
+            "pct": 1.0
+          },
+          {
+            "pos": "3B",
+            "games": 4,
+            "putouts": 0,
+            "assists": 0,
+            "errors": 0,
+            "pct": 0.0
+          },
+          {
+            "pos": "OF",
+            "games": 17,
+            "putouts": 11,
+            "assists": 1,
+            "errors": 1,
+            "pct": 0.923
+          }
+        ],
+        "source": "https://npb.jp/bis/2026/stats/idf1_c.html",
+        "estimated": false,
+        "note": "NPB公式守備成績。OF表記は左右中の内訳を示さず、OFをLF/CF/RFすべての実守備経験と解釈しない。"
+      }
+    },
+    "조형우": {
+      "name": "チョ・ヒョンウ",
+      "nativeName": "조형우",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.254,
+            "ab": 71,
+            "h": 18,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 12,
+            "bb": 3,
+            "hbp": 1,
+            "k": 18,
+            "gidp": 0,
+            "pa": null,
+            "tb": 23,
+            "slg": 0.324,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51865",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 268,
+            "h": 73,
+            "doubles": 17,
+            "triples": 0,
+            "hr": 8,
+            "rbi": 28,
+            "bb": 24,
+            "hbp": 2,
+            "k": 47,
+            "gidp": 5,
+            "avg": 0.272,
+            "pa": null,
+            "tb": 114,
+            "slg": 0.425,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51865",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51865",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.254,
+            "ab": 71,
+            "h": 18,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 12,
+            "bb": 3,
+            "hbp": 1,
+            "k": 18,
+            "gidp": 0
+          },
+          "R": {
+            "avg": 0.278,
+            "ab": 263,
+            "h": 73,
+            "doubles": 17,
+            "triples": 0,
+            "hr": 8,
+            "rbi": 28,
+            "bb": 24,
+            "hbp": 2,
+            "k": 47,
+            "gidp": 4
+          },
+          "U": {
+            "avg": 0.0,
+            "ab": 5,
+            "h": 0,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 0,
+            "bb": 0,
+            "hbp": 0,
+            "k": 0,
+            "gidp": 1
+          }
+        }
+      }
+    },
+    "허인서": {
+      "name": "ホ・インソ",
+      "nativeName": "허인서",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.299,
+            "ab": 77,
+            "h": 23,
+            "doubles": 4,
+            "triples": 0,
+            "hr": 5,
+            "rbi": 15,
+            "bb": 7,
+            "hbp": 1,
+            "k": 22,
+            "gidp": 3,
+            "pa": null,
+            "tb": 42,
+            "slg": 0.545,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52764",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 330,
+            "h": 92,
+            "doubles": 13,
+            "triples": 0,
+            "hr": 15,
+            "rbi": 64,
+            "bb": 29,
+            "hbp": 7,
+            "k": 107,
+            "gidp": 2,
+            "avg": 0.279,
+            "pa": null,
+            "tb": 150,
+            "slg": 0.455,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52764",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52764",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.299,
+            "ab": 77,
+            "h": 23,
+            "doubles": 4,
+            "triples": 0,
+            "hr": 5,
+            "rbi": 15,
+            "bb": 7,
+            "hbp": 1,
+            "k": 22,
+            "gidp": 3
+          },
+          "R": {
+            "avg": 0.274,
+            "ab": 299,
+            "h": 82,
+            "doubles": 13,
+            "triples": 0,
+            "hr": 13,
+            "rbi": 58,
+            "bb": 29,
+            "hbp": 6,
+            "k": 101,
+            "gidp": 2
+          },
+          "U": {
+            "avg": 0.323,
+            "ab": 31,
+            "h": 10,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 2,
+            "rbi": 6,
+            "bb": 0,
+            "hbp": 1,
+            "k": 6,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "문정빈": {
+      "name": "ムン・ジョンビン",
+      "nativeName": "문정빈",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.213,
+            "ab": 75,
+            "h": 16,
+            "doubles": 1,
+            "triples": 1,
+            "hr": 5,
+            "rbi": 14,
+            "bb": 12,
+            "hbp": 0,
+            "k": 24,
+            "gidp": 0,
+            "pa": null,
+            "tb": 34,
+            "slg": 0.453,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52121",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 217,
+            "h": 65,
+            "doubles": 11,
+            "triples": 3,
+            "hr": 14,
+            "rbi": 52,
+            "bb": 19,
+            "hbp": 4,
+            "k": 74,
+            "gidp": 3,
+            "avg": 0.3,
+            "pa": null,
+            "tb": 124,
+            "slg": 0.571,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52121",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52121",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.213,
+            "ab": 75,
+            "h": 16,
+            "doubles": 1,
+            "triples": 1,
+            "hr": 5,
+            "rbi": 14,
+            "bb": 12,
+            "hbp": 0,
+            "k": 24,
+            "gidp": 0
+          },
+          "R": {
+            "avg": 0.307,
+            "ab": 202,
+            "h": 62,
+            "doubles": 10,
+            "triples": 3,
+            "hr": 12,
+            "rbi": 49,
+            "bb": 19,
+            "hbp": 4,
+            "k": 69,
+            "gidp": 3
+          },
+          "U": {
+            "avg": 0.2,
+            "ab": 15,
+            "h": 3,
+            "doubles": 1,
+            "triples": 0,
+            "hr": 2,
+            "rbi": 3,
+            "bb": 0,
+            "hbp": 0,
+            "k": 5,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "이재현": {
+      "name": "イ・ジェヒョン",
+      "nativeName": "이재현",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.242,
+            "ab": 66,
+            "h": 16,
+            "doubles": 1,
+            "triples": 0,
+            "hr": 6,
+            "rbi": 13,
+            "bb": 7,
+            "hbp": 1,
+            "k": 12,
+            "gidp": 0,
+            "pa": null,
+            "tb": 35,
+            "slg": 0.53,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52415",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 182,
+            "h": 39,
+            "doubles": 6,
+            "triples": 0,
+            "hr": 11,
+            "rbi": 32,
+            "bb": 26,
+            "hbp": 11,
+            "k": 33,
+            "gidp": 2,
+            "avg": 0.214,
+            "pa": null,
+            "tb": 78,
+            "slg": 0.429,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52415",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52415",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.242,
+            "ab": 66,
+            "h": 16,
+            "doubles": 1,
+            "triples": 0,
+            "hr": 6,
+            "rbi": 13,
+            "bb": 7,
+            "hbp": 1,
+            "k": 12,
+            "gidp": 0
+          },
+          "R": {
+            "avg": 0.223,
+            "ab": 175,
+            "h": 39,
+            "doubles": 6,
+            "triples": 0,
+            "hr": 11,
+            "rbi": 30,
+            "bb": 25,
+            "hbp": 10,
+            "k": 31,
+            "gidp": 2
+          },
+          "U": {
+            "avg": 0.0,
+            "ab": 7,
+            "h": 0,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 2,
+            "bb": 1,
+            "hbp": 1,
+            "k": 2,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "김휘집": {
+      "name": "キム・フィジプ",
+      "nativeName": "김휘집",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.333,
+            "ab": 66,
+            "h": 22,
+            "doubles": 4,
+            "triples": 0,
+            "hr": 5,
+            "rbi": 23,
+            "bb": 9,
+            "hbp": 3,
+            "k": 15,
+            "gidp": 1,
+            "pa": null,
+            "tb": 41,
+            "slg": 0.621,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51344",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 235,
+            "h": 62,
+            "doubles": 14,
+            "triples": 1,
+            "hr": 9,
+            "rbi": 41,
+            "bb": 24,
+            "hbp": 9,
+            "k": 52,
+            "gidp": 5,
+            "avg": 0.264,
+            "pa": null,
+            "tb": 105,
+            "slg": 0.447,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51344",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51344",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.333,
+            "ab": 66,
+            "h": 22,
+            "doubles": 4,
+            "triples": 0,
+            "hr": 5,
+            "rbi": 23,
+            "bb": 9,
+            "hbp": 3,
+            "k": 15,
+            "gidp": 1
+          },
+          "R": {
+            "avg": 0.269,
+            "ab": 216,
+            "h": 58,
+            "doubles": 12,
+            "triples": 1,
+            "hr": 9,
+            "rbi": 39,
+            "bb": 22,
+            "hbp": 8,
+            "k": 50,
+            "gidp": 5
+          },
+          "U": {
+            "avg": 0.211,
+            "ab": 19,
+            "h": 4,
+            "doubles": 2,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 2,
+            "bb": 2,
+            "hbp": 1,
+            "k": 2,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "김주원": {
+      "name": "キム・ジュウォン",
+      "nativeName": "김주원",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.234,
+            "ab": 137,
+            "h": 32,
+            "doubles": 6,
+            "triples": 0,
+            "hr": 3,
+            "rbi": 12,
+            "bb": 18,
+            "hbp": 4,
+            "k": 20,
+            "gidp": 2,
+            "pa": null,
+            "tb": 47,
+            "slg": 0.343,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51907",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 380,
+            "h": 113,
+            "doubles": 16,
+            "triples": 0,
+            "hr": 15,
+            "rbi": 49,
+            "bb": 32,
+            "hbp": 13,
+            "k": 59,
+            "gidp": 4,
+            "avg": 0.297,
+            "pa": null,
+            "tb": 174,
+            "slg": 0.458,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51907",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51907",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.234,
+            "ab": 137,
+            "h": 32,
+            "doubles": 6,
+            "triples": 0,
+            "hr": 3,
+            "rbi": 12,
+            "bb": 18,
+            "hbp": 4,
+            "k": 20,
+            "gidp": 2
+          },
+          "R": {
+            "avg": 0.296,
+            "ab": 361,
+            "h": 107,
+            "doubles": 16,
+            "triples": 0,
+            "hr": 14,
+            "rbi": 44,
+            "bb": 32,
+            "hbp": 13,
+            "k": 56,
+            "gidp": 4
+          },
+          "U": {
+            "avg": 0.316,
+            "ab": 19,
+            "h": 6,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 1,
+            "rbi": 5,
+            "bb": 0,
+            "hbp": 0,
+            "k": 3,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "한동희": {
+      "name": "ハン・ドンヒ",
+      "nativeName": "한동희",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.333,
+            "ab": 90,
+            "h": 30,
+            "doubles": 4,
+            "triples": 1,
+            "hr": 7,
+            "rbi": 18,
+            "bb": 9,
+            "hbp": 0,
+            "k": 14,
+            "gidp": 3,
+            "pa": null,
+            "tb": 57,
+            "slg": 0.633,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=68525",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 322,
+            "h": 96,
+            "doubles": 17,
+            "triples": 0,
+            "hr": 18,
+            "rbi": 63,
+            "bb": 28,
+            "hbp": 8,
+            "k": 68,
+            "gidp": 18,
+            "avg": 0.298,
+            "pa": null,
+            "tb": 167,
+            "slg": 0.519,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=68525",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=68525",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.333,
+            "ab": 90,
+            "h": 30,
+            "doubles": 4,
+            "triples": 1,
+            "hr": 7,
+            "rbi": 18,
+            "bb": 9,
+            "hbp": 0,
+            "k": 14,
+            "gidp": 3
+          },
+          "R": {
+            "avg": 0.297,
+            "ab": 300,
+            "h": 89,
+            "doubles": 16,
+            "triples": 0,
+            "hr": 17,
+            "rbi": 60,
+            "bb": 27,
+            "hbp": 8,
+            "k": 62,
+            "gidp": 18
+          },
+          "U": {
+            "avg": 0.318,
+            "ab": 22,
+            "h": 7,
+            "doubles": 1,
+            "triples": 0,
+            "hr": 1,
+            "rbi": 3,
+            "bb": 1,
+            "hbp": 0,
+            "k": 6,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "김도영": {
+      "name": "キム・ドヨン",
+      "nativeName": "김도영",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.297,
+            "ab": 145,
+            "h": 43,
+            "doubles": 9,
+            "triples": 0,
+            "hr": 14,
+            "rbi": 30,
+            "bb": 30,
+            "hbp": 2,
+            "k": 34,
+            "gidp": 3,
+            "pa": null,
+            "tb": 94,
+            "slg": 0.648,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52605",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 351,
+            "h": 110,
+            "doubles": 20,
+            "triples": 2,
+            "hr": 31,
+            "rbi": 88,
+            "bb": 55,
+            "hbp": 5,
+            "k": 69,
+            "gidp": 5,
+            "avg": 0.313,
+            "pa": null,
+            "tb": 227,
+            "slg": 0.647,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52605",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52605",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.297,
+            "ab": 145,
+            "h": 43,
+            "doubles": 9,
+            "triples": 0,
+            "hr": 14,
+            "rbi": 30,
+            "bb": 30,
+            "hbp": 2,
+            "k": 34,
+            "gidp": 3
+          },
+          "R": {
+            "avg": 0.315,
+            "ab": 336,
+            "h": 106,
+            "doubles": 20,
+            "triples": 2,
+            "hr": 31,
+            "rbi": 84,
+            "bb": 54,
+            "hbp": 5,
+            "k": 65,
+            "gidp": 5
+          },
+          "U": {
+            "avg": 0.267,
+            "ab": 15,
+            "h": 4,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 4,
+            "bb": 1,
+            "hbp": 0,
+            "k": 4,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "안재석": {
+      "name": "アン・ジェソク",
+      "nativeName": "안재석",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.204,
+            "ab": 93,
+            "h": 19,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 2,
+            "rbi": 10,
+            "bb": 2,
+            "hbp": 3,
+            "k": 20,
+            "gidp": 2,
+            "pa": null,
+            "tb": 30,
+            "slg": 0.323,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51203",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 320,
+            "h": 96,
+            "doubles": 24,
+            "triples": 2,
+            "hr": 9,
+            "rbi": 57,
+            "bb": 24,
+            "hbp": 1,
+            "k": 50,
+            "gidp": 4,
+            "avg": 0.3,
+            "pa": null,
+            "tb": 151,
+            "slg": 0.472,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51203",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=51203",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.204,
+            "ab": 93,
+            "h": 19,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 2,
+            "rbi": 10,
+            "bb": 2,
+            "hbp": 3,
+            "k": 20,
+            "gidp": 2
+          },
+          "R": {
+            "avg": 0.311,
+            "ab": 296,
+            "h": 92,
+            "doubles": 24,
+            "triples": 2,
+            "hr": 9,
+            "rbi": 55,
+            "bb": 24,
+            "hbp": 1,
+            "k": 46,
+            "gidp": 4
+          },
+          "U": {
+            "avg": 0.167,
+            "ab": 24,
+            "h": 4,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 2,
+            "bb": 0,
+            "hbp": 0,
+            "k": 4,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "문현빈": {
+      "name": "ムン・ヒョンビン",
+      "nativeName": "문현빈",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.313,
+            "ab": 134,
+            "h": 42,
+            "doubles": 8,
+            "triples": 1,
+            "hr": 2,
+            "rbi": 18,
+            "bb": 10,
+            "hbp": 3,
+            "k": 26,
+            "gidp": 4,
+            "pa": null,
+            "tb": 58,
+            "slg": 0.433,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53764",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 382,
+            "h": 111,
+            "doubles": 22,
+            "triples": 3,
+            "hr": 13,
+            "rbi": 58,
+            "bb": 50,
+            "hbp": 4,
+            "k": 49,
+            "gidp": 16,
+            "avg": 0.291,
+            "pa": null,
+            "tb": 178,
+            "slg": 0.466,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53764",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53764",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.313,
+            "ab": 134,
+            "h": 42,
+            "doubles": 8,
+            "triples": 1,
+            "hr": 2,
+            "rbi": 18,
+            "bb": 10,
+            "hbp": 3,
+            "k": 26,
+            "gidp": 4
+          },
+          "R": {
+            "avg": 0.282,
+            "ab": 365,
+            "h": 103,
+            "doubles": 20,
+            "triples": 3,
+            "hr": 10,
+            "rbi": 50,
+            "bb": 48,
+            "hbp": 3,
+            "k": 48,
+            "gidp": 16
+          },
+          "U": {
+            "avg": 0.471,
+            "ab": 17,
+            "h": 8,
+            "doubles": 2,
+            "triples": 0,
+            "hr": 3,
+            "rbi": 8,
+            "bb": 2,
+            "hbp": 1,
+            "k": 1,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "김지찬": {
+      "name": "キム・ジチャン",
+      "nativeName": "김지찬",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.316,
+            "ab": 95,
+            "h": 30,
+            "doubles": 2,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 6,
+            "bb": 16,
+            "hbp": 1,
+            "k": 15,
+            "gidp": 1,
+            "pa": null,
+            "tb": 32,
+            "slg": 0.337,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=50458",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 353,
+            "h": 111,
+            "doubles": 8,
+            "triples": 5,
+            "hr": 0,
+            "rbi": 32,
+            "bb": 43,
+            "hbp": 4,
+            "k": 29,
+            "gidp": 2,
+            "avg": 0.314,
+            "pa": null,
+            "tb": 129,
+            "slg": 0.365,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=50458",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=50458",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.316,
+            "ab": 95,
+            "h": 30,
+            "doubles": 2,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 6,
+            "bb": 16,
+            "hbp": 1,
+            "k": 15,
+            "gidp": 1
+          },
+          "R": {
+            "avg": 0.311,
+            "ab": 338,
+            "h": 105,
+            "doubles": 8,
+            "triples": 5,
+            "hr": 0,
+            "rbi": 32,
+            "bb": 43,
+            "hbp": 4,
+            "k": 29,
+            "gidp": 2
+          },
+          "U": {
+            "avg": 0.4,
+            "ab": 15,
+            "h": 6,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 0,
+            "bb": 0,
+            "hbp": 0,
+            "k": 0,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "안현민": {
+      "name": "アン・ヒョンミン",
+      "nativeName": "안현민",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.344,
+            "ab": 93,
+            "h": 32,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 8,
+            "rbi": 27,
+            "bb": 27,
+            "hbp": 6,
+            "k": 33,
+            "gidp": 3,
+            "pa": null,
+            "tb": 61,
+            "slg": 0.656,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52001",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 233,
+            "h": 65,
+            "doubles": 17,
+            "triples": 2,
+            "hr": 6,
+            "rbi": 36,
+            "bb": 37,
+            "hbp": 17,
+            "k": 57,
+            "gidp": 7,
+            "avg": 0.279,
+            "pa": null,
+            "tb": 104,
+            "slg": 0.446,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52001",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=52001",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.344,
+            "ab": 93,
+            "h": 32,
+            "doubles": 5,
+            "triples": 0,
+            "hr": 8,
+            "rbi": 27,
+            "bb": 27,
+            "hbp": 6,
+            "k": 33,
+            "gidp": 3
+          },
+          "R": {
+            "avg": 0.284,
+            "ab": 229,
+            "h": 65,
+            "doubles": 17,
+            "triples": 2,
+            "hr": 6,
+            "rbi": 36,
+            "bb": 37,
+            "hbp": 17,
+            "k": 56,
+            "gidp": 7
+          },
+          "U": {
+            "avg": 0.0,
+            "ab": 4,
+            "h": 0,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 0,
+            "bb": 0,
+            "hbp": 0,
+            "k": 1,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "박재현": {
+      "name": "パク・ジェヒョン",
+      "nativeName": "박재현",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.283,
+            "ab": 159,
+            "h": 45,
+            "doubles": 6,
+            "triples": 2,
+            "hr": 3,
+            "rbi": 20,
+            "bb": 1,
+            "hbp": 0,
+            "k": 34,
+            "gidp": 0,
+            "pa": null,
+            "tb": 64,
+            "slg": 0.403,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=55636",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 356,
+            "h": 106,
+            "doubles": 16,
+            "triples": 4,
+            "hr": 16,
+            "rbi": 49,
+            "bb": 28,
+            "hbp": 1,
+            "k": 74,
+            "gidp": 4,
+            "avg": 0.298,
+            "pa": null,
+            "tb": 178,
+            "slg": 0.5,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=55636",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=55636",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.283,
+            "ab": 159,
+            "h": 45,
+            "doubles": 6,
+            "triples": 2,
+            "hr": 3,
+            "rbi": 20,
+            "bb": 1,
+            "hbp": 0,
+            "k": 34,
+            "gidp": 0
+          },
+          "R": {
+            "avg": 0.306,
+            "ab": 333,
+            "h": 102,
+            "doubles": 16,
+            "triples": 4,
+            "hr": 16,
+            "rbi": 47,
+            "bb": 28,
+            "hbp": 1,
+            "k": 69,
+            "gidp": 4
+          },
+          "U": {
+            "avg": 0.174,
+            "ab": 23,
+            "h": 4,
+            "doubles": 0,
+            "triples": 0,
+            "hr": 0,
+            "rbi": 2,
+            "bb": 0,
+            "hbp": 0,
+            "k": 5,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "김민석": {
+      "name": "キム・ミンソク",
+      "nativeName": "김민석",
+      "league": "KBO",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": {
+          "L": {
+            "avg": 0.299,
+            "ab": 87,
+            "h": 26,
+            "doubles": 3,
+            "triples": 1,
+            "hr": 0,
+            "rbi": 11,
+            "bb": 13,
+            "hbp": 1,
+            "k": 19,
+            "gidp": 1,
+            "pa": null,
+            "tb": 31,
+            "slg": 0.356,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53554",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          },
+          "R": {
+            "ab": 368,
+            "h": 115,
+            "doubles": 19,
+            "triples": 2,
+            "hr": 5,
+            "rbi": 46,
+            "bb": 42,
+            "hbp": 5,
+            "k": 66,
+            "gidp": 4,
+            "avg": 0.312,
+            "pa": null,
+            "tb": 153,
+            "slg": 0.416,
+            "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53554",
+            "season": 2026,
+            "estimated": false,
+            "sampleBasis": "AB（左右別の打席数未掲載）"
+          }
+        },
+        "source": "https://www.koreabaseball.com/Record/Player/HitterDetail/Situation.aspx?playerId=53554",
+        "publisher": "韓国野球委員会（KBO）",
+        "basis": "2026 KBO 정규시즌（series=0）투수유형별",
+        "retrieved": "2026-11-06",
+        "estimated": false,
+        "note": "左右別の打席数は表にないためnull。打率は安打/打数。SLGは二塁打・三塁打まである場合だけ計算。 KBOのアンダースロー（U）は独立区分で、ゲーム上の右投用Rは公式RとUを合算。",
+        "rawPitcherTypes": {
+          "L": {
+            "avg": 0.299,
+            "ab": 87,
+            "h": 26,
+            "doubles": 3,
+            "triples": 1,
+            "hr": 0,
+            "rbi": 11,
+            "bb": 13,
+            "hbp": 1,
+            "k": 19,
+            "gidp": 1
+          },
+          "R": {
+            "avg": 0.309,
+            "ab": 346,
+            "h": 107,
+            "doubles": 17,
+            "triples": 2,
+            "hr": 4,
+            "rbi": 44,
+            "bb": 40,
+            "hbp": 4,
+            "k": 65,
+            "gidp": 4
+          },
+          "U": {
+            "avg": 0.364,
+            "ab": 22,
+            "h": 8,
+            "doubles": 2,
+            "triples": 0,
+            "hr": 1,
+            "rbi": 2,
+            "bb": 2,
+            "hbp": 1,
+            "k": 1,
+            "gidp": 0
+          }
+        }
+      }
+    },
+    "吉田 聖弥": {
+      "name": "吉田 聖弥",
+      "nativeName": "吉田 聖弥",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 146.5,
+            "max": 149
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 134.5
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 124.1
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 127.7
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 108.8
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2105295/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "竹丸 和幸": {
+      "name": "竹丸 和幸",
+      "nativeName": "竹丸 和幸",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 147.2,
+            "max": 153
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 126.4
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.1
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 135.2
+          },
+          {
+            "label": "シンカー",
+            "id": "sinker",
+            "average": 133.0
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 115.4
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2118993/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "石田 裕太郎": {
+      "name": "石田 裕太郎",
+      "nativeName": "石田 裕太郎",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 147.1,
+            "max": 152
+          },
+          {
+            "label": "シンカー",
+            "id": "sinker",
+            "average": 132.4
+          },
+          {
+            "label": "ツーシーム",
+            "id": "shoot",
+            "average": 143.5
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 138.5
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 117.1
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2112182/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "武内 夏暉": {
+      "name": "武内 夏暉",
+      "nativeName": "武内 夏暉",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 146.5,
+            "max": 151
+          },
+          {
+            "label": "ツーシーム",
+            "id": "sinker",
+            "average": 137.6
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 125.9
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 117.6
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.3
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2105080/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "髙橋 宏斗": {
+      "name": "髙橋 宏斗",
+      "nativeName": "髙橋 宏斗",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 153.8,
+            "max": 158
+          },
+          {
+            "label": "スプリット",
+            "id": "split",
+            "average": 144.6
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 139.7
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 128.8
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2000042/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "金丸 夢斗": {
+      "name": "金丸 夢斗",
+      "nativeName": "金丸 夢斗",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 149.3,
+            "max": 154
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.5
+          },
+          {
+            "label": "スプリット",
+            "id": "split",
+            "average": 135.4
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 109.8
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 122.6
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 135.3
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2108462/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "髙 太一": {
+      "name": "髙 太一",
+      "nativeName": "髙 太一",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 148.0,
+            "max": 154
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.7
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 137.4
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 138.1
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 134.0
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 121.6
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/1950429/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "鈴木 豪太": {
+      "name": "鈴木 豪太",
+      "nativeName": "鈴木 豪太",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 144.9,
+            "max": 148
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 139.2
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 135.9
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.0
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2102969/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "松本 健吾": {
+      "name": "松本 健吾",
+      "nativeName": "松本 健吾",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 145.9,
+            "max": 151
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 132.3
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 127.8
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 136.9
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 115.1
+          },
+          {
+            "label": "シュート",
+            "id": "shoot",
+            "average": 143.1
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/1750696/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "九谷 瑠": {
+      "name": "九谷 瑠",
+      "nativeName": "九谷 瑠",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 147.6,
+            "max": 154
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 121.6
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 129.3
+          },
+          {
+            "label": "シュート",
+            "id": "shoot",
+            "average": 144.5
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 135.8
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 138.5
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 111.7
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2121018/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "森田 駿哉": {
+      "name": "森田 駿哉",
+      "nativeName": "森田 駿哉",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 147.6,
+            "max": 153
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 135.7
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 140.3
+          },
+          {
+            "label": "ツーシーム",
+            "id": "sinker",
+            "average": 147.0
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 130.2
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 126.6
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/1450977/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "篠原 響": {
+      "name": "篠原 響",
+      "nativeName": "篠原 響",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 152.8,
+            "max": 158
+          },
+          {
+            "label": "スライダー",
+            "id": "slider",
+            "average": 141.3
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 136.8
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 146.2
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 122.1
+          },
+          {
+            "label": "ツーシーム",
+            "id": "sinker",
+            "average": 152.3
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2117734/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "中森 俊介": {
+      "name": "中森 俊介",
+      "nativeName": "中森 俊介",
+      "league": "NPB",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "estimated": false,
+        "note": "左右別打撃成績は投手のため対象外。"
+      },
+      "pitchEvidence": {
+        "season": 2026,
+        "pitches": [
+          {
+            "label": "ストレート",
+            "id": "fast",
+            "average": 149.4,
+            "max": 155
+          },
+          {
+            "label": "フォーク",
+            "id": "fork",
+            "average": 136.1
+          },
+          {
+            "label": "カットボール",
+            "id": "cutter",
+            "average": 138.7
+          },
+          {
+            "label": "カーブ",
+            "id": "curve",
+            "average": 117.0
+          },
+          {
+            "label": "チェンジアップ",
+            "id": "change",
+            "average": 131.0
+          }
+        ],
+        "source": "https://baseball.yahoo.co.jp/npb/player/2000088/",
+        "publisher": "スポーツナビ（データスタジアム提供）",
+        "estimated": false,
+        "note": "同データ提供元の2026投球データ表。変化量は実測値でなくゲーム用査定。"
+      }
+    },
+    "張士綸": {
+      "name": "張士綸",
+      "nativeName": "張士綸",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000007085",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "岳政華": {
+      "name": "岳政華",
+      "nativeName": "岳政華",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000005571",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "曾頌恩": {
+      "name": "曾頌恩",
+      "nativeName": "曾頌恩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000005569",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "許基宏": {
+      "name": "許基宏",
+      "nativeName": "許基宏",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "1B",
+        "label": "一壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000001119",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王政順": {
+      "name": "王政順",
+      "nativeName": "王政順",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "3B",
+        "label": "三壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000002307",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "許庭綸": {
+      "name": "許庭綸",
+      "nativeName": "許庭綸",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000007278",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳統恩": {
+      "name": "陳統恩",
+      "nativeName": "陳統恩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000006732",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "伍立辰": {
+      "name": "伍立辰",
+      "nativeName": "伍立辰",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007276",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李振昌": {
+      "name": "李振昌",
+      "nativeName": "李振昌",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003331",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "呂彥青": {
+      "name": "呂彥青",
+      "nativeName": "呂彥青",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003639",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "蔡齊哲": {
+      "name": "蔡齊哲",
+      "nativeName": "蔡齊哲",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000778",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳琥": {
+      "name": "陳琥",
+      "nativeName": "陳琥",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000771",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "江忠城": {
+      "name": "江忠城",
+      "nativeName": "江忠城",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000001232",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "余謙": {
+      "name": "余謙",
+      "nativeName": "余謙",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006176",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "魏碩成": {
+      "name": "魏碩成",
+      "nativeName": "魏碩成",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005572",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王凱程": {
+      "name": "王凱程",
+      "nativeName": "王凱程",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000776",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "鄭凱文": {
+      "name": "鄭凱文",
+      "nativeName": "鄭凱文",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003334",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "謝榮豪": {
+      "name": "謝榮豪",
+      "nativeName": "謝榮豪",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003506",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "張政禹": {
+      "name": "張政禹",
+      "nativeName": "張政禹",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000005542",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王順和": {
+      "name": "王順和",
+      "nativeName": "王順和",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000006216",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林辰勳": {
+      "name": "林辰勳",
+      "nativeName": "林辰勳",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000006217",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林孝程": {
+      "name": "林孝程",
+      "nativeName": "林孝程",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "LF",
+        "label": "左外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000005548",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "拿莫．伊漾": {
+      "name": "拿莫．伊漾",
+      "nativeName": "拿莫．伊漾",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000005546",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "張祐銘": {
+      "name": "張祐銘",
+      "nativeName": "張祐銘",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "RF",
+        "label": "右外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000005553",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李展毅": {
+      "name": "李展毅",
+      "nativeName": "李展毅",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "1B",
+        "label": "一壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000006726",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "伍鐸": {
+      "name": "伍鐸",
+      "nativeName": "伍鐸",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000762",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林子昱": {
+      "name": "林子昱",
+      "nativeName": "林子昱",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000001821",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "呂偉晟": {
+      "name": "呂偉晟",
+      "nativeName": "呂偉晟",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005552",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林鋅杰": {
+      "name": "林鋅杰",
+      "nativeName": "林鋅杰",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005789",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林凱威": {
+      "name": "林凱威",
+      "nativeName": "林凱威",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005788",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳冠偉": {
+      "name": "陳冠偉",
+      "nativeName": "陳冠偉",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005555",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李超": {
+      "name": "李超",
+      "nativeName": "李超",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006160",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "郭郁政": {
+      "name": "郭郁政",
+      "nativeName": "郭郁政",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005541",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "曾仁和": {
+      "name": "曾仁和",
+      "nativeName": "曾仁和",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003608",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "魔神龍": {
+      "name": "魔神龍",
+      "nativeName": "魔神龍",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007264",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "黃暐傑": {
+      "name": "黃暐傑",
+      "nativeName": "黃暐傑",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007581",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "張翔": {
+      "name": "張翔",
+      "nativeName": "張翔",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000006716",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李丞齡": {
+      "name": "李丞齡",
+      "nativeName": "李丞齡",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "RF",
+        "label": "右外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000004641",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "朱迦恩": {
+      "name": "朱迦恩",
+      "nativeName": "朱迦恩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "LF",
+        "label": "左外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000005522",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳鏞基": {
+      "name": "陳鏞基",
+      "nativeName": "陳鏞基",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "3B",
+        "label": "三壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000002661",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "張皓崴": {
+      "name": "張皓崴",
+      "nativeName": "張皓崴",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000007037",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林祖傑": {
+      "name": "林祖傑",
+      "nativeName": "林祖傑",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000001339",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳重廷": {
+      "name": "陳重廷",
+      "nativeName": "陳重廷",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000002289",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "髙塩將樹": {
+      "name": "髙塩將樹",
+      "nativeName": "髙塩將樹",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006818",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "鍾允華": {
+      "name": "鍾允華",
+      "nativeName": "鍾允華",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007293",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李其峰": {
+      "name": "李其峰",
+      "nativeName": "李其峰",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006127",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "鄭澔": {
+      "name": "鄭澔",
+      "nativeName": "鄭澔",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007044",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "邱浩鈞": {
+      "name": "邱浩鈞",
+      "nativeName": "邱浩鈞",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000998",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "獅帝芬": {
+      "name": "獅帝芬",
+      "nativeName": "獅帝芬",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007597",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "吳承諭": {
+      "name": "吳承諭",
+      "nativeName": "吳承諭",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005482",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "胡智爲": {
+      "name": "胡智爲",
+      "nativeName": "胡智爲",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000001719",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李軍": {
+      "name": "李軍",
+      "nativeName": "李軍",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007292",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "郭俊麟": {
+      "name": "郭俊麟",
+      "nativeName": "郭俊麟",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000001260",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林岱安": {
+      "name": "林岱安",
+      "nativeName": "林岱安",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000001606",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林書逸": {
+      "name": "林書逸",
+      "nativeName": "林書逸",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000001754",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李宗賢": {
+      "name": "李宗賢",
+      "nativeName": "李宗賢",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000001473",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王正棠": {
+      "name": "王正棠",
+      "nativeName": "王正棠",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "RF",
+        "label": "右外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000002305",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "董子恩": {
+      "name": "董子恩",
+      "nativeName": "董子恩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "3B",
+        "label": "三壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000006737",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "葉子霆": {
+      "name": "葉子霆",
+      "nativeName": "葉子霆",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000006229",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林岳谷": {
+      "name": "林岳谷",
+      "nativeName": "林岳谷",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000006872",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "江國豪": {
+      "name": "江國豪",
+      "nativeName": "江國豪",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005479",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳仕朋": {
+      "name": "陳仕朋",
+      "nativeName": "陳仕朋",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000363",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "張奕": {
+      "name": "張奕",
+      "nativeName": "張奕",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005790",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "曾峻岳": {
+      "name": "曾峻岳",
+      "nativeName": "曾峻岳",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006227",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "廖任磊": {
+      "name": "廖任磊",
+      "nativeName": "廖任磊",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000002280",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林栚呈": {
+      "name": "林栚呈",
+      "nativeName": "林栚呈",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006870",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李建勳": {
+      "name": "李建勳",
+      "nativeName": "李建勳",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005561",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "賴鴻誠": {
+      "name": "賴鴻誠",
+      "nativeName": "賴鴻誠",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000003292",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李吳永勤": {
+      "name": "李吳永勤",
+      "nativeName": "李吳永勤",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000773",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "石梓霖": {
+      "name": "石梓霖",
+      "nativeName": "石梓霖",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007593",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳品宏": {
+      "name": "陳品宏",
+      "nativeName": "陳品宏",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007299",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "廖健富": {
+      "name": "廖健富",
+      "nativeName": "廖健富",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "1B",
+        "label": "一壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000000158",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "成晉": {
+      "name": "成晉",
+      "nativeName": "成晉",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "RF",
+        "label": "右外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000000159",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林政華": {
+      "name": "林政華",
+      "nativeName": "林政華",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000006235",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林智平": {
+      "name": "林智平",
+      "nativeName": "林智平",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "3B",
+        "label": "三壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000003345",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林承飛": {
+      "name": "林承飛",
+      "nativeName": "林承飛",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000000153",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "嚴宏鈞": {
+      "name": "嚴宏鈞",
+      "nativeName": "嚴宏鈞",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000004032",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "余德龍": {
+      "name": "余德龍",
+      "nativeName": "余德龍",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "SS",
+        "label": "游擊手",
+        "source": "https://stats.cpbl.com.tw/players/0000003563",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "艾菩樂": {
+      "name": "艾菩樂",
+      "nativeName": "艾菩樂",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006906",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "魔爾曼": {
+      "name": "魔爾曼",
+      "nativeName": "魔爾曼",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007790",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳克羿": {
+      "name": "陳克羿",
+      "nativeName": "陳克羿",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000004624",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "蘇俊璋": {
+      "name": "蘇俊璋",
+      "nativeName": "蘇俊璋",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005558",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "莊昕諺": {
+      "name": "莊昕諺",
+      "nativeName": "莊昕諺",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005509",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王志煊": {
+      "name": "王志煊",
+      "nativeName": "王志煊",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006228",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳冠宇": {
+      "name": "陳冠宇",
+      "nativeName": "陳冠宇",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000941",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "邱駿威": {
+      "name": "邱駿威",
+      "nativeName": "邱駿威",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006720",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "舒治浩": {
+      "name": "舒治浩",
+      "nativeName": "舒治浩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006857",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "賴胤豪": {
+      "name": "賴胤豪",
+      "nativeName": "賴胤豪",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007073",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "朱承洋": {
+      "name": "朱承洋",
+      "nativeName": "朱承洋",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000000128",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "藍寅倫": {
+      "name": "藍寅倫",
+      "nativeName": "藍寅倫",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "RF",
+        "label": "右外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000003533",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "紀慶然": {
+      "name": "紀慶然",
+      "nativeName": "紀慶然",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000006929",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "高聖恩": {
+      "name": "高聖恩",
+      "nativeName": "高聖恩",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "CF",
+        "label": "中外野手",
+        "source": "https://stats.cpbl.com.tw/players/0000006936",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳世嘉": {
+      "name": "陳世嘉",
+      "nativeName": "陳世嘉",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "C",
+        "label": "捕手",
+        "source": "https://stats.cpbl.com.tw/players/0000007064",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "宋柏翰": {
+      "name": "宋柏翰",
+      "nativeName": "宋柏翰",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "1B",
+        "label": "一壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000007302",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "郭阜林": {
+      "name": "郭阜林",
+      "nativeName": "郭阜林",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "3B",
+        "label": "三壘手",
+        "source": "https://stats.cpbl.com.tw/players/0000001291",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "黃子鵬": {
+      "name": "黃子鵬",
+      "nativeName": "黃子鵬",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000002274",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "坎南": {
+      "name": "坎南",
+      "nativeName": "坎南",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007570",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳宇宏": {
+      "name": "陳宇宏",
+      "nativeName": "陳宇宏",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006833",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳柏清": {
+      "name": "陳柏清",
+      "nativeName": "陳柏清",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006832",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "林詩翔": {
+      "name": "林詩翔",
+      "nativeName": "林詩翔",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006949",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王躍霖": {
+      "name": "王躍霖",
+      "nativeName": "王躍霖",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000001390",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "許峻暘": {
+      "name": "許峻暘",
+      "nativeName": "許峻暘",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000005285",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "李欣穎": {
+      "name": "李欣穎",
+      "nativeName": "李欣穎",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006918",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "韋宏亮": {
+      "name": "韋宏亮",
+      "nativeName": "韋宏亮",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000007580",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "黃群": {
+      "name": "黃群",
+      "nativeName": "黃群",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000006982",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "施子謙": {
+      "name": "施子謙",
+      "nativeName": "施子謙",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://stats.cpbl.com.tw/players/0000002348",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "王鏡銘": {
+      "name": "王鏡銘",
+      "nativeName": "王鏡銘",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "P",
+        "label": "投手",
+        "source": "https://cpbl.com.tw/team/person?acnt=0000003393",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "湯家豪": {
+      "name": "湯家豪",
+      "nativeName": "湯家豪",
+      "league": "CPBL",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。通常の通算能力を使用し、実測の左右差を捏造しない。"
+      },
+      "positionEvidence": {
+        "primary": "2B",
+        "label": "二壘手",
+        "source": "https://cpbl.com.tw/team/follow?Acnt=0000005333",
+        "estimated": false,
+        "retrieved": "2026-11-05",
+        "note": "既存の公式選手プロフィール証拠を再利用。登録主守備位置であり、シーズン中の守備出場試合数ではない。"
+      }
+    },
+    "陳睦衡": {
+      "name": "陳睦衡",
+      "nativeName": "陳睦衡",
+      "league": "NPB二軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "翔聖（髙橋翔聖）": {
+      "name": "徐翔聖",
+      "nativeName": "翔聖（髙橋翔聖）",
+      "league": "NPB二軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "林子崴": {
+      "name": "林子崴",
+      "nativeName": "林子崴",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "高偉強": {
+      "name": "高偉強",
+      "nativeName": "高偉強",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "盧孟揚": {
+      "name": "盧孟揚",
+      "nativeName": "盧孟揚",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "張誠恩": {
+      "name": "張誠恩",
+      "nativeName": "張誠恩",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "林吳晉瑋": {
+      "name": "林吳晉瑋",
+      "nativeName": "林吳晉瑋",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "宋嘉翔": {
+      "name": "宋嘉翔",
+      "nativeName": "宋嘉翔",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "王念好": {
+      "name": "王念好",
+      "nativeName": "王念好",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "張仁瑋": {
+      "name": "張仁瑋",
+      "nativeName": "張仁瑋",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "劉俊緯": {
+      "name": "劉俊緯",
+      "nativeName": "劉俊緯",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "陽柏翔": {
+      "name": "陽柏翔",
+      "nativeName": "陽柏翔",
+      "league": "NPB二軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "林子豪": {
+      "name": "林子豪",
+      "nativeName": "林子豪",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "林泓弦": {
+      "name": "林泓弦",
+      "nativeName": "林泓弦",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "馬傑森": {
+      "name": "馬傑森",
+      "nativeName": "馬傑森",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "郭天信": {
+      "name": "郭天信",
+      "nativeName": "郭天信",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "林佳緯": {
+      "name": "林佳緯",
+      "nativeName": "林佳緯",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "曾聖安": {
+      "name": "曾聖安",
+      "nativeName": "曾聖安",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    },
+    "何品室融": {
+      "name": "何品室融",
+      "nativeName": "何品室融",
+      "league": "CPBL一軍",
+      "matchupEvidence": {
+        "season": 2026,
+        "splits": null,
+        "source": null,
+        "estimated": false,
+        "note": "左右別実成績は未取得。左右差を実測と称して追加しない。"
+      }
+    }
+  }
+}

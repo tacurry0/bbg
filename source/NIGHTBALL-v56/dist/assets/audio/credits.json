@@ -1,0 +1,89 @@
+{
+  "prepared": "2026-11-05",
+  "sounds": [
+    {
+      "file": "bat-1.mp3",
+      "title": "Bat Hit 4 FF100.aif",
+      "author": "martinimeniscus",
+      "source": "https://freesound.org/people/martinimeniscus/sounds/162867/",
+      "preview": "https://cdn.freesound.org/previews/162/162867_2320755-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 0.58,
+      "sha256": "e52659c9fa0d33a430652be8d3964b248137507d0cc71f251f6e6adfe6685621"
+    },
+    {
+      "file": "bat-2.mp3",
+      "title": "Bat Hit 9 FF095.aif",
+      "author": "martinimeniscus",
+      "source": "https://freesound.org/people/martinimeniscus/sounds/162886/",
+      "preview": "https://cdn.freesound.org/previews/162/162886_2320755-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 0.64,
+      "sha256": "4414cff6e3914290e4ad07ed829dcb2db22351f454b13a5f991909d03ea44014"
+    },
+    {
+      "file": "mitt-1.mp3",
+      "title": "Glove Catch 10 FF005.aif",
+      "author": "martinimeniscus",
+      "source": "https://freesound.org/people/martinimeniscus/sounds/164525/",
+      "preview": "https://cdn.freesound.org/previews/164/164525_2320755-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 0.43,
+      "sha256": "357c88e798bb46ebb5dcc03eaadf9b91cb896d146afdf7df6cae12241b72d0a1"
+    },
+    {
+      "file": "mitt-2.mp3",
+      "title": "Glove Catch 12 FF003.aif",
+      "author": "martinimeniscus",
+      "source": "https://freesound.org/people/martinimeniscus/sounds/164536/",
+      "preview": "https://cdn.freesound.org/previews/164/164536_2320755-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 0.43,
+      "sha256": "18bd4916c0c6233f510ab3faca23e6d7fbe6b5f5ac8bd37ea38657b496269372"
+    },
+    {
+      "file": "crowd-bed.mp3",
+      "title": "Crowd2.wav",
+      "author": "eeease",
+      "source": "https://freesound.org/people/eeease/sounds/354054/",
+      "preview": "https://cdn.freesound.org/previews/354/354054_6000944-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 15.0,
+      "sha256": "ee953154a826c3d33f3a9e0a8a8ca978c44574185a376db58c8a6f96a28f0f00"
+    },
+    {
+      "file": "crowd-cheer.mp3",
+      "title": "RoaringCrowd.wav",
+      "author": "benfree",
+      "source": "https://freesound.org/people/benfree/sounds/130568/",
+      "preview": "https://cdn.freesound.org/previews/130/130568_2024417-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 9.0,
+      "sha256": "5d74d3e5fb16fdc6d1bec7e1639013fa17913a4ceba3556fee734b4302f87829"
+    },
+    {
+      "file": "swish.mp3",
+      "title": "Swish.aif",
+      "author": "soundpost",
+      "source": "https://freesound.org/people/soundpost/sounds/173272/",
+      "preview": "https://cdn.freesound.org/previews/173/173272_3229933-hq.mp3",
+      "license": "CC0 1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "changes": "Trimmed, filtered, normalized, mono MP3; crowd bed crossfaded for looping.",
+      "seconds": 0.38,
+      "sha256": "b146bf98d0654099255cfbec4fbf2291200ee187d871bfb535741f1e7f498eca"
+    }
+  ]
+}
