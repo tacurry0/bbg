@@ -225,9 +225,12 @@ assert.equal(vfxGame.hit.kind, 'hr', 'Ball cleared the fence for a Home Run');
 assert(vfx.crowdUniforms.uCrowdExcite.value > 0.5, 'Crowd excitement rises on Home Run');
 console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, shockwave, sparks, crowd excitement) verified.');
 
-// 7. Service Worker v56 asset manifest integrity check
+// 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v56-graphics'));
+assert(swCode.includes('nightball-v57-premium'));
+assert(swCode.includes('./stadium-premium.js?v=57'));
+assert(swCode.includes('./menu-premium.css?v=57'));
+
 assert(swCode.includes('./stadium-fx.js?v=56'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);
@@ -237,4 +240,4 @@ for (const entry of swFiles) {
   const clean = entry.split('?')[0].replace(/^\.\//, '');
   assert(existsSync('dist/' + clean), 'Missing SW cached file: dist/' + clean);
 }
-console.log('PASS 7: Service Worker v56 cache manifest verified (' + swFiles.length + ' offline-ready assets).');
+console.log('PASS 7: Service Worker current cache manifest verified (' + swFiles.length + ' offline-ready assets).');
