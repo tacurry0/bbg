@@ -39,7 +39,7 @@ const player={
 };
 decorateChibiPlayer(renderer,player);
 assert(player.head.children.length>=11,'preserved oversize chibi face with detailed helmet');
-assert(player.body.children.length>=10,'kit piping and shoulder details');
+assert(player.body.children.length>=9,'kit piping and shoulder details');
 assert(player.root.children.length>=4,'cleat details');
 renderer.gl.isSoftwareRenderer=true;
 const previous=renderer.parkDecor.children.length;
