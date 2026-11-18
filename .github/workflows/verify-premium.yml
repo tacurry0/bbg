@@ -1,0 +1,50 @@
+name: Verify NIGHTBALL premium graphics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/NIGHTBALL-v56/dist/**'
+      - 'source/NIGHTBALL-v56/tests/**'
+      - '.github/workflows/verify-premium.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check updated modules and entry point
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -euo pipefail
+          node --check dist/stadium-premium.js
+          node --check dist/stadium3d.js
+          node --check dist/app.js
+          node --check dist/sw.js
+          test -s dist/menu-premium.css
+          grep -q 'menu-premium.css?v=57' dist/index.html
+          grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
+          grep -q 'stadium3d.js?v=57' dist/app.js
+      - name: Test real 3D construction and player details
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -euo pipefail
+          node tests/premium-graphics.mjs
+          node tests/graphics.mjs
+          node tests/graphics-v56.mjs
+      - name: Verify unchanged match systems
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -euo pipefail
+          node tests/pennant.cjs
+          node tests/rules-v16.cjs
+          node tests/thumb-controls.cjs
+          node tests/career-overseas-v54.mjs
