@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=56';
-import { decorateBroadcastDome } from './broadcast-dome.js?v=56';
+import { decorateBroadcastDome } from './broadcast-dome.js?v=59';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
 import {
@@ -20,9 +20,9 @@ const GRASS_PALETTES={
  outdoor:['#9dbf84','#84af76','#8bb780'],
  dome:['#86b4a2','#649286','#80aa98'],
  school:['#b3c28a','#9bab78','#a5b57b'],
- broadcast:['#8ebda8','#66987a','#8eb6a0']
+ broadcast:['#a2b97a','#869f60','#9caf70']
 };
-const PILOT_PARKS={night:'intercontinental','tokyo-dome':'broadcast-dome'};
+const PILOT_PARKS={night:'intercontinental'};
 const skinColors=[0xd3a383,0xba896a,0xe0ae8d,0xb78367];
 
 export class StadiumRenderer {
@@ -100,14 +100,21 @@ export class StadiumRenderer {
    skin.push([Math.cos(a)*29,18.4+Math.sin(a)*27.8]);
   }
   skin.push([-25,24]);
-  this.flatShape(skin,dirt);
-  this.flatShape([[0,3.6],[15.5,19.4],[0,34.6],[-15.5,19.4]],grass,.075);
+  this.infieldSkin=[
+   this.flatShape(skin,dirt),
+   this.flatShape([[0,3.6],[15.5,19.4],[0,34.6],[-15.5,19.4]],grass,.075)
+  ];
+  this.tokyoCutouts=[[0,-.1,4.45],[19.4,19.4,3.1],[0,38.8,3.35],[-19.4,19.4,3.1]].map(([x,z,radius])=>{
+   const cutout=this.mesh(new T.CircleGeometry(radius,48),dirt);
+   cutout.rotation.x=-Math.PI/2;cutout.position.set(x,.032,z);cutout.receiveShadow=true;
+   return cutout;
+  });
   const mound=this.mesh(new T.CylinderGeometry(2.7,2.98,.19,48),dirt);mound.position.set(0,.07,18.4);mound.receiveShadow=true;
   for(const [x,z,width,depth,angle] of [[-1.66,-.23,1.5,2.25,-.04],[1.66,-.23,1.5,2.25,.04],[0,18.02,2.55,1.25,0]]){
    const worn=this.mesh(new T.CircleGeometry(1,28),new T.MeshBasicMaterial({color:0x9e6945,transparent:true,opacity:.26,depthWrite:false}));
    worn.position.set(x,z>10?.168:.061,z);worn.rotation.set(-Math.PI/2,0,angle);worn.scale.set(width/2,depth/2,1);
   }
-  const homeCircle=this.mesh(new T.CircleGeometry(3.65,48),dirt);homeCircle.rotation.x=-Math.PI/2;homeCircle.position.set(0,.03,-.1);homeCircle.receiveShadow=true;
+  const homeCircle=this.mesh(new T.CircleGeometry(3.65,48),dirt);homeCircle.rotation.x=-Math.PI/2;homeCircle.position.set(0,.03,-.1);homeCircle.receiveShadow=true;this.infieldSkin.push(homeCircle);
   const white=this.mat('base',0xfff7e6,.78),baseTrim=this.mat('baseTrim',0x1d252b,.85);
   for(const [bx,bz] of [[19.4,19.4],[0,38.8],[-19.4,19.4]]){
    const pad=this.box(this.scene,[.56,.11,.56],[bx,.095,bz],white);pad.rotation.y=Math.PI/4;
@@ -172,7 +179,7 @@ export class StadiumRenderer {
    this.grassUniforms.uIsDome.value=(park.theme==='dome'||park.id==='tokyo-dome')?1:0;
    this.grassUniforms.uConcourseColor.value.setHex(park.school?0x586552:park.id==='tokyo-dome'?0x1c2c3d:0x16222f);
   }
-  this.decoratePark(park);this.loadParkModel(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
+  this.loadParkModel(park);this.decoratePark(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[],wallHeight=NightPlayers.fenceHeight(park);
   const quad=(out,a,b,c,d)=>out.push(...a,...b,...c,...c,...b,...d);
   for(const [i,sign] of [-1,1].entries()){
@@ -186,7 +193,8 @@ export class StadiumRenderer {
   const make=(positions,mat)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.computeVertexNormals();mat.side=T.DoubleSide;const mesh=this.mesh(geo,mat,this.wallGroup);mesh.receiveShadow=true;};
   const pads=this.mat(park.id+'wall',park.wall,.66);
   make(wall,pads);
-  make(seams,this.mat(park.id+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(park.id+'rail',park.rail,.48,.18));make(track,this.mat('warningTrack',0xa77959,.96));make(trackEdge,this.mat('warningEdge',0xcba684,.92));
+  const tokyo=park.id==='tokyo-dome';
+  make(seams,this.mat(park.id+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(park.id+'rail',park.rail,.48,.18));make(track,this.mat(tokyo?'tokyoTrack':'warningTrack',tokyo?0x3c6247:0xa77959,.96));make(trackEdge,this.mat(tokyo?'tokyoTrackEdge':'warningEdge',tokyo?0x65825e:0xcba684,.92));
   for(const [i,point] of pts.entries()){
    if(i%(FENCE_SEGMENTS/4)===0){
     const panel=this.distancePanel(Math.round(point.r),park.id+'-'+i,!park.alleysVerified&&i%(FENCE_SEGMENTS/2)!==0);
@@ -203,19 +211,17 @@ export class StadiumRenderer {
    const wing=this.box(this.wallGroup,[.46,10.5,.04],[point.x-sign*.24,9.0,point.z+sign*.24],screenMat);
    wing.rotation.y=sign*Math.PI/4;
   }
-  buildPremiumPark(this,park);
+  if(!tokyo)buildPremiumPark(this,park);
  }
  loadParkModel(park){
   this.parkModel.clear();
   delete this.canvas.dataset.parkModel;
   const name=PILOT_PARKS[park.id];
-  if(!name||(park.id==='tokyo-dome'&&this.gl.isSoftwareRenderer)||typeof location==='undefined')return;
+  if(!name||typeof location==='undefined')return;
   loadMatchModel(name).then(model=>{
    if(!model||this.parkKey!==park.id)return;
    this.parkModel.clear();
    this.parkModel.add(model.clone());
-   const terraces=this.parkDecor.getObjectByName('broadcast-terraces');
-   if(terraces)terraces.visible=false;
    this.scene.userData.staticRevision++;
    this.heroRendered=false;
    this.canvas.dataset.parkModel=name;
@@ -255,11 +261,16 @@ export class StadiumRenderer {
   if(!this.parkDecor)return;
   this.parkDecor.traverse(o=>{
    if(o.geometry&&!Object.values(this.geometries).includes(o.geometry))o.geometry.dispose();
+   if(o.userData.disposeTexture)o.material.map.dispose();
    if(o.userData.disposeMaterial)o.material.dispose();
+   if(o.isInstancedMesh)o.dispose();
   });this.parkDecor.clear();
   const theme=park.theme||park.id,indoors=theme==='dome',day=!!park.school||theme==='sky'||theme==='brick'||theme==='toyama';
   this.grassMaterial.color.setHex(park.turf||0x487e4d);
   const broadcast=park.id==='tokyo-dome';
+  this.board.visible=!broadcast;
+  for(const mesh of this.infieldSkin)mesh.visible=!broadcast;
+  for(const mesh of this.tokyoCutouts)mesh.visible=broadcast;
   const surface=broadcast?'broadcast':indoors?'dome':park.school?'school':'outdoor';
   this.turfTextures||={outdoor:this.grassMaterial.map};
   this.turfTextures[surface]||=this.noiseTexture('grass',surface);
@@ -267,7 +278,7 @@ export class StadiumRenderer {
   this.dirtTextures||={outdoor:this.dirt.map};
   if(broadcast)this.dirtTextures.broadcast||=this.noiseTexture('dirt','broadcast');
   this.dirt.map=this.dirtTextures[broadcast?'broadcast':'outdoor'];
-  this.dirt.color.setHex(broadcast?0xcaa18b:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c);
+  this.dirt.color.setHex(broadcast?0xb38e76:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c);
   this.scene.fog.density=.0036;this.skyLight.color.setHex(0xd7e9ff);
   this.skyLight.intensity=indoors?2.0:day?2.25:1.62;this.keyLight.intensity=indoors?2.15:day?3.48:3.42;
   this.keyLight.color.setHex(indoors?0xe4f1ff:day?0xffedcb:0xfff2dd);
@@ -293,10 +304,10 @@ export class StadiumRenderer {
   if(this.bulbMat)this.bulbMat.color.setHex(this.lightsLit?0xfff9e2:0xbfcbd2);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
   if(broadcast){
-   const [x,y,z,w,h]=park.board;
-   this.board.position.set(x,y+2.2,z-4.2);this.board.scale.set(w/28,h/12,1);
    for(const light of this.lights)light.visible=false;
-   decorateBroadcastDome(this,park);return;
+   decorateBroadcastDome(this,park);
+   this.canvas.dataset.parkModel='tokyo-dome';
+   return;
   }
   const group=this.parkDecor,concrete=this.mat('concrete',0x8694a0),seats=this.mat(park.id+'seats',park.seats);seats.side=T.DoubleSide;concrete.side=T.DoubleSide;
   const rowMaterial=this.mat(park.id+'row',new T.Color(park.seats).multiplyScalar(1.34).getHex());

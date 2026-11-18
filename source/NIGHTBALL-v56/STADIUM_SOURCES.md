@@ -32,6 +32,10 @@ The fence uses five radial distances in metres. The 22.5° rays from the center 
 
 Grandstands, scoreboards, canopies, and fence colors are simplified scene models. Where wall heights were not established the game uses 2.8 m.
 
+## Tokyo Dome interior
+
+The [official dimensions](https://www.tokyo-dome.co.jp/dome/about/) give a roof height of 61.69 m above the field, 100 m down both lines, 122 m to center and a 4 m fence. The [venue equipment guide](https://www.tokyo-dome.co.jp/dome/about/facility/) lists the 125.6 m main LED vision and outfield ribbon visions. The game builds the air-supported canopy, cable grid, seating sections and curved displays as 3D geometry. The roof profile and seat layout are visual estimates.
+
 ## Derby
 
 [2026 NPB event rules](https://npb.jp/allstar/2026/homerun.html). The game runs the eight-player bracket at the selected venue. Eligible opponents are generated from existing CPBL rosters. The game uses seed order based on available season home runs and power rating when overtime remains tied.

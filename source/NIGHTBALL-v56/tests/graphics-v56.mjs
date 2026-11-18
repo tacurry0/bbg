@@ -117,12 +117,19 @@ const domePlate = new NightGame('practice', 'standard', () => {}, { park: 'tokyo
 domePlate.setPhase('aim');
 renderer.render(domePlate, 0);
 assert(renderer.scene.userData.broadcastDome);
-assert(renderer.board.position.z < 146, 'Tokyo Dome scoreboard sits cleanly in front of r=149 ceiling light rigs');
+assert.equal(renderer.canvas.dataset.parkModel, 'tokyo-dome');
+assert(!renderer.board.visible, 'generic central board is replaced by the Tokyo Dome vision');
+assert(renderer.parkDecor.getObjectByName('Live line score')?.material.map === renderer.boardTexture);
+assert(renderer.parkDecor.getObjectByName('Curved 125 m wide main vision')?.geometry.index.count > 12);
+assert(renderer.tokyoCutouts.every(mesh => mesh.visible));
+assert(renderer.infieldSkin.every(mesh => !mesh.visible));
 assert.notEqual(renderer.grassMaterial.map, outdoorTurf);
 assert.notEqual(renderer.dirt.map, outdoorDirt);
 
 renderer.render(plateGame, 0);
 assert.equal(renderer.scene.fog.density, 0.0036);
+assert(renderer.board.visible && renderer.infieldSkin.every(mesh => mesh.visible));
+assert(renderer.tokyoCutouts.every(mesh => !mesh.visible));
 console.log('PASS 3: Non-mirrored fence distance panels, unobstructed Tokyo Dome scoreboard, and park surface swaps verified.');
 
 // 4. Pitcher release hand accuracy at t=0 AND living idle/waggle animations at t>0
@@ -227,7 +234,7 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v58-powerplay'));
+assert(swCode.includes('nightball-v59-tokyo-dome'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 

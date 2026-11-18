@@ -51,8 +51,17 @@ try{
  assert(hero&&hero.height>=100&&hero.height<=190,'classic arcade hero must be visible');
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
+ await page.evaluate(async()=>{
+  const {StadiumRenderer}=await import('./stadium3d.js?v=59');
+  const original=StadiumRenderer.prototype.render;
+  StadiumRenderer.prototype.render=function(game,time){
+   if(game)window.testDomeMatch={renderer:this,game};
+   return original.call(this,game,time);
+  };
+ });
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-action="match-team-next"]').click();
+ await page.locator('#park-select').selectOption('tokyo-dome');
  await page.locator('[data-action="match-lineup"]').click();
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.querySelector('#game')&&!document.querySelector('#game').hidden,{timeout:10000});
@@ -61,9 +70,32 @@ try{
  const stage=await page.locator('#stage').isVisible();
  assert(game&&stage,'match opens with visible pitch and current HUD');
  assert(await page.locator('#scoreboard').count(), 'existing HUD retained');
+ await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.parkModel==='tokyo-dome');
+ const dome=await page.evaluate(()=>{
+  const {renderer}=window.testDomeMatch;
+  return {
+   membrane:!!renderer.parkDecor.getObjectByName('Tokyo Dome air-supported membrane'),
+   liveScore:renderer.parkDecor.getObjectByName('Live line score').material.map===renderer.boardTexture,
+   seats:renderer.parkDecor.getObjectByName('Blue stadium seats').count
+  };
+ });
+ assert(dome.membrane&&dome.liveScore&&dome.seats>(graphics==='webgl-3d'?10000:400),'Tokyo Dome is rendered with live score and 3D seating');
  await page.screenshot({path:'tests/screenshots/premium-match.png'});
+ await page.evaluate(()=>{
+  const {renderer,game}=window.testDomeMatch;
+  game.startField(46,43,.19,false);
+  for(let i=0;i<220;i++)game.updateField(.01);
+  game.paused=true;
+  for(let i=0;i<9;i++)renderer.render(game,game.time+=60);
+ });
+ assert(await page.evaluate(()=>{
+  const {renderer,game}=window.testDomeMatch;
+  const camera=renderer.camera.position;
+  return !game.field.foul&&renderer.fieldMode&&camera.y<NightPlayers.roofSurface(game.park,camera.x,-camera.z);
+ }),'outfield fly follows the ball below the roof');
+ await page.screenshot({path:'tests/screenshots/tokyo-dome-field.png'});
  assert.deepEqual(errors,[],'no page JavaScript errors');
- console.log('PASS: real Chromium mobile homepage, premium CSS, '+graphics+' renderer, team selection, lineup and live match.');
+ console.log('PASS: mobile Chromium, team selection, lineup, Tokyo Dome live score and fly-ball camera ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
  await context.close();
 }finally{
