@@ -227,9 +227,9 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v57-premium'));
+assert(swCode.includes('nightball-v58-powerplay'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
-assert(swCode.includes('./menu-premium.css?v=57'));
+assert(swCode.includes('./menu-polish.css?v=58'));
 
 assert(swCode.includes('./stadium-fx.js?v=56'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
