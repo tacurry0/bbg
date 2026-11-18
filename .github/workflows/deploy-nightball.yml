@@ -1,0 +1,101 @@
+name: Deploy NIGHTBALL to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Unpack latest NIGHTBALL ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          archives=(NIGHTBALL*.zip)
+          if (( ${#archives[@]} == 0 )); then
+            echo "::error::No NIGHTBALL*.zip file was found in the repository root."
+            exit 1
+          fi
+          zip_file=$(printf '%s\n' "${archives[@]}" | sort -V | tail -n 1)
+          echo "Using archive: $zip_file"
+          mkdir -p extracted _site
+          unzip -q "$zip_file" -d extracted
+
+          # Select a website root even when the ZIP contains an enclosing folder.
+          # Existing dist/build outputs take priority over unbuilt source files.
+          site_root=$(python3 - <<'PY'
+          from pathlib import Path
+          base = Path("extracted")
+          candidates = []
+          for p in base.rglob("index.html"):
+              parts = p.relative_to(base).parts
+              if any(part in {"node_modules", "__MACOSX", ".git", "test", "tests"} for part in parts):
+                  continue
+              parent = p.parent
+              priority = 0 if parent.name in {"dist", "build", "out"} else 1
+              candidates.append((priority, len(parts), str(parent)))
+          if not candidates:
+              raise SystemExit("ERROR: The ZIP does not contain an index.html file.")
+          candidates.sort()
+          print(candidates[0][2])
+          PY
+          )
+          echo "Selected site root: $site_root"
+
+          # If the ZIP contains Vite/React source but no built output,
+          # build it before publishing. Plain HTML games need no build.
+          if [[ -f "$site_root/package.json" ]] && node -e 'const p=require(process.argv[1]);process.exit(p.scripts&&p.scripts.build?0:1)' "./$site_root/package.json"; then
+            echo "Build script detected; building the game."
+            pushd "$site_root" > /dev/null
+            if [[ -f package-lock.json ]]; then npm ci; else npm install; fi
+            if [[ -f vite.config.js || -f vite.config.ts || -f vite.config.mjs || -f vite.config.mts ]] || grep -q '"vite"' package.json; then
+              npm run build -- --base="/bbg/"
+            else
+              npm run build
+            fi
+            popd > /dev/null
+            if [[ -f "$site_root/dist/index.html" ]]; then
+              site_root="$site_root/dist"
+            elif [[ -f "$site_root/build/index.html" ]]; then
+              site_root="$site_root/build"
+            elif [[ -f "$site_root/out/index.html" ]]; then
+              site_root="$site_root/out"
+            fi
+          fi
+
+          cp -a "$site_root/." _site/
+          touch _site/.nojekyll
+          test -f _site/index.html || { echo "::error::index.html is missing from publish directory"; exit 1; }
+          echo "Prepared publish directory:"
+          ls -la _site | head -40
+
+      - name: Set up GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
