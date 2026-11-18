@@ -1,9 +1,10 @@
-name: Smoke test premium NIGHTBALL in mobile Chromium
+name: Smoke test NIGHTBALL in mobile Chromium
 
 on:
   push:
     branches: [main]
     paths:
+      - 'source/NIGHTBALL-v56/dist/**'
       - 'source/NIGHTBALL-v56/tests/premium-browser.mjs'
       - '.github/workflows/smoke-premium-browser.yml'
   workflow_dispatch:
