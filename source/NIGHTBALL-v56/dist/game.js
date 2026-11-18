@@ -1252,22 +1252,48 @@ window.NightGame=class NightGame{
  }
  manualThrowPlan(){
   const f=this.field,m=f.manual,holder=f.fielders[m.holder],choices=[];
+  const batter=f.runners.find(r=>r.batter&&!r.out&&!r.scored);
+  const firstRunner=f.runners.find(r=>r.start===1&&!r.out&&!r.scored);
   for(const r of f.runners){
    if(r.out||r.scored)continue;
    const force=this.manualForceBase(r),appeal=r.needsTag&&r.progress>r.start+.04;
    const atBase=Math.abs(r.progress-Math.round(r.progress))<.015;
    if(!force&&!appeal&&atBase&&!r.running)continue;
    const base=force||(appeal?r.start:clamp(r.target<r.progress?Math.floor(r.progress):Math.ceil(r.progress),1,4));
-   const plan=this.baseThrow(m.holder,base,m.outfield?.62:.24),{receiver,duration}=plan;
+   const release=m.outfield?.62:base===2?.16:.24;
+   const plan=this.baseThrow(m.holder,base,release),{receiver,duration}=plan;
    if(receiver==null||m.bag===base&&dist(holder,BASES[base])<=BAG_REACH)continue;
    if(m.outfield&&!appeal&&base!==2&&dist(holder,BASES[base])>(force?57:37))continue;
-   const runnerTime=runTime(r,base);
-   // Prefer a force play. Otherwise throw ahead of an advancing runner.
-   if(appeal&&duration<runnerTime||force&&duration<runnerTime-(m.outfield?.30:.015)||!force&&r.running&&duration<runnerTime+.15){
-    choices.push({...plan,runnerId:r.id,appeal,score:(appeal?110:force?90:40)+base*2-duration*5});
+   const runnerETA=runTime(r,base);
+   const safeMargin=m.outfield?.27:.035;
+   if(!((appeal&&duration<runnerETA)||
+        (force&&duration<runnerETA-safeMargin)||
+        (!force&&r.running&&duration<runnerETA+.15)))continue;
+
+   // First choose a possible TWO-OUT play rather than sorting targets by base
+   // number. Especially on a 4/6 grounder with runners on first and second,
+   // the usual pivot must be SECOND -> FIRST, not an unnecessary throw to third.
+   let doublePlay=false;
+   if(force&&base===2&&firstRunner===r&&batter&&this.outs<2&&!m.fly&&!m.outfield){
+    const relay=this.baseThrow(receiver,1,.18,BASES[2]);
+    if(relay.receiver!=null&&relay.receiver!==receiver){
+     doublePlay=duration+.16+relay.duration<runTime(batter,1)-.04;
+    }
    }
+   let score=(appeal?105:force?112:35)-duration*8.5;
+   if(force&&base===2&&firstRunner===r&&this.outs<2&&!m.outfield){
+    score+=84; // middle-infield force is the correct pivot before evaluating a relay
+    if(doublePlay)score+=270;
+   }
+   if(force&&base===3&&firstRunner&&this.outs<2)score-=42;
+   // With loaded bases and a runner about to score, keep a feasible play at
+   // home competitive when the second-base double play is not available.
+   if(force&&base===4&&this.bases.every(Boolean)&&this.outs<2)score+=56;
+   if(appeal)score+=13; // retouch appeals after a caught fly
+   choices.push({...plan,runnerId:r.id,appeal,score,doublePlay});
   }
-  const choice=choices.sort((a,b)=>b.score-a.score)[0];if(!choice)return null;
+  const choice=choices.sort((a,b)=>b.score-a.score||a.duration-b.duration)[0];
+  if(!choice)return null;
   return {...choice,from:{x:f.ball.x,y:f.ball.y},to:{...BASES[choice.base]},t:0,manual:true};
  }
  updateManualDefense(dt,move){
