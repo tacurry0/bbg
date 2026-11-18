@@ -145,6 +145,7 @@ for (const [parkId,model,names] of [
  for(const name of names)assert(renderer.parkDecor.getObjectByName(name),name);
  const display=renderer.parkDecor.getObjectByName('Live stadium vision');
  assert.equal(display.material,renderer.venueVisionCache.get(parkId).material);
+ assert.equal(display.renderOrder,3,'Canvas places both vision triangles above the frame');
 }
 
 renderer.render(plateGame, 0);
@@ -255,7 +256,7 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v60-venues'));
+assert(swCode.includes('nightball-v60.1-venues'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 

@@ -7,6 +7,8 @@ import {resolve,join,extname,sep} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {chromium} from 'playwright';
 
+// Frame checks don't depend on fonts fetched by locale/UI overlays.
+process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 const dir=resolve(fileURLToPath(new URL('../dist/',import.meta.url)));
 const mime={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
  '.json':'application/json','.webmanifest':'application/manifest+json','.svg':'image/svg+xml',
@@ -34,7 +36,7 @@ try{
   '--disable-dev-shm-usage','--no-sandbox'
  ]});
  const context=await browser.newContext({
-  viewport:{width:412,height:915},deviceScaleFactor:2,isMobile:true,hasTouch:true
+  viewport:{width:412,height:915},deviceScaleFactor:1,isMobile:true,hasTouch:true
  });
  const page=await context.newPage();
  page.on('pageerror',e=>errors.push('JS: '+e.message));
@@ -52,10 +54,14 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=60');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=60.1');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
-   if(game)window.testDomeMatch={renderer:this,game};
+   if(game){
+    const previous=window.testDomeMatch;
+    window.testDomeMatch={renderer:this,game};
+    if(game.paused&&previous?.game===game&&this.lastTime===time)return;
+   }
    return original.call(this,game,time);
   };
  });
@@ -101,7 +107,7 @@ try{
   const status=await page.evaluate(({parkId,parts})=>{
    const {renderer,game}=window.testDomeMatch;
    game.park=NightPlayers.parks.find(park=>park.id===parkId);
-   game.field=null;game.setPhase('aim');renderer.render(game,game.time);
+   game.field=null;game.setPhase('aim');renderer.render(game,++game.time);
    return {id:renderer.canvas.dataset.parkModel,all:parts.every(name=>renderer.parkDecor.getObjectByName(name)),
     live:renderer.parkDecor.getObjectByName('Live stadium vision').material===renderer.venueVisionCache.get(parkId).material};
   },{parkId,parts});

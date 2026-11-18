@@ -1,6 +1,6 @@
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=56';
-import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=60';
+import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=60.1';
 import { drawVenueVision } from './venue-vision.js?v=60';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
@@ -906,7 +906,7 @@ export class StadiumRenderer {
   const boardCall=g?.phase==='result'?g?.hit?.kind:g?.pitch?.speed?Math.round(g.pitch.speed):null;
   if(this.boardKey!==boardKey||this.boardCall!==boardCall){this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;}
   if(field)this.followPlay(g,time);
-  else if(this.fieldMode||!this.hero){this.camera.fov=49;this.camera.updateProjectionMatrix();this.resetCamera();}
+  else if(this.fieldMode||!this.hero){this.camera.fov=g?.park.id==='dome'?54:49;this.camera.updateProjectionMatrix();this.resetCamera();}
   this.lastTime=time;
   this.fieldMode=field;
   for(const p of this.players){p.root.visible=false;p.shadow.visible=false;}

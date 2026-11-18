@@ -386,6 +386,8 @@ function flatVision(group,renderer,materials,{name,x,y,z,width,height,angle=0,da
  const glass=dark?materials.canvas:venueVision(renderer,renderer.parkKey).material;
  const screen=mesh(cabinet,dark?'Inactive LED surface':'Live stadium vision',new T.PlaneGeometry(width,height),glass);
  screen.position.z=-.58;
+ // Canvas sorts by triangle-centre depth; keep both halves above the cabinet.
+ if(renderer.gl.isSoftwareRenderer)screen.renderOrder=3;
 }
 
 function decorateTaipei(renderer,park,group,materials,software){
@@ -437,7 +439,7 @@ function decorateTaoyuan(renderer,group,materials,software){
   const [s,e]=segment(1.65,2.52);
   standsSection(group,'Taoyuan red field-level seating',materials,
    {start:s,end:e,width:68,depth:66,floor:1.24,rows:5,run:.91,rise:.35,palette:red},software);
-  const x=side*39,z=137;
+  const x=side*34,z=137;
   flatVision(group,renderer,materials,{name:side<0?'Taoyuan left field vision':'Taoyuan right field vision',
    x,y:16.4,z,width:33,height:16.8,angle:side*.18});
   boxBatch(group,'Taoyuan vision support columns',[-9,9].map(offset=>({point:[x+offset,4.5,z],size:[1.15,9,1.7]})),materials.shadow);
