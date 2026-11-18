@@ -1,0 +1,183 @@
+/* NIGHTBALL menu polish v58.
+   Revives the original bright PowerPro-inspired arcade presentation.
+   The in-match game screen, live HUD and 3D graphics are untouched. */
+:root{--nb-ui-ink:#104878;--nb-ui-sky:#d3f7ff;--nb-ui-edge:#e9ffff;--nb-ui-shadow:#035c9f}
+body:has(.home-screen:not([hidden])),body:has(.pennant-screen:not([hidden])),
+body:has(.career-screen:not([hidden])){
+ background:radial-gradient(ellipse at 20% 0%,#b8faff 0,transparent 30%),
+ linear-gradient(145deg,#44cdec,#168bcb 58%,#5fe1f4);
+ background-attachment:fixed;
+}
+.app:has(>.home-screen:not([hidden])),.app:has(>.pennant-screen:not([hidden])),
+.app:has(>.career-screen:not([hidden])){
+ box-shadow:0 6px 0 #0062ad55,0 18px 38px #08528570;
+}
+.app:has(>.home-screen:not([hidden])) .topbar,
+.app:has(>.pennant-screen:not([hidden])) .topbar,
+.app:has(>.career-screen:not([hidden])) .topbar{
+ background:linear-gradient(#68edff 0%,#22c2eb 42%,#047ac8 51%,#169cd7 100%);
+ border-bottom:3px solid #eaffff;
+ box-shadow:inset 0 2px #ffffff86,0 3px 0 #0474ad66;
+ color:white;
+}
+.app:has(>.home-screen:not([hidden])) .wordmark,
+.app:has(>.pennant-screen:not([hidden])) .wordmark,
+.app:has(>.career-screen:not([hidden])) .wordmark{
+ color:white;font-size:clamp(22px,5.7vw,29px);
+ font-style:italic;font-weight:950;letter-spacing:-.045em;
+ text-shadow:1px 2px 0 #125c99,-1px -1px 0 #125c99,0 4px 5px #0439745c;
+}
+.app:has(>.home-screen:not([hidden])) .icon-button,
+.app:has(>.pennant-screen:not([hidden])) .icon-button,
+.app:has(>.career-screen:not([hidden])) .icon-button{
+ color:white;border:2px solid #c1fbff;border-radius:50%;
+ background:linear-gradient(#7eedff,#12afe2 48%,#0673c3 51%,#198ad2);
+ box-shadow:inset 0 1px #fff8,0 3px #065d9c;
+}
+.home-screen{
+ color-scheme:light;--text:#103e71;--muted:#567da0;
+ --line:#8ec7e4;--panel:#e6faff;--lime:#086bbf;color:#103e71;
+ background:radial-gradient(ellipse at 20% 3%,#f9ffffb8 0,transparent 28%),
+ radial-gradient(ellipse at 90% 38%,#e0f9ff95 0,transparent 25%),
+ linear-gradient(#72ecff 0%,#29beed 50%,#36d2f4 100%);
+ padding-bottom:23px;
+}
+.home-screen .menu-hero{
+ height:118px;min-height:0;position:relative;overflow:hidden;
+ background:linear-gradient(110deg,#9afbff,#27c6f0 72%,#1687ce);
+ border-bottom:2px solid #ffffffc9;
+}
+.home-screen .menu-key-art{
+ right:0;top:0;height:118px;width:47%;opacity:.99;
+ object-position:65% 47%;
+ mask-image:linear-gradient(90deg,transparent,#000 25%);
+ filter:saturate(1.07) contrast(1.04);
+}
+.home-screen .menu-hero-shade{display:block;position:absolute;inset:0;
+ background:linear-gradient(90deg,#b4faff4d,transparent 68%);pointer-events:none}
+.home-screen .menu-hero h1{
+ top:35px;left:clamp(12px,3.3vw,20px);
+ background:linear-gradient(#68eaff 0%,#049ee4 47%,#0553af 52%,#218cdd 100%);
+ border:3px solid #fff!important;border-radius:26px;
+ padding:12px 16px;color:#fff;
+ box-shadow:0 0 0 2px #089cd3,0 5px 0 #016da8,0 7px 9px #073f7d5b;
+ text-shadow:1px 2px 0 #07529a;
+ font-size:clamp(19px,5.2vw,24px);font-style:normal;font-weight:950;
+ letter-spacing:.025em;
+}
+.home-screen .menu-content{padding:12px 14px 15px;max-width:760px;margin:auto}
+.home-screen .menu-modes{gap:12px}
+.home-screen :is(.menu-card,.menu-mini,.menu-utilities>button,.menu-resume){
+ border:3px solid #fff!important;
+ box-shadow:0 0 0 2px #0c8cc5,0 5px 0 #035b9d,0 9px 13px #0062a344;
+ transition:transform .13s,filter .13s,box-shadow .13s;
+}
+.home-screen :is(.menu-card,.menu-mini,.menu-utilities>button,.menu-resume):active{
+ transform:translateY(3px);
+ box-shadow:0 0 0 2px #0c8cc5,0 2px 0 #035b9d;
+}
+.home-screen :is(.menu-card,.menu-mini,.menu-utilities>button,.menu-resume):focus-visible{
+ outline:3px solid #ffdf56;outline-offset:5px;
+}
+.home-screen .menu-card{border-radius:19px}
+.home-screen .menu-card strong{
+ font-size:clamp(23px,6.8vw,30px);font-weight:950;
+ letter-spacing:.015em;text-shadow:0 1px #fff8;
+}
+.home-screen .menu-mode-tag{font-size:10px;font-weight:850;letter-spacing:.04em}
+.home-screen .menu-season{
+ min-height:130px;height:auto;padding:14px 17px;
+ color:#503f07;
+ background:linear-gradient(155deg,#fffdb7,#ffe15a 45%,#efb91c 49%,#fff280);
+}
+.home-screen .menu-trophy{width:128px;height:126px;bottom:0;right:7px;opacity:1;
+ filter:drop-shadow(0 4px 2px #906a1e42)}
+.home-screen .menu-club-logos{margin-top:11px;gap:6px}
+.home-screen .menu-club-logos img{width:28px;height:28px;filter:drop-shadow(0 2px 1px #6c53123b)}
+.home-screen .menu-match{
+ height:auto;min-height:97px;padding:14px 17px;color:#0a5528;
+ background:linear-gradient(135deg,#bcffae,#60ee6f 46%,#16b942 50%,#77ee79);
+}
+.home-screen .menu-match strong{color:#0c512a}
+.home-screen .menu-matchup>span{
+ width:58px;height:58px;border:2px solid white;
+ background:#edfff4df;box-shadow:inset 0 1px #fff,0 3px #168c6c;
+}
+.home-screen .menu-matchup img{width:49px;height:49px}
+.home-screen .menu-career{
+ min-height:88px;padding:14px 17px;
+ color:#174632;
+ background:linear-gradient(155deg,#eeffce,#b6f18d 45%,#77dca1 50%,#d4f9ba);
+}
+.home-screen .menu-career strong{color:#174632}
+.home-screen .menu-apbc{
+ min-height:88px;padding:14px 17px;color:#143e8e;
+ background:linear-gradient(135deg,#f6f2ff,#c3c5ff 43%,#7fa9f2 50%,#b9e1ff);
+}
+.home-screen .menu-apbc strong{color:#193e84}
+.home-screen .menu-chevron{
+ background:#ffffffba;border:1px solid #ffffffcd;border-radius:50%;
+ width:24px;height:24px;display:grid;place-items:center;
+ color:#046fb5;box-shadow:0 2px #397ca746;right:9px;top:10px;
+ font-size:18px;
+}
+.home-screen .menu-career .menu-chevron{background:#43b87b;color:#fff}
+.home-screen .menu-match .menu-chevron{top:auto;bottom:10px}
+.home-screen .menu-mini{height:96px;min-height:96px;border-radius:18px}
+.home-screen .menu-mini strong{font-size:12px;font-weight:900}
+.home-screen .menu-utilities{gap:10px;margin-top:18px}
+.home-screen .menu-utilities>button{min-height:70px;border-radius:15px}
+.home-screen .menu-resume{
+ background:linear-gradient(#d0ffb6,#6be472 48%,#20bb39 52%,#86ed91);
+ color:#18542c;padding:11px 14px;
+}
+.home-screen .menu-resume b{font-size:14px}
+.home-screen .menu-resume small{color:#315b42}
+.pennant-screen{
+ background:radial-gradient(ellipse at 20% 0%,#ffffffa0,transparent 30%),
+ linear-gradient(#b2f5ff,#e6f9ff 42%,#c2f1fc)!important;
+}
+.career-screen{
+ background:radial-gradient(ellipse at 85% 0%,#63d3ff80,transparent 40%),
+ linear-gradient(155deg,#1378b1,#075583 50%,#043c73)!important;
+}
+.career-screen .career-panel{
+ border:2px solid #b3e9f8;border-radius:15px;
+ box-shadow:inset 0 1px #fff,0 4px 0 #1a62923c,0 7px 14px #001f3830;
+}
+.career-screen .career-profile{border-radius:16px;border:2px solid #a8f1e3}
+.app:not(:has(>.game-screen:not([hidden]))) .modal-backdrop{
+ background:#0873beb8;backdrop-filter:blur(4px);
+}
+.app:not(:has(>.game-screen:not([hidden]))) .modal{
+ border:4px solid #aaf5ff;
+ background:linear-gradient(125deg,#fff,#edfbff 60%,#d2f1ff);
+ box-shadow:0 0 0 2px #078ac3,inset 0 0 0 1px #fff,0 14px 42px #003c6a73;
+ border-radius:22px;color:#123f66;
+}
+.app:not(:has(>.game-screen:not([hidden]))) .modal h2{
+ border:3px solid white;border-radius:23px;
+ background:linear-gradient(#63eaff,#0a94d5 44%,#0550a9 52%,#127cc7);
+ box-shadow:0 0 0 2px #0fa5d3,0 3px #0571ad;
+ color:#fff;text-shadow:0 2px #074f92;
+}
+.app:not(:has(>.game-screen:not([hidden]))) .modal :is(button,input,select):focus-visible{
+ outline:3px solid #f1bc28;outline-offset:3px;
+}
+@media(min-width:640px){
+ .home-screen .menu-hero{height:140px}
+ .home-screen .menu-key-art{height:140px;width:42%}
+ .home-screen .menu-hero h1{top:43px}
+ .home-screen .menu-content{padding:15px 19px 20px}
+}
+@media(max-width:365px){
+ .home-screen .menu-content{padding:10px 10px 15px}
+ .home-screen .menu-card strong{font-size:24px}
+ .home-screen .menu-trophy{width:108px;height:110px}
+ .home-screen .menu-matchup>span{width:48px;height:48px}
+ .home-screen .menu-matchup img{width:42px;height:42px}
+ .home-screen .menu-mini{height:91px;min-height:91px}
+}
+@media(prefers-reduced-motion:reduce){
+ .home-screen :is(.menu-card,.menu-mini,.menu-utilities>button,.menu-resume){transition:none}
+}
