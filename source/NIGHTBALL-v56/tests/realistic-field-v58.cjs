@@ -49,6 +49,20 @@ try{
   assert.equal(plan.receiver,receiver,'correct middle-infielder pivot');
   assert(plan.doublePlay,'second-to-first relay can beat batter for this setup');
  }
+ // Run the actual throw -> catch -> relay -> catch sequence, not just the
+ // planner. The fielder at second must record the lead force before the
+ // first-baseman records the second out.
+ const realDP=match(3,1);realDP.startField(30,0,0,false);
+ const df=realDP.field,dm=df.manual,pivot=df.fielders[3];
+ dm.secured=true;dm.holder=3;dm.outfield=false;dm.recovery=0;
+ df.ball.x=pivot.x;df.ball.y=pivot.y;df.ball.bounces=1;df.trajectory='ground';
+ for(let i=0;i<1600&&!df.resolved;i++)realDP.updateField(.01);
+ assert(df.resolved,'4-6-3 live play must terminate');
+ assert.equal(realDP.outs,3,'both outs recorded after one-out DP');
+ assert.equal(df.outcome,'doubleplay','4-6-3 play classification');
+ const arrivals=realDP.playEvents.filter(e=>e.type==='throw-arrival'&&e.caught).map(e=>e.base);
+ assert.deepEqual(arrivals.slice(0,2),[2,1],'ball goes second then first');
+
  // Confirm a double play is not attempted with two already out.
  const late=match(3,2);late.startField(30,0,0,false);
  const lm=late.field.manual;lm.secured=true;lm.holder=3;lm.outfield=false;
@@ -67,6 +81,16 @@ try{
   for(let i=0;i<30&&r.command!==to;i++)d.updateRunners(.02);
   assert.equal(r.command,to,'automatic tag-up from '+from+' to '+to);
  }
+ // Full automatic live tag-up: weak-armed CF catches deep fly; the runner
+ // leaves after the catch, beats the return and receives the correct run.
+ const liveSF=match(4,1);liveSF.startField(40,49,0,false);
+ const cf=liveSF.field.fielders[7];cf.x=0;cf.y=115;cf.arm=18;
+ liveSF.secureManualBall(7,true);
+ for(let i=0;i<1500&&!liveSF.field.resolved;i++)liveSF.updateField(.01);
+ assert(liveSF.field.resolved,'live sacrifice fly play must terminate');
+ assert.equal(liveSF.homeScore,1,'runner tags up and scores automatically');
+ assert.equal(liveSF.hit.kind,'sacrificefly','live play records sacrifice fly');
+
  // Verify a scored tag-up is a sacrifice fly (no hit, no at-bat, one RBI).
  const sf=match(4,1);sf.startField(38,48,0,false);
  sf.secureManualBall(7,true);
