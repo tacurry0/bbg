@@ -46,9 +46,9 @@ try{
  const graphics=await page.locator('#game-canvas').getAttribute('data-graphics');
  assert(['webgl-3d','canvas-3d'].includes(graphics),'3D renderer initializes: '+graphics);
  assert.equal(await page.locator('#home').isVisible(),true);
- assert(await page.locator('link[href="./menu-premium.css?v=57"]').count());
+ assert(await page.locator('link[href="./menu-polish.css?v=58"]').count());
  const hero=await page.locator('.menu-hero').boundingBox();
- assert(hero&&hero.height>=210,'new premium hero must be visible');
+ assert(hero&&hero.height>=100&&hero.height<=190,'classic arcade hero must be visible');
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.locator('[data-mode="match"]').click();
