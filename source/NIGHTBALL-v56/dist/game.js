@@ -53,7 +53,7 @@ function moveBattedBall(b,dt,wind){
  if(b.vz<1.5)b.vz=0;
  return impact;
 }
-const FLY_LEAD=.26;
+const FLY_LEAD=.045; // Catchable flies: wait nearly on the bag, ready to tag after the catch
 const outfieldPickup=(fielder,point)=>fielder>=6||Math.hypot(point.x,point.y)>54;
 let conditionGameSerial=0;
 const conditions=[
@@ -1211,7 +1211,7 @@ window.NightGame=class NightGame{
   const cover=this.secondBaseCover(index,f.ball);
   if(cover!==null)f.fielders[cover].target=BASES[2];
   const player=f.fielders[index],acrobatics=['dive','jump'].includes(player.action?.type);
-  m.recovery=(fly?(m.outfield?.80:.26):m.outfield?.88:.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
+  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?.88:.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
   f.ball.vx=f.ball.vy=f.ball.vz=0;f.trail=[];this.playEvents.push({type:fly?'catch':'pickup',fielder:index,time:f.elapsed});
   if(fly){
    this.emit('sound','catch');this.manualOut(f.runners.find(r=>r.batter),'catch');
