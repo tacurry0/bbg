@@ -75,7 +75,7 @@ function addSeatDeck(group,park,span,quality){
    chairs.push({p:pt,rot});backs.push({p:new T.Vector3(pt.x,pt.y+.35,pt.z),rot});
    const id=j*991+i,occupancy=school?.12:indoors?.46:.60;
    if(per(id*73+11)<occupancy){
-    const hue=(id*37+j*5)%10,colors.push([0xe8f5ff,0x243a4f,0xdcc94b,0xf26a50,0x58b3a2,0xf4f0e2,0x325f9b,0x7b93bd,0x9c2c4b,0xb5d7e2][hue]);
+    const hue=(id*37+j*5)%10;colors.push([0xe8f5ff,0x243a4f,0xdcc94b,0xf26a50,0x58b3a2,0xf4f0e2,0x325f9b,0x7b93bd,0x9c2c4b,0xb5d7e2][hue]);
     heads.push({p:new T.Vector3(pt.x,pt.y+1.04,pt.z),rot});
     bodies.push({p:new T.Vector3(pt.x,pt.y+.61,pt.z),rot});
    }
