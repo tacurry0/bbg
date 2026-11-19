@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=70';
+import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=74';
 
 export const OPEN_AIR_MODELS={
  night:'intercontinental',brick:'tianmu',sky:'tainan',
@@ -36,7 +36,7 @@ function section(group,name,m,software,range,shape,palette,base,attendance=0,shi
  standsSection(group,name,m,{start,end,width,depth,floor,rows,run,rise,palette,base,concourse:true,attendance,shirts},software);
 }
 
-function supportBeams(group,name,segments,material){
+export function supportBeams(group,name,segments,material){
  const beams=new T.InstancedMesh(new T.BoxGeometry(1,1,1),material,segments.length);
  beams.name=name;
  const anchor=new T.Object3D(),axis=new T.Vector3(0,1,0),start=new T.Vector3(),end=new T.Vector3();
@@ -50,7 +50,7 @@ function supportBeams(group,name,segments,material){
  group.add(beams);
 }
 
-function backstop(renderer,group,m,width,depth,trackWidth=2.45){
+export function backstop(renderer,group,m,width,depth,trackWidth=2.45){
  const soft=renderer.gl.isSoftwareRenderer,columns=soft?20:130,rows=soft?3:27;
  const low=1.35,high=12.4,start=1.51,end=TAU-start;
  const point=(i,y)=>bowlPoint(start+i/columns*(end-start),width,depth,y);
@@ -98,7 +98,7 @@ export function addReferenceBackstop(renderer,park){
  },frame.width,frame.depth,frame.trackWidth);
 }
 
-function trees(renderer,group,name,{z,spread,count,colors}){
+export function trees(renderer,group,name,{z,spread,count,colors}){
  const isLow=renderer.gl.isSoftwareRenderer;
  const n=isLow?Math.ceil(count*.66):count;
  const tree=new T.InstancedMesh(new T.IcosahedronGeometry(1,isLow?0:1),renderer.mat('outdoor:tree leaf',0xffffff,.95),n);
@@ -166,7 +166,7 @@ function intercontinental(group,r,m,soft){
  dugouts(group,m);
 }
 
-function mountain(group,name,color,distance,base,scale,phase){
+export function mountain(group,name,color,distance,base,scale,phase){
  const positions=[],faces=[];
  for(let i=0;i<=80;i++){
   const x=(i-40)*6.6,z=distance+Math.sin(i*.154+phase)*7.2;

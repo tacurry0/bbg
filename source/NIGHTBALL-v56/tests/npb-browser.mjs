@@ -47,10 +47,14 @@ try{
  await page.locator('[data-action="match-team-next"]').click();
  const before=await page.locator('#modal-content').innerText();
  assert(before.includes('西武')&&before.includes('ハヤテ'),'NPB vs NPB setup must show selected teams');
+ assert.equal(await page.locator('#park-select').inputValue(),'belluna-dome');
+ assert.equal(await page.locator('#park-select optgroup[label="日本"] option').count(),15);
  await page.locator('[data-action="match-lineup"]').click();
  assert.equal(await page.locator('.squad-starter-row').count(),9,'nine sourced NPB batters appear');
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.getElementById('game')&&!document.getElementById('game').hidden,{timeout:12000});
+ await page.waitForFunction(()=>document.querySelector('#game-canvas')?.dataset.parkModel==='belluna-dome',
+  {timeout:15000});
  await page.waitForTimeout(450);
  assert.equal(await page.locator('#scoreboard').count(),1,'old HUD preserved');
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('nightball.settings')||'{}'));

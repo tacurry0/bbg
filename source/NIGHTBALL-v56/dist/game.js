@@ -923,7 +923,7 @@ window.NightGame=class NightGame{
   const travel=Math.hypot(b.x,b.y);f.maxTravel=Math.max(f.maxTravel,travel);this.hit.distance=Math.round(f.maxTravel);
   const angle=Math.atan2(b.x,b.y),wall=NightPlayers.wallDistance(this.park,angle);
   if(!f.foul&&!f.overFence&&travel>=wall){
-   const clearsWall=!f.wallHit&&b.z>NightPlayers.fenceHeight(this.park);
+   const clearsWall=!f.wallHit&&b.z>NightPlayers.fenceHeight(this.park,angle);
    if(clearsWall&&b.bounces&&!this.derby){f.groundRule=true;this.finishBall('double');return;}
    if(clearsWall&&!b.bounces)f.overFence=true;
    else{

@@ -72,6 +72,8 @@ try{
  const body=await page.locator('#modal-content').innerText();
  assert(body.includes('ハンファ')&&body.includes('KT'),'new teams selected in pregame setup');
  await page.locator('[data-match-home="true"]').click();
+ assert.equal(await page.locator('#park-select').inputValue(),'daejeon-hanwha');
+ assert.equal(await page.locator('#park-select optgroup[label="韓国"] option').count(),9);
  const longPitcher='ウィルケル・エルナンデス';
  const pitcherChoice=page.locator('#starter-select option').filter({hasText:longPitcher});
  const pitcherValue=await pitcherChoice.getAttribute('value');
@@ -83,10 +85,11 @@ try{
  await page.locator('.editor-pitchers summary').click();
  for(const width of [320,412]){
   await page.setViewportSize({width,height:915});
-  const clipped=await page.locator('.squad-name, .editor-pitchers summary>b').evaluateAll(names=>names.filter(name=>{
+  const clipped=await page.locator('.fit-player-name').evaluateAll(names=>names.filter(name=>{
    const box=name.getBoundingClientRect(), parent=name.parentElement.getBoundingClientRect();
-   const range=document.createRange();range.selectNodeContents(name);
-   return [...range.getClientRects()].some(line=>line.left<box.left-1||line.right>box.right+1||
+   const range=document.createRange();range.selectNodeContents(name.firstElementChild.firstChild);
+   const lines=[...range.getClientRects()];
+   return lines.length!==1||lines.some(line=>line.left<box.left-1||line.right>box.right+1||
     line.top<parent.top-1||line.bottom>parent.bottom+1);
   }).map(name=>name.textContent));
   assert.deepEqual(clipped,[],'lineup names fit at '+width+'px');
@@ -94,6 +97,8 @@ try{
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.querySelector('#game')&&!document.querySelector('#game').hidden,{timeout:12000});
  await page.waitForFunction(()=>!!document.querySelector('#game-canvas')?.dataset.graphics,{timeout:15000});
+ await page.waitForFunction(()=>document.querySelector('#game-canvas')?.dataset.parkModel==='daejeon-hanwha',
+  {timeout:15000});
  await page.waitForTimeout(500);
  assert.equal(await page.locator('#scoreboard').count(),1,'legacy match HUD preserved');
  const hudName=page.locator('#pitcher-card .hud-name-text');

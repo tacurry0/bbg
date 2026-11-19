@@ -1,6 +1,6 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
 global.window=global;
-for(const file of ['ratings-data.js','players.js','pennant.js','game.js'])vm.runInThisContext(fs.readFileSync('dist/'+file,'utf8'),{filename:file});
+for(const file of ['ratings-data.js','players.js','pro-parks.js','pennant.js','game.js'])vm.runInThisContext(fs.readFileSync('dist/'+file,'utf8'),{filename:file});
 const emit=()=>{},fresh=(opts={})=>new NightGame('pennant','standard',emit,opts);
 const out=g=>{g.addOut();g.endAtBat('groundout');g.resetCount();g.changeHalf();if(g.phase!=='ended')g.beginHalf();};
 const loaded=g=>{assert.equal(g.outs,2);assert.deepEqual(g.bases,[true,true,true]);assert.equal(new Set(g.baseIds).size,3);assert(!g.baseIds.includes(g.batter.id));assert(g.baseIds.every(id=>g.lineups[g.side].some(p=>p.id===id)));};

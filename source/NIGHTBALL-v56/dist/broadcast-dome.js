@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { venueVision } from './venue-vision.js?v=69';
+import { venueVision } from './venue-vision.js?v=74';
 
 const TAU = 2 * Math.PI;
 const CENTER_Z = 48;

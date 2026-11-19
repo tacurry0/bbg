@@ -358,7 +358,7 @@
      Object.entries(startingFielding).some(([pos,id])=>!expected.has(pos)||!start.has(id))||
      new Set(Object.values(startingFielding)).size!==9)
    throw new Error('KBO starting fielders not uniquely assigned '+raw.id);
-  return {...raw,batters,pitchers,startingFielding};
+  return {...raw,park:NightPlayers.proHomeParks?.[raw.id]??raw.park,batters,pitchers,startingFielding};
  });
  const oldGet=NightTeams.get.bind(NightTeams);
  const clubsById=new Map(clubs.map(c=>[c.id,c]));

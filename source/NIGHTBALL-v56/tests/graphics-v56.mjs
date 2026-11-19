@@ -34,7 +34,7 @@ const canvas = () => ({
 });
 globalThis.document = { createElement: canvas };
 
-for (const name of ['ratings-data', 'players', 'pennant', 'derby', 'game']) {
+for (const name of ['ratings-data', 'players', 'pro-parks', 'pennant', 'derby', 'game']) {
   vm.runInThisContext(readFileSync('dist/' + name + '.js', 'utf8'));
 }
 
@@ -189,10 +189,47 @@ for(const park of NightPlayers.parks.filter(p=>!p.school)){
  renderer.setPark(park,'night');
  const nightColor=park.turfNight??new T.Color(park.turf).multiplyScalar(.86).getHex();
  assert.equal(renderer.grassMaterial.color.getHex(),nightColor);
- assert.equal(renderer.lightsLit,!indoor);
+ assert.equal(renderer.lightsLit,!indoor&&!park.roofProfile);
  if(!indoor)assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
 }
 assert.equal(renderer.venueVisionCache.get('harbor:auxiliary').canvas.width,1140);
+
+const proParks=NightPlayers.parks.filter(park=>park.pro);
+assert.equal(proParks.filter(park=>park.league==='npb').length,13);
+assert.equal(proParks.filter(park=>park.league==='kbo').length,9);
+assert.equal(NightPlayers.proHomeParks['npb-g'],'tokyo-dome');
+assert.equal(NightPlayers.proHomeParks['kbo-lg'],NightPlayers.proHomeParks['kbo-ob']);
+const details={
+ koshien:'Koshien Gin-san silver canopy',
+ 'es-con':'ES CON glass outfield facade',
+ miyagi:'Miyagi Smile Glico Park Ferris wheel',
+ 'kyocera-dome':'Kyocera seven suspended Super Rings',
+ 'daejeon-hanwha':'Hanwha high right-field Monster Wall media glass',
+ gocheok:'高尺スカイドーム steel truss grid'
+};
+for(const park of proParks){
+ renderer.setPark(park,'day');
+ assert.equal(renderer.canvas.dataset.parkModel,park.id);
+ assert(renderer.parkDecor.getObjectByName(park.name+' main vision'));
+ assert(renderer.parkDecor.getObjectByName('Infield protective net'));
+ if(details[park.id])assert(renderer.parkDecor.getObjectByName(details[park.id]),details[park.id]);
+ if(park.id==='koshien')assert(!renderer.infieldSkin[1].visible,'the grass diamond is hidden on black soil');
+ if(park.roofProfile)assert(renderer.parkDecor.getObjectByName(park.name+' roof shell'));
+ if(park.id==='daejeon-hanwha'){
+  const positions=renderer.wallGroup.children[0].geometry.attributes.position.array;
+  const heights=Array.from(positions).filter((v,i)=>i%3===1);
+  assert.equal(Math.max(...heights),8);
+  assert.equal(NightPlayers.fenceHeight(park,.6),8);
+  assert.equal(NightPlayers.fenceHeight(park,-.6),2.4);
+ }
+}
+for(const park of ['es-con','daejeon-hanwha']){
+ const match=new NightGame('match','standard',()=>{},{park});
+ renderer.render(match,0);
+ assert.equal(renderer.canvas.dataset.cameraView,'overview');
+ assert(renderer.venueVisionCache.get(park).material.map);
+}
+console.log('PASS: 22 modeled JP/KR venues, roofs, live boards, plate overviews and the Daejeon wall.');
 
 for(const parkId of ['tokyo-dome','taipei-dome','dome']){
  const match=new NightGame('match','standard',()=>{},{park:parkId});
@@ -362,13 +399,13 @@ renderer.hud=oldHud;renderer.ctx=oldContext;
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v73-pennant-ball-lineup'));
+assert(swCode.includes('nightball-v74-jp-kr-parks'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=71'));
-assert(swCode.includes('./venue-vision.js?v=69'));
-assert(swCode.includes('./open-air-parks.js?v=70'));
+assert(swCode.includes('./stadium-fx.js?v=74'));
+assert(swCode.includes('./venue-vision.js?v=74'));
+assert(swCode.includes('./open-air-parks.js?v=74'));
 assert(!swCode.includes('assets/stadiums/'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);

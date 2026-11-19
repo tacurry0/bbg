@@ -42,12 +42,22 @@ NightPlayers.schoolPark=(round,variant=0,tryout=false)=>tryout?schoolParks[varia
  round<2?schoolParks[2+(variant+round)%2][0]:'toyama';
 NightPlayers.roofSurface=(park,x,z)=>{
  if(!park.roofHeight)return Infinity;
+ if(park.roofProfile){
+  const {style,radiusX,radiusZ,edge,height}=park.roofProfile;
+  const cross=Math.abs(x/radiusX),length=(z-48)/radiusZ;
+  const crown=style==='gable'?Math.max(0,1-cross):style==='barrel'?Math.sqrt(Math.max(0,1-cross*cross)):
+   Math.pow(Math.max(0,1-cross*cross-length*length),style==='open-canopy'?.60:.72);
+  return edge+(height-edge)*crown;
+ }
  const taipei=park.id==='taipei-dome',radius=taipei?128:116,edge=taipei?40:33;
  const radiusSquared=(x/radius)**2+((z-48)/radius)**2;
  return edge+(park.roofHeight-edge)*Math.pow(Math.max(0,1-radiusSquared),.65);
 };
 for(const park of NightPlayers.parks)Object.assign(park,parkDesigns[park.id]);
-NightPlayers.fenceHeight=park=>park.wallHeight??2.8;
+NightPlayers.fenceHeight=(park,angle=0)=>{
+ const section=park.wallSections?.find(([from,to])=>angle>=from&&angle<=to);
+ return section?.[2]??park.wallHeight??2.8;
+};
 // Monotone cubic interpolation preserves the five surveyed or configured marks.
 NightPlayers.wallDistance=(park,angle)=>{
  const quarter=Math.PI/8,position=Math.max(0,Math.min(4,angle/quarter+2));
@@ -62,6 +72,7 @@ NightPlayers.wallDistance=(park,angle)=>{
   return before*after>0?2*before*after/(before+after):0;
  };
  const a=anchors[index],b=anchors[index+1],u2=u*u,u3=u2*u;
+ if(park.straightFence)return a*b*Math.sin(quarter)/(b*Math.sin(quarter*(1-u))+a*Math.sin(quarter*u));
  return a+(b-a)*(3*u2-2*u3)+tangent(index)*(u3-2*u2+u)+tangent(index+1)*(u3-u2);
 };
 })();

@@ -3,7 +3,7 @@ const {readFileSync,existsSync}=require('node:fs');
 const vm=require('node:vm');
 global.window=global;
 const dist='dist/';
-for(const f of ['ratings-data','players','pennant','apbc-data','npb-data','npb-rosters','game'])
+for(const f of ['ratings-data','players','pro-parks','pennant','apbc-data','npb-data','npb-rosters','game'])
  vm.runInThisContext(readFileSync(dist+f+'.js','utf8'),{filename:f+'.js'});
 
 assert.equal(NightNPBData.season,2026);
@@ -74,11 +74,11 @@ assert.equal(cpbl.schedule.length,20);
 assert.equal(cpbl.schedule[0].length,3);
 assert.equal(new Set(cpbl.schedule.flat().flatMap(g=>[g.home,g.away])).size,6,'CPBL old standings and schedule remain unchanged');
 const checkCache=readFileSync('dist/sw.js','utf8');
-assert(checkCache.includes('npb-data.js?v=64')&&checkCache.includes('npb-rosters.js?v=73'));
+assert(checkCache.includes('npb-data.js?v=64')&&checkCache.includes('npb-rosters.js?v=74'));
 assert(checkCache.includes('assets/npb/npb-v.svg'));
 const html=readFileSync('dist/index.html','utf8');
-assert(html.indexOf('npb-data.js?v=64')<html.indexOf('npb-rosters.js?v=73'));
-const rosterScript=html.indexOf('npb-rosters.js?v=73');
+assert(html.indexOf('npb-data.js?v=64')<html.indexOf('npb-rosters.js?v=74'));
+const rosterScript=html.indexOf('npb-rosters.js?v=74');
 const appScript=html.search(/<script type="module" src="\.\/app\.js\?v=[\w.-]+">/);
 assert(rosterScript>=0&&appScript>rosterScript,'rosters must load before the app entry point');
 console.log('PASS NPB 2026: 14 teams, 420 uniquely sourced players, independent farm clubs, each playable in live match, official evidence/uncertainty, CPBL and APBC compatibility, offline cache.');

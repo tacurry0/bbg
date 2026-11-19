@@ -263,6 +263,7 @@ export function enhanceGrassMaterial(material, gl) {
   const uniforms = {
     uFenceAnchors: { value: new T.Vector4(99.06, 112.7, 121.92, 112.7) },
     uFenceRight: { value: 99.06 },
+    uStraightFence: { value: 0.0 },
     uIsSchool: { value: 0.0 },
     uIsDome: { value: 0.0 },
     uVenueMow: { value: new T.Vector2(0, 1) },
@@ -283,6 +284,7 @@ export function enhanceGrassMaterial(material, gl) {
         varying vec3 vNbWorld;
         uniform vec4 uFenceAnchors;
         uniform float uFenceRight;
+        uniform float uStraightFence;
         uniform float uIsSchool;
         uniform float uIsDome;
         uniform vec2 uVenueMow;
@@ -317,6 +319,10 @@ export function enhanceGrassMaterial(material, gl) {
           float u = pos - idx;
           float p0 = idx < 0.5 ? a0 : idx < 1.5 ? a1 : idx < 2.5 ? a2 : a3;
           float p1 = idx < 0.5 ? a1 : idx < 1.5 ? a2 : idx < 2.5 ? a3 : a4;
+          if (uStraightFence > 0.5) {
+            float q = 0.39269908;
+            return p0 * p1 * sin(q) / (p1 * sin(q * (1.0 - u)) + p0 * sin(q * u));
+          }
           float t0 = idx < 0.5 ? (a1 - a0) : idx < 1.5 ? ((a1 - a0) * (a2 - a1) > 0.0 ? 2.0 * (a1 - a0) * (a2 - a1) / (a2 - a0) : 0.0) : idx < 2.5 ? 0.0 : ((a3 - a2) * (a4 - a3) > 0.0 ? 2.0 * (a3 - a2) * (a4 - a3) / (a4 - a2) : 0.0);
           float t1 = idx < 0.5 ? ((a1 - a0) * (a2 - a1) > 0.0 ? 2.0 * (a1 - a0) * (a2 - a1) / (a2 - a0) : 0.0) : idx < 1.5 ? 0.0 : idx < 2.5 ? ((a3 - a2) * (a4 - a3) > 0.0 ? 2.0 * (a3 - a2) * (a4 - a3) / (a4 - a2) : 0.0) : (a4 - a3);
           float u2 = u * u, u3 = u2 * u;

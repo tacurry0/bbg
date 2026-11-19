@@ -233,9 +233,42 @@ export function venueVision(renderer,id,variant='main'){
  return cache.get(key);
 }
 
+function drawProVision(c,g,images,id,vision){
+ const w=faceWidth,h=faceHeight,name=vision.name;
+ colors[id]={ink:'#101818',line:'#4c5c5c',label:'#e1e9e6',accent:vision.accent,digits:vision.classic?'#f0df95':'#f5f6ea',
+  art:[vision.accent,vision.classic?'#242b22':'#17262b']};
+ rect(c,colors[id].ink,0,0,w,h);
+ gradient(c,0,0,w,100,vision.accent,'#121b20');
+ text(c,name,w/2,70,61,'#f6f4e8',w*.90);
+ if(vision.classic){
+  score(c,g,images,id,14,114,w-28,344);
+  count(c,g,id,14,467,w-28,94);
+  const side=g?.side??'away';
+  const order=g?.lineups?.[side]??[];
+  for(let i=0;i<9;i++){
+   const x=(i+.5)*w/9;
+   text(c,i+1,x,645,34,'#f0df95');
+   text(c,order[i]?.name??'',x,726,42,'#f4f4e9',w*.104);
+  }
+  return;
+ }
+ const wing=vision.wide?268:298,bottom=620;
+ for(const [i,side] of ['away','home'].entries()){
+  lineup(c,g,side,images,id,i?w-wing:0,106,wing,bottom-106);
+ }
+ const mid=w-2*wing,active=g?.teams?.[g?.side],player=g?.batter;
+ gradient(c,wing,106,mid,414,'#24363b',colors[id].ink);
+ logo(c,active,images,w*.50,234,148);
+ text(c,player?.name??(g?.derby?'HOME RUN DERBY':'PLAY BALL'),w*.50,375,67,'#fff',mid*.88);
+ text(c,g?.pitch?.speed?Math.round(g.pitch.speed)+' km/h':'',w*.50,453,56,'#c4d9e5',mid*.8);
+ count(c,g,id,wing,520,mid,100);
+ score(c,g,images,id,0,bottom,w,h-bottom);
+}
+
 export function drawVenueVision(renderer,id,game){
  const {canvas,material}=venueVision(renderer,id),c=canvas.getContext('2d'),images=renderer.clubImages;
- if(id==='tokyo-dome')tokyo(c,game,images);
+ if(renderer.proVision)drawProVision(c,game,images,id,renderer.proVision);
+ else if(id==='tokyo-dome')tokyo(c,game,images);
  else if(id==='river')chengcingPanel(c,game,images);
  else if(id==='toyama')alpenPanel(c,game,images);
  else{

@@ -36,7 +36,7 @@
   const startingFielding=Object.fromEntries(raw.startingOrder.map(id=>{
    const p=batters.find(x=>x.id===id);return [p.pos,p.id];
   }));
-  return {...raw,batters,pitchers,startingFielding};
+  return {...raw,park:NightPlayers.proHomeParks?.[raw.id]??raw.park,batters,pitchers,startingFielding};
  });
  const byId=new Map(teams.map(team=>[team.id,team]));
  const previousGet=NightTeams.get.bind(NightTeams);

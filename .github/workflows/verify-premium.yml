@@ -27,6 +27,8 @@ jobs:
           set -euo pipefail
           node --check dist/stadium-premium.js
           node --check dist/stadium3d.js
+          node --check dist/pro-parks.js
+          node --check dist/pro-stadiums.js
           node --check dist/app.js
           node --check dist/game.js
           node --check dist/sw.js
@@ -37,12 +39,12 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=73' dist/index.html
-          grep -Fq 'npb-rosters.js?v=73' dist/index.html
-          grep -Fq 'app.js?v=73' dist/index.html
-          grep -Fq 'kbo-rosters.js?v=72' dist/index.html
+          grep -Fq 'game.js?v=74' dist/index.html
+          grep -Fq 'npb-rosters.js?v=74' dist/index.html
+          grep -Fq 'app.js?v=74' dist/index.html
+          grep -Fq 'kbo-rosters.js?v=74' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
-          grep -Fq 'stadium3d.js?v=73' dist/app.js
+          grep -Fq 'stadium3d.js?v=74' dist/app.js
       - name: Test real 3D construction and player details
         working-directory: source/NIGHTBALL-v56
         run: |

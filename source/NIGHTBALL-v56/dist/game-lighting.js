@@ -11,7 +11,7 @@ export function gameLightingMode(value){
 }
 
 export function usesDayLight(park){
- return !!park.school||['sky','brick','toyama','taoyuan'].includes(park.theme||park.id);
+ return !!park.daylight||!!park.school||['sky','brick','toyama','taoyuan'].includes(park.theme||park.id);
 }
 
 const AUTO_SKIES={
@@ -44,7 +44,7 @@ export function applyParkLighting(renderer,park,mode){
  const indoor=park.theme==='dome',tokyo=park.id==='tokyo-dome';
  const auto=mode==='auto',day=auto?usesDayLight(park):mode==='day';
  const named=auto?AUTO_SKIES[park.id]:null;
- const outdoor=auto?named:day?DAY_SKY:NIGHT_SKY;
+ const outdoor=auto?named??(park.pro?(day?DAY_SKY:NIGHT_SKY):null):day?DAY_SKY:NIGHT_SKY;
  applyTurfLighting(renderer,park,mode==='night'||(auto&&!indoor&&!day));
  renderer.lightingMode=mode;
  renderer.canvas.dataset.gameLighting=mode;
@@ -70,17 +70,18 @@ export function applyParkLighting(renderer,park,mode){
   skyLight.color.setHex(auto?(tokyo?0xf7f4ed:0xf6f0e7):day?0xe8f7fc:0xb8d1fa);
   keyLight.intensity=auto?(tokyo?2.63:2.72):day?2.86:3.48;
   keyLight.color.setHex(auto?(tokyo?0xfff5e6:0xfff5df):day?0xfff8ee:0xe7efff);
-  const roofLighting=renderer.parkDecor.getObjectByName('Roof-edge LED lamps')?.material;
-  if(roofLighting)roofLighting.emissiveIntensity=auto?(tokyo?1.05:1):day?.80:1.55;
+
  }else{
   skyLight.intensity=day?2.25:auto?1.62:1.17;
   skyLight.color.setHex(day||auto?0xd7e9ff:0xa7c4ec);
   keyLight.intensity=day?3.48:auto?3.42:3.68;
   keyLight.color.setHex(day?0xffedcb:auto?0xfff2dd:0xf1f4ff);
  }
+ const roofLighting=renderer.parkDecor.getObjectByName('Roof-edge LED lamps')?.material;
+ if(roofLighting)roofLighting.emissiveIntensity=auto?(tokyo?1.05:1):day?.8:1.55;
  rimLight.intensity=indoor?.78:day?.52:1.15;
  rimLight.color.setHex(day?0xdff2ff:0x8eceff);
- renderer.lightsLit=!day&&!indoor;
+ renderer.lightsLit=!day&&!indoor&&!park.roofProfile;
  for(const glow of renderer.lightGlows)glow.visible=renderer.lightsLit;
  for(const beam of renderer.lightBeams)beam.visible=renderer.lightsLit;
  renderer.bulbMat.color.setHex(renderer.lightsLit?0xfff9e2:0xbfcbd2);
