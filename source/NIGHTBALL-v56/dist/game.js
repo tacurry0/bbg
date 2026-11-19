@@ -22,6 +22,7 @@ const BASES=[{x:0,y:0},{x:19.4,y:19.4},{x:0,y:38.8},{x:-19.4,y:19.4},{x:0,y:0}];
 const COVER=[[],[2,0,3],[3,4,0],[5,4,0],[1,0,2]];
 const BAG_REACH=.48;
 const BASE_PATH=27.44;
+const FIELD_READ_DELAY=.20;
 const legSpeed=(runner,target)=>runner.speed*(runner.batter&&target===2?1.075:1);
 const runTime=(runner,base,progress=runner.progress)=>Math.abs(base-progress)*BASE_PATH/legSpeed(runner,base);
 const catchReach=player=>player.catchReach??Math.min(1.15,player.reach);
@@ -765,11 +766,11 @@ window.NightGame=class NightGame{
   const landing=this.predictLanding(ball);const foul=Math.abs(spray)>Math.PI/4;
   const fielders=this.derby?[]:NightGame.positions(this.park).map(([name,x,y],i)=>{const profile=this.fielder(name);
    if((this.defending||this.challenge)&&this.defense==='in')y-=i>=6?9:i>1?5:0;if(this.defending&&this.defense==='deep')y+=i>=6?10:0;
-   const fieldRating=profile.field,run=profile.run;
+   const fieldRating=profile.field,run=profile.run,outfielder=i>=6;
    return {name,player:profile.name,x,y,startX:x,startY:y,fieldRating,
-    speed:6.62+(run-70)*.036+(fieldRating-70)*.025,arm:22+profile.arm*.12,
+    speed:(6.62+(run-70)*.036+(fieldRating-70)*.025)*(outfielder?1.09:1.07),arm:22+profile.arm*.12,
     reach:.79+fieldRating*.008,catchReach:.58+fieldRating*.006,
-    reaction:Math.max(.14,(i>=6?.80:.29)+(70-fieldRating)*.009),target:{x,y},running:false};});
+    reaction:Math.max(FIELD_READ_DELAY,(outfielder?.64:.24)+(70-fieldRating)*.009),target:{x,y},running:false};});
   const candidate=fielders.map((f,i)=>({i,t:dist(f,landing)/f.speed})).sort((a,b)=>a.t-b.t)[0]?.i??0;
   const runners=[{id:this.batter.id,start:0,progress:0,x:0,y:0,batter:true,speed:this.runnerSpeed}];this.bases.forEach((b,i)=>{if(b)runners.push({id:this.baseIds[i],start:i+1,progress:i+1,x:BASES[i+1].x,y:BASES[i+1].y,batter:false,speed:RUNNER_SPEED(this.runnerRating(this.lineups[this.side].find(p=>p.id===this.baseIds[i])))});});
   this.field={ball,landing,fielders,chaser:candidate,elapsed:0,foul,cpu,perfect,trail:[],runners:this.derby?[]:runners,outsAtContact:this.outs,throw:null,resolved:false,outcome:null,maxTravel:0,landingTime:landing.time||1, batterName:this.batter.name,runnerSpeed:this.runnerSpeed};
@@ -945,7 +946,7 @@ window.NightGame=class NightGame{
    return;
   }
   if(f.foul&&b.bounces>0){this.finishBall('foul');return;}
-  if(f.elapsed>.28){
+  if(f.elapsed>FIELD_READ_DELAY){
    const grounded=b.bounces>0||f.wallHit;
    const target=grounded?this.readGroundBall():f.landing;
    if(grounded)f.chaser=target.index;
