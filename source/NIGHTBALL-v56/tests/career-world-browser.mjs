@@ -49,7 +49,7 @@ try{
    }});
   });
   const page=await context.newPage(),errors=[];
-  page.on('pageerror',err=>errors.push(err.message));
+  page.on('pageerror',err=>{errors.push(err.message);console.error('Page error:',err.stack);});
   const button=(action,value)=>page.locator('[data-world-action="'+action+'"]'+(value===undefined?'':'[data-value="'+value+'"]')).first();
   const press=(action,value)=>button(action,value).click();
   const open=async()=>{
@@ -102,10 +102,29 @@ try{
     const g=window.observedCareerGame;
     return pitcher?g.session.thrown>0||g.phase==='windup':g.session.swings>0;
    },country==='kr');
-   await page.waitForFunction(()=>['aim','career-ready','ended'].includes(window.observedCareerGame.phase));
-   if(await page.locator('#game').isVisible()){
-    await page.locator('#pause').click();
-    await page.locator('[data-action="world-finish-auto"]').click();
+   // Finish the pitch in play, including any replay, before calling the in-game fast finish.
+   try{
+    await page.waitForFunction(()=>{
+     const g=window.observedCareerGame,skip=document.getElementById('replay-skip');
+     return ['aim','career-ready','ended'].includes(g.phase)||g.phase==='windup'&&!g.pitch?.delivered||!skip.hidden;
+    });
+    const skip=page.locator('#replay-skip');
+    if(await skip.isVisible())await skip.click();
+    await page.waitForFunction(()=>{
+     const g=window.observedCareerGame;
+     return ['aim','career-ready','ended'].includes(g.phase)||g.phase==='windup'&&!g.pitch?.delivered;
+    });
+    if(await page.locator('#game').isVisible()){
+     await page.locator('#pause').dispatchEvent('click');
+     await page.locator('[data-action="world-finish-auto"]').click({timeout:6000});
+    }
+   }catch(error){
+    const report=await page.evaluate(()=>{
+     const {phase,paused,inning,half,next,session,pitch}=window.observedCareerGame;
+     return {phase,paused,inning,half,next,swings:session.swings,thrown:session.thrown,delivered:pitch?.delivered,
+      playSkip:document.getElementById('replay-skip').hidden};
+    });
+    throw Error(country+' grade '+grade+' after input: '+JSON.stringify(report),{cause:error});
    }
    await page.locator('#career .cw-last').waitFor({state:'visible'});
    w=await state();
