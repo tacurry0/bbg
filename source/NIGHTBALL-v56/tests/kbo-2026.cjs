@@ -17,15 +17,19 @@ assert.equal(NightKBO.referencePopulations.batters,140);
 assert.equal(NightKBO.referencePopulations.pitchers,150);
 const expected=['ht','ss','lg','ob','kt','sk','lt','hh','nc','wo'];
 assert.deepEqual(NightTeams.kbo.map(x=>x.id),expected.map(x=>'kbo-'+x));
-const ids=new Set(),skills=new Set();
+const ids=new Set(),skills=new Set();let matchedProfiles=0,matchedPositions=0;
 for(const t of NightTeams.kbo){
  assert.equal(t.batters.length,16,t.id);
  assert.equal(t.pitchers.length,14,t.id);
  assert.equal(t.startingOrder.length,9,t.id);
  assert.equal(new Set(t.startingOrder).size,9,t.id);
  assert.equal(t.startingOrder.every(id=>t.batters.some(p=>p.id===id)),true,t.id);
- assert.equal(new Set(t.batters.slice(0,9).map(p=>p.pos)).size,9,
-              'Starting lineup should cover nine distinct defensive/DH positions');
+ assert.equal(new Set(Object.keys(t.startingFielding)).size,9,
+              'Starting defense covers exactly nine unique positions');
+ assert.equal(new Set(Object.values(t.startingFielding)).size,9,
+              'Starting defense uses nine unique players');
+ assert(t.startingOrder.every(id=>Object.values(t.startingFielding).includes(id)),
+        'Every defensive starter appears in the nine-man batting order');
  assert.equal(NightTeams.get(t.id),t);
  assert(fs.existsSync('dist/'+t.logo.replace(/^\.\//,'')),'original badge '+t.id);
  for(const b of t.batters){
@@ -36,8 +40,11 @@ for(const t of NightTeams.kbo){
   assert.equal(b.ratingsProvisional,false);
   assert.equal(b.ratingsBasedOnStats,true);
   assert(b.stats.pa>0&&b.stats.h>=0&&b.stats.h<=b.stats.ab);
-  assert(b.estimates.includes('hand')&&b.estimates.includes('field'),
-         'clearly disclose unavailable scouting facts');
+  assert(b.estimates.includes('field'),'fielding measurements are estimated');
+  if(b.identityEvidence){matchedProfiles++;
+    assert(!b.handEstimated&&b.nativeName!==b.name,'2026 profile matching enriches identity');
+    if(!b.positionEstimated)matchedPositions++;
+  }else assert(b.handEstimated&&b.estimates.includes('hand'),'unknown handedness disclosed');
   for(const k of ['contact','power','run','field','arm'])
    assert(Number.isInteger(b[k])&&b[k]>=35&&b[k]<=98,t.id+'/'+b.name+' '+k);
   skills.add([b.contact,b.power,b.run,b.field,b.arm].join('/'));
@@ -50,6 +57,9 @@ for(const t of NightTeams.kbo){
   assert.equal(p.ratingsBasedOnStats,true);
   assert.equal(p.speedEstimated,true,'KBO velocity cannot masquerade as verified');
   assert(p.estimates.includes('velocity')&&p.estimates.includes('pitchRepertoire'));
+  if(p.identityEvidence){matchedProfiles++;
+    assert(!p.throwHandEstimated,'historical profile supports pitcher throwing hand');
+  }else assert(p.throwHandEstimated,'unknown pitcher throwing hand disclosed');
   assert(p.pitches.length>=2);
   for(const k of ['control','stamina','movement'])
    assert(Number.isInteger(p[k])&&p[k]>=35&&p[k]<=98,t.id+'/'+p.name+' '+k);
@@ -66,6 +76,14 @@ for(const t of NightTeams.kbo){
  g.update(16);
 }
 assert.equal(ids.size,300);
+assert(matchedProfiles>=105,'100+ externally matched KBO player profiles');
+assert(matchedPositions>=40,'verified primary defensive positions are integrated');
+const doYeong=NightKBO.get('kbo-ht').batters.find(p=>p.name==='KIM Do Yeong');
+assert.equal(doYeong.nativeName,'김도영');assert.equal(doYeong.no,'5');
+assert.equal(doYeong.pos,'3B');assert.equal(doYeong.hand,'R');
+const naSung=NightKBO.get('kbo-ht').batters.find(p=>p.name==='NA Sung Bum');
+assert.equal(naSung.hand,'L');assert.equal(naSung.pos,'RF');
+
 assert(skills.size>225,'individualized ability records');
 const pennant=new NightPennant('owls',4);
 assert.equal(pennant.schedule.length,20);
