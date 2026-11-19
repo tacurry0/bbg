@@ -788,6 +788,21 @@
       "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
       "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
     },
+    "62700": {
+      "nativeName": "하주석",
+      "no": null,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-11-19",
+      "profileSource": "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=62700",
+      "positionSource": "https://www.koreabaseball.com/MediaNews/News/KboPhoto/View.aspx?bdSe=547513"
+    },
     "62869": {
       "nativeName": "문승원",
       "no": 42,
@@ -1243,6 +1258,21 @@
       "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
       "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
     },
+    "68646": {
+      "nativeName": "한준수",
+      "no": null,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "포수",
+      "positionCode": "C",
+      "eligiblePositions": [
+        "C",
+        "DH"
+      ],
+      "profileDate": "2026-11-19",
+      "profileSource": "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=68646",
+      "positionSource": "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=68646"
+    },
     "69041": {
       "nativeName": "손동현",
       "no": 41,
@@ -1442,6 +1472,21 @@
       "profileDate": "2026-09-17",
       "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
       "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "78122": {
+      "nativeName": "김태군",
+      "no": null,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "포수",
+      "positionCode": "C",
+      "eligiblePositions": [
+        "C",
+        "DH"
+      ],
+      "profileDate": "2026-11-19",
+      "profileSource": "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=78122",
+      "positionSource": "https://www.koreabaseball.com/Record/Player/HitterDetail/Basic.aspx?playerId=78122"
     },
     "78168": {
       "nativeName": "서건창",
