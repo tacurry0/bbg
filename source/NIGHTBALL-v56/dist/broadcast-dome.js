@@ -222,7 +222,7 @@ function dugouts(group, materials) {
   for (const end of [-10.15,10.15]) backs.push({point:at(end,1.8,1.13),size:[3.6,2.26,.28],angle});
  }
  boxBatch(group,'Foul-side dugout padding',facades,materials.eye);
- boxBatch(group,'Dugout canopy',caps,materials.concrete);
+ boxBatch(group,'Dugout canopy',caps,materials.dugoutRoof??materials.concrete);
  boxBatch(group,'Dugout inner walls',backs,materials.shadow);
  boxBatch(group,'Dugout padded rails',railings,materials.steel);
 }
@@ -279,7 +279,7 @@ function vision(group, renderer, materials, software) {
 }
 
 export function decorateBroadcastDome(renderer, park) {
- const {parkDecor:group,gl,keyLight,skyLight,scene} = renderer;
+ const {parkDecor:group,gl} = renderer;
  const software = gl.isSoftwareRenderer;
  const solid = (name, color) => {
   const material = renderer.mat('tokyo-dome:'+name,color);
@@ -308,13 +308,7 @@ export function decorateBroadcastDome(renderer, park) {
  dugouts(group,materials);
  vision(group,renderer,materials,software);
  addGlints(renderer,group,lighting(group,materials,software));
- skyLight.intensity = 1.92;
- skyLight.color.setHex(0xf7f4ed);
- keyLight.intensity = 2.63;
- keyLight.color.setHex(0xfff5e6);
- scene.fog.density = .0009;
- scene.fog.color.setHex(0x656b66);
- renderer.grassMaterial.color.setHex(0x6f9f45);
+ renderer.grassMaterial.color.setHex(0x539565);
 }
 
 function addGlints(renderer,group,glints){
@@ -346,6 +340,7 @@ function taiwanMaterials(renderer,id,software){
   seats:make('seat base',id==='dome'?0x973550:0x8d9397),blue:make('blue seats',0x236795),
   instance:make('instances',0xffffff),cable:make('steel lattice',0x818988),
   eye:make('eye',id==='dome'?0x226849:0x191b20),
+  dugoutRoof:id==='dome'?make('red dugout roof',0xa93849):null,
   fallbackCable:renderer.taipeiFallbackCable??=new T.LineBasicMaterial({color:0xa2a7a6})
  };
 }
@@ -426,9 +421,6 @@ function decorateTaipei(renderer,park,group,materials,software){
  }
  dugouts(group,materials);
  addGlints(renderer,group,lighting(group,materials,software,128,40));
- renderer.skyLight.color.setHex(0xf6f0e7);renderer.skyLight.intensity=1.87;
- renderer.keyLight.color.setHex(0xfff5df);renderer.keyLight.intensity=2.72;
- renderer.scene.fog.density=.0011;
  renderer.grassMaterial.color.setHex(0x71934f);
 }
 
@@ -464,7 +456,6 @@ function decorateTaoyuan(renderer,group,materials,software){
  }
  boxBatch(group,'Taoyuan skyline beyond the open outfield',skyline,materials.instance);
  dugouts(group,materials);
- renderer.scene.fog.density=.0019;
  renderer.grassMaterial.color.setHex(0x719348);
 }
 

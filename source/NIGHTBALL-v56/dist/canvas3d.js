@@ -9,11 +9,13 @@ export class CanvasSceneRenderer {
   if(!this.width||!this.height)return;const c=this.ctx,w=this.width,h=this.height;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
   scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);this.view=camera.matrixWorldInverse;this.proj=camera.projectionMatrix;this.camera=camera;this.frustum.setFromProjectionMatrix(this.pv.multiplyMatrices(this.proj,this.view));
   const cacheKey=[w,h,scene.userData.staticRevision||0,...camera.matrixWorldInverse.elements.map(v=>v.toFixed(3)),...camera.projectionMatrix.elements.map(v=>v.toFixed(3))].join('/'),refresh=cacheKey!==this.cacheKey;
+  const night=scene.userData.nightLighting;
   if(refresh){const sky=scene.background,indoors=scene.userData.indoors,broadcast=scene.userData.broadcastDome,outdoor=scene.userData.outdoorSky;
    const bg=c.createLinearGradient(0,0,0,h);
-   bg.addColorStop(0,outdoor?.[0]??(broadcast?'#354860':indoors?'#537082':sky?.isColor?this.color(sky,.22):'#0b1830'));
-   bg.addColorStop(.42,outdoor?.[1]??(broadcast?'#9cafc2':indoors?'#8199a6':sky?.isColor?this.color(sky,.79):'#243e51'));
-   bg.addColorStop(.70,outdoor?.[2]??(broadcast?'#536d88':indoors?'#aebbc5':sky?.isColor?this.color(sky,1.68):'#425a68'));
+   const indoorNight=indoors&&night?['#172338','#314558','#53677a']:null;
+   bg.addColorStop(0,(outdoor||indoorNight)?.[0]??(broadcast?'#354860':indoors?'#537082':sky?.isColor?this.color(sky,.22):'#0b1830'));
+   bg.addColorStop(.42,(outdoor||indoorNight)?.[1]??(broadcast?'#9cafc2':indoors?'#8199a6':sky?.isColor?this.color(sky,.79):'#243e51'));
+   bg.addColorStop(.70,(outdoor||indoorNight)?.[2]??(broadcast?'#536d88':indoors?'#aebbc5':sky?.isColor?this.color(sky,1.68):'#425a68'));
    bg.addColorStop(1,'#516556');c.fillStyle=bg;c.fillRect(0,0,w,h);}else c.drawImage(this.cacheCanvas,0,0);
   const staticItems=[],staticGround=[],dynamicItems=[],dynamicGround=[];let items=staticItems,ground=staticGround,serial=0;
   const project=v=>{const q=v.clone().applyMatrix4(this.proj);return{x:(q.x*.5+.5)*w,y:(-.5*q.y+.5)*h};};
@@ -23,7 +25,9 @@ export class CanvasSceneRenderer {
    this.bounds.copy(geo.boundingSphere).applyMatrix4(matrix);
    if(!this.frustum.intersectsSphere(this.bounds))return;
    const mv=new T.Matrix4().multiplyMatrices(this.view,matrix),center=new T.Vector3().setFromMatrixPosition(mv);
-   const color=colorOverride||mat.color||new T.Color(0xffffff),opacity=mat.opacity??1;
+   const baseColor=colorOverride||mat.color||new T.Color(0xffffff),opacity=mat.opacity??1;
+   const dim=night&&!mat.isMeshBasicMaterial&&!(mat.emissive?.getHex()&&mat.emissiveIntensity>.5);
+   const color=dim?baseColor.clone().multiplyScalar(items===dynamicItems?.90:.74):baseColor;
    const normalMatrix=new T.Matrix3().getNormalMatrix(matrix);
    const kind=mat.map?.userData?.kind;
    if(geo.type==='PlaneGeometry'&&mat.map&&!kind&&mat.side!==T.DoubleSide){const n=new T.Vector3(0,0,1).applyMatrix3(normalMatrix).normalize(),world=new T.Vector3().setFromMatrixPosition(matrix);if(n.dot(camera.position.clone().sub(world))<=0)return;}
@@ -67,9 +71,9 @@ export class CanvasSceneRenderer {
     grad.addColorStop(1,this.color(item.groundColor,1.36));
    }else{
     const dome=scene.userData.broadcastDome;
-    grad.addColorStop(0,dome?'#815d4e':'#977151');
-    grad.addColorStop(.58,dome?'#ad755e':'#ad7654');
-    grad.addColorStop(1,dome?'#c69576':'#bd8963');
+    grad.addColorStop(0,night?'#735445':dome?'#815d4e':'#977151');
+    grad.addColorStop(.58,night?'#9c6a50':dome?'#ad755e':'#ad7654');
+    grad.addColorStop(1,night?'#b28160':dome?'#c69576':'#bd8963');
    }
    groundStyles.set(key,grad);return grad;
   };

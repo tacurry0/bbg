@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=61';
+import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=62';
 
 export const OPEN_AIR_MODELS={night:'intercontinental',brick:'tianmu',sky:'tainan'};
 const PI=Math.PI,TAU=PI*2;
@@ -8,10 +8,6 @@ const teal=[0x238a85,0x389c92,0x278d83,0x65aea0];
 const red=[0xa84342,0xc55d5b,0xd57260,0xab5144];
 const fanColors=[0xece6d3,0x2d3040,0xf1ad24,0xfabd39,0xe0d9cb,0x343c5a,0xe9c075];
 const lionsColors=[0xf58a42,0xbc5b37,0xf1ede4,0x2a343c,0xeb9951,0x529281,0xd5d7cf];
-const blueSky=['#2d65ab','#6cabe2','#c5ddef'];
-const duskSky=['#465c83','#8495ae','#e8c6a2'];
-const tainanSky=['#6394be','#b2cde0','#e8dfd1'];
-
 function materials(renderer,id){
  const get=(name,color,roughness=.8)=>{
   const surface=renderer.mat('outdoor:'+id+':'+name,color,roughness);
@@ -50,7 +46,7 @@ function supportBeams(group,name,segments,material){
  group.add(beams);
 }
 
-function backstop(renderer,group,m,width,depth){
+function backstop(renderer,group,m,width,depth,trackWidth=2.45){
  const soft=renderer.gl.isSoftwareRenderer,columns=soft?20:130,rows=soft?3:27;
  const low=1.35,high=12.4,start=1.51,end=TAU-start;
  const point=(i,y)=>bowlPoint(start+i/columns*(end-start),width,depth,y);
@@ -76,7 +72,26 @@ function backstop(renderer,group,m,width,depth){
  rail.userData.disposeMaterial=true;group.add(rail);
  strip(group,'Low backstop retaining wall',m.eye,[[width,depth,0],[width,depth,low]],start,end,soft?36:84);
  strip(group,'Curved foul-territory warning track',m.foulTrack,
-  [[width-4,depth-2.45,.025],[width,depth,.027]],start,end,soft?36:84);
+  [[width-4,depth-trackWidth,.025],[width,depth,.027]],start,end,soft?36:84);
+}
+
+const REFERENCE_BACKSTOPS={
+ 'tokyo-dome':{width:57,depth:72,track:0x326747,trackWidth:2.45,base:0x214136},
+ 'taipei-dome':{width:62,depth:75,track:0xbf6940,trackWidth:5,base:0x252b35},
+ dome:{width:59,depth:70,track:0x7d453b,trackWidth:3.8,base:0x244746}
+};
+
+export function addReferenceBackstop(renderer,park){
+ const frame=REFERENCE_BACKSTOPS[park.id];
+ if(!frame)return;
+ const surface=(name,color)=>{
+  const material=renderer.mat(park.id+':'+name,color);
+  material.side=T.DoubleSide;
+  return material;
+ };
+ backstop(renderer,renderer.parkDecor,{
+  eye:surface('backstop padding',frame.base),foulTrack:surface('backstop track',frame.track)
+ },frame.width,frame.depth,frame.trackWidth);
 }
 
 function trees(renderer,group,name,{z,spread,count,colors}){
@@ -253,16 +268,6 @@ export function decorateOpenAirPark(renderer,park){
  else if(tianmuPark)tianmu(group,renderer,m,soft);
  else tainan(group,renderer,m,soft);
 
- renderer.scene.userData.outdoorSky=taichung?duskSky:tianmuPark?blueSky:tainanSky;
- renderer.scene.fog.density=taichung?.00185:.00165;
- renderer.scene.fog.color.setHex(taichung?0xa9a8ae:tianmuPark?0x9fbed4:0xc5c8c2);
- if(renderer.sky){
-  const uniforms=renderer.sky.material.uniforms;
-  uniforms.uNight.value=0;
-  uniforms.uRural.value=tianmuPark?1:0;
-  uniforms.zenith.value.set(taichung?0x657b9c:tianmuPark?0x2a62ae:0x688eaf);
-  uniforms.horizon.value.set(taichung?0xe3c7ad:tianmuPark?0xaad0e6:0xe3e4dc);
- }
  renderer.grassMaterial.color.setHex(taichung?0x648c46:tianmuPark?0x568744:0x659649);
  renderer.dirt.color.setHex(tianmuPark?0xd48472:0xd7a080);
  renderer.lights.forEach((light,i)=>{

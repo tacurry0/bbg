@@ -166,6 +166,36 @@ for (const [parkId,model,names] of [
  assert.deepEqual(renderer.camera.position.toArray(),[.18,3.6,8.8]);
 }
 
+for(const parkId of ['tokyo-dome','taipei-dome','dome']){
+ const match=new NightGame('match','standard',()=>{},{park:parkId});
+ const {park}=match,indoors=park.theme==='dome';
+ window.nightSettings={gameLighting:'day'};
+ renderer.render(match,0);
+ assert.equal(renderer.canvas.dataset.cameraView,'overview');
+ assert.equal(renderer.canvas.dataset.gameLighting,'day');
+ assert(renderer.camera.position.y>20);
+ assert(renderer.parkDecor.getObjectByName('Infield protective net'));
+ assert(!renderer.lightsLit);
+ if(renderer.sky)assert.equal(renderer.sky.visible,!indoors);
+ const sceneParts=renderer.parkDecor.children.slice(),dayIntensity=renderer.skyLight.intensity;
+ window.nightSettings.gameLighting='night';
+ renderer.render(match,16);
+ assert.equal(renderer.canvas.dataset.gameLighting,'night');
+ assert(renderer.skyLight.intensity<dayIntensity);
+ assert.equal(renderer.lightsLit,!indoors);
+ assert.deepEqual(renderer.parkDecor.children,sceneParts,'time changes light without rebuilding venue meshes');
+ if(indoors){
+  assert(renderer.camera.position.y<NightPlayers.roofSurface(park,renderer.camera.position.x,-renderer.camera.position.z));
+  assert(renderer.parkDecor.getObjectByName('Roof-edge LED lamps').material.emissiveIntensity>1);
+ }else{
+  if(renderer.sky)assert.equal(renderer.sky.material.uniforms.uNight.value,1);
+  assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
+ }
+ match.setPhase('aim');renderer.render(match,32);
+ assert.equal(renderer.canvas.dataset.cameraView,'play');
+ delete window.nightSettings;
+}
+
 renderer.render(plateGame, 0);
 assert.equal(renderer.scene.fog.density, 0.0036);
 assert(renderer.board.visible && renderer.infieldSkin.every(mesh => mesh.visible));
@@ -274,13 +304,13 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v61-outdoor-venues'));
+assert(swCode.includes('nightball-v62-game-lighting'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
 assert(swCode.includes('./stadium-fx.js?v=60'));
 assert(swCode.includes('./venue-vision.js?v=61'));
-assert(swCode.includes('./open-air-parks.js?v=61'));
+assert(swCode.includes('./open-air-parks.js?v=62'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);
 const swFiles = JSON.parse('[' + filesMatch[1].replace(/'/g, '"') + ']');

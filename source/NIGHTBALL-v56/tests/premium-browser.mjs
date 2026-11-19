@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=61');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=62');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){
@@ -68,6 +68,9 @@ try{
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-action="match-team-next"]').click();
  await page.locator('#park-select').selectOption('tokyo-dome');
+ const lighting=page.getByLabel('試合の時間帯');
+ await lighting.selectOption('day');
+ assert.equal(await lighting.inputValue(),'day');
  await page.locator('[data-action="match-lineup"]').click();
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.querySelector('#game')&&!document.querySelector('#game').hidden,{timeout:10000});
@@ -85,6 +88,8 @@ try{
    seats:renderer.parkDecor.getObjectByName('Blue stadium seats').count
   };
  });
+ assert.equal(await page.locator('#game-canvas').getAttribute('data-game-lighting'),'day');
+ assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('nightball.settings')).gameLighting),'day');
  assert(dome.membrane&&dome.liveScore&&dome.seats>(graphics==='webgl-3d'?10000:400),'Tokyo Dome is rendered with live score and 3D seating');
  await page.screenshot({path:'tests/screenshots/premium-match.png'});
  await page.evaluate(()=>{
@@ -145,8 +150,34 @@ try{
   assert.deepEqual(state,{model,shown:true,landmark:true,board:true});
   await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
  }
+ for (const [parkId,asset] of [['tokyo-dome','tokyo-dome'],['taipei-dome','taipei-dome'],['dome','taoyuan']]){
+  await page.evaluate(parkId=>{
+   const {renderer,game}=window.testDomeMatch;
+   game.park=NightPlayers.parks.find(park=>park.id===parkId);
+   game.field=null;game.paused=true;game.setPhase('intro');game.phaseTime=400;
+   renderer.render(game,++game.time);
+  },parkId);
+  const photo=page.locator('#stadium-intro-photo:not([hidden])');
+  await photo.waitFor({state:'visible'});
+  assert.equal(await photo.getAttribute('src'),'./assets/stadiums/'+asset+'.webp');
+  assert.equal(await page.locator('#game-canvas').getAttribute('data-camera-view'),'overview');
+  await page.evaluate(()=>{
+   const {renderer,game}=window.testDomeMatch;
+   game.phaseTime=1230;
+   renderer.render(game,++game.time);
+  });
+  await photo.waitFor({state:'hidden'});
+ }
+ await page.evaluate(()=>{
+  const {renderer,game}=window.testDomeMatch;
+  window.nightSettings.gameLighting='night';game.phaseTime=400;
+  renderer.render(game,++game.time);
+ });
+ await page.locator('#game-canvas[data-camera-view="overview"][data-game-lighting="night"]').waitFor({state:'visible'});
+ assert.equal(await page.locator('#stadium-intro-photo').isVisible(),false,'Taoyuan night intro uses the lit 3D venue');
+ await page.screenshot({path:'tests/screenshots/taoyuan-night-overview.png'});
  assert.deepEqual(errors,[],'no page JavaScript errors');
- console.log('PASS: mobile Chromium, live visions, three outdoor stadium overviews, fly-ball camera and separate replay/run skips ('+graphics+').');
+ console.log('PASS: mobile Chromium, live visions, stadium photos and night lighting, fly-ball camera and separate replay/run skips ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
  await context.close();
 }finally{
