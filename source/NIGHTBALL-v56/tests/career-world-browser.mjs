@@ -134,6 +134,49 @@ try{
    await press('amateur','大学');
    assert.equal((await state()).stage,'amateur');
   }
+  if(country==='jp'){
+   // Prepare an offseason from the live save using the actual season simulation.
+   // The scenario sets the conditions for a released player's foreign offer.
+   await page.evaluate(()=>{
+    const w=NightCareerWorld.restore(NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
+    if(w.stage!=='pro'){
+     w.ensurePro();
+     w.sign({club:'npb-l',annual:520,years:1,type:'新人契約'});
+     w.startSeason(w.year+1);
+    }
+    while(w.stage==='pro'){
+     w.run('season');
+     if(w.queue)w.finishDay();
+    }
+    for(const key of NightCareerWorldMatch.batting)w.player[key]=79;
+    w.player.born=w.year-26;w.contract.remaining=0;w.marketChoice='released';
+    w.openMarket(true);
+    localStorage.setItem(NightCareerWorld.key,NightCareerWorldSave.encode(w));
+   });
+   await open();
+   const offseason=await state();
+   const index=offseason.offers.findIndex(offer=>!offer.club.startsWith('npb-')&&!offer.club.startsWith('kbo-'));
+   assert(index>=0);
+   const offer=page.locator('.cw-offer').nth(index);
+   if(await offer.getAttribute('open')===null)await offer.locator('summary').click();
+   await press('negotiate',String(index));
+   await press('accept',String(index));
+   assert.equal((await state()).contract.currency,'TWD');
+   await page.evaluate(()=>{
+    const w=NightCareerWorld.restore(NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
+    while(w.stage==='pro'){
+     w.run('season');
+     if(w.queue)w.finishDay();
+    }
+    localStorage.setItem(NightCareerWorld.key,NightCareerWorldSave.encode(w));
+   });
+   await open();
+   page.once('dialog',dialog=>dialog.accept());
+   await press('retire');
+   assert.equal((await state()).stage,'retired');
+   assert.match(await page.locator('#career').innerText(),/通算成績/);
+   console.log('PASS: mobile salary negotiation, cross-border signing and retirement.');
+  }
   assert(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1));
   assert.deepEqual(errors,[]);
   console.log('PASS:',label,'393 px setup, calendar, training, live operation each school year, saved result and draft decision.');

@@ -240,6 +240,28 @@ incumbent.injury=35;
 assert(M.positionScore(jp,incumbent,pos,'jp')<M.positionScore(jp,jp.player,pos,'jp'));
 assert(Object.values(M.lineup(jp,source,'jp',jp.day).assign).includes(jp.player.id));
 
+// Farm quality changes selection even if skills and representative registration are fixed.
+{
+ const w=roundtrip(worlds.jp);
+ w.stage='pro';
+ w.player.stats=M.blank();
+ w.farmStats=M.blank();
+ w.recentFarm=[];
+ const before=M.positionScore(w,w.player,w.player.pos,'jp');
+ Object.assign(w.farmStats,{pa:65,ab:54,h:27,bb:11,hr:9,rbi:26,tb:61});
+ w.recentFarm=[{...w.farmStats}];
+ assert(M.farmForm(w)>20);
+ assert(M.positionScore(w,w.player,w.player.pos,'jp')>before+20);
+ w.selection={level:'farm'};
+ w.selectionChange({day:w.day},'starter');
+ assert.match(w.selection.reason,/二軍での好成績/);
+ const pitcher=fresh('kr',{style:'control'});
+ pitcher.stage='pro';
+ Object.assign(pitcher.farmStats,{outs:72,er:5,k:29,walks:5});
+ const command=M.farmForm(pitcher);
+ pitcher.farmStats.walks=28;
+ assert(command>M.farmForm(pitcher));
+}
 // A released NPB farm player can go to Taiwan, sign in TWD, then earn an NPB return.
 jp.marketChoice='released';jp.contract.remaining=0;jp.player.born=jp.year-26;
 Object.assign(jp.history.at(-1).farm,{g:20,pa:80,ab:70,h:27,tb:44,bb:10});
@@ -328,6 +350,11 @@ for(let i=0;i<20;i++){
  long=season(long);
  assert.equal(long.history.length,i+1);
  if(i===0||i===8)long=roundtrip(long);
+ assert.equal(new Set(long.people.map(p=>p.id)).size,long.people.length);
+ for(const nation of countries)for(const club of D.roster(nation)){
+  const roster=long.members(club.id);
+  assert(roster.length>=19&&roster.length<=55,club.id+' roster '+roster.length);
+ }
  if(i<19)nextYear(long);
 }
 assert(long.history.some(x=>x.farm.g));
