@@ -298,29 +298,36 @@ def prepare(source):
    if item not in ordered:ordered.append(item)
    if len(ordered)==14:break
   if len(ordered)<14:raise RuntimeError("Too few pitchers "+code)
-  # Select defensively sensible starters. Prefer a verified primary field
-  # position, then an eligible secondary position, then a same-position group;
-  # only as a last resort assign a different position as a GAME fallback.
+  # Place verified *primary* defensive positions before any player is
+  # assigned to a secondary / speculative position. This avoids, for
+  # example, moving a known 3B to SS while an unknown player takes 3B.
   slots=["C","SS","2B","3B","1B","CF","RF","LF","DH"]
-  used=set(); assigned={}
-  for slot in slots:
-   def cost(p):
-    pid=p["id"].rsplit("-",1)[-1]
-    ev=evidence.get(pid,{})
-    actual=ev.get("positionCode")
-    group=ev.get("positionGroup") or ""
-    if actual==slot:return 0
-    if actual and slot in ev.get("eligiblePositions",[]):return 1
-    if slot=="DH":return 5
-    if not actual and slot==p["pos"]:return 4
-    if slot=="C" and "포수" in group:return 2
-    if slot in ("LF","CF","RF") and "외야수" in group:return 3
-    if slot in ("1B","2B","3B","SS") and "내야수" in group:return 3
-    if actual:return 11
-    return 8
-   available=[p for p in bats if p["id"] not in used]
-   selected=min(available,key=lambda p:(cost(p),-p["stats"]["pa"],p["id"]))
-   used.add(selected["id"]);assigned[slot]=selected["id"]
+  assigned={};used=set()
+  def candidate(slot,stage,p):
+   ev=evidence.get(p["id"].rsplit("-",1)[-1],{})
+   actual=ev.get("positionCode")
+   group=ev.get("positionGroup") or ""
+   if stage==0:return actual==slot
+   if stage==1:return bool(actual) and slot in ev.get("eligiblePositions",[])
+   if stage==2:
+    if slot=="C":return "포수" in group
+    if slot in ("LF","CF","RF"):return "외야수" in group
+    if slot in ("1B","2B","3B","SS"):return "내야수" in group
+    return False
+   if stage==3:return not actual and p["pos"]==slot
+   if stage==4:return True
+   return False
+  for stage in range(5):
+   for slot in slots:
+    if slot in assigned:continue
+    available=[p for p in bats if p["id"] not in used and candidate(slot,stage,p)]
+    if not available:continue
+    # DH is the flexible final spot: never take a known position player away
+    # from an unfilled real defensive slot during earlier stages.
+    if slot=="DH" and stage<4:continue
+    selected=max(available,key=lambda p:(p["stats"]["pa"],p["stats"]["h"],p["id"]))
+    used.add(selected["id"]);assigned[slot]=selected["id"]
+  if set(assigned)!=set(slots) or len(used)!=9:raise RuntimeError("Incomplete KBO lineup "+code)
   starting=sorted((p for p in bats if p["id"] in used),key=lambda p:-p["stats"]["pa"])
   team={"id":"kbo-"+code.lower(),"name":name,"short":short,"mark":mark,
         "logo":logo(code,mark,primary,accent),"color":primary,"accent":accent,
