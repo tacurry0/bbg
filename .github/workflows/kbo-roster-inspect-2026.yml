@@ -1,0 +1,42 @@
+name: Inspect KBO player-roster metadata (sample)
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/kbo-roster-inspect-2026.yml']
+  workflow_dispatch:
+permissions: {contents: read}
+jobs:
+  sample:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - run: pip install requests beautifulsoup4 lxml
+      - name: Inspect official roster form and postback for one team
+        run: |
+          python - <<'PY'
+          import requests,bs4,re
+          url='https://eng.koreabaseball.com/Teams/PlayerSearch.aspx'
+          ss=requests.Session()
+          rr=ss.get(url,timeout=25);rr.encoding='utf8';s=bs4.BeautifulSoup(rr.text,'lxml')
+          form=s.select_one('form#mainForm')
+          inputs={x.get('name'):x.get('value','') for x in form.select('input[name]') if x.get('name')}
+          print('INPUTS',[(k,repr(v[:90])) for k,v in inputs.items() if any(t in k.lower() for t in ('hfteam','hfposition','eventtarget','viewstate','lbtnsearch'))])
+          m=re.search(r'function changeTeam\([^)]*\).*?(?=</script>)',rr.text,re.S|re.I)
+          if m:print('TEAM_FUNCTION',m[0][:1800])
+          for k in inputs:
+           if k.lower().endswith('hfteam'):inputs[k]='ss'
+           if k.lower().endswith('hfposition'):inputs[k]=''
+          inputs['__EVENTTARGET']='ctl00$ctl00$ctl00$ctl00$cphContainer$cphContainer$cphContent$cphContent$lbtnSearch'
+          inputs['__EVENTARGUMENT']=''
+          po=ss.post(url,data=inputs,timeout=25)
+          po.encoding='utf8';doc=bs4.BeautifulSoup(po.text,'lxml')
+          print('POST_STATUS',po.status_code,'TEXT_TITLE',doc.title.get_text(' ',strip=True) if doc.title else '', 'LENGTH',len(po.content))
+          for i,table in enumerate(doc.select('table')[:3]):
+           rows=table.select('tr')
+           print('TABLE',i,'ROWS',len(rows),'ID',table.get('id'))
+           for tr in rows[:8]:print('ROW',[c.get_text(' ',strip=True)[:60] for c in tr.find_all(['th','td'])])
+          print('PLAYER_LINKS',[(a.get_text(' ',strip=True),a.get('href')) for a in doc.select('a[href*="pcode"]')[:15]])
+          PY
