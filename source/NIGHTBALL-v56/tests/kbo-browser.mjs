@@ -60,6 +60,8 @@ try{
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-match-group="kbo"]').click();
  assert.equal(await page.locator('[data-match-club^="kbo-"]').count(),10);
+ await page.waitForFunction(()=>[...document.querySelectorAll('[data-match-club^="kbo-"] img')].length===10&&
+  [...document.querySelectorAll('[data-match-club^="kbo-"] img')].every(img=>img.complete&&img.naturalWidth&&img.src.endsWith('.png')));
  assert.equal(await page.locator('[data-match-club="kbo-hh"]').count(),1);
  assert.equal(await page.locator('[data-match-club="kbo-wo"]').count(),1);
  mkdirSync('tests/screenshots',{recursive:true});
@@ -101,6 +103,8 @@ try{
   {timeout:15000});
  await page.waitForTimeout(500);
  assert.equal(await page.locator('#scoreboard').count(),1,'legacy match HUD preserved');
+ assert.deepEqual(await page.locator('#scoreboard image').evaluateAll(images=>images.map(i=>i.getAttribute('href'))),
+  ['./assets/kbo/kbo-kt.png','./assets/kbo/kbo-hh.png']);
  const hudName=page.locator('#pitcher-card .hud-name-text');
  await hudName.waitFor({state:'visible'});
  assert.equal(await hudName.innerText(),longPitcher);

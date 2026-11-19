@@ -54,3 +54,5 @@
 ## 更新
 
 依存ライブラリ requests、beautifulsoup4、lxml を用い、ゲームのルートからPythonスクリプトを実行すると再生成できる。GitHub Actionsの build-npb-2026.yml が同じ処理を実行できる。原典ページ構造の変更により解析できない場合は失敗として報告する。
+
+NPBとファームの球団ロゴは[NPB公式の球場一覧](https://npb.jp/stadium/franchise.html)と[2026年ファーム公式戦](https://npb.jp/farm/2026/)の掲載画像を使用。

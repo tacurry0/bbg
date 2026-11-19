@@ -36,7 +36,9 @@ for(const t of NightTeams.kbo){
  assert(t.startingOrder.every(id=>Object.values(t.startingFielding).includes(id)),
         'Every defensive starter appears in the nine-man batting order');
  assert.equal(NightTeams.get(t.id),t);
- assert(fs.existsSync('dist/'+t.logo.replace(/^\.\//,'')),'original badge '+t.id);
+ assert.equal(t.logo,`./assets/kbo/${t.id}.png`);
+ const logo=fs.readFileSync('dist/'+t.logo.slice(2));
+ assert.equal(logo.subarray(0,8).toString('hex'),'89504e470d0a1a0a',t.id+' loads a PNG');
  for(const b of t.batters){
   assert(!ids.has(b.id),'unique player identity: '+b.id);ids.add(b.id);
   checkJapaneseName(b);
@@ -110,9 +112,9 @@ assert.equal(pennant.schedule.length,20);
 assert.equal(new Set(pennant.schedule.flat().flatMap(x=>[x.home,x.away])).size,6,
  'existing six-team CPBL season does not accidentally absorb KBO');
 const sw=fs.readFileSync('dist/sw.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert(sw.includes('kbo-data.js?v=66')&&sw.includes('kbo-rosters.js?v=74'));
-assert(sw.includes('assets/kbo/kbo-wo.svg'));
-assert(html.indexOf('kbo-data.js?v=66')<html.indexOf('kbo-rosters.js?v=74'));
+assert(sw.includes('kbo-data.js?v=76')&&sw.includes('kbo-rosters.js?v=74'));
+assert(sw.includes('assets/kbo/kbo-wo.png'));
+assert(html.indexOf('kbo-data.js?v=76')<html.indexOf('kbo-rosters.js?v=74'));
 const rosterScript=html.indexOf('kbo-rosters.js?v=74');
 const appScript=html.search(/<script type="module" src="\.\/app\.js\?v=[\w.-]+">/);
 assert(rosterScript>=0&&appScript>rosterScript,'rosters must load before the app entry point');

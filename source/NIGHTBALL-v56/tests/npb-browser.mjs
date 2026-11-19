@@ -39,6 +39,8 @@ try{
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-match-group="npb"]').click();
  assert.equal(await page.locator('[data-match-club^="npb-"]').count(),14);
+ await page.waitForFunction(()=>[...document.querySelectorAll('[data-match-club^="npb-"] img')].length===14&&
+  [...document.querySelectorAll('[data-match-club^="npb-"] img')].every(img=>img.complete&&img.naturalWidth&&img.src.endsWith('.png')));
  assert(await page.getByText('オイシックス').count(),'Oisix farm member is selectable');
  await page.locator('[data-match-club="npb-l"]').click();
  await page.locator('[data-match-side="away"]').click();
@@ -57,6 +59,8 @@ try{
   {timeout:15000});
  await page.waitForTimeout(450);
  assert.equal(await page.locator('#scoreboard').count(),1,'old HUD preserved');
+ assert.deepEqual(await page.locator('#scoreboard image').evaluateAll(images=>images.map(i=>i.getAttribute('href'))),
+  ['./assets/npb/npb-v.png','./assets/npb/npb-l.png']);
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('nightball.settings')||'{}'));
  assert.equal(saved.matchTeam,'npb-l');
  assert.equal(saved.matchOpponent,'npb-v');

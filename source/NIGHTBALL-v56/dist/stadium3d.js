@@ -55,7 +55,7 @@ export class StadiumRenderer {
   const shadowRes=hero?512:2048;key.shadow.mapSize.set(shadowRes,shadowRes);Object.assign(key.shadow.camera,{left:-34,right:34,top:44,bottom:-22,near:1,far:145});key.shadow.normalBias=.045;key.shadow.bias=-.00035;this.scene.add(key);this.scene.add(key.target);
   const fill=new T.DirectionalLight(0xbadfff,1.18);fill.position.set(32,30,55);this.scene.add(fill);
   this.rimLight=new T.DirectionalLight(0x94d0ff,1.10);this.rimLight.position.set(0,32,96);this.scene.add(this.rimLight);
-  this.clubImages=new Map();if(typeof Image==='function')for(const club of (NightTeams.playable||NightTeams.all)){const img=new Image();img.src=club.logo;this.clubImages.set(club.id,img);}
+  this.clubImages=new Map();if(typeof Image==='function')for(const club of (NightTeams.playable||NightTeams.all)){const img=new Image();img.onload=()=>{this.boardKey=null;};img.src=club.logo;this.clubImages.set(club.id,img);}
   this.cameraFocus=new T.Vector3();this.fieldPosition=new T.Vector3();this.fieldFocus=new T.Vector3();
   this.materials=new Map();this.geometries={sphere:new T.SphereGeometry(1,32,24),lowSphere:new T.SphereGeometry(1,10,7),box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,12)};
   this.contactShadowTex=this.gl.isSoftwareRenderer?null:createContactShadowTexture();
@@ -495,8 +495,16 @@ export class StadiumRenderer {
     const side=index===0?'away':'home',y=236+index*98;
     c.fillStyle=index?'#091826':'#102940';c.fillRect(26,y-58,972,78);
     c.fillStyle=team?.color||(index?'#2c8f78':'#d96c45');c.fillRect(26,y-58,12,78);
-    const mark=team?.scoreMark||team?.short||team?.name||'';
-    c.fillStyle='#f7fbff';c.font='900 42px sans-serif';c.fillText(mark.slice(0,3),102,y,112);
+    const logo=this.clubImages.get(team?.id);
+    if(logo?.complete&&logo.naturalWidth&&!team.scoreMark){
+     const scale=64/Math.max(logo.naturalWidth,logo.naturalHeight);
+     const w=logo.naturalWidth*scale,h=logo.naturalHeight*scale;
+     c.fillStyle='#f7f8f7';c.fillRect(67,y-54,70,70);
+     c.drawImage(logo,102-w/2,y-19-h/2,w,h);
+    }else{
+     const mark=team?.scoreMark||team?.short||team?.name||'';
+     c.fillStyle='#f7fbff';c.font='900 42px sans-serif';c.fillText(mark.slice(0,3),102,y,112);
+    }
     c.font='900 47px Arial';
     for(const [i,inning] of innings.entries()){
      const currentHalf=inning===current&&(g.half==='top'?'away':'home')===side;

@@ -1,11 +1,11 @@
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=73';
-import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=56';
+import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=76';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
-import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=56';
+import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=76';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=56';
-import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=72';
-import { StadiumRenderer } from './stadium3d.js?v=75';
+import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
+import { StadiumRenderer } from './stadium3d.js?v=76';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';

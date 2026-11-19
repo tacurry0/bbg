@@ -12,7 +12,6 @@ from datetime import date
 from pathlib import Path
 from collections import defaultdict
 import argparse, json, math, re, time
-from html import escape
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = ROOT / "data" / "kbo-season-2026.json"
@@ -185,22 +184,7 @@ def pitch_rating(s,base,ref):
          ("精密制球" if control>=85 else "奪三振型" if movement>=85 else "先発型" if role=="SP" else "速球派"),
          "velocityEvidence":{"fastAvg":velo,"fastAvgEstimated":True,
           "repertoireEstimated":True,"speedBasis":"ゲーム用推定。KBO公式球団別年次成績表に球速情報なし"}}
-def logo(code,mark,bg,fg):
- folder=ROOT/"dist"/"assets"/"kbo";folder.mkdir(parents=True,exist_ok=True)
- # Original in-game monogram, not an official club logo.
- txt=escape(mark)
- name="kbo-"+code.lower()+".svg"
- xml=('''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
-<circle cx="80" cy="80" r="76" fill="%s" stroke="#fff" stroke-width="5"/>
-<circle cx="80" cy="80" r="65" fill="none" stroke="%s" stroke-width="3" opacity=".6"/>
-<path d="M25 50 Q80 13 135 50" fill="none" stroke="%s" stroke-width="3" opacity=".3"/>
-<text x="80" y="99" fill="%s" font-family="Arial,sans-serif" font-size="%s"
- font-weight="900" text-anchor="middle">%s</text>
-<text x="80" y="122" fill="%s" font-family="Arial,sans-serif" font-size="10"
- font-weight="700" text-anchor="middle" letter-spacing="2">NIGHTBALL</text>
-</svg>'''%(bg,fg,fg,fg,62 if len(mark)<3 else 44,txt,fg))
- (folder/name).write_text(xml,encoding="utf8")
- return "./assets/kbo/"+name
+
 def prepare(source):
  profileFile=ROOT/"data"/"kbo-profiles-2026.json"
  evidence=json.loads(profileFile.read_text(encoding="utf8"))["profiles"] if profileFile.exists() else {}
@@ -331,7 +315,7 @@ def prepare(source):
   if set(assigned)!=set(slots) or len(used)!=9:raise RuntimeError("Incomplete KBO lineup "+code)
   starting=sorted((p for p in bats if p["id"] in used),key=lambda p:-p["stats"]["pa"])
   team={"id":"kbo-"+code.lower(),"name":name,"short":short,"mark":mark,
-        "logo":logo(code,mark,primary,accent),"color":primary,"accent":accent,
+        "logo":f"./assets/kbo/kbo-{code.lower()}.png","color":primary,"accent":accent,
         "league":"kbo","division":"kbo","park":park,"season":2026,
         "tag":"2026公式成績に基づく査定",
         "description":"KBO公式英語版2026個人成績をCPBL換算式でゲーム能力化",

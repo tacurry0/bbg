@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections import defaultdict
 from datetime import date
 from pathlib import Path
-from html import escape
 import json, math, re, time, unicodedata
 
 import requests
@@ -170,19 +169,6 @@ def pitcher(line):
     for key,src in (("k9","k"),("bb9","bb"),("hr9","hr")):s[key]=s[src]*9/max(1/3,s["ip"])
     return s
 
-def originalLogo(code,monogram,bg,fg):
-    name=f"npb-{code}.svg"
-    xml=f'''<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160">
- <circle cx="80" cy="80" r="77" fill="{bg}" stroke="#fdfdfd" stroke-width="5"/>
- <circle cx="80" cy="80" r="65" fill="none" stroke="{fg}" stroke-width="2" opacity=".8"/>
- <path d="M27 47 Q80 8 133 47" stroke="{fg}" stroke-width="4" fill="none" opacity=".2"/>
- <text x="80" y="96" fill="{fg}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="900" font-size="{47 if len(monogram)>1 else 67}">{escape(monogram)}</text>
- <text x="80" y="122" fill="{fg}" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="10" letter-spacing="2">NIGHTBALL</text>
-</svg>'''
-    folder=ROOT/"dist"/"assets"/"npb"
-    folder.mkdir(parents=True,exist_ok=True)
-    (folder/name).write_text(xml)
-    return f"./assets/npb/{name}"
 
 raw={}
 for code,name,short,mono,color,accent,park,div in TEAMS:
@@ -406,7 +392,7 @@ for code,name,short,mono,color,accent,park,div in TEAMS:
     labels={"central":"セントラル・リーグ","pacific":"パシフィック・リーグ",
            "farm-east":"ファーム東地区","farm-central":"ファーム中地区"}
     club={"id":"npb-"+code,"name":name,"short":short,"mark":mono,
-          "logo":originalLogo(code,mono,color,accent),"color":color,"accent":accent,
+          "logo":f"./assets/npb/npb-{code}.png","color":color,"accent":accent,
           "league":"npb","division":div,"park":park,"tag":"2026公式成績から査定",
           "description":"2026年公式個人成績をCPBL基準の換算式でゲーム能力に反映",
           "rosterStatus":"2026年シーズン成績から16野手・14投手を選出。現役登録・故障状況とは異なります。",

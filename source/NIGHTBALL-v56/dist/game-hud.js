@@ -14,8 +14,9 @@ function cubeHTML(g){
   <path d="M3 25 88 46 88 117 3 96Z" fill="url(#cube-blue)" stroke="url(#cube-edge)" stroke-width="2"/>
   <path d="M3 59 88 80" stroke="#7696bc" stroke-width=".7"/>
   ${['away','home'].map((side,i)=>{
-   const club=g.teams[side];
-   return `<g transform="translate(5 ${28+i*35}) skewY(14)"><rect width="30" height="32" rx="1" fill="${club.color}"/>
+   const club=g.teams[side],official=club.logo&&!club.scoreMark&&['npb','kbo'].includes(club.league);
+   const badgeBackground=official?'#f7f8f7':club.color;
+   return `<g transform="translate(5 ${28+i*35}) skewY(14)"><rect width="30" height="32" rx="1" fill="${badgeBackground}"/>
     ${club.scoreMark?`<text x="15" y="21" fill="#fff" font-size="${club.scoreMark.length>1?13:19}" font-weight="900" text-anchor="middle">${club.scoreMark}</text>`:`<image href="${club.logo}" x="2" y="3" width="26" height="26" preserveAspectRatio="xMidYMid meet"/>`}
     <text data-score="${side}" x="57" y="26" text-anchor="middle" fill="white" font-size="24" font-weight="900"></text>
    </g>`;

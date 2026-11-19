@@ -25,7 +25,7 @@ URL末尾のKBO球団コードはHT、SS、LG、OB、KT、SK、LT、HH、NC、WO
 - 選定名簿と出典の対応：data/kbo-selection-2026.json
 - 117名の公開プロフィール照合資料：data/kbo-profiles-2026.json
 
-生のページHTMLや公式球団ロゴは再配布しない。チームマークはオリジナルのイニシャル画像。
+成績データは公式ページから数値を抽出したもの。球団ロゴは[KBO公式の球団紹介](https://www.koreabaseball.com/kbo/league/teaminfo.aspx)で表示される球団エンブレムを使用。
 
 ## 能力換算（CPBL・NPBと同じ系列）
 
