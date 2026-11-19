@@ -78,5 +78,7 @@ assert(checkCache.includes('npb-data.js?v=64')&&checkCache.includes('npb-rosters
 assert(checkCache.includes('assets/npb/npb-v.svg'));
 const html=readFileSync('dist/index.html','utf8');
 assert(html.indexOf('npb-data.js?v=64')<html.indexOf('npb-rosters.js?v=64'));
-assert(html.indexOf('npb-rosters.js?v=64')<html.indexOf('app.js?v=66'));
+const rosterScript=html.indexOf('npb-rosters.js?v=64');
+const appScript=html.search(/<script type="module" src="\.\/app\.js\?v=[\w.-]+">/);
+assert(rosterScript>=0&&appScript>rosterScript,'rosters must load before the app entry point');
 console.log('PASS NPB 2026: 14 teams, 420 uniquely sourced players, independent farm clubs, each playable in live match, official evidence/uncertainty, CPBL and APBC compatibility, offline cache.');
