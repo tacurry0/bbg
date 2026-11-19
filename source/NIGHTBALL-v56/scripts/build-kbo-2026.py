@@ -61,10 +61,12 @@ def percentile(v,values):
 def fetch_source():
  import requests
  from bs4 import BeautifulSoup
- session=requests.Session()
- session.headers.update({"User-Agent":"NIGHTBALL/1.0 (single-date KBO facts audit; https://github.com/tacurry0/bbg)"})
  raw={"retrieved":AS_OF,"season":2026,"source":BASE,"teams":{}}
  for code,_,short,*rest in TEAMS:
+  # KBO English ASP.NET site remembers the selected team in a session cookie.
+  # Start a fresh isolated session for every club to avoid reading KIA for other teams.
+  session=requests.Session()
+  session.headers.update({"User-Agent":"NIGHTBALL/1.0 (single-date KBO facts audit; https://github.com/tacurry0/bbg)"})
   set_={}
   for typ,urlname in [("b1","BattingByTeams.aspx"),("b2","BattingByTeams02.aspx"),
                       ("p1","PitchingByTeams.aspx"),("p2","PitchingByTeams02.aspx")]:
