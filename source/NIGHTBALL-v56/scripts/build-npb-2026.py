@@ -61,7 +61,7 @@ def get(url):
 def norm(v):
     return re.sub(r"[\s\u3000*＊^]", "", unicodedata.normalize("NFKC", str(v))).replace("﨑","崎").replace("髙","高").replace("濵","浜")
 def num(v,default=0):
-    st=re.sub(r"[,\s]","",str(v)).lstrip(".")
+    st=re.sub(r"[,\s]","",str(v))
     try: return float(st)
     except ValueError: return default
 def integer(v): return int(num(v))
