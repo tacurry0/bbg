@@ -136,7 +136,10 @@ try{
  for(const [id,model,landmark] of [
   ['night','intercontinental','Taichung multi-level outfield complex'],
   ['brick','tianmu','TAIPEI lettering behind home plate'],
-  ['sky','tainan','Tainan horseshoe canopy']
+  ['sky','tainan','Tainan horseshoe canopy'],
+  ['tokyo-dome','tokyo-dome','Tokyo Dome air-supported membrane'],
+  ['taipei-dome','taipei-dome','Taipei Dome dark ceiling'],
+  ['dome','taoyuan','Taoyuan left field vision']
  ]){
   const state=await page.evaluate(({id,landmark})=>{
    const {renderer,game}=window.testDomeMatch;
@@ -145,39 +148,26 @@ try{
    renderer.render(game,++game.time);
    return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,
     landmark:!!renderer.parkDecor.getObjectByName(landmark),
-    board:!!renderer.parkDecor.getObjectByName('Live stadium vision')};
+    board:renderer.venueVisionCache.has(id)};
   },{id,landmark});
   assert.deepEqual(state,{model,shown:true,landmark:true,board:true});
   await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
- }
- for (const [parkId,asset] of [['tokyo-dome','tokyo-dome'],['taipei-dome','taipei-dome'],['dome','taoyuan']]){
-  await page.evaluate(parkId=>{
-   const {renderer,game}=window.testDomeMatch;
-   game.park=NightPlayers.parks.find(park=>park.id===parkId);
-   game.field=null;game.paused=true;game.setPhase('intro');game.phaseTime=400;
-   renderer.render(game,++game.time);
-  },parkId);
-  const photo=page.locator('#stadium-intro-photo:not([hidden])');
-  await photo.waitFor({state:'visible'});
-  assert.equal(await photo.getAttribute('src'),'./assets/stadiums/'+asset+'.webp');
-  assert.equal(await page.locator('#game-canvas').getAttribute('data-camera-view'),'overview');
   await page.evaluate(()=>{
    const {renderer,game}=window.testDomeMatch;
-   game.phaseTime=1230;
-   renderer.render(game,++game.time);
+   game.setPhase('aim');renderer.render(game,++game.time);
   });
-  await photo.waitFor({state:'hidden'});
+  assert.equal(await page.locator('#game-canvas').getAttribute('data-camera-view'),'play');
  }
  await page.evaluate(()=>{
   const {renderer,game}=window.testDomeMatch;
-  window.nightSettings.gameLighting='night';game.phaseTime=400;
+  window.nightSettings.gameLighting='night';game.setPhase('intro');
   renderer.render(game,++game.time);
  });
  await page.locator('#game-canvas[data-camera-view="overview"][data-game-lighting="night"]').waitFor({state:'visible'});
- assert.equal(await page.locator('#stadium-intro-photo').isVisible(),false,'Taoyuan night intro uses the lit 3D venue');
+ assert.equal(await page.locator('#stage > img').count(),0,'the intro uses the 3D venue without an image overlay');
  await page.screenshot({path:'tests/screenshots/taoyuan-night-overview.png'});
  assert.deepEqual(errors,[],'no page JavaScript errors');
- console.log('PASS: mobile Chromium, live visions, stadium photos and night lighting, fly-ball camera and separate replay/run skips ('+graphics+').');
+ console.log('PASS: mobile Chromium, live visions, 3D stadium overviews and night lighting, fly-ball camera and separate replay/run skips ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
  await context.close();
 }finally{
