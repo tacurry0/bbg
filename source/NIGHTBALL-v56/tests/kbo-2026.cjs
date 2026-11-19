@@ -93,7 +93,7 @@ assert.equal(pennant.schedule.length,20);
 assert.equal(new Set(pennant.schedule.flat().flatMap(x=>[x.home,x.away])).size,6,
  'existing six-team CPBL season does not accidentally absorb KBO');
 const sw=fs.readFileSync('dist/sw.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert(sw.includes('nightball-v67-kbo10-profile-scouting'));
+assert(sw.includes('nightball-v68-kbo10-official-catcher-fix'));
 assert(sw.includes('kbo-data.js?v=66')&&sw.includes('kbo-rosters.js?v=66'));
 assert(sw.includes('assets/kbo/kbo-wo.svg'));
 assert(html.indexOf('kbo-data.js?v=66')<html.indexOf('kbo-rosters.js?v=66'));
