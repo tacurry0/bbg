@@ -202,6 +202,8 @@ def logo(code,mark,bg,fg):
  (folder/name).write_text(xml,encoding="utf8")
  return "./assets/kbo/"+name
 def prepare(source):
+ profileFile=ROOT/"data"/"kbo-profiles-2026.json"
+ evidence=json.loads(profileFile.read_text(encoding="utf8"))["profiles"] if profileFile.exists() else {}
  all_b=[];all_p=[]
  byTeam={}
  for code,*_ in TEAMS:
@@ -235,39 +237,59 @@ def prepare(source):
   pool=byTeam[code]
   all_bat=sorted(pool["batters"].values(),key=lambda x:(-x["stats"]["pa"],-x["stats"]["h"],x["id"]))
   all_pit=sorted(pool["pitchers"].values(),key=lambda x:(-x["stats"]["ip"],-x["stats"]["saves"],x["id"]))
-  # Keep the most-used 16 position players; 9 starting spots must have unique
-  # defensive roles, with any unknown natural position treated as an estimate.
+  # Roster positions and hands are supplied for matched official KBO player codes.
+  # Historical roster estimates are never presented as confirmed current values.
   bats=[]
+  fallback=["CF","RF","1B","DH","3B","LF","2B","SS","C","C","SS","2B","3B","1B","RF","LF"]
   for i,item in enumerate(all_bat[:16]):
-   # Positions here are GAME STARTING SLOTS, not presented as verified real positions.
-   pos=["CF","RF","1B","DH","3B","LF","2B","SS","C","C","SS","2B","3B","1B","RF","LF"][i]
+   ev=evidence.get(item["id"],{})
+   natural=ev.get("positionCode")
+   pos=natural if natural in FIELD_PRIOR else fallback[i]
+   positions=list(dict.fromkeys([pos]+[p for p in ev.get("eligiblePositions",[]) if p in FIELD_PRIOR]))
    stats=item["stats"]
+   notes=["field","arm","run"]
+   if not natural:notes.append("position")
+   if not ev.get("hand"):notes.append("hand")
+   if not ev.get("throwHand"):notes.append("throwHand")
    p={"id":"kbo-"+code.lower()+"-b-"+item["id"],"name":item["name"],
-      "nativeName":item["name"],"no":"—","pos":pos,"positions":[pos],
-      "positionEstimated":True,"hand":"R","handEstimated":True,"throwHand":"R",
-      "throwHandEstimated":True,"season":2026,"stats":stats,
-      **bat_rating(stats,base,ref_b,pos),
+      "nativeName":ev.get("nativeName") or item["name"],"no":str(ev["no"]) if ev.get("no") is not None else "—",
+      "pos":pos,"positions":positions,"positionEstimated":not bool(natural),
+      "hand":ev.get("hand") or "R","handEstimated":not bool(ev.get("hand")),
+      "throwHand":ev.get("throwHand") or "R",
+      "throwHandEstimated":not bool(ev.get("throwHand")),
+      "identityEvidence":{"profile":ev.get("profileSource"),
+         "position":ev.get("positionSource"),"profileDate":ev.get("profileDate")} if ev else None,
+      "season":2026,"stats":stats,**bat_rating(stats,base,ref_b,pos),
       "sourceUrl":source["teams"][code]["b1"]["url"],
       "identityUrl":"https://eng.koreabaseball.com/teams/playerinfohitter/summary.aspx?pcode="+item["id"],
       "statsLevel":"KBO一軍","statsPeriod":"KBO 2026",
       "ratingsBasedOnStats":True,"ratingsProvisional":False,
       "confidence":round(stats["pa"]/(stats["pa"]+120),3),
-      "estimates":["field","arm","run","position","hand","throwHand"],
-      "rosterNote":"守備位置・投打の左右・背番号は公式球団別成績表では確認不可。守備位置/左右はゲーム用仮設定。"}
+      "estimates":notes,
+      "rosterNote":"氏名・成績は公式2026記録。プロフィールは2026年以前の公開記録からID照合、未確認項目はゲーム用仮設定。"}
    bats.append(p)
   ratedP=[]
   for item in all_pit:
-   stats=item["stats"];ev=pitch_rating(stats,pbase,ref_p)
+   stats=item["stats"];pitchAbility=pitch_rating(stats,pbase,ref_p)
+   ev=evidence.get(item["id"],{})
+   notes=["velocity","pitchRepertoire","pitchMovement","role"]
+   if not ev.get("hand"):notes.append("hand")
+   if not ev.get("throwHand"):notes.append("throwHand")
    ratedP.append({"id":"kbo-"+code.lower()+"-p-"+item["id"],"name":item["name"],
-     "nativeName":item["name"],"no":"—","pos":"P","hand":"R",
-     "handEstimated":True,"throwHand":"R","throwHandEstimated":True,
-     "season":2026,"stats":stats,**ev,
+     "nativeName":ev.get("nativeName") or item["name"],"no":str(ev["no"]) if ev.get("no") is not None else "—",
+     "pos":"P","hand":ev.get("throwHand") or "R",
+     "handEstimated":not bool(ev.get("throwHand")),
+     "throwHand":ev.get("throwHand") or "R",
+     "throwHandEstimated":not bool(ev.get("throwHand")),
+     "identityEvidence":{"profile":ev.get("profileSource"),
+       "position":ev.get("positionSource"),"profileDate":ev.get("profileDate")} if ev else None,
+     "season":2026,"stats":stats,**pitchAbility,
      "sourceUrl":source["teams"][code]["p1"]["url"],
      "identityUrl":"https://eng.koreabaseball.com/teams/playerinfopitcher/summary.aspx?pcode="+item["id"],
      "statsLevel":"KBO一軍","statsPeriod":"KBO 2026",
      "ratingsBasedOnStats":True,"ratingsProvisional":False,
      "confidence":round(stats["ip"]/(stats["ip"]+30),3),
-     "estimates":["velocity","pitchRepertoire","pitchMovement","role","hand","throwHand"]})
+     "estimates":notes})
   # Build 5 starter candidates and 9 bullpen candidates before filling unused slots.
   starters=[p for p in ratedP if p["role"]=="SP"]
   bullpen=[p for p in ratedP if p["role"]!="SP"]
@@ -276,7 +298,30 @@ def prepare(source):
    if item not in ordered:ordered.append(item)
    if len(ordered)==14:break
   if len(ordered)<14:raise RuntimeError("Too few pitchers "+code)
-  starting=bats[:9]
+  # Select defensively sensible starters. Prefer a verified primary field
+  # position, then an eligible secondary position, then a same-position group;
+  # only as a last resort assign a different position as a GAME fallback.
+  slots=["C","SS","2B","3B","1B","CF","RF","LF","DH"]
+  used=set(); assigned={}
+  for slot in slots:
+   def cost(p):
+    pid=p["id"].rsplit("-",1)[-1]
+    ev=evidence.get(pid,{})
+    actual=ev.get("positionCode")
+    group=ev.get("positionGroup") or ""
+    if actual==slot:return 0
+    if actual and slot in ev.get("eligiblePositions",[]):return 1
+    if slot=="DH":return 5
+    if not actual and slot==p["pos"]:return 4
+    if slot=="C" and "포수" in group:return 2
+    if slot in ("LF","CF","RF") and "외야수" in group:return 3
+    if slot in ("1B","2B","3B","SS") and "내야수" in group:return 3
+    if actual:return 11
+    return 8
+   available=[p for p in bats if p["id"] not in used]
+   selected=min(available,key=lambda p:(cost(p),-p["stats"]["pa"],p["id"]))
+   used.add(selected["id"]);assigned[slot]=selected["id"]
+  starting=sorted((p for p in bats if p["id"] in used),key=lambda p:-p["stats"]["pa"])
   team={"id":"kbo-"+code.lower(),"name":name,"short":short,"mark":mark,
         "logo":logo(code,mark,primary,accent),"color":primary,"accent":accent,
         "league":"kbo","division":"kbo","park":park,"season":2026,
@@ -284,6 +329,7 @@ def prepare(source):
         "description":"KBO公式英語版2026個人成績をCPBL換算式でゲーム能力化",
         "rosterStatus":"2026年公式成績から選出した16野手・14投手。守備位置・左右・背番号の一部は未確認。",
         "lineupDate":AS_OF,"startingOrder":[p["id"] for p in starting],
+        "startingFielding":assigned,
         "batters":bats,"pitchers":ordered,
         "statsPopulation":{"batters":len(all_bat),"pitchers":len(all_pit)}}
   teams.append(team)
@@ -292,7 +338,8 @@ def prepare(source):
   print("BUILT",code,name,"candidates",len(all_bat),len(all_pit),"actual roster",len(bats),len(ordered),flush=True)
  document={"version":"kbo2026-official-10clubs-v1","season":2026,"asOf":AS_OF,
            "source":"https://eng.koreabaseball.com/Stats/BattingByTeams.aspx",
-           "method":"CPBL percentile and league average priors; disclosed estimated hand and position",
+           "method":"CPBL percentile and league average priors; 114 ID-matched historical profiles, residual scouting estimated",
+           "profileMatched":sum(1 for t in teams for p in t["batters"]+t["pitchers"] if p.get("identityEvidence")),
            "referencePopulations":{"batters":len(ref_b),"pitchers":len(ref_p)},
            "baselines":base,"pitchingBaselines":pbase,"teams":teams}
  assert len(teams)==10
