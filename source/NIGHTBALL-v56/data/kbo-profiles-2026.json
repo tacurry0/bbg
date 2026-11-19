@@ -1,0 +1,1535 @@
+{
+  "sourceDate": "2026-09-17 / 2026-07-23",
+  "sources": [
+    "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+    "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+  ],
+  "note": "Only factual player ID-linked metadata matched against KBO official 2026 performance IDs. Position is discarded when group and listed code conflict; roster positions are historical, not confirmed current.",
+  "profiles": {
+    "50030": {
+      "nativeName": "소형준",
+      "no": 30,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "50458": {
+      "nativeName": "김지찬",
+      "no": 58,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "2B",
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "50464": {
+      "nativeName": "이승민",
+      "no": 28,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "50500": {
+      "nativeName": "황성빈",
+      "no": 0,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "LF",
+      "eligiblePositions": [
+        "LF",
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "50556": {
+      "nativeName": "최준용",
+      "no": 56,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "50854": {
+      "nativeName": "최지훈",
+      "no": 54,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51154": {
+      "nativeName": "김진수",
+      "no": 45,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51516": {
+      "nativeName": "김진욱",
+      "no": 15,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51648": {
+      "nativeName": "이의리",
+      "no": 48,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51867": {
+      "nativeName": "김건우",
+      "no": 39,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51897": {
+      "nativeName": "조병현",
+      "no": 19,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "51907": {
+      "nativeName": "김주원",
+      "no": 7,
+      "hand": "S",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52043": {
+      "nativeName": "벤자민",
+      "no": 48,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-10-04",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52060": {
+      "nativeName": "박영현",
+      "no": 60,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52121": {
+      "nativeName": "문정빈",
+      "no": 56,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "1B",
+      "eligiblePositions": [
+        "1B",
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52605": {
+      "nativeName": "김도영",
+      "no": 5,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "3B",
+      "eligiblePositions": [
+        "SS",
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52764": {
+      "nativeName": "허인서",
+      "no": 59,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "포수",
+      "positionCode": "C",
+      "eligiblePositions": [
+        "C",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "52902": {
+      "nativeName": "임지민",
+      "no": 19,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53123": {
+      "nativeName": "오스틴",
+      "no": 23,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "1B",
+      "eligiblePositions": [
+        "1B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53312": {
+      "nativeName": "김건희",
+      "no": 12,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "포수",
+      "positionCode": "C",
+      "eligiblePositions": [
+        "C",
+        "1B",
+        "DH"
+      ],
+      "profileDate": "2026-09-20",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53375": {
+      "nativeName": "후라도",
+      "no": 75,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-24",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "53554": {
+      "nativeName": "김민석",
+      "no": 2,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "LF",
+      "eligiblePositions": [
+        "LF",
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53609": {
+      "nativeName": "곽도규",
+      "no": 0,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-10-07",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53764": {
+      "nativeName": "문현빈",
+      "no": 51,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "2B",
+        "LF",
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "53827": {
+      "nativeName": "에레디아",
+      "no": 27,
+      "hand": "R",
+      "throwHand": "L",
+      "positionGroup": "외야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "54263": {
+      "nativeName": "김택연",
+      "no": 63,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54400": {
+      "nativeName": "디아즈",
+      "no": 0,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "내야수",
+      "positionCode": "1B",
+      "eligiblePositions": [
+        "1B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54529": {
+      "nativeName": "레이예스",
+      "no": 29,
+      "hand": "S",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "RF",
+      "eligiblePositions": [
+        "LF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54610": {
+      "nativeName": "성영탁",
+      "no": 65,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54640": {
+      "nativeName": "네일",
+      "no": 40,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54730": {
+      "nativeName": "페라자",
+      "no": 30,
+      "hand": "S",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "LF",
+      "eligiblePositions": [
+        "LF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54768": {
+      "nativeName": "조동욱",
+      "no": 57,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54812": {
+      "nativeName": "정준재",
+      "no": 3,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "54944": {
+      "nativeName": "데이비슨",
+      "no": 34,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "1B",
+      "eligiblePositions": [
+        "1B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55130": {
+      "nativeName": "톨허스트",
+      "no": 30,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55239": {
+      "nativeName": "잭로그",
+      "no": 39,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55268": {
+      "nativeName": "최민석",
+      "no": 68,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55633": {
+      "nativeName": "올러",
+      "no": 33,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55636": {
+      "nativeName": "박재현",
+      "no": 15,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "RF",
+      "eligiblePositions": [
+        "LF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "55903": {
+      "nativeName": "라일리",
+      "no": 3,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-20",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56011": {
+      "nativeName": "스기모토",
+      "no": 11,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56034": {
+      "nativeName": "힐리어드",
+      "no": 34,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "내야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "56146": {
+      "nativeName": "리오스",
+      "no": null,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "56348": {
+      "nativeName": "유토",
+      "no": 48,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56523": {
+      "nativeName": "비슬리",
+      "no": 23,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56531": {
+      "nativeName": "로드리게스",
+      "no": 31,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56536": {
+      "nativeName": "박정민",
+      "no": 36,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "56626": {
+      "nativeName": "카스트로",
+      "no": 26,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "56719": {
+      "nativeName": "왕옌청",
+      "no": 19,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56724": {
+      "nativeName": "화이트",
+      "no": 24,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56801": {
+      "nativeName": "아빌라",
+      "no": 33,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-29",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56840": {
+      "nativeName": "김민준",
+      "no": 40,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "56911": {
+      "nativeName": "토다",
+      "no": 11,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "56966": {
+      "nativeName": "테일러",
+      "no": 66,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "61101": {
+      "nativeName": "임찬규",
+      "no": 1,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62234": {
+      "nativeName": "류지혁",
+      "no": 16,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "1B",
+        "2B",
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62404": {
+      "nativeName": "구자욱",
+      "no": 5,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "RF",
+      "eligiblePositions": [
+        "LF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62415": {
+      "nativeName": "박해민",
+      "no": 17,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62528": {
+      "nativeName": "김원중",
+      "no": 34,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62869": {
+      "nativeName": "문승원",
+      "no": 42,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62907": {
+      "nativeName": "박민우",
+      "no": 2,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "62947": {
+      "nativeName": "나성범",
+      "no": 47,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "외야수",
+      "positionCode": "RF",
+      "eligiblePositions": [
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "63260": {
+      "nativeName": "이우성",
+      "no": 55,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "63342": {
+      "nativeName": "조상우",
+      "no": 11,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "63950": {
+      "nativeName": "장현식",
+      "no": 50,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "64001": {
+      "nativeName": "고영표",
+      "no": 1,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수(우언우타)",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "64006": {
+      "nativeName": "심우준",
+      "no": 7,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "64021": {
+      "nativeName": "박세웅",
+      "no": 21,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "64646": {
+      "nativeName": "박찬호",
+      "no": 7,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "64995": {
+      "nativeName": "배재환",
+      "no": 61,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "65062": {
+      "nativeName": "김재윤",
+      "no": 62,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "65207": {
+      "nativeName": "신민재",
+      "no": 4,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "65616": {
+      "nativeName": "이민우",
+      "no": 27,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "65653": {
+      "nativeName": "김호령",
+      "no": 27,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "65769": {
+      "nativeName": "김범수",
+      "no": 49,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "65933": {
+      "nativeName": "구창모",
+      "no": 59,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "66108": {
+      "nativeName": "홍창기",
+      "no": 51,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "RF",
+      "eligiblePositions": [
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "66209": {
+      "nativeName": "조수행",
+      "no": 51,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "LF",
+        "CF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "66291": {
+      "nativeName": "이영하",
+      "no": 50,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "66606": {
+      "nativeName": "최원준",
+      "no": 3,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "CF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "66609": {
+      "nativeName": "전상현",
+      "no": 51,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "67143": {
+      "nativeName": "손주영",
+      "no": 29,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "67449": {
+      "nativeName": "김성윤",
+      "no": 39,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "LF",
+        "CF",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "67539": {
+      "nativeName": "나균안",
+      "no": 43,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-19",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "67703": {
+      "nativeName": "박상원",
+      "no": 58,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "67893": {
+      "nativeName": "박성한",
+      "no": 2,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "68043": {
+      "nativeName": "김민",
+      "no": 1,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "68050": {
+      "nativeName": "강백호",
+      "no": 50,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "68205": {
+      "nativeName": "전민재",
+      "no": 13,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "2B",
+        "SS",
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-29",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "68220": {
+      "nativeName": "곽빈",
+      "no": 47,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "68415": {
+      "nativeName": "양창섭",
+      "no": 42,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "68507": {
+      "nativeName": "장두성",
+      "no": 7,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "68525": {
+      "nativeName": "한동희",
+      "no": 25,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "3B",
+      "eligiblePositions": [
+        "1B",
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69041": {
+      "nativeName": "손동현",
+      "no": 41,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69045": {
+      "nativeName": "알칸타라",
+      "no": 54,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "69446": {
+      "nativeName": "원태인",
+      "no": 18,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69517": {
+      "nativeName": "고승민",
+      "no": 2,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "1B",
+        "2B",
+        "RF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69737": {
+      "nativeName": "노시환",
+      "no": 8,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "3B",
+      "eligiblePositions": [
+        "3B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69969": {
+      "nativeName": "전사민",
+      "no": 57,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "69992": {
+      "nativeName": "최정원",
+      "no": 14,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "72443": {
+      "nativeName": "최형우",
+      "no": 34,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "DH",
+      "eligiblePositions": [
+        "LF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "75847": {
+      "nativeName": "최정",
+      "no": 14,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "75867": {
+      "nativeName": "김진성",
+      "no": 42,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "76118": {
+      "nativeName": "원종현",
+      "no": 46,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "투수(우언우타)",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "76232": {
+      "nativeName": "양의지",
+      "no": 25,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "포수",
+      "positionCode": "C",
+      "eligiblePositions": [
+        "C",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "76290": {
+      "nativeName": "김현수",
+      "no": 10,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "LF",
+      "eligiblePositions": [
+        "LF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "76715": {
+      "nativeName": "류현진",
+      "no": 99,
+      "hand": "R",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "77637": {
+      "nativeName": "양현종",
+      "no": 54,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "투수",
+      "positionCode": "P",
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "78168": {
+      "nativeName": "서건창",
+      "no": 14,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "78224": {
+      "nativeName": "김재환",
+      "no": 32,
+      "hand": "L",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": "LF",
+      "eligiblePositions": [
+        "LF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "78603": {
+      "nativeName": "김선빈",
+      "no": 3,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "2B",
+      "eligiblePositions": [
+        "2B",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "79215": {
+      "nativeName": "박건우",
+      "no": 37,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "외야수",
+      "positionCode": null,
+      "eligiblePositions": [],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": null
+    },
+    "79231": {
+      "nativeName": "정수빈",
+      "no": 31,
+      "hand": "L",
+      "throwHand": "L",
+      "positionGroup": "외야수",
+      "positionCode": "CF",
+      "eligiblePositions": [
+        "CF",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    },
+    "79402": {
+      "nativeName": "김상수",
+      "no": 7,
+      "hand": "R",
+      "throwHand": "R",
+      "positionGroup": "내야수",
+      "positionCode": "SS",
+      "eligiblePositions": [
+        "2B",
+        "SS",
+        "DH"
+      ],
+      "profileDate": "2026-09-17",
+      "profileSource": "https://github.com/baseball-note/baseball-note/blob/main/data/profiles.json",
+      "positionSource": "https://github.com/lhg1106/Kbo/blob/main/roster_positions_2026.csv"
+    }
+  }
+}
