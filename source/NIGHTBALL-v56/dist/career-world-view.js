@@ -257,7 +257,7 @@
   return section('現役引退 · '+w.retirement.age+'歳',`<p>${countries[w.country].label} · ${esc(w.school)} · ドラフト${w.draftRecord?.round||'—'}巡目</p>
    <p>国内王者 ${w.history.filter(x=>x.champion).length}回 · アジア王者 ${w.history.filter(x=>x.asia).length}回 · 代表 ${w.national.length}回</p>
    <p>最終年俸 ${w.money(w.retirement.annual)} · 特殊能力 ${esc(w.perks.join('、')||'—')}</p>`+
-   pills('通算成績',stat(w.lifetime,w.pitching))+
+   '<h3>通算成績</h3>'+pills('通算成績',stat(w.lifetime,w.pitching))+
    w.moves.map(x=>`<p>${x.day} · ${club(w,x.from)} → ${club(w,x.to)} · ${esc(x.type)}</p>`).join('')+
    act('new','OB記録を保存して新しいキャリアへ','','primary-button'))+history(w);
  }

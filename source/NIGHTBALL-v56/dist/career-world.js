@@ -388,7 +388,7 @@
     }
     if(this.active?.id===f.id){
      this.recordOwn(f,r);
-     if(f.development)this.schoolPlay[this.schoolPlayKey]=live?'live':'auto';
+     if(f.development&&(!live||r.stats[playerId]?.g))this.schoolPlay[this.schoolPlayKey]=live?'live':'auto';
     }
    }
    if(kind==='national'&&this.nationalEvent.format){
@@ -927,7 +927,9 @@
    const park=f.park||(this.clubCountry(f.home)?NightTeams.get(f.home).park:D.park(this.country));
    const activity={fixtureId:f.id,playerId:pId,pitching:this.pitching,continuous:true,teamSeed:this.seed,
     opportunities:this.pitching?role==='rotation'?6:role==='closer'?1:2:5,label:f.name,format,role,slot,pinching,presentation:true,
-    entryInning:this.pitching?pitchRole[role]:pinching?7:1,pitchActive:this.pitching&&role==='rotation',
+    // At least twelve batting slots remain from the fifth through the eighth,
+    // even if a home win skips the ninth. The reserved slot cannot be missed.
+    entryInning:this.pitching?(f.development?Math.min(7,pitchRole[role]):pitchRole[role]):pinching?(f.development?5:7):1,pitchActive:this.pitching&&role==='rotation',
     reservePitcher:1,shortIntro:true,prospect:true,keyOnly:format==='key',firstAppearance:f.development===true,important:!!f.important||f.kind==='post'||f.kind==='asia',completed:0};
    return {worldFixture:f.id,career:format==='full'?null:activity,homeTeamId:f.home,awayTeamId:f.away,
     clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:userStarter,opponentPitcher:0,

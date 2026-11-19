@@ -73,7 +73,18 @@ for(const country of countries){
     const before=w.active.id;
     w.run('game');w.run('event');w.run('day');w.run('season');
     assert.equal(w.active.id,before);
-    assert(w.liveOptions('key'));
+    const options=w.liveOptions('key');
+    assert(options);
+    const game=new NightGame(w.pitching?'career-pitch':'career-bat','standard',()=>{},options);
+    for(let tick=0;tick<220&&game.phase!=='career-ready';tick++)game.update(50);
+    assert.equal(game.phase,'career-ready',country+' grade '+grade+' never received a live appearance');
+    assert(game.acknowledgeCareerAppearance());
+    if(w.pitching){
+     assert(game.throwPitch());
+    }else{
+     for(let tick=0;tick<60&&game.phase==='windup';tick++)game.update(50);
+     assert(game.swing());
+    }
    }
    assert(w.finishDay());
   }
