@@ -20,7 +20,7 @@ jobs:
           python - <<'PY'
           import requests,bs4,re
           s=requests.Session();s.headers['User-Agent']='Mozilla/5.0 (compatible; NIGHTBALL/1.0)'
-          for url in ['https://eng.koreabaseball.com/Stats/BattingByTeams.aspx','https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx','https://eng.koreabaseball.com/Stats/BattingLeaders.aspx']:
+          for url in ['https://eng.koreabaseball.com/Stats/BattingByTeams02.aspx?codeTeam=KT','https://eng.koreabaseball.com/Stats/PitchingByTeams02.aspx?codeTeam=KT','https://eng.koreabaseball.com/Teams/PlayerSearch.aspx']:
            try:
             r=s.get(url,timeout=23);r.encoding=r.apparent_encoding
             so=bs4.BeautifulSoup(r.text,'lxml')
@@ -32,6 +32,7 @@ jobs:
               print('ROW', [c.get_text(' ',strip=True)[:70] for c in tr.find_all(['th','td'])][:27])
             print('FORMS',[(f.get('id'),f.get('action'),f.get('method')) for f in so.select('form')[:3]])
             print('SELECTS',[(x.get('id'),x.get('name'),[(y.get('value'),y.get_text(' ',strip=True)) for y in x.select('option')[:15]]) for x in so.select('select')[:20]])
+            print('PLAYER_EXAMPLE',[(x.get_text(' ',strip=True),x.get('href')) for x in so.select('a.stats_player')[:3]])
             print('TEAM_NODES',[(x.name,x.get('id'),x.get('href'),x.get('onclick')) for x in so.find_all(['a','button','input']) if x.get_text(' ',strip=True) in ['KIA','LG','SSG','KT','NC','DOOSAN','LOTTE','KIWOOM','SAMSUNG','HANWHA']][:25])
             for match in list(re.finditer('KIA|HANWHA|Doosan|__doPostBack|TEAM_ID|ddlTeam|TEAM_CODE',r.text,re.I))[:15]:
              print('SNIP',r.text[max(match.start()-100,0):match.start()+210].replace('\\n',' '))
