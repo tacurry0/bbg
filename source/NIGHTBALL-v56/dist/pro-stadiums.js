@@ -165,8 +165,8 @@ function dome(group,r,park,m,soft){
  roof.setAttribute('position',new T.Float32BufferAttribute(vertices,3));
  roof.setAttribute('color',new T.Float32BufferAttribute(colors,3));
  roof.setIndex(indices);roof.computeVertexNormals();
- const panels=r.mat(park.id+' roof shell',0xffffff,.87);
- panels.side=T.DoubleSide;panels.vertexColors=true;
+ const panels=r.mat(park.id+' roof shell',soft?color:0xffffff,.87);
+ panels.side=T.DoubleSide;panels.vertexColors=!soft;
  mesh(group,park.name+' roof shell',roof,panels).renderOrder=-3;
 
  const wires=[],bands=[];
@@ -214,14 +214,20 @@ function dome(group,r,park,m,soft){
 function esConGlass(group,r,m,park,soft){
  const glass=r.mat('es-con outfield glazing',0x779dac,.39,.16);
  glass.side=T.DoubleSide;glass.transparent=true;glass.opacity=.47;glass.depthWrite=false;
- const panels=[],frames=[];
- for(let i=0;i<18;i++){
-  const x=(i-8.5)*11.7,z=156,top=NightPlayers.roofSurface(park,x,z)-.4;
-  panels.push({point:[x,(top+12)/2,z],size:[11.35,top-12,.19]});
-  frames.push([[x-5.85,9,z-.15],[x-5.85,top,z-.15],.43]);
-  for(let y=17;y<top;y+=6)frames.push([[x-5.86,y,z-.15],[x+5.87,y,z-.15],.27]);
+ const vertices=[],indices=[],frames=[],columns=18,width=210,z=156,bottom=12;
+ const top=x=>NightPlayers.roofSurface(park,x,z)-.4;
+ for(let i=0;i<=columns;i++){
+  const x=(i/columns-.5)*width,y=top(x);
+  vertices.push(x,bottom,z,x,y,z);
+  frames.push([[x,bottom,z-.15],[x,y,z-.15],.43]);
+  if(i===columns)continue;
+  const next=x+width/columns,k=i*2;
+  indices.push(k,k+1,k+2,k+2,k+1,k+3);
+  for(let row=18;row<=Math.min(y,top(next));row+=6)frames.push([[x,row,z-.15],[next,row,z-.15],.27]);
  }
- boxBatch(group,'ES CON glass outfield facade',panels,glass);
+ const geometry=new T.BufferGeometry().setAttribute('position',new T.Float32BufferAttribute(vertices,3));
+ geometry.setIndex(indices);geometry.computeVertexNormals();
+ mesh(group,'ES CON glass outfield facade',geometry,glass);
  supportBeams(group,'ES CON black window mullions',frames,m.steel);
  trees(r,group,'Trees beyond the glass',{z:185,spread:208,count:soft?16:26,colors:[0x536f59,0x627d5f,0x789076]});
 }

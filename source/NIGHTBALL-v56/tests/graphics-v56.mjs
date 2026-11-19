@@ -214,7 +214,10 @@ for(const park of proParks){
  assert(renderer.parkDecor.getObjectByName('Infield protective net'));
  if(details[park.id])assert(renderer.parkDecor.getObjectByName(details[park.id]),details[park.id]);
  if(park.id==='koshien')assert(!renderer.infieldSkin[1].visible,'the grass diamond is hidden on black soil');
- if(park.roofProfile)assert(renderer.parkDecor.getObjectByName(park.name+' roof shell'));
+ if(park.roofProfile){
+  const roof=renderer.parkDecor.getObjectByName(park.name+' roof shell');
+  assert.equal(roof?.material.color.getHex(),park.roofProfile.color,'software 3D preserves the photo-based roof tint');
+ }
  if(park.id==='daejeon-hanwha'){
   const positions=renderer.wallGroup.children[0].geometry.attributes.position.array;
   const heights=Array.from(positions).filter((v,i)=>i%3===1);
@@ -399,7 +402,7 @@ renderer.hud=oldHud;renderer.ctx=oldContext;
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v74-jp-kr-parks'));
+assert(swCode.includes('nightball-v75-jp-kr-parks'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 

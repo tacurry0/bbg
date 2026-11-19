@@ -2,7 +2,7 @@ import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=71';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
-import { decorateProStadium, proOverview } from './pro-stadiums.js?v=74';
+import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
 import { drawVenueVision } from './venue-vision.js?v=74';
 import { loadMatchModel } from './match-models.js?v=56';
