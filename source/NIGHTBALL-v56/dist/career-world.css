@@ -1,0 +1,30 @@
+.cw-panel,.cw-hero{margin:0 0 12px;padding:14px}
+.cw-hero{background:linear-gradient(135deg,#fff,#e3f8ff);border-color:#72c3e8}
+.cw-hero h2{font-size:clamp(1.25rem,6vw,2rem);margin:.18em 0;color:#064773}
+.cw-hero p,.cw-panel p{margin:.45em 0;overflow-wrap:anywhere}
+.cw-panel h2{font-size:1.05rem;line-height:1.4}
+.cw-panel h3{font-size:.93rem;margin:12px 0 5px}
+.cw-tabs,.cw-pills,.cw-modes{display:flex;gap:6px;flex-wrap:wrap}
+.cw-tabs{padding:4px 0 12px}
+.cw-tabs button,.cw-modes button{border:1px solid #92c8df;border-radius:9px;background:#effaff;color:#0c496d;font-weight:800;min-height:38px;padding:4px 10px;font-size:.83rem}
+.cw-tabs button[aria-pressed=true],.cw-modes button[aria-pressed=true]{background:#1760a3;color:#fff;border-color:#1760a3}
+.cw-pills span{background:#e7f5fd;border-radius:7px;color:#134761;font-size:.85rem;padding:4px 7px}
+.cw-pills+.cw-pills,.cw-modes{margin-top:8px}
+.cw-grid,.cw-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.cw-grid button,.cw-panel>.primary-button,.cw-panel>.secondary-button{min-height:42px;margin:2px 0;line-height:1.25;white-space:normal}
+.cw-fields label,.cw-name{display:grid;gap:4px;color:#164764;font-size:.9rem;font-weight:800;min-width:0}
+.cw-fields select,.cw-name input{box-sizing:border-box;width:100%;min-height:42px;font-size:1rem;border:1px solid #9acee2;background:white;color:#173b50;border-radius:7px;padding:6px}
+.cw-name{margin-bottom:9px}
+.cw-fields{margin-bottom:12px}
+.cw-table{border-collapse:collapse;width:100%;font-size:.82rem;font-variant-numeric:tabular-nums}
+.cw-table :is(th,td){padding:5px 3px;text-align:right;border-bottom:1px solid #c6e6f6}
+.cw-table :is(th,td):nth-child(2){text-align:left}
+.cw-table .cw-own{background:#e4f579}
+.cw-list{padding-inline-start:1.45rem;margin:4px 0;font-size:.91rem;line-height:1.6}
+.cw-list time{font-variant-numeric:tabular-nums;color:#264d69}
+.cw-scroll{max-height:18rem;overflow:auto}
+.cw-note{color:#38546a;font-size:.88rem}
+.cw-panel details{padding:6px 0;border-top:1px solid #c6e6f6}
+.cw-panel summary{cursor:pointer;font-weight:750}
+.cw-offer{margin-top:9px;padding:9px;border:1px solid #b2deee;border-radius:9px;background:#f4fbff}
+.cw-trophy{padding:12px;border-radius:9px;background:#ffe679;color:#553c06;font-weight:900}
