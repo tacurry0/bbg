@@ -23,7 +23,7 @@
   const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+schoolOpportunity+({easy:8,normal:0,hard:-5})[w.difficulty]:0;
   return base+formScore+glove+form+trust-fluency-penalty-(age>38?2:0);
  }
- function lineup(w,id,country,day,{farm=false,withoutPlayer=false}={}){
+ function lineup(w,id,country,day,{farm=false,withoutPlayer=false,development=false}={}){
   const roster=w.members(id).filter(p=>p.id!==w.player.id||(!withoutPlayer&&w.health.injury===0));
   const hittersAvailable=roster.filter(p=>p.pos!=='P'&&!p.injury).length;
   const pitchersAvailable=roster.filter(p=>p.pos==='P'&&!p.injury).length;
@@ -60,6 +60,7 @@
     usage=dayNumber%4===0?'runner':dayNumber%4===2?'defense':'pinch';
    }
   }
+  if(own&&development&&['inactive','bench'].includes(usage))usage=pitching?'setup':'pinch';
   const bench=own&&!pitching&&usage!=='inactive'&&usage!=='starter'?w.player:reserves[0];
   // Rotate the bottom third across the season so position battles also depend on live form.
   const order=starters.slice().sort((a,b)=>b.contact+b.run*.22-a.contact-a.run*.22);

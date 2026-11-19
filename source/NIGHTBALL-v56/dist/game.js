@@ -512,7 +512,7 @@ window.NightGame=class NightGame{
    const live=!auto&&c.completed<c.opportunities&&(c.pitching?this.defending&&c.pitchActive:!this.defending&&this.batter.id===c.playerId);
    const key=c.important&&this.inning>=7||this.inning>=7&&Math.abs(this.homeScore-this.awayScore)<=2||
     (this.inning>=5&&(this.bases[1]||this.bases[2]));
-   if(live&&(!c.keyOnly||key)){this.offerCareerAppearance();return;}
+   if(live&&(!c.keyOnly||key||c.firstAppearance&&c.completed===0)){this.offerCareerAppearance();return;}
    this.simulateCareerPlate();
   }
   // The simulation can yield in a very long extra-inning game instead of leaving the UI blocked.

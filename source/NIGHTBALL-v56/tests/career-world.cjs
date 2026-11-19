@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 global.window=global;
 const modules=['ratings-data','players','pro-parks','pennant','npb-postseason','npb-data','npb-rosters','kbo-data','kbo-rosters',
  'career-leagues','career-development','career-life','career-extras','career','game',
- 'career-world-data','career-world-leagues','career-world-school','career-world-match','career-world-save','career-world','career-world-view'];
+ 'career-world-data','career-world-identities','career-world-leagues','career-world-school','career-world-match','career-world-save','career-world','career-world-view'];
 for(const file of modules)require('../dist/'+file+'.js');
 const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld;
 const countries=['jp','tw','kr'];
@@ -18,7 +18,10 @@ const roundtrip=w=>{
 function enrollment(w){
  const tests={jp:'夏の地方大会',tw:'中信盃黑豹旗',kr:'鳳凰大旗'};
  let days=0;
- while(w.stage==='school'&&days++<20)w.run('season');
+ while(w.stage==='school'&&days++<100){
+  w.run('season');
+  if(w.queue)assert(w.finishDay());
+ }
  assert.equal(w.stage,'draft');assert.equal(w.grade,3);
  assert(w.schoolHistory.some(x=>x.name.includes(tests[w.country])));
  return w;
@@ -35,12 +38,15 @@ function draft(w){
   w.draftApply(true);w.draftReveal(true);
  }
  assert(w.signDraft());assert.equal(w.playingCountry,w.country);assert.equal(w.proYear,1);
+ const drafted=w.draft.picks.filter(p=>p.id!==w.player.id);
+ assert(drafted.every(p=>w.person(p.id)?.club===p.club&&w.person(p.id).draftRecord?.round===p.round));
+ assert.equal(new Set(w.draft.picks.map(p=>p.id)).size,w.draft.picks.length);
  return w;
 }
 function season(w){
  const initial=w.history.length;
  let i=0;
- while(w.stage==='pro'&&i++<20){
+ while(w.stage==='pro'&&i++<50){
   w.run('season');
   if(w.queue)assert(w.finishDay());
  }
@@ -55,6 +61,45 @@ function nextYear(w){
  }
  assert.equal(w.year,old+1);
 }
+// Protect the first controllable appearance even on a high-tier school and hard difficulty.
+for(const country of countries){
+ const w=fresh(country,{schoolTier:2,difficulty:'hard',style:country==='kr'?'control':'contact'});
+ for(let grade=1;grade<=3;grade++){
+  while(w.stage==='school'&&w.grade===grade){
+   w.run('season');
+   if(!w.active)continue;
+   if(w.active.development){
+    assert.equal(w.grade,grade);
+    const before=w.active.id;
+    w.run('game');w.run('event');w.run('day');w.run('season');
+    assert.equal(w.active.id,before);
+    assert(w.liveOptions('key'));
+   }
+   assert(w.finishDay());
+  }
+ }
+ assert.equal(Object.keys(w.schoolPlay).length,3);
+}
+const detail=fresh('jp');
+for(const place of [null,undefined,0,3]){
+ detail.schoolEvents[6]={place};
+ assert.equal(NightCareerWorldSchool.eligible(detail,'top:6'),false);
+}
+detail.schoolEvents[6]={place:2};
+assert(NightCareerWorldSchool.eligible(detail,'top:6'));
+assert(!NightCareerWorldSchool.eligible(detail,'win:6'));
+const rosterCheck=fresh('kr');rosterCheck.ensurePro();
+assert.equal(Object.keys(NightCareerWorldIdentities).length,900);
+assert.equal(rosterCheck.person('kbo-ht-b-52605').nation,'kr');
+assert.equal(rosterCheck.person('kbo-ht-b-56626').registration,'foreign');
+assert.equal(rosterCheck.person('kbo-hh-p-56719').registration,'asian');
+assert.equal(rosterCheck.person('kbo-hh-p-56719').nation,'tw');
+assert.equal(rosterCheck.person('falcons-p4').nation,'jp');
+assert.equal(rosterCheck.registrationFor(rosterCheck.person('falcons-p4'),'tw'),'domestic');
+assert(rosterCheck.people.filter(p=>p.real).every(p=>['domestic','foreign','asian'].includes(p.registration)));
+const old=JSON.parse(JSON.stringify(rosterCheck));old.version=1;
+old.people.find(p=>p.id==='kbo-ht-b-52605').nation='other';
+assert.equal(W.restore(old).person('kbo-ht-b-52605').nation,'kr');
 for(const short of [true,false]){
  const counts={};
  for(const [day,games] of Object.entries(L.schedules(2032,short))){

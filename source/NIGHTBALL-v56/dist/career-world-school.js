@@ -27,9 +27,9 @@
   if(!tag)return true;
   if(tag==='wood')return w.schoolTier!==0;
   if(tag==='aluminum')return w.schoolTier===0;
-  if(tag==='selected')return w.regionalSelected;
+  if(tag==='selected')return w.regionalSelected===true;
   const [mode,n]=tag.split(':'),old=w.schoolEvents[n];
-  return mode==='win'?old?.place===1:old?.place<=2;
+  return Number.isInteger(old?.place)&&old.place>0&&(mode==='win'?old.place===1:old.place<=2);
  }
  function teams(w,e){
   const regional=e.requirement==='selected';
@@ -129,9 +129,25 @@
     }
    }
   }
+  materializePicks(w,order);
   w.draft.picks=order;
   w.draft.offer=drafted;
   w.draft.visible=0;
  }
- window.NightCareerWorldSchool={calendar,open,fixtures,completeRound,selectDraft};
+ function materializePicks(w,picks){
+  const pending=picks.filter(pick=>!pick.id);
+  if(!pending.length)return;
+  const rng=w.random('draft-roster/'+w.day);
+  for(const pick of pending){
+   const id='draft/'+w.country+'/'+w.day+'/'+pick.sequence;
+   const pos=(pick.sequence+pick.round)%3===0?'P':D.positions[(pick.sequence+pick.round)%D.positions.length];
+   const player=w.npc(w.country,id,pick.round<=2?4:2,pos,rng,18,null);
+   player.name=pick.name;
+   player.stage='prospect';
+   w.people.push(player);
+   pick.id=id;
+  }
+  w.invalidate();
+ }
+ window.NightCareerWorldSchool={calendar,open,fixtures,completeRound,selectDraft,eligible,materializePicks};
 })();
