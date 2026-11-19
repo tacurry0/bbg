@@ -215,7 +215,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   try{localStorage.setItem(NightCareer.key,JSON.stringify(career.save()));}
   catch{if(!careerSaveWarned){toast('キャリアを保存できませんでした');careerSaveWarned=true;}}
  }
- let world=null,worldCountry='',worldTab='home',worldAlumni=[];
+ let world=null,worldCountry='',worldAlumni=[];
  let worldActive=false;
  const worldStore=NightCareerWorldSave;
  try{world=NightCareerWorld.restore(worldStore.decode(localStorage.getItem(NightCareerWorld.key)));}catch{}
@@ -230,7 +230,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.worldFixture||game?.career){stadiumAudio.stopEffects();game=null;}
   screen='career';
   for(const id of ['home','game','pennant','apbc-cup','pause'])$(id).hidden=true;
-  $('career').innerHTML=world?NightCareerWorldView.dashboard(world,worldTab,!!career):
+  $('career').innerHTML=world?NightCareerWorldView.dashboard(world,!!career):
    NightCareerWorldView.setup(worldCountry,!!career,worldAlumni);
   $('career').hidden=false;
   history.replaceState({nightball:'career'},'',location.href);
@@ -247,7 +247,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }catch(error){toast(error.message);return;}
   saveWorld();worldDashboard();
  });
- $('career').addEventListener('click',e=>{
+ function worldAction(e){
   const b=e.target.closest('[data-world-action]');
   if(!b)return;
   unlockAudio();
@@ -255,11 +255,15 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='home'){home();return;}
   if(action==='legacy'){careerTab='next';careerDashboard();return;}
   if(action==='country'){worldCountry=v;worldDashboard();return;}
-  if(action==='tab'){worldTab=v;worldDashboard();return;}
   const w=world;
   if(!w)return;
+  if(action==='detail'){
+   modal(modalTitle('',({schedule:'日程・大会',skills:'フォーム・特殊能力',players:'選手・成績',life:'契約・生活',international:'国際大会',history:'年表・記録'})[v]||'キャリア詳細')+
+    NightCareerWorldView.detail(w,v),'career-world-detail');
+   return;
+  }
   const change={
-   format:()=>{w.format=v;return true;},advance:()=>w.run(v),simulate:()=>w.finishDay(),
+   advance:()=>w.run(v),simulate:()=>w.finishDay(),
    train:()=>w.train(v),form:()=>w.changeForm(v),convert:()=>w.conversion(v),learn:()=>w.learn(v),life:()=>w.lifestyle(v),social:()=>w.lifestyle('social',v),
    'draft-apply':()=>w.draftApply(true),'draft-next':()=>w.draftReveal(false),'draft-all':()=>w.draftReveal(true),
    'draft-sign':()=>w.signDraft(),amateur:()=>w.amateur(v),request:()=>w.openMarket(true),
@@ -269,18 +273,19 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     worldAlumni=[{name:w.name,country:w.country,games:w.lifetime.g},...worldAlumni].slice(0,16);
     try{localStorage.setItem(NightCareerWorld.alumniKey,JSON.stringify(worldAlumni));localStorage.removeItem(NightCareerWorld.key);}
     catch{toast('OB記録を保存できませんでした');return false;}
-    world=null;worldCountry='';worldTab='home';worldDashboard();return true;
+    world=null;worldCountry='';worldDashboard();return true;
    }
   };
-  if(action==='play'&&w.format!=='auto'){playWorld();return;}
-  if(action==='play'&&w.format==='auto'){if(w.finishDay()){saveWorld();worldDashboard();}return;}
+  if(action==='play'){playWorld(v||'self');return;}
   if(change[action]?.()){
    if(action!=='new'){saveWorld();worldDashboard(!['advance','simulate','draft-sign','retire','accept','stay'].includes(action));}
   }else if(action!=='retire')toast('この操作は現在実行できません');
- });
- function playWorld(){
+ }
+ $('career').addEventListener('click',worldAction);
+ $('modal-content').addEventListener('click',worldAction);
+ function playWorld(chosen){
   const data=world.currentGame;
-  const format=data?.state?.career?.format||(data?.state?.mode==='match'?'full':world.format);
+  const format=data?.state?.career?.format||(data?.state?.mode==='match'?'full':chosen);
   const options=world.liveOptions(format)||(!data&&format==='full'?world.liveOptions('self'):null);
   if(!options)return;
   const mode=options.career?(options.career.pitching?'career-pitch':'career-bat'):'match';
@@ -295,7 +300,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function finishWorld(g){
   if(world?.completeLive(g)){saveWorld();saved=true;}
-  worldTab='home';worldDashboard();
+  worldDashboard();
  }
 
  let careerLifeTab='leisure',careerDrillAim=null;
@@ -1102,7 +1107,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    ];
    modal(`${modalTitle('YOUR BASEBALL STORY','プレイ記録')}<div class="stats-grid">${[[records.maxDistance,'m','最長飛距離'],[records.hr,'本','通算ホームラン'],[records.wins,'勝','対戦勝利数'],[records.bestTimedDerby,'/ 10','ダービー最高記録']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><span class="eyebrow">ACHIEVEMENTS</span>${achievements.map(([ok,icon,title,desc])=>`<div class="achievement ${ok?'unlocked':''}"><span>${icon}</span><div><strong>${title}</strong><small>${desc}</small></div><i>${ok?'獲得':'未獲得'}</i></div>`).join('')}<p class="modal-note">対戦 ${records.games}試合 / ${records.wins}勝 ${records.draws}分 / 通算 ${records.hits}安打<br>プレイを終了すると記録に反映されます。</p><button class="primary-button" data-action="close">閉じる</button>`, 'records');
  }
- function pause(){if(review.playback){stopReplay();return;}if(game?.phase==='career-pregame'){careerDashboard();return;}if(!game||['ended','derby-break'].includes(game.phase))return;game.paused=true;checkpoint();modal(`${modalTitle('TIME OUT','ひと休み。',false)}<div class="match-summary"><span>${game.derby?game.derby.label:`${game.inning}回${game.half==='top'?'表':'裏'} / ${game.loadedStart?'毎回2アウト満塁':game.totalInnings+'回制'}`}</span><span>${game.derby?game.derby.turnHR+' 本':`${game.teams.away.short} ${game.awayScore} - ${game.homeScore} ${game.teams.home.short}`}</span></div><button class="primary-button" data-action="close">プレイを再開</button><button class="secondary-button" data-action="settings">操作・速度の設定</button><button class="secondary-button" data-action="howto">遊び方</button>${game.isFixture?'<button class="secondary-button" data-action="bench">選手交代・ベンチ</button>':''}<button class="secondary-button" data-action="roster">選手・打順</button><button class="secondary-button" data-action="history">投球履歴・成績</button>${game.inMatch?'<button class="secondary-button" data-action="tactics">守備の作戦</button>':''}${['practice','pitching'].includes(game.mode)?'<button class="secondary-button" data-action="practice-options">練習設定</button>':''}<button class="secondary-button" data-action="leave">${game.career||game.worldFixture?'保存してキャリアへ':game.apbcFixtureId?'保存して大会へ':game.mode==='pennant'?'保存してペナントへ': ['practice','pitching'].includes(game.mode)?'練習を終えて結果を見る':'中断してホームへ'}</button>${game.mode==='pennant'||game.apbcFixtureId||game.career||game.worldFixture?'':'<button class="danger-link" data-action="restart">最初からやり直す</button>'}`,'pause');}
+ function canSimulateWorldRemainder(g){
+  return !!g?.worldFixture&&!!g.career?.continuous&&['intro','career-ready','aim','change'].includes(g.phase);
+ }
+ function pause(){if(review.playback){stopReplay();return;}if(game?.phase==='career-pregame'){careerDashboard();return;}if(!game||['ended','derby-break'].includes(game.phase))return;game.paused=true;checkpoint();modal(`${modalTitle('TIME OUT','ひと休み。',false)}<div class="match-summary"><span>${game.derby?game.derby.label:`${game.inning}回${game.half==='top'?'表':'裏'} / ${game.loadedStart?'毎回2アウト満塁':game.totalInnings+'回制'}`}</span><span>${game.derby?game.derby.turnHR+' 本':`${game.teams.away.short} ${game.awayScore} - ${game.homeScore} ${game.teams.home.short}`}</span></div><button class="primary-button" data-action="close">プレイを再開</button>${canSimulateWorldRemainder(game)?'<button class="secondary-button" data-action="world-finish-auto">残りを自動進行</button>':''}<button class="secondary-button" data-action="settings">操作・速度の設定</button><button class="secondary-button" data-action="howto">遊び方</button>${game.isFixture?'<button class="secondary-button" data-action="bench">選手交代・ベンチ</button>':''}<button class="secondary-button" data-action="roster">選手・打順</button><button class="secondary-button" data-action="history">投球履歴・成績</button>${game.inMatch?'<button class="secondary-button" data-action="tactics">守備の作戦</button>':''}${['practice','pitching'].includes(game.mode)?'<button class="secondary-button" data-action="practice-options">練習設定</button>':''}<button class="secondary-button" data-action="leave">${game.career||game.worldFixture?'保存してキャリアへ':game.apbcFixtureId?'保存して大会へ':game.mode==='pennant'?'保存してペナントへ': ['practice','pitching'].includes(game.mode)?'練習を終えて結果を見る':'中断してホームへ'}</button>${game.mode==='pennant'||game.apbcFixtureId||game.career||game.worldFixture?'':'<button class="danger-link" data-action="restart">最初からやり直す</button>'}`,'pause');}
  function start(mode,challengeId=null,fixedPark=null){
   if(mode==='apbc'){startAPBC();return;}if(mode==='apbc-cup'){playTournament(true);return;}
   if(mode==='match')clearCheckpoint();closeModal(false);unlockAudio();sound('tap');lastMode=mode;saved=false;$('distance').textContent='';$('timing-result').textContent='';
@@ -1413,7 +1421,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('contact').onclick=()=>{if(game){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('howto').onclick=howto;$('records').onclick=recordModal;
- document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?(worldTab='home',worldDashboard()):setupTraining(b.dataset.mode));
+ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():setupTraining(b.dataset.mode));
  $('clubhouse').onclick=()=>lineupModal('edit');$('resume-game').onclick=resumeGame;$('players-tool').onclick=()=>rosterModal(game?.defending?game.pitcher.id:game?.batter.id,game?.userSide||'home');$('player-card').onclick=()=>{if(game)rosterModal(game.batter.id,game.side);};$('pitcher-card').onclick=()=>{if(game)rosterModal(game.pitcher.id,game.side==='home'?'away':'home');};$('tactics-tool').onclick=tacticsModal;$('history-tool').onclick=historyModal;$('practice-tool').onclick=practiceModal;
  $('auto-defense').onclick=()=>{if(game?.setAutoDefense(!game.autoDefense)){unlockAudio();updateUI();}};
  $('field-speed').onclick=()=>{if(game?.autoDefense&&game.defending){settings.defenseSpeed=game.defenseSpeed===1?2:1;game.defenseSpeed=settings.defenseSpeed;}else{settings.fieldSpeed=settings.fieldSpeed===1?2:1;if(game)game.fieldSpeed=settings.fieldSpeed;}save();updateUI();};
@@ -1494,6 +1502,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      case'apbc-selection':apbcSelection={team:apbcDraftTeam,ids:apbcDraftRosters[apbcDraftTeam].slice(),kind:'bats',clubFilter:'all'};apbcSelectionModal();break;
      case'apbc-selection-done':if(Tournament.rosterStatus(apbcSelection.team,apbcSelection.ids).valid){apbcDraftRosters[apbcSelection.team]=apbcSelection.ids;apbcDraft();}break;
      case'apbc-create':if(Tournament.rosterStatus(apbcDraftTeam,apbcDraftRosters[apbcDraftTeam]).valid){game=null;tournament=new Tournament(apbcDraftTeam,apbcDraftInnings,apbcDraftRosters[apbcDraftTeam]);saveTournament();apbcDashboard();}break;
+     case'world-finish-auto':
+      if(canSimulateWorldRemainder(game)){
+       closeModal(false);resetCareerOverlay();game.paused=false;game.advanceCareer(true);
+      }
+      break;
      case'leave':if(game?.worldFixture){checkpoint();worldDashboard();}else if(game?.career){checkpoint();careerDashboard();}else if(game?.apbcFixtureId){checkpoint();game.paused=true;apbcDashboard();}else if(game?.mode==='pennant'){checkpoint();game.paused=true;leagueDashboard();}else if(['practice','pitching'].includes(game?.mode)){closeModal(false);game.paused=false;game.finish();}else home();break;
      case'howto':howto();break;
      case'start-match':start('match');break;
