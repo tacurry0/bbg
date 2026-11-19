@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=60.1');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=61');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){
@@ -128,8 +128,25 @@ try{
  await page.touchscreen.tap(27,86);
  await page.waitForFunction(()=>window.testDomeMatch.game.phase!=='result');
  assert.equal(await page.evaluate(()=>window.testDomeMatch.game.homeScore),before+1,'skip advances play without double-counting the HR');
+ for(const [id,model,landmark] of [
+  ['night','intercontinental','Taichung multi-level outfield complex'],
+  ['brick','tianmu','TAIPEI lettering behind home plate'],
+  ['sky','tainan','Tainan horseshoe canopy']
+ ]){
+  const state=await page.evaluate(({id,landmark})=>{
+   const {renderer,game}=window.testDomeMatch;
+   game.park=NightPlayers.parks.find(park=>park.id===id);
+   game.field=null;game.paused=true;game.setPhase('intro');
+   renderer.render(game,++game.time);
+   return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,
+    landmark:!!renderer.parkDecor.getObjectByName(landmark),
+    board:!!renderer.parkDecor.getObjectByName('Live stadium vision')};
+  },{id,landmark});
+  assert.deepEqual(state,{model,shown:true,landmark:true,board:true});
+  await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
+ }
  assert.deepEqual(errors,[],'no page JavaScript errors');
- console.log('PASS: mobile Chromium, three live venue visions, fly-ball camera and separate taps for replay and the home-run run ('+graphics+').');
+ console.log('PASS: mobile Chromium, live visions, three outdoor stadium overviews, fly-ball camera and separate replay/run skips ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
  await context.close();
 }finally{

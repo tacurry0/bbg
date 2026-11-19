@@ -1,7 +1,8 @@
 import * as T from './vendor/three.module.min.js';
-import { CanvasSceneRenderer } from './canvas3d.js?v=56';
-import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=60.1';
-import { drawVenueVision } from './venue-vision.js?v=60';
+import { CanvasSceneRenderer } from './canvas3d.js?v=61';
+import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=61';
+import { decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=61';
+import { drawVenueVision } from './venue-vision.js?v=61';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
 import {
@@ -23,8 +24,7 @@ const GRASS_PALETTES={
  school:['#b3c28a','#9bab78','#a5b57b'],
  broadcast:['#a2b97a','#869f60','#9caf70']
 };
-const PILOT_PARKS={night:'intercontinental'};
-const VENUE_VISION_PARKS=new Set(['tokyo-dome','dome','taipei-dome']);
+const VENUE_VISION_PARKS=new Set(['tokyo-dome','dome','taipei-dome',...Object.keys(OPEN_AIR_MODELS)]);
 const skinColors=[0xd3a383,0xba896a,0xe0ae8d,0xb78367];
 
 export class StadiumRenderer {
@@ -169,7 +169,7 @@ export class StadiumRenderer {
   board.traverse(m=>{if(m.isMesh)m.castShadow=false;});
   this.drawBoard(null);
   this.wallGroup=new T.Group();this.scene.add(this.wallGroup);this.parkDecor=new T.Group();this.scene.add(this.parkDecor);
-  this.parkModel=new T.Group();this.scene.add(this.parkModel);this.setPark(NightPlayers.parks[0]);
+  this.setPark(NightPlayers.parks[0]);
  }
  setPark(park){
   if(this.parkKey===park.id)return;this.parkKey=park.id;
@@ -181,7 +181,7 @@ export class StadiumRenderer {
    this.grassUniforms.uIsDome.value=(park.theme==='dome'||park.id==='tokyo-dome')?1:0;
    this.grassUniforms.uConcourseColor.value.setHex(park.school?0x586552:park.id==='tokyo-dome'?0x1c2c3d:0x16222f);
   }
-  this.loadParkModel(park);this.decoratePark(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
+  this.decoratePark(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[],wallHeight=NightPlayers.fenceHeight(park);
   const quad=(out,a,b,c,d)=>out.push(...a,...b,...c,...c,...b,...d);
   for(const [i,sign] of [-1,1].entries()){
@@ -196,7 +196,8 @@ export class StadiumRenderer {
   const pads=this.mat(park.id+'wall',park.wall,.66);
   make(wall,pads);
   const tokyo=park.id==='tokyo-dome';
-  make(seams,this.mat(park.id+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(park.id+'rail',park.rail,.48,.18));make(track,this.mat(tokyo?'tokyoTrack':'warningTrack',tokyo?0x3c6247:0xa77959,.96));make(trackEdge,this.mat(tokyo?'tokyoTrackEdge':'warningEdge',tokyo?0x65825e:0xcba684,.92));
+  const tianmu=park.id==='brick';
+  make(seams,this.mat(park.id+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(park.id+'rail',park.rail,.48,.18));make(track,this.mat(tokyo?'tokyoTrack':tianmu?'tianmuTrack':'warningTrack',tokyo?0x3c6247:tianmu?0x9c534c:0xa77959,.96));make(trackEdge,this.mat(tokyo?'tokyoTrackEdge':tianmu?'tianmuTrackEdge':'warningEdge',tokyo?0x65825e:tianmu?0xa75951:0xcba684,.92));
   for(const [i,point] of pts.entries()){
    if(i%(FENCE_SEGMENTS/4)===0){
     const panel=this.distancePanel(Math.round(point.r),park.id+'-'+i,!park.alleysVerified&&i%(FENCE_SEGMENTS/2)!==0);
@@ -214,20 +215,6 @@ export class StadiumRenderer {
    wing.rotation.y=sign*Math.PI/4;
   }
   if(!VENUE_VISION_PARKS.has(park.id))buildPremiumPark(this,park);
- }
- loadParkModel(park){
-  this.parkModel.clear();
-  delete this.canvas.dataset.parkModel;
-  const name=PILOT_PARKS[park.id];
-  if(!name||typeof location==='undefined')return;
-  loadMatchModel(name).then(model=>{
-   if(!model||this.parkKey!==park.id)return;
-   this.parkModel.clear();
-   this.parkModel.add(model.clone());
-   this.scene.userData.staticRevision++;
-   this.heroRendered=false;
-   this.canvas.dataset.parkModel=name;
-  });
  }
  loadUniforms(){
   if(typeof location==='undefined')return;
@@ -267,6 +254,9 @@ export class StadiumRenderer {
    if(o.userData.disposeMaterial)o.material.dispose();
    if(o.isInstancedMesh)o.dispose();
   });this.parkDecor.clear();
+  delete this.canvas.dataset.parkModel;
+  delete this.scene.userData.outdoorSky;
+  for(const light of this.lights)light.scale.setScalar(1);
   const theme=park.theme||park.id,indoors=theme==='dome',day=!!park.school||['sky','brick','toyama','taoyuan'].includes(theme);
   this.grassMaterial.color.setHex(park.turf||0x487e4d);
   const broadcast=park.id==='tokyo-dome';
@@ -309,8 +299,9 @@ export class StadiumRenderer {
   if(customVenue){
    for(const light of this.lights)light.visible=!indoors;
    if(broadcast)decorateBroadcastDome(this,park);
+   else if(OPEN_AIR_MODELS[park.id])decorateOpenAirPark(this,park);
    else decorateTaiwanPark(this,park);
-   this.canvas.dataset.parkModel=park.id==='dome'?'taoyuan':park.id;
+   this.canvas.dataset.parkModel=OPEN_AIR_MODELS[park.id]||(park.id==='dome'?'taoyuan':park.id);
    this.boardKey=null;
    return;
   }
@@ -766,7 +757,8 @@ export class StadiumRenderer {
   }
   if(this.cameraPlay!==f){
    this.cameraPlay=f;
-   this.camera.position.set(0,36,24);
+   if(park.id==='sky')this.camera.position.set(0,25,17);
+   else this.camera.position.set(0,36,24);
    this.cameraFocus.set(0,0,-12);
    this.camera.fov=portrait?58:47;
   }
@@ -805,12 +797,20 @@ export class StadiumRenderer {
    this.keyLight.target.updateMatrixWorld();
   }
  }
+ overviewCamera(park){
+  const tainan=park.id==='sky';
+  this.camera.position.set(.1,tainan?25.2:21.4,tainan?39:36.5);
+  this.camera.lookAt(0,1.1,-51);
+  this.camera.fov=this.camera.aspect<.85?(tainan?72:68):60;
+  this.camera.updateProjectionMatrix();
+  this.camera.updateMatrixWorld();
+ }
  resize(){const r=this.canvas.getBoundingClientRect();if(!r.width||!r.height)return;if(this.width===r.width&&this.height===r.height)return;this.width=r.width;this.height=r.height;this.heroRendered=false;this.gl.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();if(this.hud){const d=Math.min(devicePixelRatio||1,2);this.hud.width=r.width*d;this.hud.height=r.height*d;this.hud.style.width=r.width+'px';this.hud.style.height=r.height+'px';}}
  screenToAim(x,y){this.camera.updateMatrixWorld();this.raycaster.setFromCamera(new T.Vector2(x/this.width*2-1,1-y/this.height*2),this.camera);const point=new T.Vector3();if(!this.raycaster.ray.intersectPlane(this.aimPlane,point))return{x:0,y:0};return{x:point.x/.68,y:(1.25-point.y)/.62};}
  project(x,y,z){const p=new T.Vector3(x,y,-z).project(this.camera);return{x:(p.x*.5+.5)*this.width,y:(-.5*p.y+.5)*this.height};}
  aimPoint(x,y){return this.project(x*.68,1.25-y*.62,.6);}
  drawHUD(g){
-  const c=this.ctx,d=this.hud.width/this.width;c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,this.width,this.height);if(!g)return;if(this.fieldMode){
+  const c=this.ctx,d=this.hud.width/this.width;c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,this.width,this.height);if(!g||this.overviewMode)return;if(this.fieldMode){
    const field=g.field,b=field.ball,th=field.throw;
    const visible=(p,padding)=>p.x>=padding&&p.x<=this.width-padding&&p.y>=padding&&p.y<=this.height-padding;
    const diamond=(p,color,size)=>{
@@ -905,7 +905,9 @@ export class StadiumRenderer {
     g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
   const boardCall=g?.phase==='result'?g?.hit?.kind:g?.pitch?.speed?Math.round(g.pitch.speed):null;
   if(this.boardKey!==boardKey||this.boardCall!==boardCall){this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;}
+  this.overviewMode=g?.phase==='intro'&&!!OPEN_AIR_MODELS[g.park.id];
   if(field)this.followPlay(g,time);
+  else if(this.overviewMode)this.overviewCamera(g.park);
   else if(this.fieldMode||!this.hero){this.camera.fov=g?.park.id==='dome'?54:49;this.camera.updateProjectionMatrix();this.resetCamera();}
   this.lastTime=time;
   this.fieldMode=field;

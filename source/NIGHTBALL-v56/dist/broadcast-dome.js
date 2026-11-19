@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { venueVision } from './venue-vision.js?v=60';
+import { venueVision } from './venue-vision.js?v=61';
 
 const TAU = 2 * Math.PI;
 const CENTER_Z = 48;
@@ -351,8 +351,8 @@ function taiwanMaterials(renderer,id,software){
 }
 
 function standsSection(group,name,materials,config,software){
- const {start,end,width,depth,floor,rows,run,rise,palette,concourse}=config;
- const chairs=[],profile=[[width,depth,floor]];
+ const {start,end,width,depth,floor,rows,run,rise,palette,concourse,attendance=0,shirts=[]}=config;
+ const chairs=[],crowd=[],profile=[[width,depth,floor]];
  for(let row=1;row<=rows;row++){
   profile.push([width+row*run,depth+row*run,floor+(row-1)*rise],
    [width+row*run,depth+row*run,floor+row*rise]);
@@ -372,12 +372,21 @@ function standsSection(group,name,materials,config,software){
   const n=software?6:18;
   for(let row=0;row<rows;row+=software?2:1)for(let i=0;i<n;i++){
    const angle=a+.024+(b-a-.03)*(i+.5)/n,r=(row+.67)*run;
-   const color=palette[Math.floor(varying(17+section*601+row*1013+i*73)*palette.length)];
+   const seed=17+section*601+row*1013+i*73;
+   const color=palette[Math.floor(varying(seed)*palette.length)];
    chairs.push({point:bowlPoint(angle,width+r,depth+r,floor+row*rise+.33),
     size:[software?1.38:.61,.49,.18],angle,color});
+   if(shirts.length&&varying(seed+119)<attendance){
+    const y=floor+row*rise,top=shirts[Math.floor(varying(seed+241)*shirts.length)];
+    crowd.push({point:bowlPoint(angle,width+r-.24,depth+r-.24,y+.64),
+     size:[software?.57:.43,.60,.31],angle,color:top});
+    if(!software)crowd.push({point:bowlPoint(angle,width+r-.27,depth+r-.27,y+1.02),
+     size:[.24,.27,.24],angle,color:varying(seed+617)>.36?0xc1947b:0x9c6f58});
+   }
   }
  }
  boxBatch(group,name+' seat rows',chairs,materials.instance);
+ if(crowd.length)boxBatch(group,name+' spectators',crowd,materials.instance);
 }
 
 function flatVision(group,renderer,materials,{name,x,y,z,width,height,angle=0,dark=false}){
@@ -465,3 +474,5 @@ export function decorateTaiwanPark(renderer,park){
  if(park.id==='taipei-dome')decorateTaipei(renderer,park,group,materials,software);
  else decorateTaoyuan(renderer,group,materials,software);
 }
+
+export { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying };

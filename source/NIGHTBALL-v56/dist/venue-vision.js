@@ -1,11 +1,17 @@
 import * as T from './vendor/three.module.min.js';
 
 const faceWidth=1600, faceHeight=840;
-const names={'tokyo-dome':'TOKYO DOME',dome:'樂天桃園棒球場','taipei-dome':'臺北大巨蛋'};
+const names={
+ 'tokyo-dome':'TOKYO DOME',dome:'樂天桃園棒球場','taipei-dome':'臺北大巨蛋',
+ night:'臺中洲際棒球場',brick:'天母棒球場',sky:'亞太國際棒球訓練中心'
+};
 const colors={
  'tokyo-dome':{ink:'#131417',line:'#54565f',label:'#dfe2e5',accent:'#e31f51',digits:'#11151c'},
  dome:{ink:'#2b0a64',line:'#b96de2',label:'#fff5ee',accent:'#eb40b0',digits:'#ffb1ee'},
- 'taipei-dome':{ink:'#0c194c',line:'#3e64bf',label:'#f1f5ff',accent:'#f03b9d',digits:'#fdf3ff'}
+ 'taipei-dome':{ink:'#0c194c',line:'#3e64bf',label:'#f1f5ff',accent:'#f03b9d',digits:'#fdf3ff'},
+ night:{ink:'#211d1b',line:'#675549',label:'#ffeacf',accent:'#b06933',digits:'#fff4df',art:['#946239','#2b1c18']},
+ brick:{ink:'#1f1a1e',line:'#684742',label:'#fff3e9',accent:'#a8343d',digits:'#fff4ee',art:['#71363b','#261e25']},
+ sky:{ink:'#2a211d',line:'#9a5b3d',label:'#fff2df',accent:'#ce5819',digits:'#fff2de',art:['#b35b2c','#412923']}
 };
 function rect(c,color,x,y,w,h){c.fillStyle=color;c.fillRect(x,y,w,h);}
 function text(c,value,x,y,size,color='#fff',max=0,align='center'){
@@ -32,12 +38,12 @@ function lineup(c,g,side,images,theme,x,y,w,h){
  const tokyo=theme==='tokyo-dome',taoyuan=theme==='dome',pal=colors[theme];
  const title=h*.14,row=(h-title)/10;
  rect(c,taoyuan?'#ebe3e7':pal.ink,x,y,w,h);
- gradient(c,x,y,w,title,tokyo?'#202023':taoyuan?'#7c104a':'#df164f',tokyo?'#333439':taoyuan?'#420a56':'#14235c');
+ gradient(c,x,y,w,title,tokyo?'#202023':taoyuan?'#7c104a':pal.art?.[0]??'#df164f',tokyo?'#333439':taoyuan?'#420a56':pal.ink);
  text(c,clubName(club),x+w*.53,y+title*.65,title*.46,'#fff',w*.69);
  logo(c,club,images,x+w*.11,y+title*.51,title*.72);
  for(let i=0;i<10;i++){
   const player=i===9?p:list[i],top=y+title+i*row,selected=player&&player.id===active;
-  rect(c,selected?pal.accent:taoyuan?'#28142f':i%2?pal.ink:tokyo?'#292a2e':'#142455',x,top,w,row-2);
+  rect(c,selected?pal.accent:taoyuan?'#28142f':i%2?pal.ink:tokyo?'#292a2e':pal.art?.[1]??'#142455',x,top,w,row-2);
   const cy=top+row*.72,fs=row*.67;
   text(c,i===9?'P':i+1,x+w*.075,cy,fs,selected?'#fff':'#e6dbff');
   text(c,player?.pos??'',x+w*.21,cy,fs*.77,'#c5c9dd',w*.15);
@@ -52,7 +58,7 @@ function score(c,g,images,theme,x,y,w,h){
  const tokyo=theme==='tokyo-dome',taoyuan=theme==='dome';
  const scoreboard=g?.displayScore?.()??{away:g?.awayScore,home:g?.homeScore};
  rect(c,pal.ink,x,y,w,h);
- rect(c,tokyo?'#292a30':taoyuan?'#4a186f':'#182850',x,y,w,header);
+ rect(c,tokyo?'#292a30':taoyuan?'#4a186f':pal.art?.[1]??'#182850',x,y,w,header);
  text(c,tokyo?'TIME':taoyuan?'局數':'R H E',x+label*.5,y+header*.72,header*.62,pal.label,label*.84);
  for(let i=0;i<12;i++){
   const tx=x+label+i*col+col/2;
@@ -61,7 +67,7 @@ function score(c,g,images,theme,x,y,w,h){
  for(const [r,side] of ['away','home'].entries()){
   const cy=y+header+row*r,scores=g?.[side]??[],club=g?.teams?.[side];
   const active=g?.side===side;
-  rect(c,tokyo?'#dbdce2':taoyuan?'#eee3ef':'#17295e',x,cy,label-1,row-1);
+  rect(c,tokyo?'#dbdce2':taoyuan?'#eee3ef':pal.art?.[1]??'#17295e',x,cy,label-1,row-1);
   if(active)rect(c,pal.accent,x,cy,5,row-1);
   logo(c,club,images,x+label*.19,cy+row*.50,Math.min(label*.31,row*.70));
   text(c,clubName(club),x+label*.61,cy+row*.70,Math.min(row*.50,label*.18),tokyo||taoyuan?'#24202c':'#fff',label*.66);
@@ -72,7 +78,8 @@ function score(c,g,images,theme,x,y,w,h){
     i<9?((scores[inning-1]??(lit?0:''))!==''
       ?(scores[inning-1]??0)+(lit?(scoreboard?.[side]??0)-(g?.[side+'Score']??0):0):''):'';
    const back=tokyo?(i<9?(lit?'#f1d5db':i%2?'#caced6':'#e0e3e9'):'#1a1b20'):
-    lit?'#653997':taoyuan?(i%2?'#47126e':'#37125f'):(i%2?'#111f57':'#152763');
+    lit?(pal.art?pal.accent:'#653997'):taoyuan?(i%2?'#47126e':'#37125f'):
+     pal.art?(i%2?pal.ink:pal.art[1]):(i%2?'#111f57':'#152763');
    rect(c,back,tx,cy,col-1,row-1);
    text(c,cell,tx+col/2,cy+row*.72,Math.min(row*.69,col*.70),tokyo?(i<9?pal.digits:'#f7f7fa'):pal.digits);
   }
@@ -116,11 +123,12 @@ function portrait(c,club,player,x,y,w,h){
 function presentation(c,g,images,theme,x,y,w,h){
  const club=g?.teams?.[g.side],player=g?.batter,other=g?.pitcher;
  const taoyuan=theme==='dome';
- gradient(c,x,y,w,h,taoyuan?'#542288':'#194cd0',taoyuan?'#260047':'#100d39');
+ const art=colors[theme].art;
+ gradient(c,x,y,w,h,taoyuan?'#542288':art?.[0]??'#194cd0',taoyuan?'#260047':art?.[1]??'#100d39');
  for(let i=0;i<9;i++){
   c.beginPath();c.moveTo(x+w*(.04+i*.108),y);c.lineTo(x+w*(.14+i*.108),y);
   c.lineTo(x+w*(.01+i*.108),y+h);c.lineTo(x+w*(-.04+i*.108),y+h);
-  c.fillStyle=i%3?'#9456ff24':'#f66ffb35';c.fill();
+  c.fillStyle=art?'#fff3cb1d':i%3?'#9456ff24':'#f66ffb35';c.fill();
  }
  const event=g?.phase==='result'?{hr:'HOME RUN',single:'BASE HIT',double:'DOUBLE',triple:'TRIPLE'}[g.hit?.kind]:null;
  const tag=event||(g?.derby?'HOME RUN DERBY':g?.mode==='practice'?'BATTING PRACTICE':names[theme]);

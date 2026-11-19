@@ -40,6 +40,10 @@ The [official dimensions](https://www.tokyo-dome.co.jp/dome/about/) give a roof 
 
 The supplied reference photos guide the venue geometry and displays. Taoyuan has the open outfield, split rose stands, blue infield sections and two purple LED boards. Taipei has a dark diagonal steel lattice, white and gray seating, white concourse fascia and a high center-field blue LED board. Seating and structure positions are visual estimates. All three screens use the active teams, lineups and scores; player art uses the game's stylized proportions.
 
+## Taichung, Tianmu and Tainan models
+
+The supplied photos guide the architecture. Taichung Intercontinental uses the dusk and floodlit references, with its left-center vision, low multicolor outfield terraces and the stepped complex beyond right-center. Tianmu has blue and red infield seating, its painted TAIPEI wordmark, wooded hills and a compact center-field board. Tainan Asia-Pacific uses a horseshoe steel canopy with exposed trusses, a two-level infield bowl and an open outfield. The orientation and proportions of the structures are visual estimates. The opening camera shows the stadium from behind home plate before returning to the normal match view.
+
 ## Derby
 
 [2026 NPB event rules](https://npb.jp/allstar/2026/homerun.html). The game runs the eight-player bracket at the selected venue. Eligible opponents are generated from existing CPBL rosters. The game uses seed order based on available season home runs and power rating when overtime remains tied.

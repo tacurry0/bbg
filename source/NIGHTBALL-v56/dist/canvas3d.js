@@ -9,11 +9,11 @@ export class CanvasSceneRenderer {
   if(!this.width||!this.height)return;const c=this.ctx,w=this.width,h=this.height;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
   scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);this.view=camera.matrixWorldInverse;this.proj=camera.projectionMatrix;this.camera=camera;this.frustum.setFromProjectionMatrix(this.pv.multiplyMatrices(this.proj,this.view));
   const cacheKey=[w,h,scene.userData.staticRevision||0,...camera.matrixWorldInverse.elements.map(v=>v.toFixed(3)),...camera.projectionMatrix.elements.map(v=>v.toFixed(3))].join('/'),refresh=cacheKey!==this.cacheKey;
-  if(refresh){const sky=scene.background,indoors=scene.userData.indoors,broadcast=scene.userData.broadcastDome;
+  if(refresh){const sky=scene.background,indoors=scene.userData.indoors,broadcast=scene.userData.broadcastDome,outdoor=scene.userData.outdoorSky;
    const bg=c.createLinearGradient(0,0,0,h);
-   bg.addColorStop(0,broadcast?'#354860':indoors?'#537082':sky?.isColor?this.color(sky,.22):'#0b1830');
-   bg.addColorStop(.42,broadcast?'#9cafc2':indoors?'#8199a6':sky?.isColor?this.color(sky,.79):'#243e51');
-   bg.addColorStop(.70,broadcast?'#536d88':indoors?'#aebbc5':sky?.isColor?this.color(sky,1.68):'#425a68');
+   bg.addColorStop(0,outdoor?.[0]??(broadcast?'#354860':indoors?'#537082':sky?.isColor?this.color(sky,.22):'#0b1830'));
+   bg.addColorStop(.42,outdoor?.[1]??(broadcast?'#9cafc2':indoors?'#8199a6':sky?.isColor?this.color(sky,.79):'#243e51'));
+   bg.addColorStop(.70,outdoor?.[2]??(broadcast?'#536d88':indoors?'#aebbc5':sky?.isColor?this.color(sky,1.68):'#425a68'));
    bg.addColorStop(1,'#516556');c.fillStyle=bg;c.fillRect(0,0,w,h);}else c.drawImage(this.cacheCanvas,0,0);
   const staticItems=[],staticGround=[],dynamicItems=[],dynamicGround=[];let items=staticItems,ground=staticGround,serial=0;
   const project=v=>{const q=v.clone().applyMatrix4(this.proj);return{x:(q.x*.5+.5)*w,y:(-.5*q.y+.5)*h};};
@@ -54,7 +54,7 @@ export class CanvasSceneRenderer {
    if(obj.isInstancedMesh){const matrix=new T.Matrix4(),world=new T.Matrix4(),color=new T.Color();for(let i=0;i<obj.count;i++){obj.getMatrixAt(i,matrix);world.multiplyMatrices(obj.matrixWorld,matrix);if(obj.instanceColor)obj.getColorAt(i,color);else color.copy(obj.material.color);addMesh(obj,world,color.clone());}}
    else if(obj.isMesh)addMesh(obj,obj.matrixWorld);
    else if(obj.isSprite){const center=new T.Vector3().setFromMatrixPosition(obj.matrixWorld).applyMatrix4(this.view);if(center.z<-.1){const p=project(center),size=obj.getWorldScale(new T.Vector3()),edge=project(center.clone().add(new T.Vector3(size.x/2,0,0))),r=Math.abs(edge.x-p.x);items.push({type:'sprite',x:p.x,y:p.y,r,texture:obj.material.map?.image,opacity:obj.material.opacity,depth:-center.z,serial:serial++});}}
-   else if(obj.isLine){const ps=obj.geometry.attributes.position;if(!ps)return;const mv=new T.Matrix4().multiplyMatrices(this.view,obj.matrixWorld);let last=null;for(let i=0;i<ps.count;i++){const p=new T.Vector3().fromBufferAttribute(ps,i).applyMatrix4(mv);if(p.z<-.1){const q=project(p);if(last)items.push({type:'line',a:last.q,b:q,depth:-(last.z+p.z)/2,color:this.color(obj.material.color),opacity:obj.material.opacity,serial:serial++});last={q,z:p.z};}}}
+   else if(obj.isLine){const ps=obj.geometry.attributes.position;if(!ps)return;const mv=new T.Matrix4().multiplyMatrices(this.view,obj.matrixWorld),color=this.color(obj.material.color);let last=null;for(let i=0;i<ps.count;i++){if(obj.isLineSegments&&i%2===0)last=null;const p=new T.Vector3().fromBufferAttribute(ps,i).applyMatrix4(mv);if(p.z<-.1){const q=project(p);if(last)items.push({type:'line',a:last.q,b:q,depth:-(last.z+p.z)/2,color,opacity:obj.material.opacity,serial:serial++});last={q,z:p.z};}else last=null;}}
   });
   const groundStyles=new Map();
   const groundStyle=item=>{

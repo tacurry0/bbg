@@ -97,7 +97,7 @@ assert.equal(renderer.batter.bat.rotation.z, standing.batter.hand === 'L' ? Math
 console.log('PASS 2: Runner visibility, actor scales (2.0 / catcher 1.7), and bunt override preserved.');
 
 // 3. Plate alignment, Tokyo Dome unobstructed scoreboard & non-mirrored fence panels
-const plateGame = new NightGame('match', 'standard', () => {});
+const plateGame = new NightGame('match', 'standard', () => {}, {park:'harbor'});
 plateGame.half = 'bottom';
 plateGame.setPhase('aim');
 renderer.render(plateGame, 0);
@@ -146,6 +146,24 @@ for (const [parkId,model,names] of [
  const display=renderer.parkDecor.getObjectByName('Live stadium vision');
  assert.equal(display.material,renderer.venueVisionCache.get(parkId).material);
  assert.equal(display.renderOrder,3,'Canvas places both vision triangles above the frame');
+}
+for (const [parkId,model,names] of [
+ ['night','intercontinental',['Taichung left-center main vision','Taichung multi-level outfield complex','Taichung blue lower infield bowl']],
+ ['brick','tianmu',['Tianmu low center scoreboard','Tianmu green mountain ridge','TAIPEI lettering behind home plate']],
+ ['sky','tainan',['Tainan horseshoe canopy','Tainan upper deck beneath the steel roof','Tainan radial canopy trusses']]
+]) {
+ const match=new NightGame('match','standard',()=>{},{park:parkId});
+ renderer.render(match,0);
+ assert(renderer.overviewMode,'opening shot shows full stadium');
+ assert(renderer.camera.position.y>20);
+ assert.equal(renderer.canvas.dataset.parkModel,model);
+ assert(!renderer.board.visible);
+ for(const name of names)assert(renderer.parkDecor.getObjectByName(name),name);
+ assert(renderer.parkDecor.getObjectByName('Infield protective net')?.isLineSegments);
+ assert.equal(renderer.parkDecor.getObjectByName('Live stadium vision').material,renderer.venueVisionCache.get(parkId).material);
+ match.setPhase('aim');renderer.render(match,16);
+ assert(!renderer.overviewMode);
+ assert.deepEqual(renderer.camera.position.toArray(),[.18,3.6,8.8]);
 }
 
 renderer.render(plateGame, 0);
@@ -256,12 +274,13 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v60.2-fielding'));
+assert(swCode.includes('nightball-v61-outdoor-venues'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
 assert(swCode.includes('./stadium-fx.js?v=60'));
-assert(swCode.includes('./venue-vision.js?v=60'));
+assert(swCode.includes('./venue-vision.js?v=61'));
+assert(swCode.includes('./open-air-parks.js?v=61'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);
 const swFiles = JSON.parse('[' + filesMatch[1].replace(/'/g, '"') + ']');
