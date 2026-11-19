@@ -38,14 +38,14 @@ try{
   [6,14,10],'all three domestic league registers are available');
  await page.locator('#pennant-mode').click();
  assert.equal(await page.locator('[data-club-choice]').count(),6);
- for(const [id,club,count,total] of [['npb','npb-a',14,13],['kbo','kbo-hh',10,9]]){
+ for(const [id,club,count,total] of [['npb-central','npb-a',7,6],['npb-pacific','npb-v',7,6],['kbo','kbo-hh',10,9]]){
   await page.locator('[data-pennant-league="'+id+'"]').click();
   assert.equal(await page.locator('[data-club-choice]').count(),count);
   await page.locator('[data-league-games="1"]').click();
   assert.match(await page.locator('.season-length-heading strong').innerText(),new RegExp('^'+total+'\\s*試合$'));
   await page.locator('[data-club-choice="'+club+'"]').click();
   await page.locator('[data-league-action="create"]').click();
-  assert.equal(await page.locator('.standings-table tbody tr').count(),count);
+  assert.equal(await page.locator('.standings-table').first().locator('tbody tr').count(),count);
   await page.locator('[data-league-action="play"]').click();
   assert.equal(await page.locator('.squad-starter-row').count(),9);
   await page.locator('[data-action="lineup-back"]').click();
@@ -53,9 +53,35 @@ try{
  await page.reload({waitUntil:'domcontentloaded'});
  await page.locator('#pennant-mode').click();
  assert.equal(await page.locator('[data-pennant-league="kbo"]').getAttribute('aria-pressed'),'true');
- assert.equal(await page.locator('.standings-table tbody tr').count(),10);
- await page.locator('[data-pennant-league="npb"]').click();
- assert.equal(await page.locator('.standings-table tbody tr').count(),14);
+ assert.equal(await page.locator('.standings-table').first().locator('tbody tr').count(),10);
+ await page.locator('[data-pennant-league="npb-central"]').click();
+ assert.equal(await page.locator('.standings-table').first().locator('tbody tr').count(),7);
+ assert.equal(await page.locator('.standings-table').nth(1).locator('tbody tr').count(),7);
+ await page.evaluate(()=>{
+  const p=new NightPennant('npb-a',1);
+  do{
+   const home=p.fixture.home===p.clubId;
+   p.completeRound({homeScore:home?1:0,awayScore:home?0:1});
+  }while(p.next());
+  localStorage.setItem('nightball.pennant.npb-central',JSON.stringify(p));
+ });
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.locator('#pennant-mode').click();
+ await page.locator('[data-league-action="playoff-start"]').click();
+ assert.match(await page.locator('.league-heading h1').innerText(),/クライマックスシリーズ/);
+ assert.match(await page.locator('.playoff-current p').innerText(),/9回制/);
+ for(let game=0;game<3&&await page.locator('[data-league-action="playoff-simulate"]').count();game++){
+  await page.locator('[data-league-action="playoff-simulate"]').click();
+  await page.locator('[data-league-action="playoff-next"]').click();
+ }
+ assert.match(await page.locator('.playoff-current .league-card-kicker').innerText(),/ファイナルステージ/);
+ await page.locator('[data-league-action="play"]').click();
+ await page.locator('[data-action="lineup-play"]').click();
+ await page.waitForFunction(()=>!document.getElementById('game').hidden);
+ await page.locator('#pause').click();
+ assert.match(await page.locator('.match-summary').innerText(),/9回制/);
+ await page.locator('[data-action="leave"]').click();
+ assert.match(await page.locator('.playoff-current button.primary-button').innerText(),/試合を再開/);
  await page.locator('[data-league-action="home"]').click();
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-match-group="kbo"]').click();

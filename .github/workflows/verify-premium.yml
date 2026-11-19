@@ -30,6 +30,8 @@ jobs:
           node --check dist/pro-parks.js
           node --check dist/pro-stadiums.js
           node --check dist/app.js
+          node --check dist/pennant.js
+          node --check dist/npb-postseason.js
           node --check dist/game.js
           node --check dist/sw.js
           node --check dist/game-lighting.js
@@ -39,9 +41,9 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=74' dist/index.html
+          grep -Fq 'game.js?v=77' dist/index.html
           grep -Fq 'npb-rosters.js?v=74' dist/index.html
-          grep -Fq 'app.js?v=76' dist/index.html
+          grep -Fq 'app.js?v=77' dist/index.html
           grep -Fq 'kbo-rosters.js?v=74' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
           grep -Fq 'stadium3d.js?v=76' dist/app.js
@@ -56,6 +58,7 @@ jobs:
         run: |
           set -euo pipefail
           node tests/pennant.cjs
+          node tests/npb-postseason.cjs
           node tests/rules-v16.cjs
           node tests/thumb-controls.cjs
           node tests/career-overseas-v54.mjs

@@ -105,7 +105,10 @@ window.NightGame=class NightGame{
   this.conditionSeed=options.career?.fixtureId ? options.career.teamSeed+"/"+options.career.fixtureId : Date.now()+"/"+(++conditionGameSerial);
   this.runningRevision=41;this.competition=options.competition||null;this.apbcFixtureId=options.apbcFixtureId||null;this.apbcRoster=options.apbcRoster||null;this.apbcFinal=options.apbcFinal===true;this.mode=mode;this.career=options.career||null;this.arcadeRoster=options.arcadeRoster===true;this.difficulty=difficulty;this.emit=emit;this.phase='intro';this.phaseTime=0;this.time=0;this.paused=false;
   this.inning=1;this.half=this.career?.continuous||['match','pennant','pitching','career-pitch'].includes(mode)?'top':'bottom';this.outs=0;this.balls=0;this.strikes=0;this.bases=[false,false,false];
-  this.totalInnings=mode==='pennant'||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
+  this.npbPostseason=mode==='pennant'&&options.npbPostseason===true;
+  this.maxInnings=this.npbPostseason?options.maxInnings??null:null;
+  this.drawClinches=this.npbPostseason&&options.drawClinches===true;
+  this.totalInnings=(mode==='pennant'&&!this.npbPostseason)||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
   this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
   this.halfBreak=null;this.autoDefense=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
   const order=(options.order||[]).map(id=>this.teams[this.userSide].batters.find(p=>p.id===id)).filter(Boolean);
@@ -113,7 +116,7 @@ window.NightGame=class NightGame{
   this.session={hits:0,hr:0,maxDistance:0,perfect:0,swings:0,contacts:0,pitches:0,runs:0,history:[],thrown:0,ks:0,allowed:0,grandSlam:false};
   if(this.loadedStart)this.seedRunners(3,2);
   if(mode==='derby')this.derby=new NightDerby(this.teams.home,this.batter,this.park);
-  if(!this.career&&mode!=='derby')this.message(mode==='pennant'?'PENNANT PLAY BALL':mode==='match'?'PLAY BALL':mode==='pitching'?'TAKE THE MOUND':'CURSOR BATTING',mode==='pennant'?'2アウト満塁。一打で動くペナント。':mode==='match'?`投打でつかむ、${this.totalInnings}イニング。`:mode==='pitching'?'配球で、打者を打ち取れ。':'コースを読んで、芯で捉えろ。',mode==='pennant'?(this.userHome?'あなたは後攻 / 毎回2アウト満塁':'あなたは先攻 / 毎回2アウト満塁'):mode==='match'?(this.userHome?'後攻 / 守備からスタート':'先攻 / 打撃からスタート'):mode==='pitching'?'指の左上に照準 / 離して投球':'指の左上に照準 / 離してスイング');
+  if(!this.career&&mode!=='derby')this.message(mode==='pennant'?'PENNANT PLAY BALL':mode==='match'?'PLAY BALL':mode==='pitching'?'TAKE THE MOUND':'CURSOR BATTING',this.loadedStart&&mode==='pennant'?'2アウト満塁。一打で動くペナント。':mode==='match'||this.npbPostseason?`投打でつかむ、${this.totalInnings}イニング。`:mode==='pitching'?'配球で、打者を打ち取れ。':'コースを読んで、芯で捉えろ。',this.loadedStart&&mode==='pennant'?(this.userHome?'あなたは後攻 / 毎回2アウト満塁':'あなたは先攻 / 毎回2アウト満塁'):mode==='match'||this.npbPostseason?(this.userHome?'後攻 / 守備からスタート':'先攻 / 打撃からスタート'):mode==='pitching'?'指の左上に照準 / 離して投球':'指の左上に照準 / 離してスイング');
  }
  static migrateForeignMatch(state,clubs){
   const sides=['home','away'];
@@ -220,7 +223,8 @@ window.NightGame=class NightGame{
   if(this.apbcFixtureId||this.career){state.teams={home:{id:this.teams.home.id},away:{id:this.teams.away.id}};delete state.pitchingStaff;}
   return {schema:4,state};
  }
- get loadedStart(){return this.mode==='pennant'||(!!this.apbcFixtureId&&this.totalInnings===1);}
+ get loadedStart(){return (this.mode==='pennant'||!!this.apbcFixtureId)&&this.totalInnings===1;}
+ get drawDecidesSeries(){return this.drawClinches&&this.inning===this.maxInnings;}
  get mercyRule(){return !!this.apbcFixtureId&&this.totalInnings===9&&!this.apbcFinal&&this.inning>=7;}
 
  get side(){return this.half==='top'?'away':'home';}
@@ -617,8 +621,8 @@ window.NightGame=class NightGame{
    return;
   }
   if(this.half==='top'){
-   if((this.inning>=this.totalInnings&&this.homeScore>this.awayScore)||(this.mercyRule&&this.homeScore-this.awayScore>=10)){this.finish();return;}this.half='bottom';
-  }else{if((this.inning>=this.totalInnings&&(!(this.mode==='pennant'||this.apbcFixtureId)||this.homeScore!==this.awayScore))||(this.mercyRule&&Math.abs(this.homeScore-this.awayScore)>=10)){this.finish();return;}this.inning++;if(this.home.length<this.inning){this.home.push(null);this.away.push(null);}this.half='top';this.stamina=Math.min(100,this.stamina+12);}
+   if((this.inning>=this.totalInnings&&this.homeScore>this.awayScore)||(this.drawDecidesSeries&&this.homeScore===this.awayScore)||(this.mercyRule&&this.homeScore-this.awayScore>=10)){this.finish();return;}this.half='bottom';
+  }else{if((this.inning>=this.totalInnings&&(!(this.mode==='pennant'||this.apbcFixtureId)||this.homeScore!==this.awayScore))||(this.maxInnings&&this.inning>=this.maxInnings)||(this.mercyRule&&Math.abs(this.homeScore-this.awayScore)>=10)){this.finish();return;}this.inning++;if(this.home.length<this.inning){this.home.push(null);this.away.push(null);}this.half='top';this.stamina=Math.min(100,this.stamina+12);}
   this.outs=0;this.bases=[false,false,false];this.baseIds=[null,null,null];this.basePitcherIds=[null,null,null];this.resetCount();this.cursor={x:0,y:0};this.field=null;this.hit=null;this.halfBreak={...endedHalf,nextInning:this.inning,nextHalf:this.half};this.setPhase('change');this.seedHalf();this.message('CHANGE',`${this.inning}回${this.half==='top'?'オモテ':'ウラ'} · ${this.defending?'あなたの投球':'あなたの攻撃'}`,this.loadedStart?'2アウト満塁から再開':this.apbcFixtureId&&this.inning>this.totalInnings?'無死一・二塁から再開':this.defending?'球種を選び、画面で狙って離す':'カーソルを合わせて SWING');this.notify();
  }
  prepare(){
@@ -1261,7 +1265,7 @@ window.NightGame=class NightGame{
   if(f.outsAtContact===2&&f.runners.some(r=>!r.out&&this.manualForceBase(r)))return score;
   let pending=this.manualRuns().length;
   if((this.isFixture||this.career?.continuous)&&this.half==='bottom'&&this.inning>=this.totalInnings){
-   const needed=this.awayScore-this.homeScore+1;
+   const needed=this.runsToEndGame;
    if(needed>0)pending=Math.min(pending,needed);
   }
   score[this.side]+=pending;
@@ -1269,7 +1273,7 @@ window.NightGame=class NightGame{
  }
  manualWalkoffReady(){
   if(!this.isFixture&&!this.career?.continuous||this.half!=='bottom'||this.inning<this.totalInnings)return false;
-  const f=this.field,needed=this.awayScore-this.homeScore+1;
+  const f=this.field,needed=this.runsToEndGame;
   return needed>0&&this.manualRuns().length>=needed&&f.runners.find(r=>r.batter).furthest>=1&&!f.runners.some(r=>!r.out&&this.manualForceBase(r));
  }
  manualThrowPlan(){
@@ -1395,7 +1399,7 @@ window.NightGame=class NightGame{
  finishManualPlay(){
   const f=this.field,m=f.manual;if(f.resolved)return;
   const batter=f.runners.find(r=>r.batter),distance=Math.round(f.maxTravel),outs=m.outs.length;
-  const eligible=this.manualRuns(),needed=this.awayScore-this.homeScore+1;
+  const eligible=this.manualRuns(),needed=this.runsToEndGame;
   const walkoff=(this.isFixture||this.career?.continuous)&&this.half==='bottom'&&this.inning>=this.totalInnings&&needed>0&&eligible.length>=needed;
   const scorers=walkoff?eligible.slice(0,needed):eligible;
   const sacFly=m.fly&&scorers.length>0&&this.outs<3;
@@ -1521,7 +1525,7 @@ window.NightGame=class NightGame{
 
  hitAdvance(n){
   if(n===4||!this.isFixture&&!this.career?.continuous||this.half!=='bottom'||this.inning<this.totalInnings)return n;
-  const needed=this.awayScore-this.homeScore+1,scorers=[2,1,0].filter(i=>this.bases[i]&&i+n>=3);
+  const needed=this.runsToEndGame,scorers=[2,1,0].filter(i=>this.bases[i]&&i+n>=3);
   return needed>0&&scorers.length>=needed?Math.min(n,3-scorers[needed-1]):n;
  }
  advance(n){
@@ -1533,7 +1537,8 @@ window.NightGame=class NightGame{
   this.bases[0]=true;this.baseIds[0]=this.batter.id;this.basePitcherIds[0]=this.pitcher.id;
  }
 
- checkEnd(){if((this.isFixture||this.career?.continuous)&&this.half==='bottom'&&((this.inning>=this.totalInnings&&this.homeScore>this.awayScore)||(this.mercyRule&&this.homeScore-this.awayScore>=10)))this.next='finish';}
+ get runsToEndGame(){return this.awayScore-this.homeScore+(this.drawDecidesSeries?0:1);}
+ checkEnd(){if((this.isFixture||this.career?.continuous)&&this.half==='bottom'&&((this.inning>=this.totalInnings&&this.homeScore>this.awayScore)||(this.drawDecidesSeries&&this.homeScore===this.awayScore)||(this.mercyRule&&this.homeScore-this.awayScore>=10)))this.next='finish';}
  finish(){if(this.phase==='ended')return;this.setPhase('ended');this.emit('end',this);}
 };
 })();
