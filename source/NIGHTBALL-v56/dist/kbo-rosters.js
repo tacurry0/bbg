@@ -28,10 +28,11 @@
   const start=new Set(raw.startingOrder);
   if(start.size!==9||[...start].some(id=>!batters.some(p=>p.id===id)))
    throw new Error('Invalid starting nine for KBO '+raw.id);
-  const startingFielding=Object.fromEntries(raw.startingOrder.map(id=>{
-   const p=batters.find(player=>player.id===id);return [p.pos,p.id];
-  }));
-  if(Object.keys(startingFielding).length!==9)
+  const startingFielding={...(raw.startingFielding||{})};
+  const expected=new Set(['C','1B','2B','3B','SS','LF','CF','RF','DH']);
+  if(Object.keys(startingFielding).length!==9||
+     Object.entries(startingFielding).some(([pos,id])=>!expected.has(pos)||!start.has(id))||
+     new Set(Object.values(startingFielding)).size!==9)
    throw new Error('KBO starting fielders not uniquely assigned '+raw.id);
   return {...raw,batters,pitchers,startingFielding};
  });
