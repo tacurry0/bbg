@@ -50,13 +50,42 @@ try{
  await page.locator('[data-action="match-team-next"]').click();
  const body=await page.locator('#modal-content').innerText();
  assert(body.includes('ハンファ')&&body.includes('KT'),'new teams selected in pregame setup');
+ await page.locator('[data-match-home="true"]').click();
+ const longPitcher='ウィルケル・エルナンデス';
+ const pitcherChoice=page.locator('#starter-select option').filter({hasText:longPitcher});
+ const pitcherValue=await pitcherChoice.getAttribute('value');
+ await page.locator('#starter-select').selectOption(pitcherValue);
  await page.locator('[data-action="match-lineup"]').click();
  assert.equal(await page.locator('.squad-starter-row').count(),9,'full nine-player roster');
+ assert.match(await page.locator('.squad-starter-row .squad-name').first().innerText(),/^[ァ-ヺー・]+$/u);
+ assert((await page.locator('.editor-pitchers summary').innerText()).includes(longPitcher));
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.querySelector('#game')&&!document.querySelector('#game').hidden,{timeout:12000});
  await page.waitForFunction(()=>!!document.querySelector('#game-canvas')?.dataset.graphics,{timeout:15000});
  await page.waitForTimeout(500);
  assert.equal(await page.locator('#scoreboard').count(),1,'legacy match HUD preserved');
+ const hudName=page.locator('#pitcher-card .hud-name-text');
+ await hudName.waitFor({state:'visible'});
+ assert.equal(await hudName.innerText(),longPitcher);
+ assert.match(await page.locator('#player-card .hud-name-text').innerText(),/^[ァ-ヺー・]+$/u);
+ for(const width of [412,320]){
+  await page.setViewportSize({width,height:915});
+  const sizes=await page.evaluate(()=>{
+   const stats=id=>{
+    const card=document.querySelector(id),name=card.querySelector('.hud-name-text');
+    const range=document.createRange();range.selectNodeContents(name);
+    return {width:card.getBoundingClientRect().width,box:name.getBoundingClientRect().width,
+     text:range.getBoundingClientRect().width,left:card.getBoundingClientRect().left};
+   };
+   return {batter:stats('#player-card'),pitcher:stats('#pitcher-card'),
+    scoreRight:document.querySelector('#scoreboard').getBoundingClientRect().right};
+  });
+  assert(Math.abs(sizes.pitcher.width-sizes.batter.width)<1,'same card width at '+width+'px');
+  assert(Math.abs(sizes.pitcher.box-sizes.batter.box)<1,'same name width at '+width+'px');
+  assert(sizes.pitcher.text<=sizes.pitcher.box+1,'long pitcher name fits at '+width+'px: '+JSON.stringify(sizes));
+  assert(sizes.scoreRight<=sizes.pitcher.left,'score and pitcher card do not overlap at '+width+'px');
+ }
+ await page.setViewportSize({width:412,height:915});
  assert(['webgl-3d','canvas-3d'].includes(await page.locator('#game-canvas').getAttribute('data-graphics')));
  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('nightball.settings')||'{}'));
  assert.equal(saved.matchTeam,'kbo-hh');

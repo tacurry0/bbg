@@ -30,9 +30,11 @@
  --hud-u:calc(clamp(.72px,.25cqw,1.20px) * var(--hud-scale,1));
  --btn-u:calc(clamp(.75px,.25cqw,1.16px) * var(--control-scale,1));
  --hud-edge:clamp(8px,2.4cqw,16px);
+ --hud-card-width:min(calc(60cqw - var(--hud-edge)),calc(215 * var(--hud-u)));
+ --hud-score-room:calc(100cqw - var(--hud-card-width) - 2 * var(--hud-edge) - 6px);
 }
 .game-screen .game-stage>.scoreboard{
- left:var(--hud-edge);top:7px;
+ left:var(--hud-edge);top:7px;max-width:var(--hud-score-room);
 }
 .game-screen .game-stage>.scoreboard:has(.score-cube){
  width:min(43%,calc(149 * var(--hud-u)));height:auto;
@@ -50,15 +52,15 @@
 
 .hud-player-card{
  --team-top:#fba8c6;--team-mid:#ff6498;--team-low:#ce365f;--team-edge:#ffbacb;--team-text:#300714;
- position:absolute;z-index:9;display:flex;flex-direction:column;gap:calc(3 * var(--hud-u));
+ position:absolute;z-index:9;display:flex;flex-direction:column;gap:calc(3 * var(--hud-u));width:var(--hud-card-width);
  padding:calc(3.5 * var(--hud-u));text-align:center;color:#fff;cursor:pointer;
  border:calc(2.4 * var(--hud-u)) solid #8feaff;border-radius:calc(13 * var(--hud-u));
  background:linear-gradient(165deg,#0a3e79,#020f2a 58%,#0b2761);
  box-shadow:inset 0 0 0 1px #056bf4,inset 0 0 calc(6 * var(--hud-u)) #19a7ff,0 0 calc(3 * var(--hud-u)) #53deff,0 calc(4 * var(--hud-u)) calc(6 * var(--hud-u)) #000a;
  font:800 calc(13 * var(--hud-u))/1.14 system-ui,sans-serif;
 }
-.hud-pitcher{right:var(--hud-edge);top:7px;width:min(51%,calc(178 * var(--hud-u)))}
-.hud-batter{--batter-card-floor:max(17px,env(safe-area-inset-bottom));left:var(--hud-edge);bottom:var(--batter-card-floor);width:min(79%,calc(215 * var(--hud-u)))}
+.hud-pitcher{right:var(--hud-edge);top:7px}
+.hud-batter{--batter-card-floor:max(17px,env(safe-area-inset-bottom));left:var(--hud-edge);bottom:var(--batter-card-floor)}
 .hud-player-card[data-position-style=outfield]{--team-top:#c0ff79;--team-mid:#80e631;--team-low:#43b914;--team-edge:#c3ff8a;--team-text:#0b2d09}
 .hud-player-card[data-position-style=infield]{--team-top:#ffe498;--team-mid:#ffbf40;--team-low:#ce7e06;--team-edge:#ffdf83;--team-text:#352002}
 .hud-player-card[data-position-style=catch]{--team-top:#8ae6ff;--team-mid:#46bdff;--team-low:#1780cc;--team-edge:#9ee7ff;--team-text:#051831}
@@ -75,7 +77,13 @@
  box-shadow:inset 0 -1px 4px var(--team-low),0 1px 2px #000a;
  font-size:calc(20 * var(--hud-u));font-weight:950;line-height:1.13;
 }
-.hud-name{color:var(--team-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hud-name{
+ display:grid;place-items:center;min-width:0;align-self:stretch;container-type:inline-size;color:var(--team-text);
+}
+.hud-name-text{
+ display:block;width:100%;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+ font-size:min(1em,calc(100cqw / var(--hud-name-units,1)));
+}
 .hud-position{color:#fff;text-shadow:0 2px 3px var(--team-low),0 1px 2px #0006}
 .hud-face{width:calc(25 * var(--hud-u));height:auto;filter:drop-shadow(0 1px 1px #000b)}
 .hud-player-ratings{display:grid;grid-auto-columns:1fr;grid-auto-flow:column;gap:calc(2.5 * var(--hud-u));align-items:stretch}

@@ -66,9 +66,12 @@ function card(el,p,pos,order,condition,ratings){
  el.dataset.key=key;
  el.dataset.positionStyle=style;
  el.setAttribute('aria-label',`${p.name}、調子 ${condition.label}、${grades.map(([l,g])=>l+' '+g).join('、')}。選手の能力を見る`);
- el.innerHTML=`<span class="hud-player-main"><b class="hud-order">${order}</b><strong class="hud-name"></strong>${face(condition,el.id)}<b class="hud-position">${posLabels[pos]||'野'}</b></span>
+ el.innerHTML=`<span class="hud-player-main"><b class="hud-order">${order}</b><strong class="hud-name"><span class="hud-name-text"></span></strong>${face(condition,el.id)}<b class="hud-position">${posLabels[pos]||'野'}</b></span>
   <span class="hud-player-ratings">${grades.map(([l,k])=>`<span>${l}<b data-hud-grade="${k}">${k}</b></span>`).join('')}</span>`;
- el.querySelector('.hud-name').textContent=p.name;
+ const name=el.querySelector('.hud-name-text');
+ const units=Array.from(p.name).reduce((width,char)=>width+(/[\u0000-\u007f]/u.test(char) ? .85 : 1),.2);
+ name.style.setProperty('--hud-name-units',units);
+ name.textContent=p.name;
 }
 export function updatePlayerHUD(batterCard,pitcherCard,g){
  const b=g.batter,p=g.pitcher;

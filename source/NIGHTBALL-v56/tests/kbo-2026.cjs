@@ -18,6 +18,11 @@ assert.equal(NightKBO.referencePopulations.pitchers,150);
 const expected=['ht','ss','lg','ob','kt','sk','lt','hh','nc','wo'];
 assert.deepEqual(NightTeams.kbo.map(x=>x.id),expected.map(x=>'kbo-'+x));
 const ids=new Set(),skills=new Set();let matchedProfiles=0,matchedPositions=0;
+const sourceNames=new Map(NightKBOData.teams.flatMap(team=>[...team.batters,...team.pitchers]).map(p=>[p.id,p.name]));
+function checkJapaneseName(p){
+ assert.match(p.name,/^[ァ-ヺー]+(?:・[ァ-ヺー]+)+$/u,p.id+' has a Japanese display name');
+ assert.equal(p.romanizedName,sourceNames.get(p.id),p.id+' retains the original source name');
+}
 for(const t of NightTeams.kbo){
  assert.equal(t.batters.length,16,t.id);
  assert.equal(t.pitchers.length,14,t.id);
@@ -34,7 +39,8 @@ for(const t of NightTeams.kbo){
  assert(fs.existsSync('dist/'+t.logo.replace(/^\.\//,'')),'original badge '+t.id);
  for(const b of t.batters){
   assert(!ids.has(b.id),'unique player identity: '+b.id);ids.add(b.id);
-  assert(b.name&&b.sourceUrl.includes('eng.koreabaseball.com/Stats/'));
+  checkJapaneseName(b);
+  assert(b.sourceUrl.includes('eng.koreabaseball.com/Stats/'));
   assert(b.identityUrl.includes('pcode='));
   assert.equal(b.season,2026);
   assert.equal(b.ratingsProvisional,false);
@@ -42,7 +48,7 @@ for(const t of NightTeams.kbo){
   assert(b.stats.pa>0&&b.stats.h>=0&&b.stats.h<=b.stats.ab);
   assert(b.estimates.includes('field'),'fielding measurements are estimated');
   if(b.identityEvidence){matchedProfiles++;
-    assert(!b.handEstimated&&b.nativeName!==b.name,'2026 profile matching enriches identity');
+    assert(!b.handEstimated&&b.nativeName!==b.romanizedName,'2026 profile matching enriches identity');
     if(!b.positionEstimated)matchedPositions++;
   }else assert(b.handEstimated&&b.estimates.includes('hand'),'unknown handedness disclosed');
   for(const k of ['contact','power','run','field','arm'])
@@ -51,7 +57,8 @@ for(const t of NightTeams.kbo){
  }
  for(const p of t.pitchers){
   assert(!ids.has(p.id),'unique player identity '+p.id);ids.add(p.id);
-  assert(p.name&&p.sourceUrl.includes('eng.koreabaseball.com/Stats/'));
+  checkJapaneseName(p);
+  assert(p.sourceUrl.includes('eng.koreabaseball.com/Stats/'));
   assert(p.identityUrl.includes('pcode='));
   assert(p.stats.ip>0&&p.stats.bb>=0&&p.stats.k>=0);
   assert.equal(p.ratingsBasedOnStats,true);
@@ -79,13 +86,23 @@ assert.equal(ids.size,300);
 assert.equal(matchedProfiles,117,'114 cached and 3 official player identities');
 assert(matchedPositions>=40,'verified primary defensive positions are integrated');
 const kia=NightKBO.get('kbo-ht');
-assert.equal(kia.batters.find(p=>p.id===kia.startingFielding.SS).name,'HA Ju Suk');
-assert(['HAN Jun Su','KIM Tae Gun'].includes(kia.batters.find(p=>p.id===kia.startingFielding.C).name));
-const doYeong=NightKBO.get('kbo-ht').batters.find(p=>p.name==='KIM Do Yeong');
+assert.equal(kia.batters.find(p=>p.id===kia.startingFielding.SS).name,'ハ・ジュソク');
+assert(['ハン・ジュンス','キム・テグン'].includes(kia.batters.find(p=>p.id===kia.startingFielding.C).name));
+const doYeong=NightKBO.get('kbo-ht').batters.find(p=>p.name==='キム・ドヨン');
 assert.equal(doYeong.nativeName,'김도영');assert.equal(doYeong.no,'5');
 assert.equal(doYeong.pos,'3B');assert.equal(doYeong.hand,'R');
-const naSung=NightKBO.get('kbo-ht').batters.find(p=>p.name==='NA Sung Bum');
+const naSung=NightKBO.get('kbo-ht').batters.find(p=>p.name==='ナ・ソンボム');
 assert.equal(naSung.hand,'L');assert.equal(naSung.pos,'RF');
+
+const legacyMatch=new NightGame('match','standard',()=>{},
+  {homeTeamId:'kbo-hh',awayTeamId:'kbo-kt',userHome:true});
+const legacy=structuredClone(legacyMatch.snapshot());
+for(const side of ['home','away']){
+ for(const player of [...legacy.state.lineups[side],...legacy.state.pitchingStaff[side]])player.name=player.romanizedName;
+}
+const resumed=NightGame.restore(legacy,()=>{});
+assert.equal(resumed.batter.name,legacyMatch.batter.name);
+assert.equal(resumed.pitcher.name,legacyMatch.pitcher.name);
 
 assert(skills.size>225,'individualized ability records');
 const pennant=new NightPennant('owls',4);
@@ -93,10 +110,10 @@ assert.equal(pennant.schedule.length,20);
 assert.equal(new Set(pennant.schedule.flat().flatMap(x=>[x.home,x.away])).size,6,
  'existing six-team CPBL season does not accidentally absorb KBO');
 const sw=fs.readFileSync('dist/sw.js','utf8'),html=fs.readFileSync('dist/index.html','utf8');
-assert(sw.includes('kbo-data.js?v=66')&&sw.includes('kbo-rosters.js?v=66'));
+assert(sw.includes('kbo-data.js?v=66')&&sw.includes('kbo-rosters.js?v=72'));
 assert(sw.includes('assets/kbo/kbo-wo.svg'));
-assert(html.indexOf('kbo-data.js?v=66')<html.indexOf('kbo-rosters.js?v=66'));
-const rosterScript=html.indexOf('kbo-rosters.js?v=66');
+assert(html.indexOf('kbo-data.js?v=66')<html.indexOf('kbo-rosters.js?v=72'));
+const rosterScript=html.indexOf('kbo-rosters.js?v=72');
 const appScript=html.search(/<script type="module" src="\.\/app\.js\?v=[\w.-]+">/);
 assert(rosterScript>=0&&appScript>rosterScript,'rosters must load before the app entry point');
 console.log('PASS KBO 2026: 10 independently rated teams, 300 sourced player records, all live matches, 9-position lineups, KBO/NPB/CPBL exhibition, existing CPBL pennant and APBC preserved, offline cache.');

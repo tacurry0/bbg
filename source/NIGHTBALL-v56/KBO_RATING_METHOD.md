@@ -86,3 +86,9 @@ URL末尾のKBO球団コードはHT、SS、LG、OB、KT、SK、LT、HH、NC、WO
 3. 再取得が必要な場合に限り、元データファイルを管理者が明示的にアーカイブした後で --capture を実行する
 
 同じ公式データページを毎回繰り返して取得する仕組みにはしていない。
+
+## 日本語の選手名
+
+ゲーム内の表示名は、KBO選手コードに対応づけたカタカナ表記を使う。韓国選手は姓・名の順とし、外国籍選手は日本語の野球報道で使われる表記を参照した。日本語の用例が少ない選手は公式の英字表記や韓国語名から読みを起こした。英字名は `romanizedName`、元データの選手IDとプロフィールは従来のフィールドに保持する。
+
+主な表記資料は[KBO公式選手検索](https://www.koreabaseball.com/Player/Search.aspx)、[侍ジャパンの選手名鑑](https://www.japan-baseball.jp/jp/profile/top_kor2025/63.html)、[ストライク・ゾーンの2026年選手成績](https://strike-zone.jp/26date.html)。
