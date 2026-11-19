@@ -206,14 +206,14 @@ function seating(group, materials, software) {
  if (bays.length) boxBatch(group, 'Open concourse entrances', bays, materials.shadow);
 }
 
-function dugouts(group, materials) {
+function dugouts(group, materials, {lateral=29,depth=14}={}) {
  const facades = [], caps = [], railings = [], backs = [];
  for (const side of [-1,1]) {
   const angle = side * .76;
   const at = (along, behind, y) => [
-   side * 29 + along * Math.sin(angle) + side * behind * Math.cos(angle),
+   side * lateral + along * Math.sin(angle) + side * behind * Math.cos(angle),
    y,
-   14 + along * Math.cos(angle) - behind * Math.sin(.76)
+   depth + along * Math.cos(angle) - behind * Math.sin(.76)
   ];
   facades.push({point:at(0,0,.56),size:[.46,1.12,20.5],angle});
   backs.push({point:at(0,3.55,1.12),size:[.4,2.24,20.5],angle});
@@ -308,7 +308,6 @@ export function decorateBroadcastDome(renderer, park) {
  dugouts(group,materials);
  vision(group,renderer,materials,software);
  addGlints(renderer,group,lighting(group,materials,software));
- renderer.grassMaterial.color.setHex(0x539565);
 }
 
 function addGlints(renderer,group,glints){
@@ -421,7 +420,6 @@ function decorateTaipei(renderer,park,group,materials,software){
  }
  dugouts(group,materials);
  addGlints(renderer,group,lighting(group,materials,software,128,40));
- renderer.grassMaterial.color.setHex(0x71934f);
 }
 
 function decorateTaoyuan(renderer,group,materials,software){
@@ -456,7 +454,6 @@ function decorateTaoyuan(renderer,group,materials,software){
  }
  boxBatch(group,'Taoyuan skyline beyond the open outfield',skyline,materials.instance);
  dugouts(group,materials);
- renderer.grassMaterial.color.setHex(0x719348);
 }
 
 export function decorateTaiwanPark(renderer,park){

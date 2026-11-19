@@ -54,6 +54,10 @@ The supplied photos guide the architecture. Taichung Intercontinental uses the d
 
 The references guide the modeled geometry and surface colors. The stand proportions and positions without published measurements are visual estimates. The opening views render these meshes with the selected time of day.
 
+## Playing surfaces
+
+All nine real venues have separate photo-based colors for turf, infield clay, the outfield warning strip, foul-territory surfacing, fence pads and the top rail. Turf band direction and contrast vary by venue. The Tokyo Dome reference guides the cool turf and orange-brown cutouts, Taipei's reference guides the wider orange perimeter and charcoal fence, and Taoyuan's reference guides the muted green turf and red-brown outer track. The Taichung, Tianmu and Tainan photos guide their green turf, clay and fence palettes. The recorded field dimensions are used separately from these visual estimates.
+
 ## Derby
 
 [2026 NPB event rules](https://npb.jp/allstar/2026/homerun.html). The game runs the eight-player bracket at the selected venue. Eligible opponents are generated from existing CPBL rosters. The game uses seed order based on available season home runs and power rating when overtime remains tied.

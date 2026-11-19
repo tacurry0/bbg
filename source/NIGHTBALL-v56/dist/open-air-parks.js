@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=69';
+import { bowlPoint, boxBatch, dugouts, flatVision, mesh, parkSign, standsSection, strip, varying } from './broadcast-dome.js?v=70';
 
 export const OPEN_AIR_MODELS={
  night:'intercontinental',brick:'tianmu',sky:'tainan',
@@ -21,9 +21,9 @@ function materials(renderer,park){
  return {
   concrete:get('concrete',0xb2b7b2),steps:get('stairs',0xcdcabd),instance:get('instances',0xffffff),
   shadow:get('shadow',0x222b2d),canvas:get('black led',0x101819),steel:get('steel',0x687276,.59),
-  eye:get('padded walls',park.foulTrack?park.wall:0x274f43),blue:get('navy seats',blue[0]),seats:get('teal seats',teal[0]),
+  eye:get('padded walls',REGIONAL_MODELS[id]?park.wall:0x274f43),blue:get('navy seats',blue[0]),seats:get('teal seats',teal[0]),
   coral:get('coral seats',red[0]),roof:get('roof cladding',0x475157,.69),
-  foulTrack:get('foul territory track',park.foulTrack??(id==='brick'?0xa65750:0xaa7457))
+  foulTrack:get('foul territory track',park.foulTrack)
  };
 }
 
@@ -80,9 +80,9 @@ function backstop(renderer,group,m,width,depth,trackWidth=2.45){
 }
 
 const REFERENCE_BACKSTOPS={
- 'tokyo-dome':{width:57,depth:72,track:0x326747,trackWidth:2.45,base:0x214136},
- 'taipei-dome':{width:62,depth:75,track:0xbf6940,trackWidth:5,base:0x252b35},
- dome:{width:59,depth:70,track:0x7d453b,trackWidth:3.8,base:0x244746}
+ 'tokyo-dome':{width:57,depth:72,trackWidth:2.45,base:0x214136},
+ 'taipei-dome':{width:62,depth:75,trackWidth:5,base:0x252b35},
+ dome:{width:59,depth:70,trackWidth:3.8,base:0x244746}
 };
 
 export function addReferenceBackstop(renderer,park){
@@ -94,7 +94,7 @@ export function addReferenceBackstop(renderer,park){
   return material;
  };
  backstop(renderer,renderer.parkDecor,{
-  eye:surface('backstop padding',frame.base),foulTrack:surface('backstop track',frame.track)
+  eye:surface('backstop padding',frame.base),foulTrack:surface('backstop track',park.foulTrack)
  },frame.width,frame.depth,frame.trackWidth);
 }
 
@@ -162,7 +162,7 @@ function intercontinental(group,r,m,soft){
  for(let x=-163;x<-51;x+=20)highway.push([[x,4.6,176],[2,9.2,5],0x838984]);
  boxes(group,'Elevated road beyond left field',m.instance,highway);
  trees(r,group,'Trees beneath the Taichung outfield buildings',{z:155,spread:207,count:28,colors:[0x3b5841,0x455c3d,0x4d6146]});
- backstop(r,group,m,69,68);
+ backstop(r,group,m,69,68,3.4);
  dugouts(group,m);
 }
 
@@ -179,10 +179,10 @@ function mountain(group,name,color,distance,base,scale,phase){
 }
 
 function groundWord(group,label,font='950 160px system-ui,sans-serif',width=29.5,depth=4.7,z=-10.9){
- const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=192;
+ const canvas=document.createElement('canvas');canvas.width=label.length===1?192:1024;canvas.height=192;
  const ctx=canvas.getContext('2d');
  ctx.fillStyle='#f1eddb';ctx.textAlign='center';ctx.font=font;
- ctx.fillText(label,512,151,1004);
+ ctx.fillText(label,canvas.width/2,151,canvas.width-20);
  const map=new T.CanvasTexture(canvas);map.colorSpace=T.SRGBColorSpace;
  const mat=new T.MeshBasicMaterial({map,transparent:true,alphaTest:.40,side:T.DoubleSide,depthWrite:false,toneMapped:false});
  const mark=mesh(group,label.replaceAll(' ','')+' lettering behind home plate',new T.PlaneGeometry(width,depth),mat);
@@ -211,7 +211,7 @@ function tianmu(group,r,m,soft){
  trees(r,group,'Tianmu treeline',{z:149,spread:200,count:29,colors:[0x46694d,0x57774e,0x365b47]});
  boxes(group,'Tianmu center sight screen',m.eye,[[[11,3.15,127],[21,6.3,1.6]]]);
  placeVision(group,r,m,{name:'Tianmu low center scoreboard',x:-9.5,y:8.3,z:137,width:20,height:8.3,angle:-.025});
- groundWord(group,'T A I P E I');backstop(r,group,m,64,64);
+ groundWord(group,'T A I P E I');backstop(r,group,m,64,64,3.7);
  dugouts(group,m);
 }
 
@@ -262,7 +262,7 @@ function tainan(group,r,m,soft){
  for(let y=4;y<36;y+=3)towerFloors.push([[27,y,176.34],[21,.39,.26],0x4d5b65]);
  boxes(group,'Tainan skyline floor lines',m.instance,towerFloors);
  placeVision(group,r,m,{name:'Tainan left-center orange main vision',x:-24,y:15.2,z:143,width:29,height:9.2,angle:-.07});
- tainanCanopy(group,m,soft);backstop(r,group,m,67,65);dugouts(group,m);
+ tainanCanopy(group,m,soft);backstop(r,group,m,67,65,4.2);dugouts(group,m);
 }
 
 function residentialSkyline(group,m,name,buildings){
@@ -349,7 +349,7 @@ function xinzhuang(group,r,m,soft){
  trees(r,group,'Xinzhuang trees behind the outfield seating',{z:150,spread:213,count:39,colors:[0x425c36,0x5e6f42,0x45684b]});
  arcadeCanopy(group,r,m,soft);
  backstop(r,group,m,61,64,4.6);
- dugouts(group,m);
+ dugouts(group,m,{lateral:47,depth:18});
  groundWord(group,'G','italic 900 154px Georgia,serif',10,7,-11.7);
 }
 
@@ -415,7 +415,7 @@ function chengcing(group,r,m,soft){
  trees(r,group,'Trees at the Chengcing Lake stadium edge',{z:154,spread:228,count:31,colors:[0x345642,0x486748,0x45704e]});
  chengcingCanopies(group,r,m,soft);
  backstop(r,group,m,60,63,5.0);
- dugouts(group,m);
+ dugouts(group,m,{lateral:46,depth:18});
 }
 
 function alpenScoreboard(group,r,m){
@@ -474,7 +474,7 @@ function toyama(group,r,m,soft){
  boxes(group,'Alpen farmland and village rooftops',m.instance,farms);
  trees(r,group,'Alpen treeline behind the grass terraces',{z:156,spread:236,count:28,colors:[0x3d6048,0x4d7256,0x526b44]});
  backstop(r,group,m,65,69,3.0);
- dugouts(group,m);
+ dugouts(group,m,{lateral:50,depth:17});
  groundWord(group,'T O Y A M A','950 152px system-ui,sans-serif',24,3.0,-15.6);
 }
 
@@ -511,8 +511,6 @@ export function decorateOpenAirPark(renderer,park){
  else if(tianmuPark)tianmu(group,renderer,m,soft);
  else tainan(group,renderer,m,soft);
 
- renderer.grassMaterial.color.setHex(taichung?0x648c46:tianmuPark?0x568744:0x659649);
- renderer.dirt.color.setHex(tianmuPark?0xd48472:0xd7a080);
  renderer.lights.forEach((light,i)=>{
   light.visible=taichung?i!==0&&i!==5:tianmuPark||i===2||i===3;
   light.scale.set(.72,taichung?1.13:tianmuPark?.95:1.18,.72);

@@ -169,19 +169,25 @@ for (const [parkId,model,names] of [
  assert.deepEqual(renderer.camera.position.toArray(),[.18,3.6,8.8]);
 }
 
-for(const id of ['harbor','river','toyama']){
- const park=NightPlayers.parks.find(p=>p.id===id);
+const pairedTowers={harbor:0,river:4,toyama:6};
+for(const park of NightPlayers.parks.filter(p=>!p.school)){
+ const {id}=park,indoor=park.theme==='dome';
  renderer.setPark(park,'day');
- assert.equal(renderer.grassMaterial.color.getHex(),park.turf);
- assert.equal(renderer.dirt.color.getHex(),park.clay);
- assert.equal(renderer.materials.get(id+'wall').color.getHex(),park.wall);
- assert.equal(renderer.materials.get(id+'warningTrack').color.getHex(),park.track);
- assert.equal(renderer.materials.get('outdoor:'+id+':foul territory track').color.getHex(),park.foulTrack);
+ for(const [material,color] of [[renderer.grassMaterial,park.turf],[renderer.dirt,park.clay],
+  [renderer.materials.get(id+'wall'),park.wall],[renderer.materials.get(id+'rail'),park.rail],
+  [renderer.materials.get(id+'warningTrack'),park.track],
+  [renderer.parkDecor.getObjectByName('Curved foul-territory warning track').material,park.foulTrack]]){
+  assert.equal(typeof color,'number',id+' defines a photo-based color');
+  assert.equal(material.color.getHex(),color,id+' applies its color to the rendered surface');
+ }
+ assert.equal(renderer.mowing.opacity,.20*park.mowing[1]);
  assert(!renderer.lightsLit);
- assert.equal(renderer.lights.filter(light=>light.userData.secondPole.visible).length,id==='harbor'?0:id==='river'?4:6);
+ if(id in pairedTowers){
+  assert.equal(renderer.lights.filter(light=>light.userData.secondPole.visible).length,pairedTowers[id]);
+ }
  renderer.setPark(park,'night');
- assert(renderer.lightsLit);
- assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
+ assert.equal(renderer.lightsLit,!indoor);
+ if(!indoor)assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
 }
 assert.equal(renderer.venueVisionCache.get('harbor:auxiliary').canvas.width,1140);
 
@@ -325,13 +331,13 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v69-real-stadiums'));
+assert(swCode.includes('nightball-v70-stadium-surfaces'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=69'));
+assert(swCode.includes('./stadium-fx.js?v=70'));
 assert(swCode.includes('./venue-vision.js?v=69'));
-assert(swCode.includes('./open-air-parks.js?v=69'));
+assert(swCode.includes('./open-air-parks.js?v=70'));
 assert(!swCode.includes('assets/stadiums/'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);

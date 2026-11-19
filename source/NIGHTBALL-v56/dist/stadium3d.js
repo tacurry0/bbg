@@ -1,7 +1,7 @@
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=69';
-import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=69';
-import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=69';
+import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=70';
+import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=70';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=69';
 import { drawVenueVision } from './venue-vision.js?v=69';
 import { loadMatchModel } from './match-models.js?v=56';
@@ -15,7 +15,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=69';
+} from './stadium-fx.js?v=70';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const FENCE_SEGMENTS=96;
@@ -200,7 +200,7 @@ export class StadiumRenderer {
    this.grassUniforms.uIsSchool.value=park.school?1:0;
    this.grassUniforms.uIsDome.value=(park.theme==='dome'||park.id==='tokyo-dome')?1:0;
    this.grassUniforms.uConcourseColor.value.setHex(park.school?0x586552:park.id==='tokyo-dome'?0x1c2c3d:0x16222f);
-   this.grassUniforms.uVenueMow.value=park.id==='river'?1:park.id==='toyama'?2:0;
+   this.grassUniforms.uVenueMow.value.set(...(park.mowing??[0,1]));
   }
   this.decoratePark(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[],wallHeight=NightPlayers.fenceHeight(park);
@@ -304,7 +304,7 @@ export class StadiumRenderer {
   this.dirt.map=this.dirtTextures[broadcast?'broadcast':'outdoor'];
   this.dirt.color.setHex(park.clay??(broadcast?0xb38e76:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c));
   this.scene.userData.venueClay=park.clay!==undefined;
-  if(this.mowing)this.mowing.opacity=park.id==='toyama'?.085:park.id==='river'?.25:.20;
+  if(this.mowing)this.mowing.opacity=.20*(park.mowing?.[1]??1);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
   if(customVenue){
    for(const light of this.lights)light.visible=!indoors;

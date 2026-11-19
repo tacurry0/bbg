@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=69');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=70');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){
@@ -152,8 +152,10 @@ try{
    return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,
     landmark:!!renderer.parkDecor.getObjectByName(landmark),
     board:renderer.venueVisionCache.has(id),
-    colors:game.park.clay===undefined||(renderer.dirt.color.getHex()===game.park.clay&&
-     renderer.grassMaterial.color.getHex()===game.park.turf&&renderer.materials.get(id+'wall').color.getHex()===game.park.wall)};
+    colors:renderer.dirt.color.getHex()===game.park.clay&&
+     renderer.grassMaterial.color.getHex()===game.park.turf&&
+     renderer.materials.get(id+'wall').color.getHex()===game.park.wall&&
+     renderer.parkDecor.getObjectByName('Curved foul-territory warning track').material.color.getHex()===game.park.foulTrack};
   },{id,landmark});
   assert.deepEqual(state,{model,shown:true,landmark:true,board:true,colors:true});
   await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});

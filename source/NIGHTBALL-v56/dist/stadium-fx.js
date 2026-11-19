@@ -265,7 +265,7 @@ export function enhanceGrassMaterial(material, gl) {
     uFenceRight: { value: 99.06 },
     uIsSchool: { value: 0.0 },
     uIsDome: { value: 0.0 },
-    uVenueMow: { value: 0.0 },
+    uVenueMow: { value: new T.Vector2(0, 1) },
     uConcourseColor: { value: new T.Color(0x16212c) }
   };
   material.userData.fxUniforms = uniforms;
@@ -283,7 +283,7 @@ export function enhanceGrassMaterial(material, gl) {
         uniform float uFenceRight;
         uniform float uIsSchool;
         uniform float uIsDome;
-        uniform float uVenueMow;
+        uniform vec2 uVenueMow;
         uniform vec3 uConcourseColor;
 
         float nbHash(vec2 p) {
@@ -347,12 +347,9 @@ export function enhanceGrassMaterial(material, gl) {
         float arcCut = nbStripe(distHome, 7.6);
         float outfieldCut = mix(radialCut * 0.66 + arcCut * 0.34, 0.5, uIsSchool * 0.72);
 
-        float mow = mix(outfieldCut, infieldCut, inInfield);
-        if (uVenueMow > 1.5) {
-          mow = mix(0.5, nbStripe(fp.x + fp.y * 0.17, 7.5), 0.3);
-        } else if (uVenueMow > 0.5) {
-          mow = nbStripe(fp.x + fp.y * 0.17, 5.3);
-        }
+        float stadiumCut = mix(outfieldCut, infieldCut, inInfield);
+        float straightCut = nbStripe(fp.x + fp.y * 0.17, 5.3);
+        float mow = clamp(0.5 + (mix(stadiumCut, straightCut, uVenueMow.x) - 0.5) * uVenueMow.y, 0.0, 1.0);
 
         // Fine grass blade micro-grain (gracefully filtered at distance)
         float fwBlade = fwidth(fp.x) + fwidth(fp.y);
