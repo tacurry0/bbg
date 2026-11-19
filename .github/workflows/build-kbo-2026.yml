@@ -1,0 +1,56 @@
+name: Build 2026 KBO 10-club performance ratings
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/NIGHTBALL-v56/scripts/build-kbo-2026.py'
+      - '.github/workflows/build-kbo-2026.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-kbo-2026
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install parsers
+        run: pip install requests beautifulsoup4 lxml
+      - name: Snapshot official KBO facts only once, then build offline
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/build-kbo-2026.py
+          if [ -s data/kbo-season-2026.json ]; then
+            python scripts/build-kbo-2026.py
+          else
+            python scripts/build-kbo-2026.py --capture
+          fi
+      - name: Commit season records, ratings and original team monograms
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source/NIGHTBALL-v56/data/kbo-season-2026.json
+          git add source/NIGHTBALL-v56/data/kbo-selection-2026.json
+          git add source/NIGHTBALL-v56/dist/kbo-data.js
+          git add source/NIGHTBALL-v56/dist/assets/kbo/
+          if ! git diff --cached --quiet; then
+            git commit -m "data(kbo): freeze sourced 2026 statistics and 300 ratings for all 10 clubs"
+            git push origin HEAD:main
+          else
+            echo "KBO season ratings already current"
+          fi
