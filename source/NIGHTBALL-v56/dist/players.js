@@ -14,16 +14,16 @@ const parkDesigns={
  night:{leftCenter:112.7,rightCenter:112.7,wallHeight:2.5,board:[-10,16,143,33,12],stands:[[-1.12,-.21,.8],[.20,1.12,.8]],seats:0x325e71,wall:0x11546a,rail:0xf3c941},
  brick:{leftCenter:111.4,rightCenter:111.4,board:[-20,9,134,23,8],stands:[[-1.16,-.55,.35],[.54,1.16,.35]],seats:0x3a6759,wall:0x165453,rail:0xf5d64f},
  sky:{leftCenter:115,rightCenter:115,board:[4,15,140,44,12],stands:[[-1.25,-.20,.88],[.20,1.25,.88]],seats:0x387962,wall:0x145746,rail:0xf5d64f},
- harbor:{leftCenter:113.8,rightCenter:113.8,board:[-14,14,139,27,11],stands:[[-1.23,-.27,.65],[.25,1.23,.65]],seats:0x226778,wall:0x164459,rail:0xefe084},
+ harbor:{leftCenter:113.8,rightCenter:113.8,turf:0x679447,clay:0xd09469,track:0x99554b,foulTrack:0x984c47,trackWidth:2.45,board:[-14,14,139,27,11],stands:[[-1.23,-.27,.65],[.25,1.23,.65]],seats:0x226778,wall:0x1f3e62,rail:0xb9a276},
  dome:{leftCenter:114.2,rightCenter:114.2,theme:'taoyuan',board:[0,15,142,37,12],stands:[[-1.2,-.26,.72],[.26,1.2,.72]],seats:0x91384d,wall:0x164e5d,rail:0xe7ca57},
- river:{leftCenter:115.2,rightCenter:115.2,board:[9,15,144,33,12],stands:[[-1.32,-.17,.95],[.17,1.32,.95]],seats:0x2b6a76,wall:0x135356,rail:0xecd36f},
+ river:{leftCenter:115.2,rightCenter:115.2,turf:0x78a253,clay:0xcd9d76,track:0xb37b58,foulTrack:0xb98b67,trackWidth:3.6,board:[9,15,144,33,12],stands:[[-1.32,-.17,.95],[.17,1.32,.95]],seats:0x2b6a76,wall:0x294c40,rail:0xe5c35d},
  'taipei-dome':{leftCenter:108.5,rightCenter:108.5,wallHeight:3.5,board:[0,22,150,43,14],stands:[[-1.42,1.42,1.18]],seats:0xa9afb4,wall:0x333339,rail:0xc0b8a7,roofHeight:68},
  'tokyo-dome':{leftCenter:110,rightCenter:110,alleysVerified:true,wallHeight:4,board:[0,22,148,48,12],stands:[[-1.42,1.42,1.16]],seats:0x303d71,wall:0x184835,rail:0x42654d,roofHeight:61.69},
- toyama:{leftCenter:114,rightCenter:114,board:[0,11,139,31,11],stands:[[-1.20,-.30,.52],[.30,1.20,.52]],seats:0x3d6289,wall:0x214c63,rail:0xeddb75}
+ toyama:{leftCenter:114,rightCenter:114,turf:0x637d51,clay:0xba7062,track:0x904c49,foulTrack:0x6b745f,trackWidth:2.6,board:[0,11,139,31,11],stands:[[-1.20,-.30,.52],[.30,1.20,.52]],seats:0x3d6289,wall:0x315a50,rail:0x5d786b}
 };
 NightPlayers.parks.push(
  {id:'tokyo-dome',name:'東京ドーム',left:100,right:100,corner:100,center:122,theme:'dome',turf:0x3d8d70,source:'https://www.tokyo-dome.co.jp/dome/about/'},
- {id:'toyama',name:'富山市民球場（アルペンスタジアム）',left:99.1,right:99.1,corner:99.1,center:122,theme:'toyama',turf:0x427c55,source:'https://www.city.toyama.lg.jp/bunka/sports/1010565/1010567/1011160.html'}
+ {id:'toyama',name:'富山市民球場（アルペンスタジアム）',left:99.1,right:99.1,corner:99.1,center:122,theme:'toyama',source:'https://www.city.toyama.lg.jp/bunka/sports/1010565/1010567/1011160.html'}
 );
 // Fictional school venues, with the same distance model used by the match and renderer.
 const schoolParks=[

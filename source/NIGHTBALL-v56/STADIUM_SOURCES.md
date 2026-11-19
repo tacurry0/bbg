@@ -44,6 +44,16 @@ The supplied reference photos guide the venue geometry and displays. Taoyuan has
 
 The supplied photos guide the architecture. Taichung Intercontinental uses the dusk and floodlit references, with its left-center vision, low multicolor outfield terraces and the stepped complex beyond right-center. Tianmu has blue and red infield seating, its painted TAIPEI wordmark, wooded hills and a compact center-field board. Tainan Asia-Pacific uses a horseshoe steel canopy with exposed trusses, a two-level infield bowl and an open outfield. The orientation and proportions of the structures are visual estimates. The opening camera shows the stadium from behind home plate before returning to the normal match view.
 
+## Xinzhuang, Chengcing Lake and Alpen Stadium models
+
+| Venue | Reference photos and specifications | Modeled details |
+|---|---|---|
+| 新莊棒球場 | [2026 season-opening photo (TSNA)](https://tsna.com/article/124823), [New Taipei City venue guide](https://www.t-sports.ntpc.gov.tw/home.jsp?id=f57762b740db24e7) | Scalloped canopy, overhanging blue seating, tan walkway, asymmetric blue video boards around the black batter’s eye, deep-blue fence and red foul-territory surfacing. |
+| 澄清湖棒球場 | [Game panorama (DAZN)](https://www.dazn.com/zh-TW/news/%E6%A3%92%E7%90%83/%E5%8F%B0%E9%8B%BC%E9%9B%84%E9%B7%B9%E5%95%9F%E5%8B%95%E5%85%A8%E4%B8%BB%E5%A0%B4%E6%87%89%E6%8F%B4%E6%A8%A1%E5%BC%8F-2025%E7%90%83%E5%AD%A3%E5%8A%9B%E9%82%80%E9%B7%B9%E8%BF%B7%E5%85%B1%E8%A5%84%E7%9B%9B%E8%88%89/1axdv0nisl8r71an1ght5w6gg9), [September 2026 scoreboard photo (Liberty Times)](https://sports.ltn.com.tw/news/breakingnews/5576059) | Green multilevel stands, yellow rails, two-panel center video board, four paired outfield towers, striped grass, tan infield clay and dark green fence. |
+| 富山市民球場（アルペンスタジアム） | [Infield and outfield reference (ぶるっく)](https://x.com/buru_photo/status/1399344560468205570), [2023 scoreboard layout and dimensions (Seiko)](https://www.seiko-stc.co.jp/works/detail/case_2118.html), [Toyama City venue guide](https://www.city.toyama.lg.jp/bunka/sports/1010565/1010567/1011160.html) | Open red and blue infield, lawn terraces, center board and clock, six towers, turf with subdued mowing bands, reddish clay, deep green fence and the Tateyama ridgeline. |
+
+The references guide the modeled geometry and surface colors. The stand proportions and positions without published measurements are visual estimates. The opening views render these meshes with the selected time of day.
+
 ## Derby
 
 [2026 NPB event rules](https://npb.jp/allstar/2026/homerun.html). The game runs the eight-player bracket at the selected venue. Eligible opponents are generated from existing CPBL rosters. The game uses seed order based on available season home runs and power rating when overtime remains tied.

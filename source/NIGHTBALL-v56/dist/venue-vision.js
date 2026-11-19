@@ -3,7 +3,8 @@ import * as T from './vendor/three.module.min.js';
 const faceWidth=1600, faceHeight=840;
 const names={
  'tokyo-dome':'TOKYO DOME',dome:'樂天桃園棒球場','taipei-dome':'臺北大巨蛋',
- night:'臺中洲際棒球場',brick:'天母棒球場',sky:'亞太國際棒球訓練中心'
+ night:'臺中洲際棒球場',brick:'天母棒球場',sky:'亞太國際棒球訓練中心',
+ harbor:'新莊棒球場',river:'澄清湖棒球場',toyama:'富山市民球場'
 };
 const colors={
  'tokyo-dome':{ink:'#131417',line:'#54565f',label:'#dfe2e5',accent:'#e31f51',digits:'#11151c'},
@@ -11,7 +12,10 @@ const colors={
  'taipei-dome':{ink:'#0c194c',line:'#3e64bf',label:'#f1f5ff',accent:'#f03b9d',digits:'#fdf3ff'},
  night:{ink:'#211d1b',line:'#675549',label:'#ffeacf',accent:'#b06933',digits:'#fff4df',art:['#946239','#2b1c18']},
  brick:{ink:'#1f1a1e',line:'#684742',label:'#fff3e9',accent:'#a8343d',digits:'#fff4ee',art:['#71363b','#261e25']},
- sky:{ink:'#2a211d',line:'#9a5b3d',label:'#fff2df',accent:'#ce5819',digits:'#fff2de',art:['#b35b2c','#412923']}
+ sky:{ink:'#2a211d',line:'#9a5b3d',label:'#fff2df',accent:'#ce5819',digits:'#fff2de',art:['#b35b2c','#412923']},
+ harbor:{ink:'#091c3c',line:'#3c78b2',label:'#eef5fc',accent:'#1769ac',digits:'#eff6ff',art:['#1359a1','#102548']},
+ river:{ink:'#1c2d25',line:'#627c61',label:'#e2e5cf',accent:'#4f7446',digits:'#f9e5a9',art:['#4e7863','#23382b']},
+ toyama:{ink:'#12191f',line:'#53554c',label:'#eee1c0',accent:'#873237',digits:'#ffe1a3',art:['#244052','#1e252b']}
 };
 function rect(c,color,x,y,w,h){c.fillStyle=color;c.fillRect(x,y,w,h);}
 function text(c,value,x,y,size,color='#fff',max=0,align='center'){
@@ -173,21 +177,67 @@ function tokyo(c,g,images){
  text(c,'打者  '+(g?.batter?.name??'—'),1420,228,25,pal.label,255);
 }
 
-export function venueVision(renderer,id){
+function chengcingPanel(c,g,images){
+ const theme='river';
+ rect(c,colors[theme].ink,0,0,faceWidth,faceHeight);
+ presentation(c,g,images,theme,0,0,731,faceHeight);
+ rect(c,'#506b58',732,0,14,faceHeight);
+ const x=747,mid=563,rest=faceWidth-x-mid;
+ score(c,g,images,theme,x,0,faceWidth-x,252);
+ presentation(c,g,images,theme,x,254,mid,422);
+ count(c,g,theme,x,678,mid,162);
+ lineup(c,g,'home',images,theme,x+mid+4,252,rest-4,588);
+}
+
+function alpenPanel(c,g,images){
+ const theme='toyama',width=253;
+ rect(c,colors[theme].ink,0,0,faceWidth,faceHeight);
+ lineup(c,g,'away',images,theme,0,0,width,faceHeight);
+ lineup(c,g,'home',images,theme,faceWidth-width,0,width,faceHeight);
+ const middle=faceWidth-width*2;
+ score(c,g,images,theme,width,0,middle,226);
+ const left=336;
+ count(c,g,theme,width,239,left,126);
+ const ballSpeed=g?.pitch?.speed?Math.round(g.pitch.speed)+' km/h':'—';
+ text(c,ballSpeed,width+left*.5,428,47,'#fbb35d',left*.89);
+ text(c,'富 山 市 民 球 場',width+left*.5,758,34,'#dce5e5',left*.93);
+ presentation(c,g,images,theme,width+left+12,245,middle-left-12,595);
+}
+
+function xinzhuangAuxiliary(canvas,g,images){
+ const c=canvas.getContext('2d'),w=canvas.width,h=canvas.height;
+ gradient(c,0,0,w,h,'#0e254c','#13579f');
+ rect(c,'#067bb9',0,0,w,87);
+ const home=g?.teams?.home,away=g?.teams?.away;
+ text(c,'GUARDIANS',w/2,62,52,'#eff7ff',w*.88);
+ logo(c,away,images,w*.22,h*.39,h*.25);
+ logo(c,home,images,w*.78,h*.39,h*.25);
+ const runs=g?.displayScore?.();
+ text(c,(runs?.away??0)+'  –  '+(runs?.home??0),w*.5,h*.49,104,'#fff',w*.44);
+ text(c,clubName(away),w*.22,h*.62,39,'#e1edfc',w*.36);
+ text(c,clubName(home),w*.78,h*.62,39,'#e1edfc',w*.36);
+ text(c,g?.derby?'HOME RUN DERBY':g?.pitch?.speed?Math.round(g.pitch.speed)+' km/h':'新莊棒球場',w*.5,h*.82,52,'#b6e8fb',w*.86);
+}
+
+export function venueVision(renderer,id,variant='main'){
  const cache=renderer.venueVisionCache??=new Map();
- if(!cache.has(id)){
+ const key=variant==='main'?id:id+':'+variant;
+ if(!cache.has(key)){
   const canvas=document.createElement('canvas');
-  canvas.width=id==='tokyo-dome'?2304:faceWidth;canvas.height=id==='tokyo-dome'?256:faceHeight;
+  canvas.width=id==='tokyo-dome'?2304:variant==='auxiliary'?1140:faceWidth;
+  canvas.height=id==='tokyo-dome'?256:variant==='auxiliary'?750:faceHeight;
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;
   const material=new T.MeshBasicMaterial({map:texture,side:T.DoubleSide,fog:false,toneMapped:false});
-  cache.set(id,{canvas,material});
+  cache.set(key,{canvas,material});
  }
- return cache.get(id);
+ return cache.get(key);
 }
 
 export function drawVenueVision(renderer,id,game){
  const {canvas,material}=venueVision(renderer,id),c=canvas.getContext('2d'),images=renderer.clubImages;
  if(id==='tokyo-dome')tokyo(c,game,images);
+ else if(id==='river')chengcingPanel(c,game,images);
+ else if(id==='toyama')alpenPanel(c,game,images);
  else{
   const taoyuan=id==='dome',wing=taoyuan?319:304,liveHeight=taoyuan?665:626;
   rect(c,colors[id].ink,0,0,faceWidth,faceHeight);
@@ -200,4 +250,9 @@ export function drawVenueVision(renderer,id,game){
   score(c,game,images,id,taoyuan?wing:0,liveHeight,taoyuan?mid:faceWidth,faceHeight-liveHeight);
  }
  material.map.needsUpdate=true;
+ if(id==='harbor'){
+  const secondary=venueVision(renderer,id,'auxiliary');
+  xinzhuangAuxiliary(secondary.canvas,game,images);
+  secondary.material.map.needsUpdate=true;
+ }
 }

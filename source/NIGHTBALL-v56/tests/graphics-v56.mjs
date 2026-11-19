@@ -97,7 +97,7 @@ assert.equal(renderer.batter.bat.rotation.z, standing.batter.hand === 'L' ? Math
 console.log('PASS 2: Runner visibility, actor scales (2.0 / catcher 1.7), and bunt override preserved.');
 
 // 3. Plate alignment, Tokyo Dome unobstructed scoreboard & non-mirrored fence panels
-const plateGame = new NightGame('match', 'standard', () => {}, {park:'harbor'});
+const plateGame = new NightGame('match', 'standard', () => {}, {park:'school-district-east'});
 plateGame.half = 'bottom';
 plateGame.setPhase('aim');
 renderer.render(plateGame, 0);
@@ -150,7 +150,10 @@ for (const [parkId,model,names] of [
 for (const [parkId,model,names] of [
  ['night','intercontinental',['Taichung left-center main vision','Taichung multi-level outfield complex','Taichung blue lower infield bowl']],
  ['brick','tianmu',['Tianmu low center scoreboard','Tianmu green mountain ridge','TAIPEI lettering behind home plate']],
- ['sky','tainan',['Tainan horseshoe canopy','Tainan upper deck beneath the steel roof','Tainan radial canopy trusses']]
+ ['sky','tainan',['Tainan horseshoe canopy','Tainan upper deck beneath the steel roof','Tainan radial canopy trusses']],
+ ['harbor','xinzhuang',['Xinzhuang scalloped infield canopy','Xinzhuang left-center main vision','Xinzhuang right-center auxiliary vision']],
+ ['river','chengcing-lake',['Chengcing cantilevered infield wing roofs','Chengcing center-field two-panel vision','Chengcing blue seats behind home plate']],
+ ['toyama','alpen-stadium',['Alpen grass outfield berms','Alpen 33-metre scoreboard cabinet','Alpen distant Tateyama ridgeline']]
 ]) {
  const match=new NightGame('match','standard',()=>{},{park:parkId});
  renderer.render(match,0);
@@ -165,6 +168,22 @@ for (const [parkId,model,names] of [
  assert(!renderer.overviewMode);
  assert.deepEqual(renderer.camera.position.toArray(),[.18,3.6,8.8]);
 }
+
+for(const id of ['harbor','river','toyama']){
+ const park=NightPlayers.parks.find(p=>p.id===id);
+ renderer.setPark(park,'day');
+ assert.equal(renderer.grassMaterial.color.getHex(),park.turf);
+ assert.equal(renderer.dirt.color.getHex(),park.clay);
+ assert.equal(renderer.materials.get(id+'wall').color.getHex(),park.wall);
+ assert.equal(renderer.materials.get(id+'warningTrack').color.getHex(),park.track);
+ assert.equal(renderer.materials.get('outdoor:'+id+':foul territory track').color.getHex(),park.foulTrack);
+ assert(!renderer.lightsLit);
+ assert.equal(renderer.lights.filter(light=>light.userData.secondPole.visible).length,id==='harbor'?0:id==='river'?4:6);
+ renderer.setPark(park,'night');
+ assert(renderer.lightsLit);
+ assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
+}
+assert.equal(renderer.venueVisionCache.get('harbor:auxiliary').canvas.width,1140);
 
 for(const parkId of ['tokyo-dome','taipei-dome','dome']){
  const match=new NightGame('match','standard',()=>{},{park:parkId});
@@ -199,6 +218,8 @@ for(const parkId of ['tokyo-dome','taipei-dome','dome']){
 renderer.render(plateGame, 0);
 assert.equal(renderer.scene.fog.density, 0.0036);
 assert(renderer.board.visible && renderer.infieldSkin.every(mesh => mesh.visible));
+assert(renderer.lights.every(light=>light.userData.pole.visible&&!light.userData.secondPole.visible),
+ 'default stadium lights are restored after a park with custom towers');
 assert(renderer.tokyoCutouts.every(mesh => !mesh.visible));
 console.log('PASS 3: Non-mirrored fence distance panels, unobstructed Tokyo Dome scoreboard, and park surface swaps verified.');
 
@@ -304,13 +325,13 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v68-kbo10-official-catcher-fix'));
+assert(swCode.includes('nightball-v69-real-stadiums'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=60'));
-assert(swCode.includes('./venue-vision.js?v=61'));
-assert(swCode.includes('./open-air-parks.js?v=62'));
+assert(swCode.includes('./stadium-fx.js?v=69'));
+assert(swCode.includes('./venue-vision.js?v=69'));
+assert(swCode.includes('./open-air-parks.js?v=69'));
 assert(!swCode.includes('assets/stadiums/'));
 const filesMatch = swCode.match(/const FILES=\[([^\]]+)\]/);
 assert(filesMatch);

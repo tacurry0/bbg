@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=62');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=69');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){
@@ -139,7 +139,10 @@ try{
   ['sky','tainan','Tainan horseshoe canopy'],
   ['tokyo-dome','tokyo-dome','Tokyo Dome air-supported membrane'],
   ['taipei-dome','taipei-dome','Taipei Dome dark ceiling'],
-  ['dome','taoyuan','Taoyuan left field vision']
+  ['dome','taoyuan','Taoyuan left field vision'],
+  ['harbor','xinzhuang','Xinzhuang scalloped infield canopy'],
+  ['river','chengcing-lake','Chengcing center-field two-panel vision'],
+  ['toyama','alpen-stadium','Alpen grass outfield berms']
  ]){
   const state=await page.evaluate(({id,landmark})=>{
    const {renderer,game}=window.testDomeMatch;
@@ -148,9 +151,11 @@ try{
    renderer.render(game,++game.time);
    return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,
     landmark:!!renderer.parkDecor.getObjectByName(landmark),
-    board:renderer.venueVisionCache.has(id)};
+    board:renderer.venueVisionCache.has(id),
+    colors:game.park.clay===undefined||(renderer.dirt.color.getHex()===game.park.clay&&
+     renderer.grassMaterial.color.getHex()===game.park.turf&&renderer.materials.get(id+'wall').color.getHex()===game.park.wall)};
   },{id,landmark});
-  assert.deepEqual(state,{model,shown:true,landmark:true,board:true});
+  assert.deepEqual(state,{model,shown:true,landmark:true,board:true,colors:true});
   await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
   await page.evaluate(()=>{
    const {renderer,game}=window.testDomeMatch;
@@ -160,12 +165,13 @@ try{
  }
  await page.evaluate(()=>{
   const {renderer,game}=window.testDomeMatch;
+  game.park=NightPlayers.parks.find(park=>park.id==='river');
   window.nightSettings.gameLighting='night';game.setPhase('intro');
   renderer.render(game,++game.time);
  });
  await page.locator('#game-canvas[data-camera-view="overview"][data-game-lighting="night"]').waitFor({state:'visible'});
  assert.equal(await page.locator('#stage > img').count(),0,'the intro uses the 3D venue without an image overlay');
- await page.screenshot({path:'tests/screenshots/taoyuan-night-overview.png'});
+ await page.screenshot({path:'tests/screenshots/chengcing-night-overview.png'});
  assert.deepEqual(errors,[],'no page JavaScript errors');
  console.log('PASS: mobile Chromium, live visions, 3D stadium overviews and night lighting, fly-ball camera and separate replay/run skips ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));

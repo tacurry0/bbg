@@ -15,7 +15,10 @@ export function usesDayLight(park){
 const AUTO_SKIES={
  night:{canvas:['#465c83','#8495ae','#e8c6a2'],zenith:0x657b9c,horizon:0xe3c7ad,fog:0xa9a8ae,density:.00185},
  brick:{canvas:['#2d65ab','#6cabe2','#c5ddef'],zenith:0x2a62ae,horizon:0xaad0e6,fog:0x9fbed4,density:.00165},
- sky:{canvas:['#6394be','#b2cde0','#e8dfd1'],zenith:0x688eaf,horizon:0xe3e4dc,fog:0xc5c8c2,density:.00165}
+ sky:{canvas:['#6394be','#b2cde0','#e8dfd1'],zenith:0x688eaf,horizon:0xe3e4dc,fog:0xc5c8c2,density:.00165},
+ harbor:{canvas:['#5f748f','#9cafd0','#d4dbe4'],zenith:0x697f9d,horizon:0xd4dbe4,fog:0xacb7c6,density:.00185},
+ river:{canvas:['#35628c','#749ab8','#c0c6bb'],zenith:0x4e759e,horizon:0xc3c7bf,fog:0x9aaebc,density:.00195},
+ toyama:{canvas:['#3978ad','#90b9d8','#dde8e6'],zenith:0x3978ad,horizon:0xd8e7ef,fog:0xb6ccda,density:.00145}
 };
 const DAY_SKY={canvas:['#3476bd','#72b1de','#d1e7f5'],zenith:0x3476bd,horizon:0xc5dff3,fog:0xb1cadd,density:.0023};
 const NIGHT_SKY={canvas:['#060f24','#142644','#355173'],zenith:0x050c23,horizon:0x253f62,fog:0x253d57,density:.0031};

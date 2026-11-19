@@ -1,5 +1,5 @@
 import * as T from './vendor/three.module.min.js';
-import { venueVision } from './venue-vision.js?v=61';
+import { venueVision } from './venue-vision.js?v=69';
 
 const TAU = 2 * Math.PI;
 const CENTER_Z = 48;
@@ -384,10 +384,10 @@ function standsSection(group,name,materials,config,software){
  if(crowd.length)boxBatch(group,name+' spectators',crowd,materials.instance);
 }
 
-function flatVision(group,renderer,materials,{name,x,y,z,width,height,angle=0,dark=false}){
+function flatVision(group,renderer,materials,{name,x,y,z,width,height,angle=0,dark=false,variant='main'}){
  const cabinet=new T.Group();cabinet.name=name;cabinet.position.set(x,y,z);cabinet.rotation.y=angle;group.add(cabinet);
  mesh(cabinet,'LED steel cabinet',new T.BoxGeometry(width+.70,height+.70,1.1),materials.shadow);
- const glass=dark?materials.canvas:venueVision(renderer,renderer.parkKey).material;
+ const glass=dark?materials.canvas:venueVision(renderer,renderer.parkKey,variant).material;
  const screen=mesh(cabinet,dark?'Inactive LED surface':'Live stadium vision',new T.PlaneGeometry(width,height),glass);
  screen.position.z=-.58;
  // Canvas sorts by triangle-centre depth; keep both halves above the cabinet.

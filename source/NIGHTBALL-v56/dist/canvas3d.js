@@ -9,7 +9,7 @@ export class CanvasSceneRenderer {
   if(!this.width||!this.height)return;const c=this.ctx,w=this.width,h=this.height;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
   scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);this.view=camera.matrixWorldInverse;this.proj=camera.projectionMatrix;this.camera=camera;this.frustum.setFromProjectionMatrix(this.pv.multiplyMatrices(this.proj,this.view));
   const cacheKey=[w,h,scene.userData.staticRevision||0,...camera.matrixWorldInverse.elements.map(v=>v.toFixed(3)),...camera.projectionMatrix.elements.map(v=>v.toFixed(3))].join('/'),refresh=cacheKey!==this.cacheKey;
-  const night=scene.userData.nightLighting;
+  const {nightLighting:night,venueClay}=scene.userData;
   if(refresh){const sky=scene.background,indoors=scene.userData.indoors,broadcast=scene.userData.broadcastDome,outdoor=scene.userData.outdoorSky;
    const bg=c.createLinearGradient(0,0,0,h);
    const indoorNight=indoors&&night?['#172338','#314558','#53677a']:null;
@@ -47,7 +47,8 @@ export class CanvasSceneRenderer {
     if(vs.length<3)continue;
     let normal;if(norm)normal=new T.Vector3().fromBufferAttribute(norm,ids[0]).applyMatrix3(normalMatrix).normalize();else normal=new T.Vector3(0,1,0);
     const lighting=mat.isMeshBasicMaterial?1:.58+.42*Math.max(0,normal.dot(this.lightDirection));
-    let fill=kind==='grass'?this.color(color,1.08):kind==='dirt'?(scene.userData.broadcastDome?'#b68167':'#ac805d'):this.color(color,lighting);
+    let fill=kind==='grass'?this.color(color,1.08):this.color(color,lighting);
+    if(kind==='dirt'&&!venueClay)fill=scene.userData.broadcastDome?'#b68167':'#ac805d';
     const ps=vs.map(v=>project(v.p));if(ps.every(p=>p.x<0)||ps.every(p=>p.x>w)||ps.every(p=>p.y<0)||ps.every(p=>p.y>h))continue;
     const depth=-vs.reduce((a,v)=>a+v.p.z,0)/vs.length;
     const item={type:'poly',ps,vs,fill,depth,opacity,kind,groundColor:color,texture:!kind?mat.map?.image:null,serial:serial++,layer:new T.Vector3().setFromMatrixPosition(matrix).y,order:obj.renderOrder||0};(isGround?ground:items).push(item);
@@ -69,6 +70,10 @@ export class CanvasSceneRenderer {
     grad.addColorStop(0,this.color(item.groundColor,.62));
     grad.addColorStop(.60,this.color(item.groundColor,1.12));
     grad.addColorStop(1,this.color(item.groundColor,1.36));
+   }else if(venueClay){
+    grad.addColorStop(0,this.color(item.groundColor,.68));
+    grad.addColorStop(.58,this.color(item.groundColor,.91));
+    grad.addColorStop(1,this.color(item.groundColor,1.07));
    }else{
     const dome=scene.userData.broadcastDome;
     grad.addColorStop(0,night?'#735445':dome?'#815d4e':'#977151');
