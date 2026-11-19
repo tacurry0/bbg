@@ -32,6 +32,7 @@ TEAMS = [
  ("WO","キウム・ヒーローズ","キウム","KH","#7c163b","#ffffff","tokyo-dome")
 ]
 EXPECTED = {t[0] for t in TEAMS}
+ENGLISH_TEAM = dict(zip([t[0] for t in TEAMS], ["KIA","SAMSUNG","LG","DOOSAN","KT","SSG","LOTTE","HANWHA","NC","KIWOOM"]))
 PITCH_SPEED_RATIO = {"fast":1,"slider":.90,"curve":.82,"change":.89,"fork":.90,"cutter":.95}
 FIELD_PRIOR = {"C":74,"1B":66,"2B":74,"3B":70,"SS":78,"LF":66,"CF":74,"RF":68,"DH":52}
 ARM_PRIOR = {"C":81,"1B":61,"2B":68,"3B":78,"SS":79,"LF":66,"CF":74,"RF":79,"DH":62}
@@ -88,7 +89,7 @@ def fetch_source():
     pid=m[1]
     record={h:c.get_text(" ",strip=True) for h,c in zip(header,cells)}
     record["PLAYER"]=link.get_text(" ",strip=True)
-    if record.get("TEAM") and record["TEAM"].upper()!=short.upper():
+    if record.get("TEAM") and record["TEAM"].upper()!=ENGLISH_TEAM[code]:
      raise RuntimeError("Wrong team on "+url+" : "+record["TEAM"])
     if pid in output:raise RuntimeError("Duplicate official KBO code "+pid)
     output[pid]=record
