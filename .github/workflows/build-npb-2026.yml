@@ -1,0 +1,51 @@
+name: Build sourced 2026 NPB 14-club ratings
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'source/NIGHTBALL-v56/scripts/build-npb-2026.py'
+      - '.github/workflows/build-npb-2026.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-npb-2026
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install source table parser
+        run: pip install requests beautifulsoup4 lxml
+      - name: Compile and generate 420 individually calculated ratings
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/build-npb-2026.py
+          python scripts/build-npb-2026.py
+      - name: Commit frozen NPB source selection and ratings
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source/NIGHTBALL-v56/dist/npb-data.js
+          git add source/NIGHTBALL-v56/dist/assets/npb/
+          git add source/NIGHTBALL-v56/data/npb-selection-2026.json
+          if ! git diff --cached --quiet; then
+            git commit -m "data(npb): freeze 2026 official season performance for 14 clubs, 420 players"
+            git push origin HEAD:main
+          else
+            echo "NPB ratings unchanged"
+          fi
