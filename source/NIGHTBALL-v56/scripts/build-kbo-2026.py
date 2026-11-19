@@ -239,6 +239,7 @@ def prepare(source):
   all_pit=sorted(pool["pitchers"].values(),key=lambda x:(-x["stats"]["ip"],-x["stats"]["saves"],x["id"]))
   # Roster positions and hands are supplied for matched official KBO player codes.
   # Historical roster estimates are never presented as confirmed current values.
+  # Direct KBO profile cross-checks for three KIA players override old placeholders.
   bats=[]
   fallback=["CF","RF","1B","DH","3B","LF","2B","SS","C","C","SS","2B","3B","1B","RF","LF"]
   for i,item in enumerate(all_bat[:16]):
