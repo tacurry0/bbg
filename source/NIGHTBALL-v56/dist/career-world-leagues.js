@@ -57,19 +57,40 @@
   const jp=Object.fromEntries(['central','pacific'].map(division=>[division,
    standings(table,roster('jp').filter(c=>c.division===division).map(c=>c.id))]));
   const twIds=roster('tw').map(c=>c.id),tw=standings(table,twIds);
-  const halves=['first','second'].map(key=>standings(table,twIds,key)[0].id);
-  const both=halves[0]===halves[1];
-  const direct=both?halves[0]:tw.find(r=>halves.includes(r.id)).id;
-  const wild=both?tw.filter(r=>r.id!==direct).slice(0,2).map(r=>r.id):
-   [halves.find(id=>id!==direct),tw.find(r=>!halves.includes(r.id)).id];
+  const halfLeaders=['first','second'].map(key=>{
+   const rank=standings(table,twIds,key);
+   return rank.filter(r=>pct(r)===pct(rank[0])).map(r=>r.id);
+  });
   const kr=standings(table,roster('kr').map(c=>c.id));
-  return {jp,tw,kr,halves,direct,both,started:false,champions:{},series:{
+  const post={jp,tw,kr,halves:[],twSetup:{halfLeaders,directWinner:null,games:[]},started:false,champions:{},series:{
    central:[series('central-first','セ・リーグ CS ファースト',jp.central[1].id,jp.central[2].id,2,3,0,'cs')],
    pacific:[series('pacific-first','パ・リーグ CS ファースト',jp.pacific[1].id,jp.pacific[2].id,2,3,0,'cs')],
    japan:[],
-   tw:[series('tw-first','CPBL 季後挑戰賽',wild[0],wild[1],3,both?5:4,both?0:1,'taiwan')],
+   tw:[],
    kr:[series('kr-wild','KBO ワイルドカード',kr[3].id,kr[4].id,2,2,1,'wc')]
   },asia:null,done:false};
+  configureTaiwan(post);
+  return post;
+ }
+ function configureTaiwan(post){
+  if(post.series.tw.length)return null;
+  const setup=post.twSetup;
+  const half=setup.halfLeaders.findIndex(ids=>ids.length>1);
+  if(half!==-1){
+   const [home,away]=setup.halfLeaders[half];
+   return {home,away,halfIndex:half,name:half===0?'CPBL 前期優勝決定戦':'CPBL 後期優勝決定戦'};
+  }
+  post.halves=setup.halfLeaders.map(ids=>ids[0]);
+  post.both=post.halves[0]===post.halves[1];
+  const champions=post.tw.filter(r=>post.halves.includes(r.id));
+  if(!post.both&&!setup.directWinner&&pct(champions[0])===pct(champions[1])){
+   return {home:champions[0].id,away:champions[1].id,halfIndex:null,name:'CPBL 台湾シリーズ進出決定戦'};
+  }
+  post.direct=setup.directWinner||champions[0].id;
+  const wild=post.both?post.tw.filter(r=>r.id!==post.direct).slice(0,2).map(r=>r.id):
+   [post.halves.find(id=>id!==post.direct),post.tw.find(r=>!post.halves.includes(r.id)).id];
+  post.series.tw.push(series('tw-first','CPBL 季後挑戰賽',wild[0],wild[1],3,post.both?5:4,post.both?0:1,'taiwan'));
+  return null;
  }
  function extend(post){
   const g=post.series;
@@ -86,13 +107,13 @@
   const central=g.central[1]?.winner,pacific=g.pacific[1]?.winner;
   if(central&&pacific&&!g.japan.length)g.japan.push(series('japan','日本シリーズ',central,pacific,4,7,0,'japan'));
   if(g.japan[0]?.winner)post.champions.jp=g.japan[0].winner;
-  if(g.tw[0].winner&&g.tw.length===1)g.tw.push(series('tw-final','台湾シリーズ',post.direct,g.tw[0].winner,4,post.both?6:7,post.both?1:0,'taiwan'));
+  if(g.tw[0]?.winner&&g.tw.length===1)g.tw.push(series('tw-final','台湾シリーズ',post.direct,g.tw[0].winner,4,post.both?6:7,post.both?1:0,'taiwan'));
   if(g.tw[1]?.winner)post.champions.tw=g.tw[1].winner;
   const rounds=[['kr-semi','KBO 準プレーオフ',2,3,5],['kr-play','KBO プレーオフ',1,3,5],['kr-final','韓国シリーズ',0,4,7]];
   const last=g.kr.at(-1),next=rounds[g.kr.length-1];
   if(last.winner&&next){
    const [id,label,seed,target,limit]=next;
-   g.kr.push(series(id,label,post.kr[seed].id,last.winner,target,limit));
+   g.kr.push(series(id,label,post.kr[seed].id,last.winner,target,limit,0,'kbo'));
   }
   if(g.kr[3]?.winner)post.champions.kr=g.kr[3].winner;
  }
@@ -102,6 +123,7 @@
   post.asia={host,clubs,games:[],table:Object.fromEntries(clubs.map(id=>[id,{all:row(),first:row()}])),winner:null,mvp:null,stats:{}};
  }
  function fixtures(post,year,day){
+  const taiwan=configureTaiwan(post);
   extend(post);
   if(Object.keys(post.champions).length===3&&!post.asia){
    if(day<date(year,'11-18'))return [];
@@ -114,19 +136,44 @@
    const [home,away]=final?rank.slice(0,2).map(r=>r.id):[[a.clubs[0],a.clubs[1]],[a.clubs[2],a.clubs[0]],[a.clubs[1],a.clubs[2]]][i];
    return [{id:`${year}/asia/${i+1}`,kind:'asia',country:a.host,home,away,half:'first',day,name:final?'🏆 アジアシリーズ決勝':'アジアシリーズ 総当たり',final,park:D.park(a.host)}];
   }
-  return Object.entries(post.series).flatMap(([key,list])=>{
+  const games=Object.entries(post.series).flatMap(([key,list])=>{
    const s=list.at(-1);
    if(!s||s.winner)return [];
-   const i=s.games.length;
-   const upperHome=s.rule==='cs'||s.rule==='wc'||
+   const i=s.games.length,round=i+1;
+   const upperHome=['cs','wc'].includes(s.rule)||
     (s.rule==='japan'?[true,true,false,false,false,true,true,true][i]??i%2===1:
-     s.rule==='taiwan'?i<2||i>=4:i<2||i>=5);
-   const [home,away]=upperHome?[s.upper,s.lower]:[s.lower,s.upper];
-   return [{id:`${year}/${s.id}/${i+1}`,kind:'post',country:['central','pacific','japan'].includes(key)?'jp':key,
-    home,away,day,name:`${s.name} 第${i+1}戦`,series:key}];
+     s.rule==='taiwan'?i<2||i>=4:s.limit===5?i<2||i===4:i<2||i>=5);
+   const replay=key==='kr'&&s.rule!=='wc'&&i>=s.limit?s.games.filter(g=>g.home===g.away)[i-s.limit]:null;
+   const home=replay?.homeId||(upperHome?s.upper:s.lower);
+   const away=replay?.awayId||(upperHome?s.lower:s.upper);
+   const drawClinches=s.rule==='cs'&&s.wins[0]>=s.wins[1]+s.limit-round;
+   const maxInnings=key==='kr'?(round<=s.limit*2?15:null):key==='tw'?null:s.rule==='japan'&&round>7?null:12;
+   return [{id:`${year}/${s.id}/${round}`,kind:'post',country:['central','pacific','japan'].includes(key)?'jp':key,
+    home,away,day,name:`${s.name} 第${round}戦${replay?'（再試合）':''}`,series:key,maxInnings,drawClinches}];
   });
+  if(taiwan)games.push({...taiwan,id:year+'/tw-tiebreak/'+(post.twSetup.games.length+1),kind:'post',
+   country:'tw',series:'tw-tiebreak',day,maxInnings:null,important:true});
+  return games;
+ }
+ function inningLimit(f){
+  if(Object.hasOwn(f,'maxInnings'))return f.maxInnings;
+  if(f.kind==='regular')return f.country==='kr'?11:12;
+  if(f.kind!=='post')return null;
+  if(f.country==='tw')return null;
+  if(f.country==='kr')return 15;
+  return f.series==='japan'&&+f.id.split('/').at(-1)>7?null:12;
  }
  function recordPost(post,f,result){
+  if(f.series==='tw-tiebreak'){
+   const setup=post.twSetup;
+   if(result.home===result.away||setup.games.some(g=>g.id===f.id))return false;
+   const winner=result.home>result.away?f.home:f.away,loser=winner===f.home?f.away:f.home;
+   setup.games.push({id:f.id,homeId:f.home,awayId:f.away,winner,...result});
+   if(f.halfIndex===null)setup.directWinner=winner;
+   else setup.halfLeaders[f.halfIndex]=setup.halfLeaders[f.halfIndex].filter(id=>id!==loser);
+   configureTaiwan(post);
+   return true;
+  }
   if(f.kind==='asia'){
    const a=post.asia;
    a.games.push({homeId:f.home,awayId:f.away,...result});
@@ -135,13 +182,14 @@
    return;
   }
   const s=post.series[f.series].at(-1);
-  s.games.push({homeId:f.home,awayId:f.away,...result});
+  if(s.winner||s.games.some(g=>g.id===f.id))return false;
+  s.games.push({id:f.id,homeId:f.home,awayId:f.away,...result});
   const winner=result.home>result.away?f.home:result.home<result.away?f.away:null;
   if(winner)s.wins[winner===s.upper?0:1]++;
   const [a,b]=s.wins,remaining=s.limit-s.games.length;
   if(a>=s.target||s.rule==='wc'&&!winner||s.rule==='cs'&&a>=b+remaining)s.winner=s.upper;
   else if(b>=s.target)s.winner=s.lower;
-  else if(remaining<=0&&s.rule!=='japan')s.winner=a>=b?s.upper:s.lower;
+  else if(remaining<=0&&s.rule==='wc')s.winner=s.upper;
  }
  function asiaStandings(a){
   return standings(a.table,a.clubs).sort((x,y)=>{
@@ -157,5 +205,5 @@
    return y.rf-y.ra-(x.rf-x.ra)||y.rf-x.rf||x.id.localeCompare(y.id);
   });
  }
- window.NightCareerWorldLeagues={schedules,tables,standings,record,createPost,fixtures,recordPost,asiaStandings,pct};
+ window.NightCareerWorldLeagues={schedules,tables,standings,record,createPost,fixtures,recordPost,asiaStandings,pct,inningLimit};
 })();

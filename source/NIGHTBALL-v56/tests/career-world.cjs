@@ -2,7 +2,7 @@ const assert=require('node:assert/strict');
 global.window=global;
 const modules=['ratings-data','players','pro-parks','pennant','npb-postseason','npb-data','npb-rosters','kbo-data','kbo-rosters',
  'career-leagues','career-development','career-life','career-extras','career','game',
- 'career-world-data','career-world-identities','career-world-leagues','career-world-school','career-world-match','career-world-save','career-world','career-world-view'];
+ 'career-world-data','career-world-identities','career-world-leagues','career-world-international','career-world-school','career-world-match','career-world-save','career-world','career-world-view'];
 for(const file of modules)require('../dist/'+file+'.js');
 const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld;
 const countries=['jp','tw','kr'];
@@ -188,6 +188,40 @@ assert(next.some(f=>f.series==='kr'&&f.home===post.kr[3].id));
 for(const f of next)if(f.series==='kr')L.recordPost(post,f,{home:0,away:0,inning:12});
 assert.equal(post.series.kr[0].winner,post.kr[3].id);
 
+// Korean extra games replace a draw instead of crowning a team below the required wins.
+{
+ const same=L.createPost(tbl);
+ const kr=()=>L.fixtures(same,2031,'2031-10-10').find(f=>f.series==='kr');
+ let f=kr();
+ L.recordPost(same,f,{home:1,away:0,inning:9});
+ for(let i=0;i<5;i++){
+  f=kr();
+  assert.equal(f.maxInnings,15);
+  L.recordPost(same,f,i===0?{home:0,away:0,inning:15}:{home:i%2,away:1-i%2,inning:9});
+ }
+ const s=same.series.kr.at(-1);
+ assert.equal(s.winner,null);
+ f=kr();
+ assert.match(f.name,/再試合/);
+ assert.equal(f.home,s.games[0].homeId);
+ L.recordPost(same,f,{home:1,away:0,inning:9});
+ assert(s.winner);
+}
+{
+ const same=L.tables(),twClubs=D.roster('tw');
+ for(const [i,c] of twClubs.entries()){
+  Object.assign(same[c.id].all,{w:11-i,l:9+i});
+  Object.assign(same[c.id].first,{w:i<=1?7:4-i%3,l:i<=1?3:6+i%3});
+  Object.assign(same[c.id].second,{w:i===0?8:3,l:i===0?2:7});
+ }
+ const tournament=L.createPost(same);
+ assert.equal(tournament.series.tw.length,0);
+ const f=L.fixtures(tournament,2031,'2031-10-10').find(f=>f.series==='tw-tiebreak');
+ assert.equal(f.maxInnings,null);
+ assert.match(f.name,/前期/);
+ L.recordPost(tournament,f,{home:8,away:3,inning:9});
+ assert.equal(tournament.halves[0],f.home);
+}
 // Competition is based on the real club depth. Strong recent performances and
 // an unavailable incumbent can actually change the selected lineup.
 const jp=worlds.jp;
@@ -253,7 +287,7 @@ pitch.currentGame=null;
 
 // In a representative season the player keeps nationality while on a foreign club.
 const national=worlds.tw;
-national.advanceDate('2031-11-09');
+national.advanceDate('2035-11-09');
 national.proYear=2;
 for(const key of M.batting)national.player[key]=99;
 Object.assign(national.player.stats,{g:17,pa:69,ab:60,h:29,tb:55,bb:9});
@@ -262,7 +296,8 @@ national.representation('fall');
 {
  assert(national.nationalEvent);
  const fixtures=national.nationalFixtures();
- assert.equal(fixtures.length,1);
+ assert(fixtures.length>1);
+ assert(fixtures.every(f=>f.kind==='national'));
  assert(fixtures.some(f=>f.home==='national-tw'||f.away==='national-tw'));
  assert.equal(national.player.nation,'tw');
  assert(national.members('national-tw').includes(national.player));
@@ -273,20 +308,34 @@ national.representation('fall');
  assert.equal(copy.national.at(-1).games.length,1);
 }
 
+// The group fixtures, advancement and championship are all computed for each tournament.
+for(const [cup,year,teams,rounds] of [['WBC',2030,20,4],['プレミア12',2031,16,4],['APBC',2030,4,2]]){
+ const I=NightCareerWorldInternational,n=I.create(cup,year);
+ assert.equal(n.round.groups.flat().length,teams);
+ let count=0;
+ while(!n.done&&count++<30){
+  const day=n.next,fixtures=I.fixtures({day,country:'jp'},n);
+  assert.ok(fixtures.length);
+  assert.equal(fixtures.flatMap(f=>[f.home,f.away]).length,new Set(fixtures.flatMap(f=>[f.home,f.away])).size);
+  I.complete(n,day,fixtures.map(f=>[f,{home:4,away:1,inning:9}]));
+ }
+ assert.equal(n.history.length,rounds);
+ assert.equal(n.champion,n.history.at(-1).results[0].homeId);
+}
 // Multi-decade calendar, rosters, player aging and an uninterrupted final save.
 let long=draft(enrollment(fresh('jp')));
-for(let i=0;i<17;i++){
+for(let i=0;i<20;i++){
  long=season(long);
  assert.equal(long.history.length,i+1);
  if(i===0||i===8)long=roundtrip(long);
- if(i<16)nextYear(long);
+ if(i<19)nextYear(long);
 }
 assert(long.history.some(x=>x.farm.g));
 assert(long.history.some(x=>x.stats.g));
 assert(long.people.some(p=>p.stage==='retired'&&p.real));
 assert(long.people.some(p=>p.id.startsWith('rookie/')));
 assert(long.people.some(p=>p.school&&p.history.length));
-assert.equal(long.asia.length,17);
+assert.equal(long.asia.length,20);
 assert.equal(long.past.at(-1).year,long.history.at(-1).year);
 assert(long.retire());
 const retired=roundtrip(long);
@@ -295,4 +344,4 @@ assert.equal(retired.retirement.age,retired.age);
 assert.equal(retired.lifetime.g,retired.history.reduce((n,x)=>n+x.stats.g,0));
 assert(NightCareerWorldSave.encode(retired).length<2_500_000);
 assert.match(NightCareerWorldView.dashboard(retired,'home',true),/現役引退/);
-console.log('PASS: 3 school paths and domestic drafts; standard/short schedules; NPB/CPBL/KBO postseasons and Asia; live modes and saves; farm/promotion, overseas moves and return, 17 years and retirement.');
+console.log('PASS: 3 school paths and domestic drafts; standard/short schedules; NPB/CPBL/KBO postseasons and Asia; live modes and saves; farm/promotion, overseas moves and return, 20 years and retirement.');

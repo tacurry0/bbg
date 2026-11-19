@@ -1,7 +1,7 @@
 /* Player career state. The 2026 clubs are immutable outside this save. */
 (()=>{
  'use strict';
- const D=NightCareerWorldData,L=NightCareerWorldLeagues,S=NightCareerWorldSchool,M=NightCareerWorldMatch;
+ const D=NightCareerWorldData,L=NightCareerWorldLeagues,S=NightCareerWorldSchool,M=NightCareerWorldMatch,I=NightCareerWorldInternational;
  const {date,stamp,countries,leagueCountries}=D;
  const {clamp,blank,merge}=M;
  const playerId='career-player';
@@ -57,7 +57,7 @@
    this.life={savings:0,housing:'寮',relationship:0,married:false,friends:0,spend:0,currency:c.currency,budget:{}};
    this.standings=L.tables();this.past=[];this.post=null;this.daysPlayed=0;this.seasonDays=0;this.postStarted=false;
    this.timeline=[];this.history=[];this.titles=[];this.national=[];this.asia=[];this.moves=[];this.rivalry={};
-   this.playerYear=blank();this.farmStats=blank();this.playerPost=blank();this.currentGame=null;this.last=null;
+   this.playerYear=blank();this.farmStats=blank();this.recentFarm=[];this.selection=null;this.playerPost=blank();this.currentGame=null;this.last=null;
    this.queue=null;this.offers=[];this.salaryDemand=null;this.acquired=null;this.lastWin=null;this.marketChoice=null;
    this.ensureSchoolClub('school-player',this.school,this.schoolTier,this.region);
    this.ensureSchoolClub('region-player',this.region+'代表',2,this.region);
@@ -74,6 +74,8 @@
     world.version=2;
    }
    world.schoolPlay ||= {};
+   world.recentFarm ||= [];
+   if(world.farmStats)world.farmStats.walks ??= 0;
    if(world.queue?.kind==='school'&&!world.currentGame)world.protectSchoolFixture(world.active);
    if(world.country==='tw'&&!countries.tw.region.includes(world.region)){
     world.region=countries.tw.region.find(region=>region.startsWith(world.region))||countries.tw.region[0];
@@ -130,7 +132,7 @@
    return all[id]||null;
   }
   clubName(id){
-   if(id?.startsWith('national-'))return countries[id.slice(9)].label+'代表';
+   if(id?.startsWith('national-'))return (I.names[id.slice(9)]||id.slice(9))+'代表';
    return this.schoolClubs[id]?.label||NightTeams.get(id).name;
   }
   members(id){
@@ -221,11 +223,12 @@
   }
   selectGame(fixtures,kind){
    if(!fixtures.length)return false;
-   const homeIds=kind==='school'?[this.player.club,'region-player']:kind==='national'?['national-'+this.country]:[this.club];
+   const homeIds=kind==='school'?[this.player.club,'region-player']:kind==='national'?(this.nationalEvent?.selected===false?[]:['national-'+this.country]):[this.club];
    let selected=fixtures.findIndex(f=>homeIds.includes(f.home)||homeIds.includes(f.away));
    if(kind==='regular'&&selected!==-1){
     const own=fixtures[selected];
     const role=this.usage(own);
+    this.selectionChange(own,role);
     if(role==='inactive'&&this.health.injury===0){
      const opponent=own.home===this.club?own.away:own.home;
      fixtures.push({...own,id:own.id+'/farm',name:(this.leagueLabel==='KBO'?'フューチャーズリーグ':'二軍公式戦'),
@@ -236,6 +239,21 @@
    this.queue={games:fixtures,selected,kind};
    if(kind==='school')this.protectSchoolFixture(this.active);
    return true;
+  }
+  selectionChange(f,role){
+   if(this.health.injury)return;
+   const level=role==='inactive'?'farm':'first';
+   if(this.selection?.level===level)return;
+   const previous=this.selection?.level;
+   const peer=this.members(this.club).filter(p=>p.id!==playerId&&p.positions.includes(this.player.pos))
+    .sort((a,b)=>this.ability(b)-this.ability(a))[0];
+   let reason;
+   if(level==='first')reason=M.farmForm(this)>=5?'二軍での好成績が評価され、一軍に昇格しました。':
+    peer?.injury?peer.name+'の離脱で一軍に昇格しました。':'能力と監督・コーチ評価をもとに一軍に選ばれました。';
+   else reason=previous==='first'?(peer&&!peer.injury?peer.name+'との起用競争と直近の成績を受け、二軍に降格しました。':'直近の成績を受け、二軍で調整します。'):
+    '二軍で開幕。出場を重ねて昇格を目指します。';
+   this.selection={level,day:f.day,reason};
+   this.note(reason);
   }
   get schoolPlayKey(){return this.academicYear+'/'+this.grade;}
   protectSchoolFixture(f){
@@ -306,7 +324,7 @@
   }
   run(mode){
    if(this.currentGame)return 0;
-   const from=this.day,stage=this.stage,grade=this.grade,year=this.year;
+   const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1);
    const limit={day:1,week:7,game:370,event:370,season:420}[mode]||1;
    let steps=0;
    const start=Date.parse(from);
@@ -318,7 +336,7 @@
      this.finishDay();
     }else if(!this.nextDay())break;
     steps++;
-    if(this.grade!==grade||this.year!==year&&stage==='pro')break;
+    if(this.grade!==grade||this.year!==year&&stage==='pro'||mode==='event'&&this.timeline.at(-1)!==lastNote)break;
    }
    return steps;
   }
@@ -355,12 +373,13 @@
       }
      }
     }else if(f.kind==='national'){
-     const record=this.national.at(-1),campaign=this.nationalEvent;
-     const player=r.stats[playerId];
-     if(player?.g){merge(record.stats,player);record.status='代表出場';}
-     record.games.push({day:f.day,opponent:this.clubName(f.home===this.owningClub(f)?f.away:f.home),home:r.home,away:r.away});
-     campaign.played++;
-     campaign.next=stamp(this.day,2);
+     const record=this.national.at(-1),campaign=this.nationalEvent,own=this.owningClub(f);
+     if(campaign.selected!==false&&[f.home,f.away].includes(own)){
+      const player=r.stats[playerId];
+      if(player?.g){merge(record.stats,player);record.status='代表出場';}
+      record.games.push({day:f.day,opponent:this.clubName(f.home===own?f.away:f.home),home:r.home,away:r.away});
+     }
+     if(!campaign.format){campaign.played++;campaign.next=stamp(this.day,2);}
     }else if(f.kind==='school'){
      for(const [id,s] of Object.entries(r.stats)){
       const p=this.person(id);
@@ -372,6 +391,16 @@
      if(f.development)this.schoolPlay[this.schoolPlayKey]=live?'live':'auto';
     }
    }
+   if(kind==='national'&&this.nationalEvent.format){
+    const n=this.nationalEvent,record=this.national.at(-1);
+    I.complete(n,this.day,events);
+    if(n.done){
+     record.champion=n.champion;
+     record.third=n.third;
+     record.stages=n.history.map(h=>({key:h.key,rank:h.rank,results:h.results}));
+     this.note(n.cup+'優勝 · '+this.clubName(n.champion));
+    }
+   }
    if(kind==='school')S.completeRound(this,events.map(([f,r])=>[f,{home:r.home,away:r.away,inning:r.inning}]));
    this.queue=null;
    this.currentGame=null;
@@ -380,12 +409,17 @@
   }
   person(id){
    if(id===this.player.id)return this.player;
-   return this.cache('_people',()=>new Map(this.people.map(p=>[p.id,p]))).get(id);
+   return this.cache('_people',()=>new Map(this.people.map(p=>[p.id,p]))).get(id)||this.nationalEvent?.guests?.find(p=>p.id===id);
   }
   recordOwn(f,r){
    const school=f.kind==='school';
    const own=f.home===this.owningClub(f);
    const s=r.stats[this.player.id]||blank();
+   if(f.kind==='farm'&&s.g){
+    this.recentFarm ||= [];
+    this.recentFarm.push(s);
+    if(this.recentFarm.length>8)this.recentFarm.shift();
+   }
    if(f.kind!=='national')merge(school?this.schoolTotals:f.kind==='farm'?this.farmStats:f.kind==='regular'?this.playerYear:this.playerPost,s);
    const result=own?[r.home,r.away]:[r.away,r.home],rival=own?f.away:f.home;
    this.last={id:f.id,day:f.day,name:f.name,opponent:this.clubName(rival),score:result,stat:s,inning:r.inning};
@@ -591,6 +625,7 @@
   }
   nationalFixtures(){
    const n=this.nationalEvent;
+   if(n?.format)return I.fixtures(this,n);
    if(!n||n.played>=2||this.day<n.next)return [];
    const a=this.country,b=D.leagueCountries.filter(c=>c!==a)[n.played];
    const sides=n.played===0?[a,b]:[b,a];
@@ -623,8 +658,8 @@
     const r=this.random('national/'+nation+'/'+this.year);
     const positions=[...Array.from({length:Math.max(0,12-depth)},(_,i)=>D.positions[i%9]),...Array(Math.max(0,7-arms)).fill('P')];
     positions.forEach((pos,i)=>{
-     const p=this.npc(nation,'national-pool/'+this.year+'/'+nation+'/'+i,5,pos,r,22,null);
-     this.people.push(p);pick.push(p);
+     const p=this.npc(nation,'national-pool/'+this.year+'/'+this.nationalEvent.cup+'/'+nation+'/'+i,5,pos,r,22,null);
+     this.nationalEvent.guests.push(p);pick.push(p);
     });
     this.invalidate();
    }
@@ -633,19 +668,24 @@
   }
   representation(time){
    const year=this.year,age=this.age;
-   const cup=time==='spring'&&year>=2026&&(year-2026)%4===0?'WBC':
-    time==='fall'&&Math.max(0,year-2027)%4===0?'プレミア12':
-    time==='fall'&&Math.max(0,year-2026)%4===0?'APBC':null;
-   if(!cup||age<18||cup==='APBC'&&(age>24||this.proYear>3))return;
+   const cup=time==='spring'&&year>=2030&&(year-2030)%4===0?'WBC':
+    time==='fall'&&(year-2027)%4===0?'プレミア12':
+    time==='fall'&&year>=2030&&(year-2030)%4===0?'APBC':null;
+   if(!cup||this.national.some(row=>row.cup===cup&&row.year===year))return;
    const peers=this.people.filter(p=>p.nation===this.country&&this.clubCountry(p.club)&&p.pos===this.player.pos);
    const p=this.player;
-   const sc=x=>this.ability(x)+(x.pos==='P'?(x.stats.outs>=18?Math.max(-12,(4-M.era(x.stats))*8):0):x.stats.pa>=12?M.ops(x.stats)*24:0);
-   if((this.playerYear.g||this.history.at(-1)?.stats.g)&&sc(p)>=65&&peers.filter(x=>sc(x)>sc(p)).length<(p.pos==='P'?9:4)){
-    this.national.push({year,cup,nation:this.country,status:'代表選出',games:[],stats:blank()});
-    this.nationalEvent={cup,played:0,next:date(year,time==='spring'?'03-06':'11-09'),rosters:{}};
-    for(const nation of D.leagueCountries)this.nationalEvent.rosters['national-'+nation]=this.makeNationalSquad(nation,nation===this.country);
-    this.note(countries[this.country].label+'代表に選出 · '+cup);
+   const score=x=>this.ability(x)+(x.pos==='P'?(x.stats.outs>=18?Math.max(-12,(4-M.era(x.stats))*8):0):x.stats.pa>=12?M.ops(x.stats)*24:0);
+   const eligible=age>=18&&!this.health.injury&&(cup!=='APBC'||age<=24&&this.proYear<=3);
+   const selected=eligible&&(this.playerYear.g||this.history.at(-1)?.stats.g)&&score(p)>=65&&
+    peers.filter(x=>score(x)>score(p)).length<(p.pos==='P'?9:4);
+   this.national.push({year,cup,nation:this.country,status:selected?'代表選出':'選外',games:[],stats:blank(),projected:!(cup==='プレミア12'&&year===2027)});
+   const event=this.nationalEvent=I.create(cup,year);
+   event.selected=!!selected;
+   for(const id of event.round.groups.flat()){
+    const nation=id.slice(9);
+    event.rosters[id]=countries[nation]?this.makeNationalSquad(nation,selected&&nation===this.country):I.guestRoster(this,event,id);
    }
+   if(selected)this.note(countries[this.country].label+'代表に選出 · '+cup);
   }
   closeSeason(){
    if(this.stage!=='pro')return false;
@@ -696,7 +736,7 @@
     free&&dominance&&this.proYear>=2&&rng()<.78;
    const dollars=countries[current].salary;
    this.offers=[];
-   if(!waived){
+   if(!waived&&this.marketChoice!=='refused'){
     if(!free&&!request)return true;
     this.offers.push({club,annual:Math.round(dollars*(.9+ability*.014+(dominance?.44:0))),years:dominance?3:1,type:'契約更新'});
    }
@@ -768,7 +808,7 @@
    const offer=this.offers[index];
    if(this.stage!=='offseason'||!offer||!this.foreignSlot(offer.club))return false;
    if(offer.type==='トレード'){
-    const counterpart=this.members(offer.club).filter(p=>p.nation===this.playingCountry&&p.pos===this.player.pos)
+    const counterpart=this.members(offer.club).filter(p=>this.registrationFor(p,this.playingCountry)==='domestic'&&p.pos===this.player.pos)
      .sort((a,b)=>Math.abs(this.ability(a)-this.ability(this.player))-Math.abs(this.ability(b)-this.ability(this.player)))[0];
     if(!counterpart)return false;
     counterpart.club=this.club;this.invalidate();
@@ -799,7 +839,7 @@
    this.representation('spring');
    this.standings=L.tables();this.post=null;this.asiaAnnounced=false;this.queue=null;delete this._days;
    this.daysPlayed=0;this.seasonDays=0;this.offers=[];this.health.fatigue=0;
-   this.playerYear=blank();this.farmStats=blank();this.playerPost=blank();
+   this.playerYear=blank();this.farmStats=blank();this.recentFarm=[];this.selection=null;this.playerPost=blank();
    const rng=this.random('world/'+year);
    const openings=[];
    for(const p of this.people){
@@ -852,6 +892,9 @@
    return true;
   }
   get lifetime(){return this.history.reduce((total,row)=>merge(total,row.stats),blank());}
+  canPlay(f=this.active){
+   return !!f&&!this.health.injury&&!['inactive','bench'].includes(this.usage(f));
+  }
   liveOptions(format=this.format){
    const f=this.active;
    if(!f||format==='auto'||this.health.injury||!formats[format])return null;
@@ -889,7 +932,7 @@
    return {worldFixture:f.id,career:format==='full'?null:activity,homeTeamId:f.home,awayTeamId:f.away,
     clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:userStarter,opponentPitcher:0,
     order:ownTeam.startingOrder,fielding:ownTeam.startingFielding,practiceBatter:pId,
-    worldMaxInnings:f.kind==='regular'||f.kind==='post'&&(!f.id.includes('/japan/')||+f.id.split('/').at(-1)<=7)?12:null,
+    worldMaxInnings:L.inningLimit(f),worldDrawClinches:f.drawClinches,
     worldRival:rival.team.id};
   }
   completeLive(g){
@@ -902,7 +945,7 @@
    for(const [id,p] of Object.entries(g.pitchingStats)){
     if(!p.batters&&!p.outs&&!p.pitches)continue;
     const win=summary.decision?.winner?.id===id;
-    stats[id]={...blank(),g:1,outs:p.outs,k:p.k,er:p.earned??p.runs,w:win?1:0,
+    stats[id]={...blank(),g:1,outs:p.outs,k:p.k,walks:p.bb||0,er:p.earned??p.runs,w:win?1:0,
      sv:id===this.player.id&&g.career?.saveEligible&&g.userScore>g.opponentScore&&p.outs>=3?1:0};
    }
    if(g.career?.fieldStats?.errors) (stats[playerId] ||= blank()).errors=g.career.fieldStats.errors;

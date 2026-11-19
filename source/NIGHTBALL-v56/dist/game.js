@@ -108,7 +108,7 @@ window.NightGame=class NightGame{
   this.npbPostseason=mode==='pennant'&&options.npbPostseason===true;
   this.worldFixture=options.worldFixture||null;
   this.maxInnings=this.npbPostseason?options.maxInnings??null:this.worldFixture?options.worldMaxInnings??null:null;
-  this.drawClinches=this.npbPostseason&&options.drawClinches===true;
+  this.drawClinches=this.npbPostseason&&options.drawClinches===true||!!this.worldFixture&&options.worldDrawClinches===true;
   this.totalInnings=(mode==='pennant'&&!this.npbPostseason)||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
   this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
   this.halfBreak=null;this.autoDefense=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
@@ -471,7 +471,7 @@ window.NightGame=class NightGame{
    if(this.batFinished){this.battingIndex[this.side]=(this.battingIndex[this.side]+1)%9;this.batFinished=false;}
    const regulation=this.inning>=this.totalInnings;
    if(regulation&&this.half==='bottom'&&this.homeScore>this.awayScore||
-    this.outs>=3&&regulation&&(this.half==='top'?this.homeScore>this.awayScore:this.homeScore!==this.awayScore||this.maxInnings&&this.inning>=this.maxInnings)){
+    this.outs>=3&&regulation&&(this.half==='top'?this.homeScore>this.awayScore||this.drawDecidesSeries&&this.homeScore===this.awayScore:this.homeScore!==this.awayScore||this.maxInnings&&this.inning>=this.maxInnings)){
     c.simulationFinal=true;this.finish();return;
    }
    if(this.outs>=3){
