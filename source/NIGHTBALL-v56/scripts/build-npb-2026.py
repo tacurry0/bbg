@@ -93,6 +93,7 @@ def table_records(url):
         obj=dict(zip(header,v))
         obj["name"]=norm(name)
         obj["displayName"]=name.replace("\u3000"," ")
+        obj["tableHand"]="L" if v[0].lstrip().startswith(("*","＊")) else "R"
         records.append(obj)
     if len(records)<12:raise RuntimeError(f"Unusually short stats page {url}: {len(records)}")
     return records
@@ -335,7 +336,7 @@ for code,name,short,mono,color,accent,park,div in TEAMS:
     f1=x.get(("f",1),{});f2=x.get(("f",2),{})
     batter_pool=[];pitcher_pool=[]
     allNames=set(b1)|set(b2)|set(p1)|set(p2)
-    for key in allNames:
+    for key in sorted(allNames):
         evidence=roster.get(key,{})
         group=evidence.get("positionGroup")
         # Remove unverified exchanged players from the 12-club 2026 selection;
@@ -352,8 +353,8 @@ for code,name,short,mono,color,accent,park,div in TEAMS:
             rating=rating_p(st,lv)
             pitcher_pool.append({
                 "name":evidence.get("name",line["displayName"]),"no":evidence.get("no","?"),
-                "hand":evidence.get("throwHand","L" if "*" in str(line["displayName"]) else "R"),
-                "throwHand":evidence.get("throwHand","R"),"pos":"P","season":YEAR,
+                "hand":evidence.get("throwHand",line.get("tableHand","R")),
+                "throwHand":evidence.get("throwHand",line.get("tableHand","R")),"pos":"P","season":YEAR,
                 "stats":st,**rating,"statsLevel":level,"sourceUrl":f"{BASE}/idp{lv}_{code}.html",
                 "identityUrl":evidence.get("rosterSource",f"{BASE}/idp{lv}_{code}.html"),
                 "statsPeriod":["2026-03","2026-10"],"ratingsBasedOnStats":True,
@@ -371,7 +372,7 @@ for code,name,short,mono,color,accent,park,div in TEAMS:
             ab=rating_b(st,lv,defs,pos)
             player={
                 "name":evidence.get("name",line["displayName"]),"no":evidence.get("no","?"),
-                "hand":evidence.get("hand","L" if "*" in str(line["displayName"]) else "R"),
+                "hand":evidence.get("hand",line.get("tableHand","R")),
                 "throwHand":evidence.get("throwHand","R"),"pos":pos,
                 "positions":sorted(set([pos]+[e["pos"] for e in defs if e["pos"]!="P"])),
                 "positionEstimated":pos in ("LF","RF","CF") or not defs,
