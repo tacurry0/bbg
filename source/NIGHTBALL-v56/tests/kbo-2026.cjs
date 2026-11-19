@@ -76,8 +76,11 @@ for(const t of NightTeams.kbo){
  g.update(16);
 }
 assert.equal(ids.size,300);
-assert(matchedProfiles>=105,'100+ externally matched KBO player profiles');
+assert.equal(matchedProfiles,117,'114 cached and 3 official player identities');
 assert(matchedPositions>=40,'verified primary defensive positions are integrated');
+const kia=NightKBO.get('kbo-ht');
+assert.equal(kia.batters.find(p=>p.id===kia.startingFielding.SS).name,'HA Ju Suk');
+assert(['HAN Jun Su','KIM Tae Gun'].includes(kia.batters.find(p=>p.id===kia.startingFielding.C).name));
 const doYeong=NightKBO.get('kbo-ht').batters.find(p=>p.name==='KIM Do Yeong');
 assert.equal(doYeong.nativeName,'김도영');assert.equal(doYeong.no,'5');
 assert.equal(doYeong.pos,'3B');assert.equal(doYeong.hand,'R');
