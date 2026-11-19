@@ -1,3 +1,5 @@
+import * as T from './vendor/three.module.min.js';
+
 export const GAME_LIGHTING_OPTIONS=[
  ['auto','球場標準'],
  ['day','デイゲーム'],
@@ -23,12 +25,27 @@ const AUTO_SKIES={
 const DAY_SKY={canvas:['#3476bd','#72b1de','#d1e7f5'],zenith:0x3476bd,horizon:0xc5dff3,fog:0xb1cadd,density:.0023};
 const NIGHT_SKY={canvas:['#060f24','#142644','#355173'],zenith:0x050c23,horizon:0x253f62,fog:0x253d57,density:.0031};
 
+function applyTurfLighting(renderer,park,night){
+ const sampled=!park.school&&park.turf!==undefined;
+ const nightSample=night?park.turfNight:undefined;
+ const illumination=sampled&&night&&!nightSample ? .86 : 1;
+ const turf=renderer.grassMaterial.color;
+ turf.setHex(nightSample??park.turf??0x487e4d).multiplyScalar(illumination);
+ const near=sampled?new T.Color(nightSample??park.turfNear??park.turf).multiplyScalar(illumination):null;
+ renderer.scene.userData.turfNear=near;
+ if(renderer.grassUniforms){
+  renderer.grassUniforms.uPhotoTurf.value=sampled?1:0;
+  renderer.grassUniforms.uTurfNear.value.copy(near??turf);
+ }
+}
+
 export function applyParkLighting(renderer,park,mode){
  const {scene,sky,skyLight,keyLight,rimLight}=renderer;
  const indoor=park.theme==='dome',tokyo=park.id==='tokyo-dome';
  const auto=mode==='auto',day=auto?usesDayLight(park):mode==='day';
  const named=auto?AUTO_SKIES[park.id]:null;
  const outdoor=auto?named:day?DAY_SKY:NIGHT_SKY;
+ applyTurfLighting(renderer,park,mode==='night'||(auto&&!indoor&&!day));
  renderer.lightingMode=mode;
  renderer.canvas.dataset.gameLighting=mode;
  if(!indoor&&outdoor)scene.userData.outdoorSky=outdoor.canvas;

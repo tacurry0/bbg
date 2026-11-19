@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=70');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=71');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){
@@ -149,7 +149,18 @@ try{
    game.park=NightPlayers.parks.find(park=>park.id===id);
    game.field=null;game.paused=true;game.setPhase('intro');
    renderer.render(game,++game.time);
-   return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,
+   const canvas=renderer.canvas,software=renderer.gl.isSoftwareRenderer;
+   const pixels=software?canvas.getContext('2d'):renderer.gl.getContext();
+   const samples=[[-11,62],[-7,69],[7,66],[14,73],[3,56]].map(([x,z])=>{
+    const point=renderer.project(x,0,z);
+    const left=Math.floor(point.x*canvas.width/renderer.width),top=Math.floor(point.y*canvas.height/renderer.height);
+    if(software)return Array.from(pixels.getImageData(left,top,1,1).data).slice(0,3);
+    const rgba=new Uint8Array(4);
+    pixels.readPixels(left,canvas.height-1-top,1,1,pixels.RGBA,pixels.UNSIGNED_BYTE,rgba);
+    return Array.from(rgba).slice(0,3);
+   });
+   const turf=[0,1,2].map(channel=>samples.map(rgb=>rgb[channel]).sort((a,b)=>a-b)[2]);
+   return {model:renderer.canvas.dataset.parkModel,shown:renderer.overviewMode,turf,expectedTurf:game.park.turf,
     landmark:!!renderer.parkDecor.getObjectByName(landmark),
     board:renderer.venueVisionCache.has(id),
     colors:renderer.dirt.color.getHex()===game.park.clay&&
@@ -157,7 +168,11 @@ try{
      renderer.materials.get(id+'wall').color.getHex()===game.park.wall&&
      renderer.parkDecor.getObjectByName('Curved foul-territory warning track').material.color.getHex()===game.park.foulTrack};
   },{id,landmark});
-  assert.deepEqual(state,{model,shown:true,landmark:true,board:true,colors:true});
+  const {turf,expectedTurf,...venue}=state;
+  assert.deepEqual(venue,{model,shown:true,landmark:true,board:true,colors:true});
+  const expected=[expectedTurf>>16,(expectedTurf>>8)&255,expectedTurf&255];
+  assert(turf.every((channel,i)=>Math.abs(channel-expected[i])<=18),
+   model+' rendered outfield RGB '+turf.join(',')+' is close to photo target '+expected.join(','));
   await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
   await page.evaluate(()=>{
    const {renderer,game}=window.testDomeMatch;

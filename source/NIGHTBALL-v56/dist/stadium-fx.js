@@ -266,10 +266,12 @@ export function enhanceGrassMaterial(material, gl) {
     uIsSchool: { value: 0.0 },
     uIsDome: { value: 0.0 },
     uVenueMow: { value: new T.Vector2(0, 1) },
+    uPhotoTurf: { value: 0 },
+    uTurfNear: { value: new T.Color() },
     uConcourseColor: { value: new T.Color(0x16212c) }
   };
   material.userData.fxUniforms = uniforms;
-  material.customProgramCacheKey = () => 'nb-turf-v56';
+  material.customProgramCacheKey = () => 'nb-photo-turf-v71';
   material.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
     shader.vertexShader = shader.vertexShader
@@ -284,6 +286,8 @@ export function enhanceGrassMaterial(material, gl) {
         uniform float uIsSchool;
         uniform float uIsDome;
         uniform vec2 uVenueMow;
+        uniform float uPhotoTurf;
+        uniform vec3 uTurfNear;
         uniform vec3 uConcourseColor;
 
         float nbHash(vec2 p) {
@@ -356,11 +360,17 @@ export function enhanceGrassMaterial(material, gl) {
         float detailFade = 1.0 - smoothstep(0.06, 0.45, fwBlade);
         float micro = (nbNoise(fp * 14.0) - 0.5) * 0.11 * detailFade + (nbNoise(fp * 2.3) - 0.5) * 0.06;
 
-        // Rich light/dark emerald contrast along mowed grass grain
+        // Keep photographed turf shades separate from the older school-field palette.
         vec3 baseGrass = diffuseColor.rgb;
         vec3 darkCut = baseGrass * (uIsDome > 0.5 ? vec3(0.84, 0.90, 0.88) : vec3(0.80, 0.88, 0.78));
         vec3 lightCut = baseGrass * (uIsDome > 0.5 ? vec3(1.06, 1.11, 1.05) : vec3(1.12, 1.15, 1.02));
         vec3 turfCol = mix(darkCut, lightCut, mow) * (1.0 + micro);
+        if (uPhotoTurf > 0.5) {
+          float byHomePlate = 1.0 - smoothstep(8.0, 39.0, fp.y);
+          vec3 photoColor = mix(baseGrass, uTurfNear, byHomePlate);
+          float mottling = (nbNoise(fp * 0.35) - 0.5) * 0.12;
+          turfCol = photoColor * (1.0 + (mow - 0.5) * 0.32 + mottling + micro);
+        }
 
         // Subtle turf wear & ambient lip near warning track
         float nearTrack = smoothstep(fDist - 7.5, fDist - 4.1, distHome) * (1.0 - smoothstep(fDist - 4.1, fDist - 3.6, distHome));
@@ -375,6 +385,16 @@ export function enhanceGrassMaterial(material, gl) {
       `)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
         roughnessFactor = mix(nbMowRough, 0.92, apronMask);
+      `)
+      .replace('#include <tonemapping_fragment>', `#include <tonemapping_fragment>
+        if (uPhotoTurf > 0.5) {
+          // The photo samples are already display colors. Keep a little of the
+          // scene lighting, including shadows, without tone-mapping them twice.
+          vec3 luminance = vec3(0.2126, 0.7152, 0.0722);
+          float direct = dot(reflectedLight.directDiffuse, luminance) / max(dot(turfCol, luminance), 0.01);
+          float brightness = mix(0.78, 1.0, smoothstep(0.02, 0.25, direct));
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, turfCol * brightness, (1.0 - apronMask) * 0.94);
+        }
       `);
   };
   return uniforms;

@@ -1,4 +1,16 @@
 import * as T from './vendor/three.module.min.js';
+function turfPattern(context){
+ if(!context.createPattern)return null;
+ const tile=document.createElement('canvas');tile.width=tile.height=127;
+ const ink=tile.getContext('2d');
+ for(let i=0;i<1100;i++){
+  const x=(i*59+(i*i>>3))%127,y=(i*97+(i*i>>5))%127;
+  ink.fillStyle=i%2?'#f9f3cb10':'#18291c18';
+  ink.fillRect(x,y,1+(i%3===0),1+(i%11===0));
+ }
+ return context.createPattern(tile,'repeat');
+}
+
 /* A CPU compatibility renderer for the same scene and player models. */
 export class CanvasSceneRenderer {
  constructor({canvas}){this.canvas=canvas;this.ctx=canvas.getContext('2d',{alpha:false});this.capabilities={getMaxAnisotropy:()=>1};this.shadowMap={};this.ratio=1;this.isSoftwareRenderer=true;this.v=new T.Vector3();this.c=new T.Color();this.bounds=new T.Sphere();this.frustum=new T.Frustum();this.pv=new T.Matrix4();this.lightDirection=new T.Vector3(-.4,.8,-.35).normalize();this.cacheCanvas=document.createElement('canvas');}
@@ -9,7 +21,7 @@ export class CanvasSceneRenderer {
   if(!this.width||!this.height)return;const c=this.ctx,w=this.width,h=this.height;c.setTransform(1,0,0,1,0,0);c.globalAlpha=1;c.globalCompositeOperation='source-over';
   scene.updateMatrixWorld(true);camera.updateMatrixWorld(true);this.view=camera.matrixWorldInverse;this.proj=camera.projectionMatrix;this.camera=camera;this.frustum.setFromProjectionMatrix(this.pv.multiplyMatrices(this.proj,this.view));
   const cacheKey=[w,h,scene.userData.staticRevision||0,...camera.matrixWorldInverse.elements.map(v=>v.toFixed(3)),...camera.projectionMatrix.elements.map(v=>v.toFixed(3))].join('/'),refresh=cacheKey!==this.cacheKey;
-  const {nightLighting:night,venueClay}=scene.userData;
+  const {nightLighting:night,venueClay,turfNear}=scene.userData;
   if(refresh){const sky=scene.background,indoors=scene.userData.indoors,broadcast=scene.userData.broadcastDome,outdoor=scene.userData.outdoorSky;
    const bg=c.createLinearGradient(0,0,0,h);
    const indoorNight=indoors&&night?['#172338','#314558','#53677a']:null;
@@ -19,6 +31,9 @@ export class CanvasSceneRenderer {
    bg.addColorStop(1,'#516556');c.fillStyle=bg;c.fillRect(0,0,w,h);}else c.drawImage(this.cacheCanvas,0,0);
   const staticItems=[],staticGround=[],dynamicItems=[],dynamicGround=[];let items=staticItems,ground=staticGround,serial=0;
   const project=v=>{const q=v.clone().applyMatrix4(this.proj);return{x:(q.x*.5+.5)*w,y:(-.5*q.y+.5)*h};};
+  const farTurf=new T.Vector3(0,0,-39).applyMatrix4(this.view);
+  const nearTurf=new T.Vector3(0,0,-8).applyMatrix4(this.view);
+  const grain=refresh&&turfNear?(this.turfGrain??=turfPattern(c)):null;
   const addMesh=(obj,matrix,colorOverride)=>{
    if(obj.userData.roof)return;const geo=obj.geometry,mat=Array.isArray(obj.material)?obj.material[0]:obj.material;if(!geo?.attributes?.position||!mat||mat.opacity<.01)return;
    if(!geo.boundingSphere)geo.computeBoundingSphere();
@@ -26,10 +41,10 @@ export class CanvasSceneRenderer {
    if(!this.frustum.intersectsSphere(this.bounds))return;
    const mv=new T.Matrix4().multiplyMatrices(this.view,matrix),center=new T.Vector3().setFromMatrixPosition(mv);
    const baseColor=colorOverride||mat.color||new T.Color(0xffffff),opacity=mat.opacity??1;
-   const dim=night&&!mat.isMeshBasicMaterial&&!(mat.emissive?.getHex()&&mat.emissiveIntensity>.5);
+   const kind=mat.map?.userData?.kind;
+   const dim=night&&!(turfNear&&kind==='grass')&&!mat.isMeshBasicMaterial&&!(mat.emissive?.getHex()&&mat.emissiveIntensity>.5);
    const color=dim?baseColor.clone().multiplyScalar(items===dynamicItems?.90:.74):baseColor;
    const normalMatrix=new T.Matrix3().getNormalMatrix(matrix);
-   const kind=mat.map?.userData?.kind;
    if(geo.type==='PlaneGeometry'&&mat.map&&!kind&&mat.side!==T.DoubleSide){const n=new T.Vector3(0,0,1).applyMatrix3(normalMatrix).normalize(),world=new T.Vector3().setFromMatrixPosition(matrix);if(n.dot(camera.position.clone().sub(world))<=0)return;}
    const isSphere=geo.type==='SphereGeometry';
    if(isSphere){
@@ -65,6 +80,17 @@ export class CanvasSceneRenderer {
   const groundStyle=item=>{
    const key=item.kind+item.fill;
    if(groundStyles.has(key))return groundStyles.get(key);
+   if(item.kind==='grass'&&turfNear){
+    // Anchor the transition to the field, so the same colors appear from both camera angles.
+    const farY=project(farTurf).y,nearY=project(nearTurf).y;
+    let style=this.color(item.groundColor);
+    if(nearTurf.z<-.1&&farTurf.z<-.1&&Math.abs(nearY-farY)>1){
+     style=c.createLinearGradient(0,farY,0,nearY);
+     style.addColorStop(0,this.color(item.groundColor));
+     style.addColorStop(1,this.color(turfNear));
+    }
+    groundStyles.set(key,style);return style;
+   }
    const grad=c.createLinearGradient(0,h*.27,0,h);
    if(item.kind==='grass'){
     grad.addColorStop(0,this.color(item.groundColor,.62));
@@ -90,6 +116,7 @@ export class CanvasSceneRenderer {
     c.beginPath();item.ps.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();
     if(item.texture&&item.vs.length===3&&item.texture.width){const a=item.vs[0],b=item.vs[1],d=item.vs[2],tw=item.texture.width,th=item.texture.height;const us=[a.u*tw,b.u*tw,d.u*tw],vs=[(1-a.v)*th,(1-b.v)*th,(1-d.v)*th],ps=item.ps;const den=us[0]*(vs[1]-vs[2])+us[1]*(vs[2]-vs[0])+us[2]*(vs[0]-vs[1]);if(Math.abs(den)>.01){const coeff=values=>[(values[0]*(vs[1]-vs[2])+values[1]*(vs[2]-vs[0])+values[2]*(vs[0]-vs[1]))/den,(values[0]*(us[2]-us[1])+values[1]*(us[0]-us[2])+values[2]*(us[1]-us[0]))/den,(values[0]*(us[1]*vs[2]-us[2]*vs[1])+values[1]*(us[2]*vs[0]-us[0]*vs[2])+values[2]*(us[0]*vs[1]-us[1]*vs[0]))/den];const X=coeff(ps.map(p=>p.x)),Y=coeff(ps.map(p=>p.y));c.save();c.clip();c.setTransform(X[0],Y[0],X[1],Y[1],X[2],Y[2]);c.drawImage(item.texture,0,0);c.restore();}else{c.fillStyle=item.kind?groundStyle(item):item.fill;c.fill();if(item.opacity>.95){c.strokeStyle=c.fillStyle;c.lineWidth=.55;c.lineJoin='round';c.stroke();}}}
     else{c.fillStyle=item.kind?groundStyle(item):item.fill;c.fill();if(item.opacity>.95){c.strokeStyle=c.fillStyle;c.lineWidth=.55;c.lineJoin='round';c.stroke();}}
+    if(item.kind==='grass'&&grain){c.fillStyle=grain;c.fill();}
    }else if(item.type==='sprite'&&item.texture){c.save();c.globalCompositeOperation='screen';c.drawImage(item.texture,item.x-item.r,item.y-item.r,item.r*2,item.r*2);c.restore();}
    else if(item.type==='line'){c.strokeStyle=item.color;c.lineWidth=1;c.beginPath();c.moveTo(item.a.x,item.a.y);c.lineTo(item.b.x,item.b.y);c.stroke();}
   };

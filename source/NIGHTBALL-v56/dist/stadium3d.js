@@ -1,8 +1,8 @@
 import * as T from './vendor/three.module.min.js';
-import { CanvasSceneRenderer } from './canvas3d.js?v=69';
+import { CanvasSceneRenderer } from './canvas3d.js?v=71';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=70';
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=70';
-import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=69';
+import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=71';
 import { drawVenueVision } from './venue-vision.js?v=69';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
@@ -15,7 +15,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=70';
+} from './stadium-fx.js?v=71';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const FENCE_SEGMENTS=96;
@@ -289,7 +289,6 @@ export class StadiumRenderer {
    light.userData.pole.visible=true;light.userData.secondPole.visible=false;
   });
   const theme=park.theme||park.id,indoors=theme==='dome',day=usesDayLight(park);
-  this.grassMaterial.color.setHex(park.turf||0x487e4d);
   const broadcast=park.id==='tokyo-dome';
   const customVenue=VENUE_VISION_PARKS.has(park.id),cutouts=customVenue&&indoors;
   this.board.visible=!customVenue;
@@ -304,7 +303,7 @@ export class StadiumRenderer {
   this.dirt.map=this.dirtTextures[broadcast?'broadcast':'outdoor'];
   this.dirt.color.setHex(park.clay??(broadcast?0xb38e76:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c));
   this.scene.userData.venueClay=park.clay!==undefined;
-  if(this.mowing)this.mowing.opacity=.20*(park.mowing?.[1]??1);
+  if(this.mowing)this.mowing.opacity=park.school ? .20 : .14*(park.mowing?.[1]??1);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
   if(customVenue){
    for(const light of this.lights)light.visible=!indoors;

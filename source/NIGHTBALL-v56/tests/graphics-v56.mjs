@@ -180,12 +180,15 @@ for(const park of NightPlayers.parks.filter(p=>!p.school)){
   assert.equal(typeof color,'number',id+' defines a photo-based color');
   assert.equal(material.color.getHex(),color,id+' applies its color to the rendered surface');
  }
- assert.equal(renderer.mowing.opacity,.20*park.mowing[1]);
+ assert.equal(renderer.scene.userData.turfNear.getHex(),park.turfNear??park.turf);
+ assert.equal(renderer.mowing.opacity,.14*park.mowing[1]);
  assert(!renderer.lightsLit);
  if(id in pairedTowers){
   assert.equal(renderer.lights.filter(light=>light.userData.secondPole.visible).length,pairedTowers[id]);
  }
  renderer.setPark(park,'night');
+ const nightColor=park.turfNight??new T.Color(park.turf).multiplyScalar(.86).getHex();
+ assert.equal(renderer.grassMaterial.color.getHex(),nightColor);
  assert.equal(renderer.lightsLit,!indoor);
  if(!indoor)assert.equal(renderer.scene.userData.outdoorSky[0],'#060f24');
 }
@@ -295,6 +298,12 @@ const mockGl = { isSoftwareRenderer: false };
 const grassMat = new T.MeshStandardMaterial();
 const grassUniforms = enhanceGrassMaterial(grassMat, mockGl);
 assert(grassUniforms.uFenceAnchors && typeof grassMat.onBeforeCompile === 'function');
+assert.equal(grassUniforms.uPhotoTurf.value,0);
+const grassShader={uniforms:{},vertexShader:'#include <common>\n#include <project_vertex>',
+ fragmentShader:'#include <common>\n#include <map_fragment>\n#include <roughnessmap_fragment>\n#include <tonemapping_fragment>'};
+grassMat.onBeforeCompile(grassShader);
+assert(grassShader.fragmentShader.includes('turfCol * brightness'));
+assert(grassShader.fragmentShader.indexOf('#include <tonemapping_fragment>')<grassShader.fragmentShader.indexOf('turfCol * brightness'));
 const dirtMat = new T.MeshStandardMaterial();
 enhanceDirtMaterial(dirtMat, mockGl);
 assert(typeof dirtMat.onBeforeCompile === 'function');
@@ -331,11 +340,11 @@ console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, sh
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v70-stadium-surfaces'));
+assert(swCode.includes('nightball-v71-photo-turf'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=70'));
+assert(swCode.includes('./stadium-fx.js?v=71'));
 assert(swCode.includes('./venue-vision.js?v=69'));
 assert(swCode.includes('./open-air-parks.js?v=70'));
 assert(!swCode.includes('assets/stadiums/'));
