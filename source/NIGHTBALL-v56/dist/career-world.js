@@ -950,7 +950,7 @@
     stats[id]={...blank(),g:1,outs:p.outs,k:p.k,walks:p.bb||0,er:p.earned??p.runs,w:win?1:0,
      sv:id===this.player.id&&g.career?.saveEligible&&g.userScore>g.opponentScore&&p.outs>=3?1:0};
    }
-   if(g.career?.fieldStats?.errors) (stats[playerId] ||= blank()).errors=g.career.fieldStats.errors;
+   if(g.career?.fieldStats?.errors) (stats[this.player.id] ||= blank()).errors=g.career.fieldStats.errors;
    return this.finishDay({id:g.worldFixture,result:{home:g.homeScore,away:g.awayScore,inning:g.inning,stats}});
   }
  }

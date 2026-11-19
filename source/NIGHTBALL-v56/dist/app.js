@@ -1111,7 +1111,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   return !!g?.worldFixture&&!!g.career?.continuous&&
    (['intro','career-ready','aim','change'].includes(g.phase)||g.phase==='windup'&&!g.pitch?.delivered);
  }
- function pause(){if(review.playback){stopReplay();return;}if(game?.phase==='career-pregame'){careerDashboard();return;}if(!game||['ended','derby-break'].includes(game.phase))return;game.paused=true;checkpoint();modal(`${modalTitle('TIME OUT','ひと休み。',false)}<div class="match-summary"><span>${game.derby?game.derby.label:`${game.inning}回${game.half==='top'?'表':'裏'} / ${game.loadedStart?'毎回2アウト満塁':game.totalInnings+'回制'}`}</span><span>${game.derby?game.derby.turnHR+' 本':`${game.teams.away.short} ${game.awayScore} - ${game.homeScore} ${game.teams.home.short}`}</span></div><button class="primary-button" data-action="close">プレイを再開</button>${canSimulateWorldRemainder(game)?'<button class="secondary-button" data-action="world-finish-auto">残りを自動進行</button>':''}<button class="secondary-button" data-action="settings">操作・速度の設定</button><button class="secondary-button" data-action="howto">遊び方</button>${game.isFixture?'<button class="secondary-button" data-action="bench">選手交代・ベンチ</button>':''}<button class="secondary-button" data-action="roster">選手・打順</button><button class="secondary-button" data-action="history">投球履歴・成績</button>${game.inMatch?'<button class="secondary-button" data-action="tactics">守備の作戦</button>':''}${['practice','pitching'].includes(game.mode)?'<button class="secondary-button" data-action="practice-options">練習設定</button>':''}<button class="secondary-button" data-action="leave">${game.career||game.worldFixture?'保存してキャリアへ':game.apbcFixtureId?'保存して大会へ':game.mode==='pennant'?'保存してペナントへ': ['practice','pitching'].includes(game.mode)?'練習を終えて結果を見る':'中断してホームへ'}</button>${game.mode==='pennant'||game.apbcFixtureId||game.career||game.worldFixture?'':'<button class="danger-link" data-action="restart">最初からやり直す</button>'}`,'pause');}
+ function canSwitchWorldBatting(g){
+  return !!g?.worldFixture&&g.worldFixture===world?.active?.id&&!world.pitching&&g.canSwitchWorldBatting(world.player.id);
+ }
+ function pause(){if(review.playback){stopReplay();return;}if(game?.phase==='career-pregame'){careerDashboard();return;}if(!game||['ended','derby-break'].includes(game.phase))return;game.paused=true;checkpoint();modal(`${modalTitle('TIME OUT','ひと休み。',false)}<div class="match-summary"><span>${game.derby?game.derby.label:`${game.inning}回${game.half==='top'?'表':'裏'} / ${game.loadedStart?'毎回2アウト満塁':game.totalInnings+'回制'}`}</span><span>${game.derby?game.derby.turnHR+' 本':`${game.teams.away.short} ${game.awayScore} - ${game.homeScore} ${game.teams.home.short}`}</span></div><button class="primary-button" data-action="close">プレイを再開</button>${canSwitchWorldBatting(game)?'<button class="secondary-button" data-action="world-batting-only">自分の打席だけに切り替え</button>':''}${canSimulateWorldRemainder(game)?'<button class="secondary-button" data-action="world-finish-auto">残りを自動進行</button>':''}<button class="secondary-button" data-action="settings">操作・速度の設定</button><button class="secondary-button" data-action="howto">遊び方</button>${game.isFixture?'<button class="secondary-button" data-action="bench">選手交代・ベンチ</button>':''}<button class="secondary-button" data-action="roster">選手・打順</button><button class="secondary-button" data-action="history">投球履歴・成績</button>${game.inMatch?'<button class="secondary-button" data-action="tactics">守備の作戦</button>':''}${['practice','pitching'].includes(game.mode)?'<button class="secondary-button" data-action="practice-options">練習設定</button>':''}<button class="secondary-button" data-action="leave">${game.career||game.worldFixture?'保存してキャリアへ':game.apbcFixtureId?'保存して大会へ':game.mode==='pennant'?'保存してペナントへ': ['practice','pitching'].includes(game.mode)?'練習を終えて結果を見る':'中断してホームへ'}</button>${game.mode==='pennant'||game.apbcFixtureId||game.career||game.worldFixture?'':'<button class="danger-link" data-action="restart">最初からやり直す</button>'}`,'pause');}
  function start(mode,challengeId=null,fixedPark=null){
   if(mode==='apbc'){startAPBC();return;}if(mode==='apbc-cup'){playTournament(true);return;}
   if(mode==='match')clearCheckpoint();closeModal(false);unlockAudio();sound('tap');lastMode=mode;saved=false;$('distance').textContent='';$('timing-result').textContent='';
@@ -1503,6 +1506,17 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      case'apbc-selection':apbcSelection={team:apbcDraftTeam,ids:apbcDraftRosters[apbcDraftTeam].slice(),kind:'bats',clubFilter:'all'};apbcSelectionModal();break;
      case'apbc-selection-done':if(Tournament.rosterStatus(apbcSelection.team,apbcSelection.ids).valid){apbcDraftRosters[apbcSelection.team]=apbcSelection.ids;apbcDraft();}break;
      case'apbc-create':if(Tournament.rosterStatus(apbcDraftTeam,apbcDraftRosters[apbcDraftTeam]).valid){game=null;tournament=new Tournament(apbcDraftTeam,apbcDraftInnings,apbcDraftRosters[apbcDraftTeam]);saveTournament();apbcDashboard();}break;
+     case'world-batting-only':
+      if(canSwitchWorldBatting(game)){
+       const activity=world.liveOptions('self')?.career;
+       if(!activity)break;
+       closeModal(false);queuedBench=false;game.paused=false;
+       if(game.switchWorldBatting(activity)){
+        if(game?.pendingWorldBatting)toast('現在のプレー後に自分の打席だけに切り替えます');
+        if(game)updateUI();
+       }
+      }
+      break;
      case'world-finish-auto':
       if(canSimulateWorldRemainder(game)){
        closeModal(false);resetCareerOverlay();game.paused=false;game.advanceCareer(true);

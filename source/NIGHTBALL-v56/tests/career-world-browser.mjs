@@ -84,8 +84,18 @@ try{
    assert(w.queue?.selected>=0);
    const id=w.queue.games[w.queue.selected].id;
    assert(w.queue.games[w.queue.selected].development);
-   await press('play','self');
+   const switchFromFull=country==='jp'&&grade===2;
+   await press('play',switchFromFull?'full':'self');
+   if(switchFromFull){
+    await page.waitForFunction(()=>['aim','pitch'].includes(window.observedCareerGame?.phase));
+    await page.locator('#pause').dispatchEvent('click');
+    await page.locator('[data-action="world-batting-only"]').click();
+   }
    await page.locator('[data-field-action="appearance"]').waitFor({state:'visible',timeout:20000});
+   if(switchFromFull){
+    assert.equal((await state()).currentGame.state.career.format,'self');
+    console.log('PASS: full career match switched to remaining personal plate appearances.');
+   }
    if(grade===1){
     await page.locator('#pause').click();
     await page.locator('[data-action="leave"]').click();

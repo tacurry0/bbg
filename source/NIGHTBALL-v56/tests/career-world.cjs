@@ -91,6 +91,62 @@ for(const country of countries){
  }
  assert.equal(Object.keys(w.schoolPlay).length,3);
 }
+// Change a live full game without replacing its box score, lineup, count or save slot.
+{
+ const w=fresh('jp');
+ for(const key of M.batting)w.player[key]=98;
+ w.run('game');
+ const full=w.liveOptions('full'),self=w.liveOptions('self');
+ const g=new NightGame('match','standard',()=>{},full);
+ const id=w.player.id,slot=g.lineups[g.userSide].findIndex(p=>p.id===id);
+ assert(slot>=0);
+ const awayBefore=g.away.slice();
+ g.inning=4;g.half=g.userHome?'bottom':'top';g.battingIndex[g.userSide]=slot;
+ g[g.userSide][3]=2;g[g.userSide+'Score']=2;
+ g.batterStats().pa=6;g.batterStats().ab=6;g.batterStats().h=2;
+ g.seedRunners(1,1);g.balls=2;g.strikes=1;
+ const runner=g.baseIds[0],pitcher=g.pitcher.id;
+ g.setPhase('windup');g.pitch={delivered:false};
+ assert(g.switchWorldBatting(self.career));
+ assert.equal(g.phase,'career-ready');
+ assert.equal(g.batter.id,id);assert.equal(g.pitcher.id,pitcher);
+ assert.equal(g.inning,4);assert.equal(g.outs,1);
+ assert.equal(g.balls,2);assert.equal(g.strikes,1);
+ assert.equal(g.baseIds[0],runner);
+ assert.equal(g.userScore,2);
+ if(g.userHome)assert.deepEqual(g.away,awayBefore);
+ assert.equal(g.box[id].h,2);assert.equal(g.career.completed,6);
+ assert(!g.canSwitchWorldBatting(id));
+ const restored=NightGame.restore(JSON.parse(JSON.stringify(g.snapshot())),()=>{},self);
+ assert.equal(restored.phase,'career-ready');assert.equal(restored.balls,2);
+ assert.equal(restored.box[id].pa,6);assert.equal(restored.career.opportunities,null);
+ assert(restored.acknowledgeCareerAppearance());
+ restored.endAtBat('single');
+ restored.advanceCareer(true);
+ assert.equal(restored.phase,'ended');
+ assert(restored.box[id].pa>=7);assert(restored.box[id].h>=3);
+ assert(w.completeLive(restored));assert(!w.completeLive(restored));
+}
+{
+ const w=fresh('tw',{schoolTier:2,difficulty:'hard'});
+ w.run('game');
+ const full=w.liveOptions('full'),self=w.liveOptions('self');
+ const g=new NightGame('match','standard',()=>{},full);
+ g.setPhase('result');
+ assert(g.switchWorldBatting(self.career));assert.equal(g.mode,'match');
+ const restored=NightGame.restore(JSON.parse(JSON.stringify(g.snapshot())),()=>{},full);
+ assert.equal(restored.mode,'match');assert.equal(restored.pendingWorldBatting.playerId,w.player.id);
+ for(let i=0;i<30&&restored.mode==='match';i++)restored.update(50);
+ assert.equal(restored.phase,'career-ready');
+ assert.equal(restored.batter.id,w.player.id);
+ assert.equal(restored.pendingWorldBatting,undefined);
+ if(restored.career.pinching){
+  assert(restored.removedPlayers[restored.userSide].length);
+  assert.equal(restored.substitutions.at(-1).inId,w.player.id);
+ }
+ const normal=new NightGame('match','standard',()=>{});
+ assert(!normal.switchWorldBatting(self.career));
+}
 const detail=fresh('jp');
 for(const place of [null,undefined,0,3]){
  detail.schoolEvents[6]={place};
