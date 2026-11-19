@@ -50,6 +50,8 @@ jobs:
           git add source/NIGHTBALL-v56/dist/assets/kbo/
           if ! git diff --cached --quiet; then
             git commit -m "data(kbo): freeze sourced 2026 statistics and 300 ratings for all 10 clubs"
+            git fetch origin main
+            git rebase origin/main
             git push origin HEAD:main
           else
             echo "KBO season ratings already current"
