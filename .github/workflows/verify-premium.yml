@@ -31,9 +31,13 @@ jobs:
           node --check dist/game.js
           node --check dist/sw.js
           node --check dist/game-lighting.js
+          node --check dist/npb-data.js
+          node --check dist/npb-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
           grep -Fq 'game.js?v=60.2' dist/index.html
+          grep -Fq 'npb-rosters.js?v=64' dist/index.html
+          grep -Fq 'app.js?v=64' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
           grep -Fq 'stadium3d.js?v=62' dist/app.js
       - name: Test real 3D construction and player details
@@ -51,3 +55,4 @@ jobs:
           node tests/thumb-controls.cjs
           node tests/career-overseas-v54.mjs
           node tests/realistic-field-v58.cjs
+          node tests/npb-2026.cjs
