@@ -19,7 +19,8 @@
   const formScore=p.pos==='P'?s.outs>=12?clamp((4.6-era(s))*5,-17,18)*Math.min(1,s.outs/42):0:
    s.pa>=8?clamp((ops(s)-.68)*48,-19,19)*Math.min(1,s.pa/36):0;
   const glove=p.pos==='P'?0:p.pos===pos?7:p.positions.includes(pos)?3:pos==='DH'?-1:-16;
-  const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+({easy:8,normal:0,hard:-5})[w.difficulty]:0;
+  const schoolOpportunity=w.stage==='school'?[12,5,0][w.schoolTier]:w.stage==='amateur'?5:0;
+  const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+schoolOpportunity+({easy:8,normal:0,hard:-5})[w.difficulty]:0;
   return base+formScore+glove+form+trust-fluency-penalty-(age>38?2:0);
  }
  function lineup(w,id,country,day,{farm=false,withoutPlayer=false}={}){

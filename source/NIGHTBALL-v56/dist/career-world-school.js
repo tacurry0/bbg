@@ -35,15 +35,16 @@
   const regional=e.requirement==='selected';
   const league=e.format===2;
   const count=league?4:8;
-  const home=regional?'region-player':'school-player';
+  const home=regional?'region-player':w.player.club;
   const rng=w.random('school/'+e.index);
-  const candidates=countries[w.country].region.filter(r=>r!==w.region);
+  const local=w.country==='jp'&&[0,3,5].includes(e.index);
+  const district=(w.country==='jp'&&[1,6].includes(e.index))||(w.country==='kr'&&[2,4].includes(e.index));
+  const all=countries[w.country].region.filter(r=>r!==w.region);
+  const candidates=w.stage==='amateur'?all:local?[w.region]:district?D.district(w.country,w.region):all;
   const opponents=Array.from({length:count-1},(_,i)=>{
    const region=candidates[(e.index+i)%candidates.length];
-   const id=(regional?'region-':'school-')+region+(regional?'':'-'+(e.index%3)+'-'+i);
-   const local=w.country==='jp'&&[0,3,5].includes(e.index);
-   const location=local?w.region:region;
-   const label=regional?region+'代表':location+' '+D.schools[w.country][i%D.schools[w.country].length];
+   const id=(regional?'region-':w.stage==='amateur'?'amateur-':'school-')+region+(regional?'':'-'+(e.index%3)+'-'+i);
+   const label=regional?region+'代表':w.stage==='amateur'?region+'アマ選抜':region+' '+D.schools[w.country][i%D.schools[w.country].length];
    const tier=rng()<.25?2:rng()<.55?1:0;
    w.ensureSchoolClub(id,label,tier,region);
    return id;
@@ -72,7 +73,7 @@
  }
  function fixtures(w,t){
   if(!t||t.finished)return [];
-  return t.draw[t.round].map(([home,away],i)=>({id:`school/${w.grade}/${t.event.index}/${t.round}/${i}`,country:w.country,
+  return t.draw[t.round].map(([home,away],i)=>({id:`school/${w.stage==='amateur'?w.amateurStart:w.academicYear}/${w.grade}/${t.event.index}/${t.round}/${i}`,country:w.country,
    home,away,half:'first',day:w.day,kind:'school',name:t.event.name,important:t.event.format===1&&t.round===2,
    park:w.country==='jp'&&/甲子園|選抜/.test(t.event.name)?D.park('jp'):NightPlayers.schoolPark(t.round,w.schoolIndex,t.event.format===0)}));
  }

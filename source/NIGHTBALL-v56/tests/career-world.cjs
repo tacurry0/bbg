@@ -69,11 +69,23 @@ for(const short of [true,false]){
  }
  assert.equal(counts['npb-a'],undefined);assert.equal(counts['npb-v'],undefined);
 }
+// A prospect who was not drafted still has a complete lineup at their new school.
+{
+ const w=enrollment(fresh('tw',{schoolTier:0,style:'velocity',seed:'undrafted-amateur'}));
+ assert(w.draftApply(true));w.draftReveal(true);
+ assert(w.amateur('大学'));
+ assert(w.player.club.startsWith('amateur-'));
+ w.run('season');
+ assert.equal(w.stage,'draft');assert.equal(w.academyGames,3);
+ assert(w.schoolHistory.some(row=>row.name==='大学 リーグ戦'));
+ assert.equal(D.countries.jp.region.length,47);
+}
 const worlds={};
 for(const country of countries){
  let w=fresh(country);
  assert.equal(w.day,'2027-'+D.countries[country].start);
- w.run('game');assert(w.queue);
+ while(!w.queue&&w.stage==='school')w.run('day');
+ assert(w.queue);
  w=roundtrip(w);assert(w.finishDay());assert.equal(w.finishDay(),false);
  w=draft(enrollment(w));
  w.run('game');assert(w.queue);

@@ -2,9 +2,16 @@
    Source links and differences are listed in CAREER_WORLD.md. */
 (()=>{
  'use strict';
+ const jpDistricts=[
+  ['北海道'],['青森','岩手','宮城','秋田','山形','福島'],['茨城','栃木','群馬','埼玉','千葉','神奈川','山梨'],
+  ['東京'],['新潟','富山','石川','福井','長野'],['岐阜','静岡','愛知','三重'],['滋賀','京都','大阪','兵庫','奈良','和歌山'],
+  ['鳥取','島根','岡山','広島','山口'],['徳島','香川','愛媛','高知'],['福岡','佐賀','長崎','熊本','大分','宮崎','鹿児島','沖縄']
+ ];
+ const krDistricts=[['ソウル','仁川','京畿','江原'],['忠清','大田'],['大邱','慶北','釜山','慶南'],['光州','全羅','済州']];
+ const district=(country,region)=>(country==='jp'?jpDistricts:country==='kr'?krDistricts:[]).find(g=>g.includes(region))||[region];
  const countries={
-  jp:{label:'日本',league:'NPB',currency:'JPY',start:'04-01',draft:'10-22',region:['北海道','宮城','新潟','埼玉','東京','神奈川','静岡','愛知','大阪','兵庫','広島','福岡','沖縄'],park:'koshien',unit:10000,salary:520,level:5,fa:8,internationalFA:9},
-  tw:{label:'台湾',league:'CPBL',currency:'TWD',start:'08-15',draft:'07-02',region:['臺北','新北','桃園','新竹','臺中','南投','嘉義','臺南','高雄','屏東','宜蘭','花蓮','臺東'],park:'taipei-dome',unit:10000,salary:96,level:0,fa:9,internationalFA:9},
+  jp:{label:'日本',league:'NPB',currency:'JPY',start:'04-01',draft:'10-22',region:jpDistricts.flat(),park:'koshien',unit:10000,salary:520,level:5,fa:8,internationalFA:9},
+  tw:{label:'台湾',league:'CPBL',currency:'TWD',start:'08-15',draft:'07-02',region:['臺北市','新北市','基隆市','桃園市','新竹市','新竹縣','苗栗縣','臺中市','彰化縣','南投縣','雲林縣','嘉義市','嘉義縣','臺南市','高雄市','屏東縣','宜蘭縣','花蓮縣','臺東縣','澎湖縣','金門縣','連江縣' ],park:'taipei-dome',unit:10000,salary:96,level:0,fa:9,internationalFA:9},
   kr:{label:'韓国',league:'KBO',currency:'KRW',start:'03-02',draft:'09-21',region:['ソウル','仁川','京畿','江原','忠清','大田','大邱','慶北','釜山','慶南','光州','全羅','済州'],park:'gocheok',unit:10000,salary:3200,level:2,fa:8,internationalFA:8}
  };
  const schools={
@@ -63,5 +70,5 @@
   const exists=id=>NightPlayers.parks.some(p=>p.id===id);
   return [countries[country].park,fallback,'night'].find(exists);
  };
- window.NightCareerWorldData={countries,schools,phases,leagueCountries,types,positions,roundRobin,roster,name,date,stamp,park};
+ window.NightCareerWorldData={countries,schools,phases,leagueCountries,types,positions,roundRobin,roster,name,date,stamp,park,district};
 })();

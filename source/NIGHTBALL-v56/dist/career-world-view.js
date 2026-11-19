@@ -98,7 +98,7 @@
     section('次の6試合',`<ol class="cw-list">${matches.map(f=>`<li><time>${f.day}</time> ${club(w,f.away)} VS ${club(w,f.home)}</li>`).join('')}</ol>`));
  }
  function squad(w){
-  const id=w.club||'school-player',l=M.lineup(w,id,w.playingCountry,w.day);
+  const id=w.player.club,l=M.lineup(w,id,w.playingCountry,w.day);
   const pos=w.player.pos;
   const peers=w.members(id).filter(p=>p.positions.includes(pos)).sort((a,b)=>M.positionScore(w,b,pos,w.playingCountry)-M.positionScore(w,a,pos,w.playingCountry));
   const cohort=w.people.filter(p=>p.school&&p.club!==id).sort((a,b)=>(w.rivalry[b.id]?.games||0)-(w.rivalry[a.id]?.games||0)).slice(0,12);
@@ -169,7 +169,7 @@
  }
  function life(w){
   const wallet=w.money(w.life.budget[w.currency]||0);
-  const peer=w.members(w.club||'school-player').find(p=>p.id!==w.player.id);
+  const peer=w.members(w.player.club).find(p=>p.id!==w.player.id);
   return section('私生活',`<p>${w.life.housing} · ${wallet} · ${w.life.married?'既婚':'未婚'}</p><div class="cw-grid">
    ${act('life','休養','rest')}${act('life','趣味 '+w.money(w.costs[0]),'hobby')}${act('life','引っ越し '+w.money(w.costs[1]),'move')}
    ${act('life','住居購入 '+w.money(w.costs[2]),'house')}${act('life','家族・恋愛','family')}${act('life','リハビリ','rehab')}

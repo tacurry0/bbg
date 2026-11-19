@@ -17,9 +17,10 @@ const server=createServer(async(req,res)=>{
  const f=resolve(root,'.'+(path==='/'?'/index.html':decodeURIComponent(path)));
  if(!f.startsWith(root+sep)){res.writeHead(403);res.end();return;}
  try{
+  const bytes=await readFile(f);
   res.writeHead(200,{'Content-Type':mime[extname(f)]||'application/octet-stream',
                     'Cache-Control':'no-store'});
-  res.end(await readFile(f));
+  res.end(bytes);
  }catch{res.writeHead(404);res.end();}
 });
 await new Promise(r=>server.listen(0,'127.0.0.1',r));
