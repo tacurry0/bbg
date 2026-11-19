@@ -1,11 +1,11 @@
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
-import {playoffHTML} from './playoff-view.js?v=56';
+import {playoffHTML} from './playoff-view.js?v=73';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=56';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=56';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=56';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=72';
-import { StadiumRenderer } from './stadium3d.js?v=71';
+import { StadiumRenderer } from './stadium3d.js?v=73';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=71';
 (()=>{
  'use strict';
@@ -70,10 +70,26 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=71
  function modal(html,kind){$('modal-content').dataset.kind=kind;if(game?.phase!=='ended')stadiumAudio.stopEffects();if(kind!=='music-settings')ballparkMusic.stop('preview');const same=modalKind===kind;if(!same)lastFocus=document.activeElement;modalKind=kind;$('modal-content').innerHTML=html;$('modal-content').scrollTop=0;$('modal').hidden=false;document.body.style.overflow='hidden';if(!same)setTimeout(()=>{if(modalKind===kind)$('modal-content').querySelector('button')?.focus({preventScroll:true});},30);}
  function closeModal(resume=true){const previous=modalKind;ballparkMusic.stop('preview');$('modal').hidden=true;document.body.style.overflow='';modalKind='';if(resume&&game&&screen==='game'&&game.phase!=='ended')game.paused=false;lastFocus?.focus?.({preventScroll:true});if(resume&&game?.phase==='career-ready')$('career-field-overlay').querySelector('button')?.focus({preventScroll:true});if(resume&&screen==='game'&&game?.phase==='ended'&&!['result','career-result'].includes(previous))finish(game);}
  const modalTitle=(en,ja,close=true)=>`<div class="modal-top"><h2 id="modal-title">${({'今夜の試合':'試合設定','親指の操作・ゲーム設定':'設定','押して、狙って、離す。':'遊び方','ひと休み。':'タイム','練習おつかれさま':'練習結果','選手・ベンチ':'選手データ'})[ja]||ja}</h2>${close?'<button class="close-button" data-action="close" aria-label="閉じる">×</button>':''}</div>`;
- // Pennant progress lives separately from the normal five-inning match.
- let league=null,selectedClub='owls',selectedGamesPerOpponent=settings.pennantGamesPerOpponent,leagueSaveWarned=false;
- try{league=NightPennant.restore(JSON.parse(localStorage.getItem('nightball.pennant')||'null'));}catch{}
- function saveLeague(){try{localStorage.setItem('nightball.pennant',JSON.stringify(league));}catch{if(!leagueSaveWarned){toast('保存容量が足りません。画面を閉じると進行状況を失う場合があります');leagueSaveWarned=true;}}}
+ // Keep the legacy CPBL save key and one independent season for each league.
+ const pennantLeagues=NightPennant.leagues;
+ let selectedLeague=Object.hasOwn(pennantLeagues,settings.pennantLeague)?settings.pennantLeague:'cpbl';
+ let league,selectedClub,selectedGamesPerOpponent,leagueSaveWarned=false;
+ const leagueSaveKey=id=>id==='cpbl'?'nightball.pennant':'nightball.pennant.'+id;
+ function resetLeaguePicker(){
+  selectedClub=league?.clubId||NightPennant.clubsFor(selectedLeague)[0].id;
+  selectedGamesPerOpponent=league?.gamesPerOpponent||settings.pennantGamesPerOpponent;
+ }
+ function loadLeague(id){
+  league=null;
+  try{
+   const restored=NightPennant.restore(JSON.parse(localStorage.getItem(leagueSaveKey(id))||'null'));
+   if(restored?.leagueId===id)league=restored;
+  }catch{}
+  resetLeaguePicker();
+ }
+ loadLeague(selectedLeague);
+ function saveLeague(){try{localStorage.setItem(leagueSaveKey(league.leagueId),JSON.stringify(league));}catch{if(!leagueSaveWarned){toast('保存容量が足りません。画面を閉じると進行状況を失う場合があります');leagueSaveWarned=true;}}}
+ const leagueTabs=()=>`<div class="pennant-league-options" role="group" aria-label="ペナントのリーグ">${Object.entries(pennantLeagues).map(([id,label])=>`<button data-pennant-league="${id}" aria-pressed="${id===selectedLeague}">${label}</button>`).join('')}</div>`;
  const clubBadge=(id,small=false)=>{
   const c=NightCareerLife.foreignClub(id)||NightTeams.get(id);
   return `<span class="club-badge ${small?'small':''}" style="--club:${c.color};--accent:${c.accent}" aria-hidden="true">${c.logo?`<img src="${c.logo}" alt="">`:`<b class="career-foreign-mark">${c.scoreMark}</b>`}</span>`;
@@ -81,7 +97,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=71
  function showLeagueScreen(){$('career').hidden=true;$('apbc-cup').hidden=true;closeModal(false);screen='pennant';$('home').hidden=true;$('game').hidden=true;$('pennant').hidden=false;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'pennant'},'',location.href);window.scrollTo(0,0);}
  function leaguePicker(){
   showLeagueScreen();
-  $('pennant').innerHTML=`<div class="league-heading"><button class="text-button" data-league-action="home">◀ 戻る</button><h1>ペナント設定</h1></div><section class="season-length-picker"><div class="season-length-heading"><h2>対戦数</h2><strong>${selectedGamesPerOpponent*5}<small>試合</small></strong></div><div class="season-length-options" role="group" aria-label="各相手との対戦数">${Array.from({length:10},(_,i)=>i+1).map(n=>`<button data-league-games="${n}" class="${n===selectedGamesPerOpponent?'selected':''}" aria-pressed="${n===selectedGamesPerOpponent}">${n}<small>試合ずつ</small></button>`).join('')}</div></section><h2 class="arcade-section-title">球団選択</h2><div class="club-grid">${NightTeams.all.map(c=>`<button class="club-choice ${selectedClub===c.id?'selected':''}" data-club-choice="${c.id}" aria-label="${c.name}" aria-pressed="${selectedClub===c.id}">${clubBadge(c.id)}<strong>${c.short}</strong><span class="choice-check">${selectedClub===c.id?'✓':''}</span></button>`).join('')}</div><div class="league-rule"><b>1回制・2アウト満塁</b><p>同点は延長。各球団と${selectedGamesPerOpponent}試合。上位3球団でプレーオフ。</p></div><button class="primary-button" data-league-action="create">${NightTeams.get(selectedClub).short}で開始</button>${league?'<button class="secondary-button" data-league-action="dashboard">進行中のペナントへ</button><p class="league-footnote">開始すると前のペナントを置き換えます。</p>':''}`;
+  const clubs=NightPennant.clubsFor(selectedLeague);
+  $('pennant').innerHTML=`<div class="league-heading"><button class="text-button" data-league-action="home">◀ 戻る</button><h1>ペナント設定</h1></div>${leagueTabs()}<section class="season-length-picker"><div class="season-length-heading"><h2>対戦数</h2><strong>${selectedGamesPerOpponent*(clubs.length-1)}<small>試合</small></strong></div><div class="season-length-options" role="group" aria-label="各相手との対戦数">${Array.from({length:10},(_,i)=>i+1).map(n=>`<button data-league-games="${n}" class="${n===selectedGamesPerOpponent?'selected':''}" aria-pressed="${n===selectedGamesPerOpponent}">${n}<small>試合ずつ</small></button>`).join('')}</div></section><h2 class="arcade-section-title">球団選択</h2><div class="club-grid">${clubs.map(c=>`<button class="club-choice ${selectedClub===c.id?'selected':''}" data-club-choice="${c.id}" aria-label="${c.name}" aria-pressed="${selectedClub===c.id}">${clubBadge(c.id)}<strong>${c.short}</strong><span class="choice-check">${selectedClub===c.id?'✓':''}</span></button>`).join('')}</div><div class="league-rule"><b>1回制・2アウト満塁</b><p>同点は延長。各球団と${selectedGamesPerOpponent}試合。上位3球団でプレーオフ。</p></div><button class="primary-button" data-league-action="create">${NightTeams.get(selectedClub).short}で開始</button>${league?'<button class="secondary-button" data-league-action="dashboard">進行中のペナントへ</button><p class="league-footnote">開始すると同じリーグのペナントを置き換えます。</p>':''}`;
  }
  function standingsHTML(){
   const rows=league.standings();
@@ -95,10 +112,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=71
   if(!league){leaguePicker();return;}if(league.postseason){playoffDashboard();return;}showLeagueScreen();
   const f=league.activeFixture,r=league.results[f.id],isHome=f.home===league.clubId,opponent=NightTeams.get(isHome?f.away:f.home),row=league.standings().find(s=>s.id===league.clubId),won=r&&(isHome?r.homeScore>r.awayScore:r.awayScore>r.homeScore),ownScore=r?(isHome?r.homeScore:r.awayScore):0,oppScore=r?(isHome?r.awayScore:r.homeScore):0;
   const leaders=league.standings().filter(s=>s.rank===1),champion=league.completed?league.playoffSeeds()[0].clubId===league.clubId:leaders.some(s=>s.id===league.clubId),resume=!!league.currentGame;
-  $('pennant').innerHTML=`<div class="league-heading"><button class="text-button" data-league-action="home">← ホーム</button><h1>ペナント</h1></div><div class="league-club-header">${clubBadge(league.clubId)}<div><span class="eyebrow">YOUR CLUB</span><h1>${league.club.short}</h1><div class="season-summary"><span><b>${row.rank}</b>位</span><span><b>${row.wins}</b>勝 <b>${row.losses}</b>敗</span><span>得失差 <b>${row.diff>0?'+':''}${row.diff}</b></span></div></div></div><div class="season-progress"><i style="width:${league.played/league.totalGames*100}%"></i></div><div class="season-caption"><span>${league.completed?'全日程終了':`第${league.round+1}戦`}</span><span>${league.played} / ${league.totalGames} 試合終了</span></div>${league.completed?`<div class="champion-banner"><span>SEASON FINALE</span><strong>${champion?'シーズン1位':'シーズン終了'}</strong><p>${champion?'プレーオフは決勝から出場。':`あなたの球団は${row.rank}位でシーズン終了。`}<br>${leaders.map(s=>NightTeams.get(s.id).short).join(' / ')}${leaders.length>1?'が同率首位':'が通常シーズン首位'}</p></div>`:''}<section class="league-match-card ${r?won?'won':'lost':''}"><div class="league-card-kicker"><span>${r?'試合結果':resume?'試合中':'次の試合'}</span><span>第${league.round+1}戦 · ${isHome?'後攻':'先攻'}</span></div>${r?`<div class="league-result-title">${won?'勝 利':'敗 戦'}</div><div class="league-versus"><div>${clubBadge(league.clubId)}<b>${league.club.short}</b></div><strong class="final-score"><b>${ownScore}</b><span>−</span><b>${oppScore}</b></strong><div>${clubBadge(opponent.id)}<b>${opponent.short}</b></div></div><p>試合終了${r.innings>1?` ・ 延長${r.innings}回`:''}</p>`:`<div class="league-versus"><div>${clubBadge(league.clubId)}<b>${league.club.short}</b></div><span class="versus-label">VS</span><div>${clubBadge(opponent.id)}<b>${opponent.short}</b></div></div><p>${isHome?'あなたは後攻。投球からスタート。':'あなたは先攻。打撃からスタート。'}<br>1回制 / 2アウト満塁 / 同点は延長</p>`}<button class="primary-button" data-league-action="${r?league.completed?'playoff-start':'next':'play'}">${r?league.completed?'プレーオフへ':'次の試合へ':resume?'再開':'試合開始'}　↗</button>${r?.report?resultReportHTML(r.report):''}${!r&&!resume?'<button class="league-inline-button" data-league-action="lineup">オーダー編成</button>':''}${r&&game?.mode==='pennant'&&game.leagueFixtureId===f.id?'<button class="league-inline-button" data-league-action="box">この試合の打撃成績</button>':''}</section>${r?`<div class="league-section-head"><h2>第${league.round+1}節の全結果</h2><span>先攻　／　後攻</span></div><div class="fixture-list">${league.schedule[league.round].map(fixtureHTML).join('')}</div>`:''}${standingsHTML()}<details class="league-schedule"><summary>日程・結果 <span>＋</span></summary>${league.schedule.map((fixtures,i)=>`<div class="schedule-round"><b>第${i+1}節 ${i===league.round?'・現在':''}</b>${fixtures.map(fixtureHTML).join('')}</div>`).join('')}</details><div class="league-rule compact-rule"><b>2アウト満塁</b><p>同点は延長。延長も2アウト満塁。走塁は設定で切替。</p></div><button class="secondary-button" data-league-action="roster">選手データ</button><button class="league-inline-button" data-league-action="picker">新しいペナント</button><p class="league-footnote">同節のほか2試合は自動進行。球団能力をもとに同じ特別ルールで結果を計算します。</p>`;
+  $('pennant').innerHTML=`<div class="league-heading"><button class="text-button" data-league-action="home">← ホーム</button><h1>ペナント</h1></div>${leagueTabs()}<div class="league-club-header">${clubBadge(league.clubId)}<div><span class="eyebrow">YOUR CLUB</span><h1>${league.club.short}</h1><div class="season-summary"><span><b>${row.rank}</b>位</span><span><b>${row.wins}</b>勝 <b>${row.losses}</b>敗</span><span>得失差 <b>${row.diff>0?'+':''}${row.diff}</b></span></div></div></div><div class="season-progress"><i style="width:${league.played/league.totalGames*100}%"></i></div><div class="season-caption"><span>${league.completed?'全日程終了':`第${league.round+1}戦`}</span><span>${league.played} / ${league.totalGames} 試合終了</span></div>${league.completed?`<div class="champion-banner"><span>SEASON FINALE</span><strong>${champion?'シーズン1位':'シーズン終了'}</strong><p>${champion?'プレーオフは決勝から出場。':`あなたの球団は${row.rank}位でシーズン終了。`}<br>${leaders.map(s=>NightTeams.get(s.id).short).join(' / ')}${leaders.length>1?'が同率首位':'が通常シーズン首位'}</p></div>`:''}<section class="league-match-card ${r?won?'won':'lost':''}"><div class="league-card-kicker"><span>${r?'試合結果':resume?'試合中':'次の試合'}</span><span>第${league.round+1}戦 · ${isHome?'後攻':'先攻'}</span></div>${r?`<div class="league-result-title">${won?'勝 利':'敗 戦'}</div><div class="league-versus"><div>${clubBadge(league.clubId)}<b>${league.club.short}</b></div><strong class="final-score"><b>${ownScore}</b><span>−</span><b>${oppScore}</b></strong><div>${clubBadge(opponent.id)}<b>${opponent.short}</b></div></div><p>試合終了${r.innings>1?` ・ 延長${r.innings}回`:''}</p>`:`<div class="league-versus"><div>${clubBadge(league.clubId)}<b>${league.club.short}</b></div><span class="versus-label">VS</span><div>${clubBadge(opponent.id)}<b>${opponent.short}</b></div></div><p>${isHome?'あなたは後攻。投球からスタート。':'あなたは先攻。打撃からスタート。'}<br>1回制 / 2アウト満塁 / 同点は延長</p>`}<button class="primary-button" data-league-action="${r?league.completed?'playoff-start':'next':'play'}">${r?league.completed?'プレーオフへ':'次の試合へ':resume?'再開':'試合開始'}　↗</button>${r?.report?resultReportHTML(r.report):''}${!r&&!resume?'<button class="league-inline-button" data-league-action="lineup">オーダー編成</button>':''}${r&&game?.mode==='pennant'&&game.leagueFixtureId===f.id?'<button class="league-inline-button" data-league-action="box">この試合の打撃成績</button>':''}</section>${r?`<div class="league-section-head"><h2>第${league.round+1}節の全結果</h2><span>先攻　／　後攻</span></div><div class="fixture-list">${league.schedule[league.round].map(fixtureHTML).join('')}</div>`:''}${standingsHTML()}<details class="league-schedule"><summary>日程・結果 <span>＋</span></summary>${league.schedule.map((fixtures,i)=>`<div class="schedule-round"><b>第${i+1}節 ${i===league.round?'・現在':''}</b>${fixtures.map(fixtureHTML).join('')}</div>`).join('')}</details><div class="league-rule compact-rule"><b>2アウト満塁</b><p>同点は延長。延長も2アウト満塁。走塁は設定で切替。</p></div><button class="secondary-button" data-league-action="roster">選手データ</button><button class="league-inline-button" data-league-action="picker">新しいペナント</button><p class="league-footnote">同節のほか${league.schedule[league.round].length-1}試合は自動進行。球団能力をもとに同じ特別ルールで結果を計算します。</p>`;
  }
  function playoffDashboard(){
-  showLeagueScreen();$('pennant').innerHTML=playoffHTML(league)+`<details class="league-schedule"><summary>通常シーズンの順位</summary>${standingsHTML()}</details><button class="secondary-button" data-league-action="roster">選手データ</button>`;
+  showLeagueScreen();$('pennant').innerHTML=playoffHTML(league,leagueTabs())+`<details class="league-schedule"><summary>通常シーズンの順位</summary>${standingsHTML()}</details><button class="secondary-button" data-league-action="roster">選手データ</button>`;
  }
  function playoffReport(){
   const report=league?.activeResult?.report;if(!report)return;
@@ -125,11 +142,20 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=71
  $('pennant-mode').onclick=leagueDashboard;
  $('pennant').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;unlockAudio();
+  if(b.dataset.pennantLeague){
+   const id=b.dataset.pennantLeague;
+   if(id!==selectedLeague&&Object.hasOwn(pennantLeagues,id)){
+    if(game?.mode==='pennant')game=null;
+    selectedLeague=settings.pennantLeague=id;
+    save();loadLeague(id);leagueDashboard();
+   }
+   return;
+  }
   if(b.dataset.leagueGames){selectedGamesPerOpponent=Number(b.dataset.leagueGames);settings.pennantGamesPerOpponent=selectedGamesPerOpponent;save();const scroll=window.scrollY;leaguePicker();window.scrollTo(0,scroll);return;}
   if(b.dataset.clubChoice){selectedClub=b.dataset.clubChoice;const scroll=window.scrollY;leaguePicker();window.scrollTo(0,scroll);return;}
   switch(b.dataset.leagueAction){
    case'home':home();break;
-   case'picker':selectedClub=league?.clubId||'owls';selectedGamesPerOpponent=league?.gamesPerOpponent||settings.pennantGamesPerOpponent;leaguePicker();break;
+   case'picker':resetLeaguePicker();leaguePicker();break;
    case'dashboard':leagueDashboard();break;
    case'create':league=new NightPennant(selectedClub,selectedGamesPerOpponent);saveLeague();game=null;leagueDashboard();break;
    case'play':playLeague();break;

@@ -1,5 +1,5 @@
 /* NIGHTBALL NPB 2026 — 12 NPB franchises + Oisix Niigata and Hayate Shizuoka.
- * Non-invasive extension: CPBL NightTeams.all and its six-club pennant stay unchanged.
+ * CPBL remains the default club register, with NPB accessible by its own league key.
  * All abilities come from frozen official individual 2026 stat lines in npb-data.js.
  */
 (()=>{
@@ -43,7 +43,7 @@
  NightTeams.npb=teams;
  NightTeams.npbDataVersion=input.version;
  NightTeams.npbRatingsSource=input.source;
- // Normal CPBL pennant, season archives and career mode remain six-club-only.
+ // Keep the match selector separate from the per-league club lists.
  NightTeams.matchTeams=[...cpbl,...teams];
  // Includes 6 CPBL, 4 APBC and 14 NPB for practice and HR derby.
  NightTeams.playable=[...cpbl,...countries,...teams];

@@ -36,3 +36,35 @@ for(let r=0;r<20;r++){
 assert(season.completed);assert.equal(season.next(),false);const table=season.standings();assert(table.every(r=>r.played===20&&r.wins+r.losses===20));assert.equal(table.reduce((n,r)=>n+r.wins,0),60);assert.equal(table.reduce((n,r)=>n+r.losses,0),60);assert.equal(table.reduce((n,r)=>n+r.diff,0),0);
 assert.throws(()=>new NightPennant('invalid'));assert.throws(()=>new NightPennant('owls').completeRound({homeScore:0,awayScore:0}));
 console.log('PASS: balanced 60-game schedule, 180 unique players, both control sides, loaded extra innings through 9th, walk-off, visitor win, pitcher change, saves, normal five innings, full season and standings.');
+
+for(const schema of [1,2]){
+ const legacy=JSON.parse(JSON.stringify(season));legacy.schema=schema;delete legacy.leagueId;
+ if(schema===1)delete legacy.gamesPerOpponent;
+ const migrated=NightPennant.restore(legacy);
+ assert.equal(migrated.leagueId,'cpbl');assert.equal(migrated.played,20);
+}
+for(const file of ['npb-data','npb-rosters','kbo-data','kbo-rosters'])vm.runInThisContext(fs.readFileSync('dist/'+file+'.js','utf8'),{filename:file+'.js'});
+for(const [id,clubId,count] of [['npb','npb-a',14],['kbo','kbo-hh',10]]){
+ let p=new NightPennant(clubId,2);
+ const fixtures=p.schedule.flat(),clubIds=p.clubs.map(c=>c.id);
+ assert.equal(p.leagueId,id);assert.equal(clubIds.length,count);assert.equal(p.totalGames,2*(count-1));
+ for(const r of p.schedule)assert.deepEqual(r.flatMap(f=>[f.home,f.away]).sort(),clubIds.slice().sort());
+ for(const home of clubIds)for(const away of clubIds.filter(id=>id!==home))assert.equal(fixtures.filter(f=>f.home===home&&f.away===away).length,1);
+ const first=p.fixture,match=fresh({userHome:first.home===clubId,homeTeamId:first.home,awayTeamId:first.away});
+ match.beginHalf();loaded(match);assert.deepEqual([match.teams.home.id,match.teams.away.id],[first.home,first.away]);
+ for(let r=0;r<p.totalGames;r++){
+  assert(p.completeRound(p.simulate(p.fixture)));
+  if(r<p.totalGames-1)assert(p.next());
+ }
+ assert(p.standings().every(row=>row.played===p.totalGames));
+ assert(p.startPlayoffs());
+ p=NightPennant.restore(JSON.parse(JSON.stringify(p)));
+ assert(p.postseason.seeds.every(seed=>clubIds.includes(seed.clubId)));
+ while(!p.postseasonCompleted){
+  if(p.activeRoundDone)assert(p.nextPlayoff());
+  else if(p.userInActiveFixture)assert(p.completeActiveGame(p.simulate(p.activeFixture)));
+  else assert(p.simulatePlayoffGame());
+ }
+ assert(clubIds.includes(NightPennant.restore(JSON.parse(JSON.stringify(p))).postseason.champion));
+}
+console.log('PASS: legacy CPBL saves, NPB/KBO league schedules, match lineups, standings, playoffs and saves.');

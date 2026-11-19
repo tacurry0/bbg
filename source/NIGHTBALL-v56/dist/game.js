@@ -66,7 +66,7 @@ const conditions=[
 ];
 window.NightGame=class NightGame{
  static ballVisualScale(height,distance){
-  return clamp(1.22-Math.max(0,height-1)*.035-Math.max(0,distance-12)*.0034,.34,1.22);
+  return 1.22/(1+Math.max(0,height-1)*.032+Math.max(0,distance-12)*.003);
  }
  static conditionInfo(level=0){return conditions[clamp(Math.round(Number(level)||0),-2,2)+2];}
  static TYPES=TYPES;

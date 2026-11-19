@@ -1,4 +1,4 @@
-/* Six CPBL clubs; configurable complete round-robin seasons. */
+/* Configurable round-robin seasons for CPBL, NPB and KBO. */
 (()=>{
  'use strict';
  const P=NightPlayers;
@@ -13,24 +13,48 @@
  ];
  const clubs=definitions.map(([id,name,mark,asset,color,accent,tag,description,park])=>({id,name,short:name,mark,logo:`./assets/clubs/${asset}.png`,color,accent,tag,description,park,...P.rosters[id]}));
  window.NightTeams={all:clubs,get:id=>clubs.find(c=>c.id===id)||clubs[0]};
+ const leagues={cpbl:'CPBL',npb:'NPB',kbo:'KBO'};
+ const clubsFor=id=>Object.hasOwn(leagues,id)?id==='cpbl'?clubs:NightTeams[id]||[]:[];
  const hash=s=>{let h=2166136261;for(const c of s)h=Math.imul(h^c.charCodeAt(0),16777619);return h>>>0;};
  const random=seed=>()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};
  class NightPennant{
+  static leagues=leagues;
+  static clubsFor=clubsFor;
   constructor(clubId,gamesPerOpponent=4){
-   if(!clubs.some(c=>c.id===clubId))throw Error('Unknown club');
+   const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
+   if(!leagueId)throw Error('Unknown club');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.schema=2;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
-   const rotation=clubs.map(c=>c.id),base=[];
-   for(let r=0;r<5;r++){const pairs=[];for(let i=0;i<3;i++){const a=rotation[i],b=rotation[5-i];pairs.push((r+i)%2?[b,a]:[a,b]);}base.push(pairs);rotation.splice(1,0,rotation.pop());}
-   this.schedule=Array.from({length:gamesPerOpponent*5},(_,r)=>base[r%5].map(([h,a],i)=>({id:`r${r+1}-${i+1}`,round:r,home:Math.floor(r/5)%2?a:h,away:Math.floor(r/5)%2?h:a})));
+   this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   const rotation=this.clubs.map(c=>c.id),base=[],rounds=rotation.length-1;
+   for(let r=0;r<rounds;r++){
+    const pairs=[];
+    for(let i=0;i<rotation.length/2;i++){
+     const a=rotation[i],b=rotation[rounds-i];
+     pairs.push((r+i)%2?[b,a]:[a,b]);
+    }
+    base.push(pairs);rotation.splice(1,0,rotation.pop());
+   }
+   this.schedule=Array.from({length:gamesPerOpponent*rounds},(_,r)=>{
+    const reverse=Math.floor(r/rounds)%2;
+    return base[r%rounds].map(([h,a],i)=>({id:`r${r+1}-${i+1}`,round:r,home:reverse?a:h,away:reverse?h:a}));
+   });
   }
   static restore(s){
-   if(![1,2].includes(s?.schema)||!clubs.some(c=>c.id===s.clubId)||!Array.isArray(s.schedule))return null;
-   const count=s.schema===1?4:s.gamesPerOpponent;
-   if(!Number.isInteger(count)||count<1||count>10||s.schedule.length!==count*5||!Number.isInteger(s.round)||s.round<0||s.round>=s.schedule.length||s.schedule.some(r=>!Array.isArray(r)||r.length!==3))return null;
-   const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:2,gamesPerOpponent:count});p.results ||= {};p.postseason ||= null;if(p.postseason&&!p.validPostseason())return null;return p;
+   if(![1,2,3].includes(s?.schema)||!Array.isArray(s.schedule))return null;
+   const leagueId=s.schema<3?'cpbl':s.leagueId,count=s.schema===1?4:s.gamesPerOpponent;
+   const clubIds=new Set(clubsFor(leagueId).map(c=>c.id)),size=clubIds.size;
+   if(!clubIds.has(s.clubId)||!Number.isInteger(count)||count<1||count>10||
+    s.schedule.length!==count*(size-1)||!Number.isInteger(s.round)||s.round<0||s.round>=s.schedule.length)return null;
+   for(const round of s.schedule){
+    if(!Array.isArray(round)||round.length!==size/2)return null;
+    const playing=new Set(round.flatMap(f=>[f?.home,f?.away]));
+    if(playing.size!==size||[...playing].some(id=>!clubIds.has(id)))return null;
+   }
+   const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:3,leagueId,gamesPerOpponent:count});
+   p.results ||= {};p.postseason ||= null;if(p.postseason&&!p.validPostseason())return null;return p;
   }
   get totalGames(){return this.schedule.length;}
+  get clubs(){return clubsFor(this.leagueId);}
   get club(){return NightTeams.get(this.clubId);}
   get fixture(){return this.schedule[this.round].find(f=>[f.home,f.away].includes(this.clubId));}
   get roundDone(){return !!this.results[this.fixture.id];}
@@ -62,7 +86,8 @@
    const rows=this.standings();
    const direct=(a,b)=>Object.values(this.results).filter(g=>[g.home,g.away].includes(a)&&[g.home,g.away].includes(b)).reduce((sum,g)=>sum+((g.homeScore>g.awayScore?g.home:g.away)===a?1:-1),0);
    // Reuse league ranking, resolve a completely tied cutoff by head-to-head, runs scored, then club order.
-   rows.sort((a,b)=>b.wins-a.wins||a.losses-b.losses||b.diff-a.diff||-direct(a.id,b.id)||b.for-a.for||clubs.findIndex(c=>c.id===a.id)-clubs.findIndex(c=>c.id===b.id));
+   const order=this.clubs.map(c=>c.id);
+   rows.sort((a,b)=>b.wins-a.wins||a.losses-b.losses||b.diff-a.diff||-direct(a.id,b.id)||b.for-a.for||order.indexOf(a.id)-order.indexOf(b.id));
    return rows.slice(0,3).map((r,i)=>({clubId:r.id,seed:i+1}));
   }
   startPlayoffs(){
@@ -93,7 +118,7 @@
    return this.completePlayoffGame(this.simulate(this.activeFixture));
   }
   validPostseason(){
-   const p=this.postseason;if(p.schema!==1||!this.regularCompleted||!Array.isArray(p.seeds)||p.seeds.length!==3||new Set(p.seeds.map(s=>s.clubId)).size!==3||p.seeds.some((s,i)=>s.seed!==i+1||!clubs.some(c=>c.id===s.clubId))||!['qualifier','final','complete'].includes(p.stage)||typeof p.awaitingNext!=='boolean')return false;
+   const p=this.postseason;if(p.schema!==1||!this.regularCompleted||!Array.isArray(p.seeds)||p.seeds.length!==3||new Set(p.seeds.map(s=>s.clubId)).size!==3||p.seeds.some((s,i)=>s.seed!==i+1||!this.clubs.some(c=>c.id===s.clubId))||!['qualifier','final','complete'].includes(p.stage)||typeof p.awaitingNext!=='boolean')return false;
    const valid=(s,id,target,higher,lower)=>{
     if(!s||s.id!==id||s.target!==target||s.higher!==higher||s.lower!==lower||higher===lower||!Array.isArray(s.games)||s.games.length>target*2-1)return false;
     const counts={[higher]:0,[lower]:0};let won=null;
@@ -126,11 +151,12 @@
    return {homeScore:scores.home,awayScore:scores.away,innings};
   }
   standings(){
-   const rows=clubs.map(c=>({id:c.id,played:0,wins:0,losses:0,for:0,against:0}));
+   const order=this.clubs.map(c=>c.id);
+   const rows=order.map(id=>({id,played:0,wins:0,losses:0,for:0,against:0}));
    const byId=Object.fromEntries(rows.map(r=>[r.id,r]));
    Object.values(this.results).forEach(g=>{const h=byId[g.home],a=byId[g.away];h.played++;a.played++;h.for+=g.homeScore;h.against+=g.awayScore;a.for+=g.awayScore;a.against+=g.homeScore;if(g.homeScore>g.awayScore){h.wins++;a.losses++;}else{a.wins++;h.losses++;}});
    rows.forEach(r=>{r.pct=r.played?r.wins/r.played:0;r.diff=r.for-r.against;});
-   rows.sort((a,b)=>b.wins-a.wins||a.losses-b.losses||b.diff-a.diff||clubs.findIndex(c=>c.id===a.id)-clubs.findIndex(c=>c.id===b.id));
+   rows.sort((a,b)=>b.wins-a.wins||a.losses-b.losses||b.diff-a.diff||order.indexOf(a.id)-order.indexOf(b.id));
    rows.forEach((r,i)=>{const prev=rows[i-1];r.rank=prev&&r.wins===prev.wins&&r.losses===prev.losses&&r.diff===prev.diff?prev.rank:i+1;r.behind=((rows[0].wins-r.wins)+(r.losses-rows[0].losses))/2;});return rows;
   }
  }

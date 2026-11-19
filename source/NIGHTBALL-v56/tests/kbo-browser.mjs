@@ -36,6 +36,27 @@ try{
  await page.waitForFunction(()=>!!window.NightKBO&&!!window.NightNPB&&!!window.NightTeams,{timeout:25000});
  assert.deepEqual(await page.evaluate(()=>[NightTeams.all.length,NightNPB.teams.length,NightKBO.teams.length]),
   [6,14,10],'all three domestic league registers are available');
+ await page.locator('#pennant-mode').click();
+ assert.equal(await page.locator('[data-club-choice]').count(),6);
+ for(const [id,club,count,total] of [['npb','npb-a',14,13],['kbo','kbo-hh',10,9]]){
+  await page.locator('[data-pennant-league="'+id+'"]').click();
+  assert.equal(await page.locator('[data-club-choice]').count(),count);
+  await page.locator('[data-league-games="1"]').click();
+  assert.match(await page.locator('.season-length-heading strong').innerText(),new RegExp('^'+total+'\\s*試合$'));
+  await page.locator('[data-club-choice="'+club+'"]').click();
+  await page.locator('[data-league-action="create"]').click();
+  assert.equal(await page.locator('.standings-table tbody tr').count(),count);
+  await page.locator('[data-league-action="play"]').click();
+  assert.equal(await page.locator('.squad-starter-row').count(),9);
+  await page.locator('[data-action="lineup-back"]').click();
+ }
+ await page.reload({waitUntil:'domcontentloaded'});
+ await page.locator('#pennant-mode').click();
+ assert.equal(await page.locator('[data-pennant-league="kbo"]').getAttribute('aria-pressed'),'true');
+ assert.equal(await page.locator('.standings-table tbody tr').count(),10);
+ await page.locator('[data-pennant-league="npb"]').click();
+ assert.equal(await page.locator('.standings-table tbody tr').count(),14);
+ await page.locator('[data-league-action="home"]').click();
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-match-group="kbo"]').click();
  assert.equal(await page.locator('[data-match-club^="kbo-"]').count(),10);
@@ -59,6 +80,17 @@ try{
  assert.equal(await page.locator('.squad-starter-row').count(),9,'full nine-player roster');
  assert.match(await page.locator('.squad-starter-row .squad-name').first().innerText(),/^[ァ-ヺー・]+$/u);
  assert((await page.locator('.editor-pitchers summary').innerText()).includes(longPitcher));
+ await page.locator('.editor-pitchers summary').click();
+ for(const width of [320,412]){
+  await page.setViewportSize({width,height:915});
+  const clipped=await page.locator('.squad-name, .editor-pitchers summary>b').evaluateAll(names=>names.filter(name=>{
+   const box=name.getBoundingClientRect(), parent=name.parentElement.getBoundingClientRect();
+   const range=document.createRange();range.selectNodeContents(name);
+   return [...range.getClientRects()].some(line=>line.left<box.left-1||line.right>box.right+1||
+    line.top<parent.top-1||line.bottom>parent.bottom+1);
+  }).map(name=>name.textContent));
+  assert.deepEqual(clipped,[],'lineup names fit at '+width+'px');
+ }
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>document.querySelector('#game')&&!document.querySelector('#game').hidden,{timeout:12000});
  await page.waitForFunction(()=>!!document.querySelector('#game-canvas')?.dataset.graphics,{timeout:15000});

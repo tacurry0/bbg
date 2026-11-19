@@ -821,6 +821,14 @@ export class StadiumRenderer {
  resize(){const r=this.canvas.getBoundingClientRect();if(!r.width||!r.height)return;if(this.width===r.width&&this.height===r.height)return;this.width=r.width;this.height=r.height;this.heroRendered=false;this.gl.setSize(r.width,r.height,false);this.camera.aspect=r.width/r.height;this.camera.updateProjectionMatrix();if(this.hud){const d=Math.min(devicePixelRatio||1,2);this.hud.width=r.width*d;this.hud.height=r.height*d;this.hud.style.width=r.width+'px';this.hud.style.height=r.height+'px';}}
  screenToAim(x,y){this.camera.updateMatrixWorld();this.raycaster.setFromCamera(new T.Vector2(x/this.width*2-1,1-y/this.height*2),this.camera);const point=new T.Vector3();if(!this.raycaster.ray.intersectPlane(this.aimPlane,point))return{x:0,y:0};return{x:point.x/.68,y:(1.25-point.y)/.62};}
  project(x,y,z){const p=new T.Vector3(x,y,-z).project(this.camera);return{x:(p.x*.5+.5)*this.width,y:(-.5*p.y+.5)*this.height};}
+ fieldBallRadius(ball,throwing){
+  const depth=-new T.Vector3(ball.x,ball.z+.08,-ball.y).applyMatrix4(this.camera.matrixWorldInverse).z;
+  if(depth<this.camera.near)return 0;
+  const focalPixels=this.height*this.camera.projectionMatrix.elements[5]/2;
+  // Keep a readable marker over the mesh while letting depth and altitude change its size.
+  const prominence=NightGame.ballVisualScale(ball.z,0)/NightGame.ballVisualScale(0,0);
+  return .85+(throwing?4.5:5.8)*focalPixels/(focalPixels+depth*12)*prominence;
+ }
  aimPoint(x,y){return this.project(x*.68,1.25-y*.62,.6);}
  drawHUD(g){
   const c=this.ctx,d=this.hud.width/this.width;c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,this.width,this.height);if(!g||this.overviewMode)return;if(this.fieldMode){
@@ -848,7 +856,9 @@ export class StadiumRenderer {
     }
    }
    if(field.manual?.secured&&!th||field.resolved)return;
-   const point=this.project(b.x,b.z+.08,b.y),size=th?3.2:3.8;
+   const size=this.fieldBallRadius(b,!!th);
+   if(!size)return;
+   const point=this.project(b.x,b.z+.08,b.y);
    if(!visible(point,0)){
     const x=clamp(point.x,12,this.width-12),y=clamp(point.y,13,this.height-17);
     if(!Number.isFinite(x+y))return;
@@ -859,7 +869,7 @@ export class StadiumRenderer {
     return;
    }
    c.beginPath();c.arc(point.x,point.y,size,0,Math.PI*2);
-   c.strokeStyle='#111a25e6';c.lineWidth=2.4;c.stroke();c.fillStyle='#fff5dc';c.fill();
+   c.strokeStyle='#111a25e6';c.lineWidth=Math.min(2.4,size*.6);c.stroke();c.fillStyle='#fff5dc';c.fill();
    return;
   }
 

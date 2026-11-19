@@ -338,9 +338,31 @@ assert.equal(vfxGame.hit.kind, 'hr', 'Ball cleared the fence for a Home Run');
 assert(vfx.crowdUniforms.uCrowdExcite.value > 0.5, 'Crowd excitement rises on Home Run');
 console.log('PASS 6: WebGL shader hooks and 3D StadiumVFX (ribbon, swing arc, shockwave, sparks, crowd excitement) verified.');
 
+// The line-of-sight overlay must vary as well as the underlying 3D ball.
+renderer.camera.position.set(0,10,20);
+renderer.camera.lookAt(0,7,-25);
+renderer.camera.updateMatrixWorld();
+const oldHud=renderer.hud,oldContext=renderer.ctx;
+let paintedRadius=0;
+renderer.hud={width:renderer.width};
+renderer.ctx={setTransform(){},clearRect(){},beginPath(){},arc(x,y,r){paintedRadius=r;},stroke(){},fill(){}};
+renderer.fieldMode=true;
+renderer.overviewMode=false;
+const drawFieldBall=(y,z)=>{
+  paintedRadius=0;
+  renderer.drawHUD({replayView:true,field:{ball:{x:0,y,z}}});
+  assert(paintedRadius>0,'ball marker is visible');
+  return paintedRadius;
+};
+const nearBall=drawFieldBall(20,1),highBall=drawFieldBall(20,23),farBall=drawFieldBall(70,1);
+assert(nearBall>highBall*1.3,'same-depth fly ball shrinks visibly as it rises');
+assert(nearBall>farBall*1.25,'ground-level ball shrinks at a greater camera distance');
+assert.equal(drawFieldBall(20,1),nearBall,'ball grows again on descent');
+renderer.hud=oldHud;renderer.ctx=oldContext;
+
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v72-kbo-japanese-hud'));
+assert(swCode.includes('nightball-v73-pennant-ball-lineup'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
