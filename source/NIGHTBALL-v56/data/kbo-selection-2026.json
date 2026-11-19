@@ -1,0 +1,1572 @@
+{
+  "HT": {
+    "club": "KIAタイガース",
+    "batters": [
+      {
+        "id": "kbo-ht-b-52605",
+        "name": "KIM Do Yeong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-62947",
+        "name": "NA Sung Bum",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-65653",
+        "name": "KIM Ho Ryung",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-55636",
+        "name": "PARK Jae Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-78603",
+        "name": "KIM Sun Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-56626",
+        "name": "CASTRO Harold",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-68646",
+        "name": "HAN Jun Su",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-78122",
+        "name": "KIM Tae Gun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-62700",
+        "name": "HA Ju Suk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-66614",
+        "name": "KIM Kyu Sung",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-67609",
+        "name": "PARK Jung Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-52634",
+        "name": "PARK Sang Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-56632",
+        "name": "DALE Jarryd",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-56613",
+        "name": "ADERLIN Rodriguez",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-69727",
+        "name": "BYUN Woo Hyuk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-b-69636",
+        "name": "OH Sun Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HT"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-ht-p-54640",
+        "name": "NAILE James",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-55633",
+        "name": "OLLER Adam",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-77637",
+        "name": "YANG Hyeon Jong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-52641",
+        "name": "HWANG Dong Ha",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-54843",
+        "name": "SHIRAKAWA Keisho",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-51648",
+        "name": "LEE Eui Lee",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-63342",
+        "name": "CHO Sang Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-54610",
+        "name": "SUNG Yeong Tak",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-50662",
+        "name": "JUNG Hai Young",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-66609",
+        "name": "JEON Sang Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-51994",
+        "name": "HAN Jae Seung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-65769",
+        "name": "KIM Beom Su",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-60768",
+        "name": "LEE Tae Yang",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      },
+      {
+        "id": "kbo-ht-p-53609",
+        "name": "KWAK Do Gyu",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HT"
+      }
+    ]
+  },
+  "SS": {
+    "club": "サムスン・ライオンズ",
+    "batters": [
+      {
+        "id": "kbo-ss-b-54400",
+        "name": "DIAZ Lewin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-72443",
+        "name": "CHOI Hyoung Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-62234",
+        "name": "RYU Ji Hyuk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-50458",
+        "name": "KIM Ji Chan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-62404",
+        "name": "KOO Ja Wook",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-67449",
+        "name": "KIM Seong Yoon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-65586",
+        "name": "JEON Byeong Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-69418",
+        "name": "PARK Seung Kyu",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-74540",
+        "name": "KANG Min Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-52415",
+        "name": "LEE Jae Hyeon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-69442",
+        "name": "KIM Do Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-61404",
+        "name": "KIM Hun Gon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-69403",
+        "name": "YANG Woo Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-55425",
+        "name": "KIM Sang Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-51417",
+        "name": "KIM Hyun Joon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-b-64468",
+        "name": "PARK Gye Beom",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SS"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-ss-p-53375",
+        "name": "JURADO Ariel",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-69446",
+        "name": "WON Tae In",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-65320",
+        "name": "CHOI Won Tae",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-68415",
+        "name": "YANG Chang Seop",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-56464",
+        "name": "O`LOUGHLIN Jack",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-56460",
+        "name": "JANG Chan Hee",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-50464",
+        "name": "LEE Seung Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-65062",
+        "name": "KIM Jae Yoon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-62754",
+        "name": "IM Gi Yeong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-55455",
+        "name": "BAE Chan Seung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-62360",
+        "name": "KIM Tae Hoon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-56415",
+        "name": "MIYAJI Yura",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-67421",
+        "name": "CHOI Ji Gwang",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      },
+      {
+        "id": "kbo-ss-p-56474",
+        "name": "MIYAMORI Satoshi",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SS"
+      }
+    ]
+  },
+  "LG": {
+    "club": "LGツインズ",
+    "batters": [
+      {
+        "id": "kbo-lg-b-53123",
+        "name": "DEAN Austin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-62415",
+        "name": "PARK Hae Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-66108",
+        "name": "HONG Chang Ki",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-65207",
+        "name": "SHIN Min Jae",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-79109",
+        "name": "OH Ji Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-68110",
+        "name": "SONG Chan Eui",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-69102",
+        "name": "MOON Bo Gyeong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-79365",
+        "name": "PARK Dong Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-69100",
+        "name": "GU Bon Hyeok",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-52121",
+        "name": "MOON Jeong Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-50054",
+        "name": "CHEON Seong Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-68119",
+        "name": "MOON Sung Ju",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-52154",
+        "name": "LEE Ju Heon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-68106",
+        "name": "LEE Jae Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-51100",
+        "name": "LEE Young Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-b-52103",
+        "name": "CHOI Won Yeong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LG"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-lg-p-61101",
+        "name": "IM Chan Kyu",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-55130",
+        "name": "TOLHURST Anders",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-55348",
+        "name": "WELLS Lachlan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-56103",
+        "name": "CARRASCO Carlos",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-51154",
+        "name": "KIM Jin Su",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-55121",
+        "name": "PARK Si Won",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-63950",
+        "name": "JANG Hyun Sik",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-67143",
+        "name": "SON Ju Young",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-75867",
+        "name": "KIM Jin Sung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-55167",
+        "name": "KIM Young Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-61145",
+        "name": "LEE Woo Chan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-56168",
+        "name": "KENNEDY Jon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-67119",
+        "name": "GO Woo Suk",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      },
+      {
+        "id": "kbo-lg-p-56146",
+        "name": "RIOS Yacksel",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LG"
+      }
+    ]
+  },
+  "OB": {
+    "club": "斗山ベアーズ",
+    "batters": [
+      {
+        "id": "kbo-ob-b-64646",
+        "name": "PARK Chan Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-76232",
+        "name": "YANG Eui Ji",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-79231",
+        "name": "JUNG Soo Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-53554",
+        "name": "KIM Min Suk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-51203",
+        "name": "AN Jae Seok",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-55252",
+        "name": "PARK Jun Soon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-56251",
+        "name": "CAMERON Daz",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-50204",
+        "name": "PARK Ji Hoon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-63123",
+        "name": "KANG Seung Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-66209",
+        "name": "JO Soo Haeng",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-64153",
+        "name": "YANG Suk Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-56236",
+        "name": "YUNIOR Severino",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-77532",
+        "name": "SON Ah Seop",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-50208",
+        "name": "OH Myeong Jin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-69238",
+        "name": "KIM Dae Han",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-b-53404",
+        "name": "RYU Seung Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=OB"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-ob-p-55239",
+        "name": "LOGUE Zach",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-68220",
+        "name": "GWAK Been",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-55268",
+        "name": "CHOI Min Seok",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-52043",
+        "name": "BENJAMIN Wesley",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-66291",
+        "name": "LEE Young Ha",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-68830",
+        "name": "KIM Jeong Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-54263",
+        "name": "KIM Taek Yeon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-56212",
+        "name": "TAKADA Takuto",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-67266",
+        "name": "PARK Chi Guk",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-77211",
+        "name": "LEE Yong Chan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-52204",
+        "name": "LEE Byeong Heon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-52202",
+        "name": "YUN Tae Ho",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-53259",
+        "name": "CHOI Jun Ho",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      },
+      {
+        "id": "kbo-ob-p-56215",
+        "name": "CHOI Ju Hyeong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=OB"
+      }
+    ]
+  },
+  "KT": {
+    "club": "KTウィズ",
+    "batters": [
+      {
+        "id": "kbo-kt-b-66606",
+        "name": "CHOI Won Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-56034",
+        "name": "HILLIARD Sam",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-76290",
+        "name": "KIM Hyun Soo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-79402",
+        "name": "KIM Sang Su",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-64004",
+        "name": "KIM Min Hyuck",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-52001",
+        "name": "AHN Hyun Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-79240",
+        "name": "HEO Kyoung Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-63722",
+        "name": "HAN Seung Taek",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-51003",
+        "name": "KWON Dong Jin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-53036",
+        "name": "RYU Hyun In",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-64504",
+        "name": "OH Yoon Suk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-64166",
+        "name": "BAE Jeong Dae",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-67644",
+        "name": "LEE Jeong Hun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-66706",
+        "name": "JANG Jin Hyuk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-68089",
+        "name": "CHO Dae Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-b-51013",
+        "name": "RYU Jun Kyu",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=KT"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-kt-p-64001",
+        "name": "KO Young Pyo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-50030",
+        "name": "SO Hyeong Jun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-56032",
+        "name": "SAUER Matthew",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-50859",
+        "name": "OH Won Seok",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-55912",
+        "name": "ALLEN Logan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-56011",
+        "name": "SUGIMOTO Koki",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-69041",
+        "name": "SON Dong Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-52060",
+        "name": "PARK Yeong Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-65060",
+        "name": "JU Kwon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-69047",
+        "name": "JEON Yong Ju",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-65048",
+        "name": "KIM Min Su",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-73117",
+        "name": "WOO Kyu Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-61666",
+        "name": "HAN Seung Hyuk",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      },
+      {
+        "id": "kbo-kt-p-53029",
+        "name": "KIM Jeong Woon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=KT"
+      }
+    ]
+  },
+  "SK": {
+    "club": "SSGランダース",
+    "batters": [
+      {
+        "id": "kbo-sk-b-67893",
+        "name": "PARK Seong Han",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-50854",
+        "name": "CHOI Ji Hoon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-54812",
+        "name": "JEONG Jun Jae",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-78224",
+        "name": "KIM Jae Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-53827",
+        "name": "HEREDIA Guillermo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-51865",
+        "name": "CHO Hyeong Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-50820",
+        "name": "JEON Eui San",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-75847",
+        "name": "CHOI Jeong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-60558",
+        "name": "OH Tae Gon",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-66864",
+        "name": "AN Sang Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-51868",
+        "name": "KO Myeong Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-62895",
+        "name": "HAN Yoo Seom",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-62934",
+        "name": "KIM Seong Uk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-79456",
+        "name": "LEE Ji Young",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-52807",
+        "name": "LIM Geun Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-b-55897",
+        "name": "HONG Dae In",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=SK"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-sk-p-51867",
+        "name": "KIM Keon Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-68856",
+        "name": "CHOI Min Jun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-56823",
+        "name": "TAKEDA Shota",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-56801",
+        "name": "AVILA Pedro",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-56840",
+        "name": "KIM Min Jun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-53892",
+        "name": "LEE Ro Un",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-68043",
+        "name": "KIM Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-62869",
+        "name": "MOON Seung Won",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-52809",
+        "name": "JEON Young Jun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-51897",
+        "name": "JO Byeong Hyeon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-73211",
+        "name": "NOH Kyung Eun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-50812",
+        "name": "PARK Si Hoo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-64861",
+        "name": "LEE Geun Wook",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      },
+      {
+        "id": "kbo-sk-p-68092",
+        "name": "HAN Doo Sol",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=SK"
+      }
+    ]
+  },
+  "LT": {
+    "club": "ロッテ・ジャイアンツ",
+    "batters": [
+      {
+        "id": "kbo-lt-b-54529",
+        "name": "REYES Victor",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-68205",
+        "name": "JEON Min Jae",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-50500",
+        "name": "HWANG Seong Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-69517",
+        "name": "GO Seung Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-68525",
+        "name": "HAN Dong Hui",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-51551",
+        "name": "NA Seung Yeup",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-51528",
+        "name": "SON Seong Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-52591",
+        "name": "YOON Dong Hee",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-68507",
+        "name": "JANG Du Seong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-78513",
+        "name": "JEON Jun Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-62931",
+        "name": "NO Jin Hyuk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-52568",
+        "name": "HAN Tae Yang",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-50150",
+        "name": "SON Ho Young",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-62802",
+        "name": "PARK Seung Wook",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-61102",
+        "name": "YOO Kang Nam",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-b-52516",
+        "name": "CHO Se Jin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=LT"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-lt-p-56531",
+        "name": "RODRIGUEZ Elvin",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-67539",
+        "name": "NA Gyun An",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-64021",
+        "name": "PARK Se Woong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-56523",
+        "name": "BEASLEY Jeremy",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-51516",
+        "name": "KIM Jin Uk",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-50556",
+        "name": "CHOI Jun Yong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-56536",
+        "name": "PARK Jeong Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-62528",
+        "name": "KIM Won Jung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-68260",
+        "name": "HYEON Do Hoon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-53562",
+        "name": "LEE Jin Ha",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-65522",
+        "name": "KIM Gang Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-54503",
+        "name": "PARK Joon Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-55503",
+        "name": "LEE Young Jae",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      },
+      {
+        "id": "kbo-lt-p-56554",
+        "name": "LEE Jun Seo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=LT"
+      }
+    ]
+  },
+  "HH": {
+    "club": "ハンファ・イーグルス",
+    "batters": [
+      {
+        "id": "kbo-hh-b-53764",
+        "name": "MOON Hyun Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-69737",
+        "name": "ROH Si Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-68050",
+        "name": "KANG Baek Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-54730",
+        "name": "PERLAZA Yonathan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-52764",
+        "name": "HEO In Seo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-66704",
+        "name": "KIM Tae Yean",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-64006",
+        "name": "SIM Woo Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-65703",
+        "name": "LEE Do Yun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-50707",
+        "name": "CHOI In Ho",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-68700",
+        "name": "LEE Won Seok",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-79192",
+        "name": "CHAE Eun Seong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-56754",
+        "name": "OH Jae Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-50709",
+        "name": "PARK Jung Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-55767",
+        "name": "HAN Ji Youn",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-66657",
+        "name": "LEE Jin Young",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-b-52765",
+        "name": "YU Min",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=HH"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-hh-p-56724",
+        "name": "WHITE Owen",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-76715",
+        "name": "RYU Hyun Jin",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-56719",
+        "name": "WANG Yan-Cheng",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-56712",
+        "name": "HERNANDEZ Wilkel",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-52701",
+        "name": "MOON Dong Ju",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-52731",
+        "name": "PARK Jun Yeong",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-54729",
+        "name": "HWANG Jun Seo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-65117",
+        "name": "LEE Sang Kyu",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-65616",
+        "name": "LEE Min Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-54768",
+        "name": "CHO Dong Uk",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-67703",
+        "name": "PARK Sang Won",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-69645",
+        "name": "JANG Yoo Ho",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-62951",
+        "name": "LEE Hyeong Beom",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      },
+      {
+        "id": "kbo-hh-p-50705",
+        "name": "KANG Jae Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=HH"
+      }
+    ]
+  },
+  "NC": {
+    "club": "NCダイノス",
+    "batters": [
+      {
+        "id": "kbo-nc-b-51907",
+        "name": "KIM Ju Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-62907",
+        "name": "PARK Min Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-79215",
+        "name": "PARK Kun Woo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-63260",
+        "name": "LEE Woo Sung",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-68912",
+        "name": "KIM Hyung Jun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-51344",
+        "name": "KIM Whee Jip",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-67905",
+        "name": "CHEON Jae Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-63963",
+        "name": "KWON Hui Dong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-56950",
+        "name": "BLAINE Crim",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-69992",
+        "name": "CHOI Jeong Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-64022",
+        "name": "AN Joong Yeol",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-64101",
+        "name": "HAN Suk Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-50996",
+        "name": "PARK Si Won",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-56949",
+        "name": "KO Jun Hwi",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-51996",
+        "name": "OH Tae Yang",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-b-51991",
+        "name": "OH Jang Han",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=NC"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-nc-p-65933",
+        "name": "KOO Chang Mo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-56911",
+        "name": "TODA Natsuki",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-55903",
+        "name": "THOMPSON Riley",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-56966",
+        "name": "TAYLOR Curtis",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-68902",
+        "name": "SHIN Min Hyeok",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-69969",
+        "name": "CHUN Sa Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-64995",
+        "name": "BAE Jae Whan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-52902",
+        "name": "LIM Ji Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-52992",
+        "name": "LEE Jun Hyeok",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-53919",
+        "name": "SHIN Yeong Woo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-51948",
+        "name": "LEE Yong Jun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-68900",
+        "name": "KIM Young Kyu",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-55995",
+        "name": "KIM Tae Hoon",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      },
+      {
+        "id": "kbo-nc-p-54903",
+        "name": "CHOI Woo Seok",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=NC"
+      }
+    ]
+  },
+  "WO": {
+    "club": "キウム・ヒーローズ",
+    "batters": [
+      {
+        "id": "kbo-wo-b-54944",
+        "name": "DAVIDSON Matthew",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-79608",
+        "name": "AN Chi Hong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-78168",
+        "name": "SEO Geon Chang",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-53312",
+        "name": "KIM Gun Hee",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-52348",
+        "name": "PARK Chan Hyeok",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-55371",
+        "name": "GWON Hyuk Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-65898",
+        "name": "KIM Woong Bin",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-68362",
+        "name": "CHOO Jae Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-56305",
+        "name": "HIURA Keston",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-76267",
+        "name": "CHOI Joo Hwan",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-64346",
+        "name": "LIM Byeong Wuk",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-50357",
+        "name": "PARK Ju Hong",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-56322",
+        "name": "BROOKS Trenton",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-50167",
+        "name": "LEE Ju Hyoung",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-55392",
+        "name": "EO Joon Seo",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-b-64340",
+        "name": "IM Ji Yeol",
+        "source": "https://eng.koreabaseball.com/Stats/BattingByTeams.aspx?codeTeam=WO"
+      }
+    ],
+    "pitchers": [
+      {
+        "id": "kbo-wo-p-69045",
+        "name": "ALCANTARA Raul",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-64350",
+        "name": "HA Yeong Min",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-68341",
+        "name": "AN Woo Jin",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-56318",
+        "name": "PARK Jun Hyun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-55322",
+        "name": "ROSENBERG Kenny",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-54362",
+        "name": "JHUN Jun Pyo",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-55394",
+        "name": "PARK Jeong Hun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-56348",
+        "name": "KANAKUBO Yuto",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-76118",
+        "name": "WON Jong Hyan",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-56337",
+        "name": "PARK Ji Sung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-69360",
+        "name": "CHO Young Gun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-63512",
+        "name": "PARK Jin Hyung",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-56345",
+        "name": "JUNG Da Hun",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      },
+      {
+        "id": "kbo-wo-p-66018",
+        "name": "KIM Seon Gi",
+        "source": "https://eng.koreabaseball.com/Stats/PitchingByTeams.aspx?codeTeam=WO"
+      }
+    ]
+  }
+}
