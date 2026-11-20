@@ -3,7 +3,7 @@ import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=76';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=76';
-import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=56';
+import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=84';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
 import { StadiumRenderer } from './stadium3d.js?v=76';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
@@ -257,6 +257,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='country'){worldCountry=v;worldDashboard();return;}
   const w=world;
   if(!w)return;
+  if(action==='music'){musicMenu('world-career');return;}
+  if(action==='last-result'){if(w.last)showWorldResult();return;}
+  if(action==='result-next'){
+   if(screen==='game')worldDashboard();else closeModal(false);
+   return;
+  }
   if(action==='detail'){
    modal(modalTitle('',({schedule:'日程・大会',skills:'フォーム・特殊能力',players:'選手・成績',life:'契約・生活',international:'国際大会',history:'年表・記録'})[v]||'キャリア詳細')+
     NightCareerWorldView.detail(w,v),'career-world-detail');
@@ -278,7 +284,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   };
   if(action==='play'){playWorld(v||'self');return;}
   if(change[action]?.()){
-   if(action!=='new'){saveWorld();worldDashboard(!['advance','simulate','draft-sign','retire','accept','stay'].includes(action));}
+   if(action!=='new'){
+    saveWorld();worldDashboard(!['advance','simulate','draft-sign','retire','accept','stay'].includes(action));
+    if(action==='simulate'&&w.last)showWorldResult();
+   }
   }else if(action!=='retire')toast('この操作は現在実行できません');
  }
  $('career').addEventListener('click',worldAction);
@@ -299,8 +308,17 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game.phase==='career-ready')careerAppearance(game);
  }
  function finishWorld(g){
-  if(world?.completeLive(g)){saveWorld();saved=true;}
-  worldDashboard();
+  if(!saved){
+   if(!world?.completeLive(g)){worldDashboard();return;}
+   saveWorld();saved=true;
+  }
+  resetCareerOverlay();
+  showWorldResult(g);
+ }
+ function showWorldResult(g){
+  const line=g?lineScoreHTML(buildMatchReport(g)):'';
+  modal(`${modalTitle('','試合結果',false)}${NightCareerWorldView.matchResult(world)}${line}
+   <button class="primary-button" data-world-action="result-next">キャリアへ戻る</button>`,'career-result');
  }
 
  let careerLifeTab='leisure',careerDrillAim=null;
@@ -400,7 +418,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const before=['camp','rest'].includes(key)&&career?careerChoiceState():null;
   switch(key){
    case'home':home();return;
-   case'music':musicMenu(true);return;
+   case'music':musicMenu('career');return;
    case'episode':{
     const result=NightCareerExtras.resolveEpisode(career,b.dataset.choice);
     if(result){saveCareer();careerDashboard();
@@ -1004,35 +1022,51 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   game.prepare();
  }
  function thumbPreview(){const lift=settings.cursorLift,shift=settings.cursorShift,sx=settings.leftHanded?shift:-shift;return `<div class="thumb-preview" aria-label="照準と指の位置のプレビュー"><span class="preview-finger"></span><i class="preview-line" style="width:${Math.hypot(shift*.5,lift*.5)}px;transform:rotate(${Math.atan2(-lift,sx)*180/Math.PI}deg)"></i><span class="preview-reticle" style="transform:translate(${sx*.5}px,${-lift*.5}px)">＋</span><small>照準</small><b>${settings.leftHanded?'左':'右'}親指</b></div>`;}
- let musicSelection={club:null,person:'',fromCareer:false};
+ let musicSelection={club:null,person:'',fromCareer:null};
  let importedTracks=[];
  const musicSlots=slot=>slot==='chance'?['chance','cheer']:slot==='thirdOut'?['thirdOut','out']:[slot];
  const htmlText=text=>String(text??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function musicTarget(){
   const {club,person}=musicSelection;
-  if(club==='career')return {key:careerMusicKey(career.seed,person===''),teamKey:person?careerMusicKey(career.seed,true):null};
-  return {key:person?playerMusicKey(club,person):teamMusicKey(club),teamKey:person?teamMusicKey(club):null};
+  if(club==='world-career'){
+   const team=game?.worldFixture?game.teams[game.userSide].id:world.active?world.owningClub(world.active):world.player.club;
+   const teamKey=careerMusicKey(world.seed,true),key=person?careerMusicKey(world.seed):teamKey;
+   const keys=person?[key,playerMusicKey(team,person),teamKey]:[key];
+   return {key,keys:[...keys,teamMusicKey(team)]};
+  }
+  if(club==='career'){
+   const teamKey=careerMusicKey(career.seed,true),key=person?careerMusicKey(career.seed):teamKey;
+   return {key,keys:person?[key,teamKey]:[key]};
+  }
+  const teamKey=teamMusicKey(club),key=person?playerMusicKey(club,person):teamKey;
+  return {key,keys:person?[key,teamKey]:[key]};
+ }
+ function musicTrack(slot,keys){
+  const fallback=musicSelection.club==='world-career'&&['cheer','chance'].includes(slot)?DEFAULT_CAREER_CHEER:null;
+  return trackForEvent(settings.music,musicSlots(slot),keys,fallback);
  }
  function musicControls(){
   const {club,person}=musicSelection,settingsMusic=settings.music;
   const available=NightTeams.playable||NightTeams.all;
   const current=available.find(t=>t.id===club)||available[0];
-  const people=club==='career'?[career.player()]:[...current.batters,...current.pitchers];
-  const {key,teamKey}=musicTarget();
+  const people=club==='world-career'?[world.player]:club==='career'?[career.player()]:[...current.batters,...current.pitchers];
+  const {key,keys}=musicTarget();
   const option=(value,label,selected)=>`<option value="${htmlText(value)}"${selected?' selected':''}>${htmlText(label)}</option>`;
   const volume=[['cheer','応援歌'],['results','結果曲'],['overlap','相手の応援と重なるとき']].map(([id,label])=>
    `<div class="setting-slider"><label for="music-${id}">${label}<output id="music-${id}-value">${settingsMusic[id]}%</output></label><input id="music-${id}" data-music-volume="${id}" type="range" min="0" max="100" value="${settingsMusic[id]}"></div>`).join('');
   const rows=Object.entries(MUSIC_SLOTS).map(([slot,label])=>{
    const tracks=[...PRESETS,...importedTracks],value=settingsMusic.assignments[key]?.[slot]||'';
    if(value&&value!=='off'&&!tracks.some(t=>t.id===value))tracks.push({id:value,name:'保存済みの音源'});
-   const resolved=trackForEvent(settingsMusic,musicSlots(slot),teamKey?[key,teamKey]:[key]);
-   const choices=option('',teamKey?'チームの設定を使う':slot==='chance'?'通常の応援歌を使う':slot==='thirdOut'?'通常の判定曲を使う':'曲なし',value==='')+option('off','曲を流さない',value==='off')+
+   const resolved=musicTrack(slot,keys);
+   const inherited=person?'チームの設定を使う':slot==='chance'?'通常の応援歌を使う':slot==='thirdOut'?'通常の判定曲を使う':
+    club==='world-career'?(slot==='cheer'?'所属チームまたは標準の応援歌を使う':'所属チームの設定を使う'):'曲なし';
+   const choices=option('',inherited,value==='')+option('off','曲を流さない',value==='off')+
     tracks.map(t=>option(t.id,t.name,t.id===value)).join('');
    return `<div class="music-row"><label for="song-${slot}">${label}</label><select id="song-${slot}" class="field-select" data-song-slot="${slot}">${choices}</select>
     <div class="music-actions"><button type="button" data-music-preview="${slot}" ${resolved?'':'disabled'}>試聴</button>${!['cheer','chance'].includes(slot)?`<button type="button" data-music-preview="${slot}" data-music-quiet ${resolved?'':'disabled'}>小音量で試聴</button>`:''}
     <label class="music-import">音源を選ぶ<input type="file" accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac" data-music-upload="${slot}"></label>${value.startsWith('user:')?`<button type="button" data-music-delete="${slot}">音源を削除</button>`:''}</div></div>`;
   }).join('');
-  return `<div class="music-target"><div><label for="music-club">チーム</label><select id="music-club" class="field-select">${career?option('career','選手キャリア',club==='career'):''}${available.map(t=>option(t.id,t.name,t.id===club)).join('')}</select></div>
+  return `<div class="music-target"><div><label for="music-club">チーム</label><select id="music-club" class="field-select">${world?option('world-career','選手キャリア',club==='world-career'):''}${career?option('career',world?'従来キャリア':'選手キャリア',club==='career'):''}${available.map(t=>option(t.id,t.name,t.id===club)).join('')}</select></div>
    <div><label for="music-person">対象</label><select id="music-person" class="field-select">${option('','チーム全体',!person)}${people.map(p=>option(p.id,p.name,p.id===person)).join('')}</select></div></div>
    <p class="modal-note">応援とヒットは打者、アウトと3アウトは守備選手、三振は投手の設定を優先します。二塁か三塁に走者がいるとチャンステーマに切り替わります。</p>
    ${rows}<button class="secondary-button" data-action="music-stop">試聴を停止</button>
@@ -1045,10 +1079,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   body.innerHTML=musicControls();$('modal-content').scrollTop=scroll;
   if(focus)$(focus)?.focus({preventScroll:true});
  }
- function musicMenu(fromCareer=false){
-  const club=game?.teams[game.userSide]?.id||settings.matchTeam;
-  musicSelection={club:fromCareer?'career':club,person:fromCareer?career.player().id:'',fromCareer};
-  if(!(NightTeams.playable||NightTeams.all).some(c=>c.id===club)&&!fromCareer)musicSelection.club=settings.matchTeam;
+ function musicMenu(fromCareer=null){
+  const club=game?.teams[game.userSide]?.id;
+  const matchClub=(NightTeams.playable||NightTeams.all).some(c=>c.id===club)?club:settings.matchTeam;
+  musicSelection={club:fromCareer||matchClub,person:fromCareer==='world-career'?world.player.id:fromCareer==='career'?career.player().id:'',fromCareer};
   modal(`${modalTitle('','球場の応援歌・結果曲')}<div id="music-settings-body">${musicControls()}</div>`,'music-settings');
   songVault.list().then(list=>{importedTracks=list;drawMusicMenu();}).catch(()=>{});
  }
@@ -1454,8 +1488,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(b.dataset.matchSide){matchPickSide=b.dataset.matchSide;matchClubGroup=(matchPickSide==='home'?settings.matchTeam:settings.matchOpponent).startsWith('kbo-')?'kbo':(matchPickSide==='home'?settings.matchTeam:settings.matchOpponent).startsWith('npb-')?'npb':'cpbl';setupMatchTeams();return;}
    if(b.dataset.matchClub){const chosen=b.dataset.matchClub;if(matchPickSide==='home'){if(settings.matchOpponent===chosen)settings.matchOpponent=settings.matchTeam;settings.matchTeam=chosen;settings.park=NightTeams.get(chosen).park;lineupConfig('match');}else{if(settings.matchTeam===chosen)settings.matchTeam=settings.matchOpponent;settings.matchOpponent=chosen;}settings.park=NightTeams.get(settings.matchUserHome?settings.matchTeam:settings.matchOpponent).park;lineupConfig('match');save();setupMatchTeams();return;}
    if(b.dataset.musicPreview){
-    const slot=b.dataset.musicPreview,{key,teamKey}=musicTarget();
-    const id=trackForEvent(settings.music,musicSlots(slot),teamKey?[key,teamKey]:[key]);
+    const slot=b.dataset.musicPreview,{keys}=musicTarget();
+    const id=musicTrack(slot,keys);
     if(!settings.sound){settings.sound=true;save();}
     if(id&&!await ballparkMusic.preview(id,slot,b.hasAttribute('data-music-quiet')))toast('音源を再生できませんでした');
     return;
@@ -1537,7 +1571,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      case'roster':rosterModal(null,game?.userSide||'home');break;
      case'bench':requestBench();break;
      case'settings':settingsModal();break;
-     case'music-settings':musicMenu(!!career&&(screen==='career'||!!game?.career));break;
+     case'music-settings':
+      musicMenu(world&&(game?.worldFixture||screen==='career'&&worldActive)?'world-career':
+       career&&(game?.career||screen==='career')?'career':null);
+      break;
      case'music-stop':ballparkMusic.stop('preview');break;
      case'music-back':if(musicSelection.fromCareer&&screen==='career')closeModal(false);else settingsModal();break;
      case'history':historyModal();break;

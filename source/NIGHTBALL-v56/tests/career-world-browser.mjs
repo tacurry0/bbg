@@ -65,6 +65,16 @@ try{
   await page.locator('[name="schoolTier"]').selectOption('2');
   await page.locator('[name="style"]').selectOption(style);
   await page.locator('#world-create [type="submit"]').click();
+  if(country==='jp'){
+   await press('music');
+   assert.equal(await page.locator('#music-club').inputValue(),'world-career');
+   assert.equal(await page.locator('#music-person').inputValue(),'career-player');
+   assert(await page.locator('[data-music-preview="cheer"]').isEnabled());
+   await page.locator('#song-cheer').selectOption('preset:clap');
+   const seed=(await state()).seed;
+   assert.equal(await page.evaluate(key=>nightSettings.music.assignments[key].cheer,'career:'+seed),'preset:clap');
+   await page.locator('[data-action="music-back"]').click();
+  }
   await page.locator('.cw-train summary').click();
   const drill=country==='kr'?'control':'contact';
   await press('train',drill);
@@ -124,7 +134,7 @@ try{
      const g=window.observedCareerGame;
      return ['aim','career-ready','ended'].includes(g.phase)||g.phase==='windup'&&!g.pitch?.delivered;
     });
-    if(await page.locator('#game').isVisible()){
+    if(await page.evaluate(()=>window.observedCareerGame.phase!=='ended')){
      await page.locator('#pause').dispatchEvent('click');
      await page.locator('[data-action="world-finish-auto"]').click({timeout:6000});
     }
@@ -136,14 +146,28 @@ try{
     });
     throw Error(country+' grade '+grade+' after input: '+JSON.stringify(report),{cause:error});
    }
-   await page.locator('#career .cw-last').waitFor({state:'visible'});
+   await page.locator('#modal-title').filter({hasText:'試合結果'}).waitFor({state:'visible'});
    w=await state();
    assert.equal(w.last.id,id);
    assert.equal(w.schoolPlay[w.academicYear+'/'+grade],'live');
    assert(w.last.stat.g>0);
+   assert.match(await page.locator('.career-result-banner').innerText(),new RegExp(w.last.score.join(' − ')));
+   assert.match(await page.locator('#modal-content').innerText(),/イニング別スコア/);
+   assert.match(await page.locator('#modal-content').innerText(),country==='kr'?/奪三振/:/打数/);
+   await press('result-next');
+   await page.locator('#career .cw-last').waitFor({state:'visible'});
+   if(grade===1){
+    await press('last-result');
+    assert.match(await page.locator('.career-result-banner').innerText(),new RegExp(w.last.score.join(' − ')));
+    await press('result-next');
+   }
    let clicks=0;
    while(w.stage==='school'&&w.grade===grade&&clicks++<30){
-    if(w.queue?.selected>=0) await press('simulate');
+    if(w.queue?.selected>=0){
+     await press('simulate');
+     await page.locator('#modal-title').filter({hasText:'試合結果'}).waitFor({state:'visible'});
+     await press('result-next');
+    }
     else{
      await page.locator('.cw-batch summary').click();
      await press('advance','season');

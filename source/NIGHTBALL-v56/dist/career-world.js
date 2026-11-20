@@ -413,7 +413,7 @@
   }
   recordOwn(f,r){
    const school=f.kind==='school';
-   const own=f.home===this.owningClub(f);
+   const team=this.owningClub(f),own=f.home===team;
    const s=r.stats[this.player.id]||blank();
    if(f.kind==='farm'&&s.g){
     this.recentFarm ||= [];
@@ -422,7 +422,7 @@
    }
    if(f.kind!=='national')merge(school?this.schoolTotals:f.kind==='farm'?this.farmStats:f.kind==='regular'?this.playerYear:this.playerPost,s);
    const result=own?[r.home,r.away]:[r.away,r.home],rival=own?f.away:f.home;
-   this.last={id:f.id,day:f.day,name:f.name,opponent:this.clubName(rival),score:result,stat:s,inning:r.inning};
+   this.last={id:f.id,day:f.day,name:f.name,team:this.clubName(team),opponent:this.clubName(rival),score:result,stat:s,inning:r.inning,pitching:this.pitching};
    const people=this.members(rival).filter(p=>p.school&&r.stats[p.id]);
    for(const p of people){
     const head=this.rivalry[p.id] ||= {games:0,wins:0};
@@ -932,6 +932,7 @@
     entryInning:this.pitching?(f.development?Math.min(7,pitchRole[role]):pitchRole[role]):pinching?(f.development?5:7):1,pitchActive:this.pitching&&role==='rotation',
     reservePitcher:1,shortIntro:true,prospect:true,keyOnly:format==='key',firstAppearance:f.development===true,important:!!f.important||f.kind==='post'||f.kind==='asia',completed:0};
    return {worldFixture:f.id,career:format==='full'?null:activity,homeTeamId:f.home,awayTeamId:f.away,
+    worldMusic:{teamSeed:this.seed,playerId:pId},
     clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:userStarter,opponentPitcher:0,
     order:ownTeam.startingOrder,fielding:ownTeam.startingFielding,practiceBatter:pId,
     worldMaxInnings:L.inningLimit(f),worldDrawClinches:f.drawClinches,

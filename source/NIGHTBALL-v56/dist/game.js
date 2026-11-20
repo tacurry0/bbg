@@ -107,6 +107,7 @@ window.NightGame=class NightGame{
   this.inning=1;this.half=this.career?.continuous||['match','pennant','pitching','career-pitch'].includes(mode)?'top':'bottom';this.outs=0;this.balls=0;this.strikes=0;this.bases=[false,false,false];
   this.npbPostseason=mode==='pennant'&&options.npbPostseason===true;
   this.worldFixture=options.worldFixture||null;
+  if(options.worldMusic)this.worldMusic=options.worldMusic;
   this.maxInnings=this.npbPostseason?options.maxInnings??null:this.worldFixture?options.worldMaxInnings??null:null;
   this.drawClinches=this.npbPostseason&&options.drawClinches===true||!!this.worldFixture&&options.worldDrawClinches===true;
   this.totalInnings=(mode==='pennant'&&!this.npbPostseason)||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
@@ -169,6 +170,7 @@ window.NightGame=class NightGame{
   }else if(!['match','pennant'].includes(state.mode))return null;
   const career=state.career;
   const g=Object.create(NightGame.prototype);Object.assign(g,state);g.emit=emit;g.paused=false;g.touch=null;g.userHome ??= true;
+  if(options.worldMusic)g.worldMusic=options.worldMusic;
   if(career)Object.assign(career,{presentation:options.career.presentation??career.presentation,shortIntro:options.career.shortIntro??career.shortIntro,
    weakSchool:career.weakSchool??options.career.weakSchool,teamSeed:career.teamSeed??options.career.teamSeed});
   if(career&&!career.pitching){

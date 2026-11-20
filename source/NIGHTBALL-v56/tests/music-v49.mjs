@@ -71,6 +71,25 @@ assert.equal(trackFor(s,'out',gameMusicKeys(g,'home',g.batter.id)),'preset:rally
 mixer.update(g,s,true,true);await tick();assert.equal(mixer.slots.home.id,'user:theme');
 assert(await mixer.preview('preset:strike','strikeout',true));assert(!mixer.slots.preview.source.loop);
 
+const worldGame={...g,career:null,worldMusic:{teamSeed:'world-save',playerId:'career-player'},
+ phase:'windup',half:'top',side:'away',userSide:'away',batFinished:false,batter:{id:'career-player'},bases:[false,true,false]};
+const worldSettings=musicSettings();
+mixer.update(worldGame,worldSettings,true,true);await tick();
+assert.equal(mixer.slots.away.id,'preset:stadium');
+assert(mixer.slots.away.source.loop);
+worldSettings.assignments['career-team:world-save']={cheer:'preset:clap'};
+mixer.update(worldGame,worldSettings,true,true);await tick();
+assert.equal(mixer.slots.away.id,'preset:clap');
+worldSettings.assignments['career:world-save']={chance:'preset:rally',cheer:'off'};
+mixer.update(worldGame,worldSettings,true,true);await tick();
+assert.equal(mixer.slots.away.id,'preset:rally');
+worldGame.bases=[false,false,false];
+mixer.update(worldGame,worldSettings,true,true);
+assert(!mixer.slots.away);
+worldGame.side='home';worldGame.half='bottom';
+mixer.update(worldGame,worldSettings,true,true);await tick();
+assert(!mixer.slots.home);
+
 globalThis.window=globalThis;
 for(const file of ['ratings-data','players','pennant','game']){
  vm.runInThisContext(readFileSync('dist/'+file+'.js','utf8'));

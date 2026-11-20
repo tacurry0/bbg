@@ -8,6 +8,7 @@ const brass=[
  {id:'strike',name:'三振コール',bpm:122,notes:[72,0,72,70,67,0,65,60]}
 ];
 export const PRESETS=brass.map(({id,name})=>({id:'preset:'+id,name}));
+export const DEFAULT_CAREER_CHEER='preset:stadium';
 export function musicSettings(saved){
  const s=saved&&typeof saved==='object'?saved:{};
  return {cheer:level(s.cheer,64),results:level(s.results,62),overlap:level(s.overlap,30),
@@ -16,23 +17,24 @@ export function musicSettings(saved){
 export const teamMusicKey=id=>'team:'+id;
 export const playerMusicKey=(team,id)=>'player:'+team+':'+id;
 export const careerMusicKey=(seed,team=false)=>(team?'career-team:':'career:')+seed;
-export function trackForEvent(music,slots,keys){
+export function trackForEvent(music,slots,keys,fallback=null){
  for(const slot of slots)for(const key of keys){
   const track=music.assignments[key]?.[slot];
   if(track)return track==='off'?null:track;
  }
- return null;
+ return fallback;
 }
 export function trackFor(music,slot,keys){return trackForEvent(music,[slot],keys);}
 const battingMusic=slot=>slot==='cheer'||slot==='chance';
 export function gameMusicKeys(game,side,player){
  const team=game.teams[side],keys=[];
- if(game.career&&side===game.userSide){
-  if(player===game.career.playerId)keys.push(careerMusicKey(game.career.teamSeed));
+ const career=game.worldMusic||game.career;
+ if(career&&side===game.userSide){
+  if(player===career.playerId)keys.push(careerMusicKey(career.teamSeed));
   if(player)keys.push(playerMusicKey(team.id,player));
-  keys.push(careerMusicKey(game.career.teamSeed,true));
+  keys.push(careerMusicKey(career.teamSeed,true));
  }else if(player)keys.push(playerMusicKey(team.id,player));
- if(!game.career||!team.scoreMark)keys.push(teamMusicKey(team.id));
+ if(!game.career||game.worldMusic||!team.scoreMark)keys.push(teamMusicKey(team.id));
  return keys;
 }
 
@@ -154,7 +156,8 @@ export class BallparkMusic{
   if(newPlate){
    const side=game.side,key=[game.inning,game.half,game.battingIndex[side],game.batter.id,game.box?.[game.batter.id]?.pa,game.derby?.turn].join('/');
    const chance=game.bases?.[1]||game.bases?.[2];
-   const track=trackForEvent(settings,chance?['chance','cheer']:['cheer'],gameMusicKeys(game,side,game.batter.id));
+   const fallback=game.worldMusic&&side===game.userSide?DEFAULT_CAREER_CHEER:null;
+   const track=trackForEvent(settings,chance?['chance','cheer']:['cheer'],gameMusicKeys(game,side,game.batter.id),fallback);
    if(this.atBat!==key||this.cheerTrack!==track){
     this.atBat=key;this.atBatSide=side;this.cheerTrack=track;
     if(this.slots[side]?.loop)this.stop(side);

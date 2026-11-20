@@ -16,6 +16,17 @@
   `<span>${s.g}試合</span><span>打率 ${s.ab?fmt(M.rate(s.h,s.ab)):'—'}</span><span>${s.hr}本</span><span>${s.rbi}打点</span><span>${s.sb}盗塁</span>`;
  const pills=(label,inner)=>`<div class="cw-pills" aria-label="${esc(label)}">${inner}</div>`;
  const title=(screen,legacy)=>`<div class="career-heading"><button type="button" class="career-back" data-world-action="home">◀ ホーム</button><h1>${esc(screen)}</h1>${legacy?act('legacy','従来キャリア','','career-back'):''}</div>`;
+ function matchResult(w){
+  const {name,day,team,opponent,score,stat:s,inning,pitching=w.pitching}=w.last;
+  const [own,rival]=score;
+  const outcome=own===rival?'引き分け':own>rival?'勝利':'敗戦';
+  const performance=!s.g?'<p class="cw-note">出場なし</p>':pills('個人成績',pitching?
+   `<span>${Math.floor(s.outs/3)}回${s.outs%3?' '+s.outs%3+'/3':''}</span><span>${s.k}奪三振</span><span>${s.er}自責点</span>`:
+   `<span>${s.ab}打数 ${s.h}安打</span><span>${s.hr}本塁打</span><span>${s.rbi}打点</span><span>${s.sb}盗塁</span>`);
+  return `<p class="modal-note">${esc(day)} · ${esc(name)}${inning?' · '+inning+'回':''}</p>
+   <div class="career-result-banner${own<rival?' career-lost':''}"><div><small>${esc(team||w.clubName(w.player.club))} 対 ${esc(opponent)}</small>
+   <b>${own} − ${rival}</b></div><strong>${outcome}</strong></div><h3>${esc(w.name)}の成績</h3>${performance}`;
+ }
  function setup(country,legacy,alumni=[]){
   if(!country)return title('選手キャリア',legacy)+section('高校生活を始める国・地域',`<div class="cw-grid">${Object.entries(countries).map(([id,c])=>
     act('country',c.label+' · '+c.league,id,'primary-button')).join('')}</div>`)+
@@ -88,11 +99,13 @@
    act('detail','成績とポジション争い','players','cw-link'));
   const recent=w.timeline.slice(-3).reverse();
   const news=section('試合結果・ニュース',
-   (w.last?`<p class="cw-last"><strong>${w.last.score.join(' – ')}</strong> ${esc(w.last.opponent)} <small>${esc(w.last.name)} · ${w.last.day}</small></p>`:'')+
+   (w.last?`<p class="cw-last"><strong>${w.last.score.join(' – ')}</strong> ${esc(w.last.opponent)} <small>${esc(w.last.name)} · ${w.last.day}</small></p>`+
+    act('last-result','前回の試合結果','','cw-link'):'')+
    (recent.length?`<ul class="cw-news">${recent.map(x=>`<li><time>${esc(x.day.slice(5).replace('-','/'))}</time>${esc(x.message)}</li>`).join('')}</ul>`:blank)+
    act('detail','年表・年度別成績','history','cw-link'));
   const extras=`<div class="cw-details">${act('detail','日程・大会','schedule','cw-link')}${act('detail','フォーム・特殊能力','skills','cw-link')}
-   ${w.club?act('detail','契約・生活','life','cw-link')+act('detail','国際大会','international','cw-link'):act('detail','生活・交流','life','cw-link')}</div>`;
+   ${w.club?act('detail','契約・生活','life','cw-link')+act('detail','国際大会','international','cw-link'):act('detail','生活・交流','life','cw-link')}
+   ${act('music','応援歌設定','','cw-link')}</div>`;
   return title('選手キャリア',legacy)+hero+action+(w.stage==='retired'?'':state+news)+extras;
  }
  function daily(w,f,next){
@@ -261,5 +274,5 @@
    w.moves.map(x=>`<p>${x.day} · ${club(w,x.from)} → ${club(w,x.to)} · ${esc(x.type)}</p>`).join('')+
    act('new','OB記録を保存して新しいキャリアへ','','primary-button'))+history(w);
  }
- window.NightCareerWorldView={setup,dashboard,detail};
+ window.NightCareerWorldView={setup,dashboard,detail,matchResult};
 })();
