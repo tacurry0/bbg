@@ -1,7 +1,7 @@
 /* Career-only views. The live game uses the existing HUD. */
 (()=>{
  'use strict';
- const D=NightCareerWorldData,M=NightCareerWorldMatch,L=NightCareerWorldLeagues;
+ const D=NightCareerWorldData,M=NightCareerWorldMatch,L=NightCareerWorldLeagues,Z=NightCareerWorldSuccess;
  const {countries,schools}=D;
  const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const act=(key,label,value='',kind='secondary-button')=>
@@ -108,35 +108,67 @@
    ${act('music','応援歌設定','','cw-link')}</div>`;
   return title('選手キャリア',legacy)+hero+action+(w.stage==='retired'?'':state+news)+extras;
  }
+ function successPanel(w){
+  const s=Z.state(w);
+  const meter='<div class="cw-success-meter"><div><span>体力</span><b>'+Math.round(s.energy)+'/100</b><meter min="0" max="100" value="'+s.energy+'"></meter></div>'+
+   '<div><span>気分</span><b>'+Math.round(s.morale)+'/100</b><meter min="0" max="100" value="'+s.morale+'"></meter></div></div>';
+  if(s.pending){
+   const e=s.pending;
+   if(e.type==='drill'){
+    const q=Z.currentQuestion(w);
+    return meter+'<div class="cw-success-scene" role="group" aria-label="実戦練習"><p class="cw-scene-kicker">練習チャレンジ · '+(e.index+1)+'/3問</p>'+
+     '<h3>'+esc(e.title)+'</h3><p>'+esc(q[0])+'</p><div class="cw-choices">'+q[1].map((label,i)=>act('success-choice',label,i,i===0?'primary-button':'secondary-button')).join('')+'</div>'+
+     '<p class="cw-note">正解 '+e.correct+'問 · 選択によって成長量が変化します。</p></div>';
+   }
+   return meter+'<div class="cw-success-scene" role="group" aria-label="キャリアイベント"><p class="cw-scene-kicker">今週のイベント</p>'+
+    '<h3>'+esc(e.title)+'</h3><p>'+esc(e.body)+'</p><div class="cw-choices">'+
+     e.choices.map((option,i)=>act('success-choice',option.label,i,i===0?'primary-button':'secondary-button')).join('')+'</div></div>';
+  }
+  if(s.menu){
+   const keys=w.pitching?M.pitching:M.batting;
+   return meter+'<div class="cw-success-scene"><p class="cw-scene-kicker">'+(s.menu==='special'?'実戦特訓':'基礎練習')+'</p>'+
+    '<h3>伸ばしたい能力を選ぶ</h3><p class="cw-note">野球の場面を判断する3問の練習。正解が多いほど能力が伸びます。</p>'+
+    '<div class="cw-grid">'+keys.map(key=>act('success-skill',NightCareerWorld.training[key]+' '+Math.round(w.player[key]),key)).join('')+
+    act('success-back','戻る')+'</div></div>';
+  }
+  if(Z.available(w)){
+   return meter+'<div class="cw-success-cmd"><h3>今週の行動を選ぶ</h3><p class="cw-note">1週間に1つ。選んだ行動で成長・体力・仲間との関係が変わります。</p>'+
+    '<div class="cw-grid cw-command-grid">'+act('success-action','⚾ 練習','practice','primary-button')+
+    act('success-action','🔥 実戦特訓','special')+act('success-action','🛌 休む','rest')+
+    act('success-action','💬 交流','friend')+act('success-action','🌿 遊ぶ','outing')+'</div></div>'+
+    (s.last?'<p class="cw-last-action"><strong>前回：</strong>'+esc(s.last.title)+' · '+esc(s.last.summary)+'</p>':'');
+  }
+  return meter+'<p class="cw-last-action"><strong>今週の行動は完了</strong>'+
+   (s.last?' · '+esc(s.last.title)+'：'+esc(s.last.summary):' · 次の週へ進めます')+'</p>';
+ }
  function daily(w,f,next){
   const elapsed=next?Math.max(0,Math.round((Date.parse(next.day)-Date.parse(w.day))/86400000)):null;
   const park=next?.fixture?.park?NightPlayers.parks.find(x=>x.id===f.park)?.name:null;
   const role=f?w.usage(f):null;
   const eligible=w.canPlay(f);
-  const info=next?`<div class="cw-fixture"><div><p class="cw-fixture-date">${esc(next.day)} · ${elapsed===0?'本日':elapsed+'日後'}</p>
-   <h3>${esc(next.name)}</h3><p>${next.opponent?'対 '+club(w,next.opponent):'対戦相手は抽選・進行後に決定'}${park?' · '+esc(park):''}</p></div></div>`:'';
+  const info=next?'<div class="cw-fixture"><div><p class="cw-fixture-date">'+esc(next.day)+' · '+(elapsed===0?'本日':elapsed+'日後')+'</p>'+
+   '<h3>'+esc(next.name)+'</h3><p>'+(next.opponent?'対 '+club(w,next.opponent):'対戦相手は抽選・進行後に決定')+(park?' · '+esc(park):'')+'</p></div></div>':'';
   let contents;
   if(f){
    const reason=w.health.injury?'故障のため欠場':role==='bench'?'今日は登板予定なし':role==='inactive'?'出場メンバー外':'';
    contents=info+(w.currentGame?act('play','試合を再開','','primary-button'):
-    eligible?`<p class="cw-note">${esc(M.roleText[role])}${f.development?' · 今学年の出場機会':''}</p>
-     <div class="cw-grid">${act('play','自分の出番をプレー','self','primary-button')}${act('play','フル試合をプレー','full')}
-     ${act('play','重要場面だけ','key')}${act('simulate','この試合を自動進行')}</div>`:
-    `<p class="cw-note">${reason}</p>${act('simulate','試合結果を確認する','','primary-button')}`);
+    eligible?'<p class="cw-note">'+esc(M.roleText[role])+(f.development?' · 今学年の出場機会':'')+'</p>'+
+      '<div class="cw-grid">'+act('play','自分の出番をプレー','self','primary-button')+act('play','フル試合をプレー','full')+
+      act('play','重要場面だけ','key')+act('simulate','この試合を自動進行')+'</div>':
+      '<p class="cw-note">'+reason+'</p>'+act('simulate','試合結果を確認する','','primary-button'));
   }else{
-   const peer=w.members(w.player.club).find(p=>p.id!==w.player.id);
-   const training=w.lastTraining===w.day?'':`<details class="cw-train"><summary>練習する</summary><div class="cw-grid">
-    ${(w.pitching?M.pitching:M.batting).map(key=>act('train',NightCareerWorld.training[key]+' '+Math.round(w.player[key]),key)).join('')}</div></details>`;
-   const rest=w.lastLife!==w.day&&w.health.fatigue>0?act('life','休養する','rest'):'';
-   const rehab=w.lastLife!==w.day&&w.health.injury?act('life','リハビリする','rehab'):'';
-   const social=w.lastLife!==w.day&&peer?act('social','チームメイトと交流',peer.id):'';
-   const schoolEvent=['school','amateur'].includes(w.stage)?NightCareerWorldSchool.calendar(w).find(e=>e.format>=3&&e.day>=w.day):null;
-   contents=info+(schoolEvent&&schoolEvent.name!==next?.name?`<p class="cw-note">次の節目 · ${esc(schoolEvent.name)} ${schoolEvent.day}</p>`:'')+
-    (next?.opponent?`<p class="cw-note">${w.health.injury>elapsed?'故障のため欠場見込み':'出場予定は当日の選考で決定'}</p>`:'')+
-    training+`<div class="cw-grid">${rest}${rehab}${social}${act('advance','1日進める','day')}</div>
-    <div class="cw-grid cw-next-buttons">${act('advance','次の試合まで','game','primary-button')}${act('advance','重要イベントまで','event')}</div>
-    <details class="cw-batch"><summary>まとめて進める</summary><p>通常試合を自動処理し、各学年の最初の出場機会、決勝や契約などで停止します。</p>
-    ${act('advance','シーズンを自動進行','season')}</details>`;
+   const upcomingSchool=['school','amateur'].includes(w.stage)?
+    NightCareerWorldSchool.calendar(w).find(e=>e.format>=3&&e.day>=w.day):null;
+   contents=info+(upcomingSchool&&upcomingSchool.name!==next?.name?
+      '<p class="cw-note">次の節目 · '+esc(upcomingSchool.name)+' '+upcomingSchool.day+'</p>':'')+
+     (next?.opponent?'<p class="cw-note">'+(w.health.injury>elapsed?'故障のため欠場見込み':'出場予定は当日の選考で決定')+'</p>':'')+
+     successPanel(w)+
+     '<div class="cw-grid cw-next-buttons">'+act('advance','次の週へ','week','primary-button')+
+     act('advance','次の試合へ','game')+act('advance','重要イベントへ','event')+
+     act('advance','1日だけ進める','day')+'</div>'+
+     '<details class="cw-batch"><summary>まとめて進める</summary>'+
+      '<p>通常試合を自動処理し、学年最初の出場機会や重要な大会では停止します。</p>'+
+      act('advance','シーズンを自動進行','season')+'</details>';
   }
   return section(f?'今日の試合':'今日の行動',contents);
  }
