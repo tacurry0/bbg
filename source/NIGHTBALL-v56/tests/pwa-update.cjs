@@ -99,10 +99,10 @@ async function scenario({controlled = true, playing = false} = {}) {
   await firstInstall.poll();
   assert.equal(firstInstall.banner.hidden, true, 'first-time installation does not ask to update');
 
-  assert(index.includes('./pwa-update.js?v=1'));
+  assert(index.includes('./pwa-update.js?v=2'));
   assert(index.includes('./pwa-update.css?v=1'));
   assert(index.includes('./app.js?v=85'));
-  assert(sw.includes('./pwa-update.js?v=1'));
+  assert(sw.includes('./pwa-update.js?v=2'));
   assert(sw.includes('./pwa-update.css?v=1'));
   assert(sw.includes('./stadium3d.js?v=77'));
   assert(sw.includes('./app.js?v=85'));
