@@ -54,3 +54,23 @@
 .cw-details{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;padding-bottom:10px}
 .modal[data-kind="career-world-detail"] .cw-panel{color:#173b50}
 @media(max-width:360px){.cw-grid button{font-size:.84rem}.cw-profile{gap:6px}.cw-team-logo{width:27px;height:27px}}
+
+/* Single-screen weekly player actions; scoped to the career view only. */
+.cw-success-meter{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:9px 0}
+.cw-success-meter>div{display:grid;grid-template-columns:1fr auto;gap:4px 8px;padding:8px 10px;border:1px solid #b3ddec;border-radius:10px;background:#f3fbff}
+.cw-success-meter span{font-size:.83rem;font-weight:800;color:#234c64}
+.cw-success-meter b{font-size:.86rem;color:#1c3a4b}
+.cw-success-meter meter{width:100%;grid-column:1/-1;height:11px;accent-color:#22a168}
+.cw-success-cmd{margin:12px 0 9px}
+.cw-success-cmd h3{margin:7px 0 2px;font-size:1rem;color:#16405f}
+.cw-success-cmd .cw-note{margin:2px 0 9px}
+.cw-command-grid button{font-weight:800;min-height:54px;font-size:.98rem;border-radius:10px}
+.cw-success-scene{background:linear-gradient(160deg,#eaf8ff,#fffdf0);border:1px solid #9bcde2;border-radius:11px;padding:12px;margin:9px 0}
+.cw-success-scene h3{margin:4px 0 9px;font-size:1.08rem;color:#16405f}
+.cw-success-scene>p{line-height:1.5}
+.cw-scene-kicker{font-size:.8rem;font-weight:800;color:#285b76;margin:0}
+.cw-choices{display:grid;gap:8px;margin-top:12px}
+.cw-choices button{min-height:46px;white-space:normal;text-align:left;font-size:.93rem;line-height:1.4}
+.cw-last-action{background:#f4f8e8;border-left:4px solid #82aa3b;padding:8px 10px;margin:9px 0;border-radius:4px;font-size:.89rem;line-height:1.45}
+.cw-next-buttons{margin-top:12px}
+@media(max-width:360px){.cw-command-grid button{font-size:.87rem}.cw-success-meter>div{padding:7px}}
