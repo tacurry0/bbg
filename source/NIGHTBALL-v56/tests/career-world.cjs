@@ -207,6 +207,7 @@ for(const short of [true,false]){
  assert.equal(Z.state(w).pending,null);
  assert.equal(Z.state(w).actionWeek,Z.week(w));
  assert(w.player.contact>old);
+ assert.equal(Z.state(w).goal.skill,'contact');
  assert(Z.state(w).energy<energy);
  assert(!Z.action(w,'rest'));
  const saved=roundtrip(w);
