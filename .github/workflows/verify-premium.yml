@@ -42,7 +42,7 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=84' dist/index.html
+          grep -Fq 'game.js?v=85' dist/index.html
           grep -Fq 'npb-rosters.js?v=74' dist/index.html
           grep -Fq 'app.js?v=84' dist/index.html
           grep -Fq 'kbo-rosters.js?v=74' dist/index.html

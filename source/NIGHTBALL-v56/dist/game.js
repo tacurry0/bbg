@@ -275,7 +275,11 @@ window.NightGame=class NightGame{
    }
   }
   if(simulated)return;
-  if(['single','double','triple'].includes(kind))this.emit('music-result',{kind:'hit',player:this.batter.id,side:this.side});
+  if(['single','double','triple'].includes(kind)){
+   const f=this.field,batter=f?.runners.find(r=>r.batter);
+   if(f?.resolved&&batter&&!batter.out&&(batter.furthest??batter.progress)<1)f.hitMusicPending=true;
+   else this.playHitMusic();
+  }
   if(this.career?.continuous&&this.defending&&this.outs>=3)this.next='career';
   if(this.career){
    const c=this.career,tracking=c.metrics||={};
@@ -891,7 +895,22 @@ window.NightGame=class NightGame{
    r.progress+=Math.sign(delta)*Math.min(Math.abs(delta),dt*r.speed/27.44);
    r.progress=clamp(r.progress,0,4);ahead=r.progress>=4?Infinity:r.progress;
    const i=Math.min(3,Math.floor(r.progress)),u=r.progress-i;r.x=BASES[i].x+(BASES[i+1].x-BASES[i].x)*u;r.y=BASES[i].y+(BASES[i+1].y-BASES[i].y)*u;
+   if(f.hitMusicPending&&r.batter&&r.progress>=1)this.playHitMusic();
   }
+ }
+ playHitMusic(){
+  const f=this.field;
+  if(f?.hitMusicPlayed)return;
+  if(f){f.hitMusicPlayed=true;delete f.hitMusicPending;}
+  this.emit('music-result',{kind:'hit',player:this.batter.id,side:this.side});
+ }
+ updateLiveHitMusic(){
+  const f=this.field,m=f.manual;
+  if(!this.inMatch||!m||f.resolved||f.hitMusicPlayed||f.overFence||!f.ball.bounces||m.fly||this.outs>=3)return;
+  if(f.runners.find(r=>r.batter).furthest<1||m.outs.some(o=>o.type==='force'))return;
+  // An outstanding force on another runner can still turn safe arrival into a fielder's choice.
+  if(f.runners.some(r=>!r.out&&!r.scored&&this.manualForceBase(r)))return;
+  this.playHitMusic();
  }
  fieldingAction(index,type){
   const f=this.field,actor=f.fielders[index];
@@ -932,6 +951,7 @@ window.NightGame=class NightGame{
   const f=this.field,b=f.ball;f.elapsed+=dt;
   const move=(p,target,speed)=>{const d=dist(p,target),step=Math.min(d,speed*dt);p.running=d>.5;if(d>.001){p.x+=(target.x-p.x)/d*step;p.y+=(target.y-p.y)/d*step;}};
   this.updateRunners(dt);
+  this.updateLiveHitMusic();
   if(f.manual?.secured){this.updateManualDefense(dt,move);return;}
   if(f.throw){
    const th=f.throw,arrived=this.stepReturn(th,b,dt);

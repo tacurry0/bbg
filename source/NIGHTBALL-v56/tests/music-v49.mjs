@@ -104,4 +104,63 @@ game.outs=2;game.strikes=2;game.strike(true);
 assert.equal(cues.at(-1).thirdOut,true);
 game.endAtBat('double');assert.equal(cues.at(-1).kind,'hit');
 assert.equal(cues.at(-1).side,game.side);
-console.log('PASS: chance, hit and third-out cues, per-team replacement, opposite-team overlap, inheritance and mute.');
+
+function battedBall({speed=8,firstOccupied=false,manualRunning=false}={}){
+ const hits=[];
+ const g=new NightGame('match','standard',(type,value)=>{
+  if(type==='music-result'&&value.kind==='hit')hits.push(value);
+ },{manualRunning});
+ g.half='bottom';
+ if(firstOccupied){g.bases[0]=true;g.baseIds[0]=g.lineups.home[1].id;}
+ g.startField(36,43,.16,false);
+ for(const p of g.field.fielders)p.x=p.y=p.startX=p.startY=999;
+ const batter=g.field.runners.find(r=>r.batter);
+ batter.speed=speed;
+ return {g,hits,batter};
+}
+function fieldUntil(g,condition){
+ for(let i=0;i<1200&&!condition()&&g.phase==='field';i++)g.updateField(.01);
+ assert(condition());
+}
+for(const manualRunning of [false,true]){
+ const {g,hits,batter}=battedBall({speed:5.5,manualRunning});
+ fieldUntil(g,()=>g.field.ball.bounces>0);
+ assert(batter.progress<1);
+ assert.equal(hits.length,0,'ground contact alone does not start the hit song');
+ fieldUntil(g,()=>batter.furthest===1);
+ assert.deepEqual(hits,[{kind:'hit',player:batter.id,side:'home'}]);
+ assert.equal(g.phase,'field','the hit song starts before the ball comes back in');
+ g.finishManualPlay();
+ assert.equal(hits.length,1,'the final hit ruling does not restart the song');
+}
+const longFly=battedBall({speed:18});
+fieldUntil(longFly.g,()=>longFly.batter.furthest===1);
+assert.equal(longFly.g.field.ball.bounces,0);
+assert.equal(longFly.hits.length,0,'first base alone does not confirm the hit');
+fieldUntil(longFly.g,()=>longFly.hits.length===1);
+assert(longFly.g.field.ball.bounces>0);
+
+const caught=battedBall({speed:18});
+fieldUntil(caught.g,()=>caught.batter.furthest===1);
+caught.g.secureManualBall(7,true);
+caught.g.finishManualPlay();
+assert.equal(caught.hits.length,0,'a fly caught before it lands is an out even after first base');
+
+const choice=battedBall({firstOccupied:true,manualRunning:true});
+const lead=choice.g.field.runners.find(r=>r.start===1);
+lead.speed=2.5;
+fieldUntil(choice.g,()=>choice.batter.furthest===1&&choice.g.field.ball.bounces>0);
+assert.equal(choice.hits.length,0,'a force on a lead runner is still possible');
+choice.g.manualOut(lead,'force',2);
+choice.g.finishManualPlay();
+assert.equal(choice.hits.length,0,'a fielder’s choice does not play the hit song');
+
+const groundRule=battedBall();
+groundRule.g.field.ball.bounces=1;
+groundRule.g.field.groundRule=true;
+groundRule.g.finishBall('double');
+assert.equal(groundRule.hits.length,0,'an awarded hit waits for actual first-base arrival');
+for(let i=0;i<1200&&!groundRule.hits.length;i++)groundRule.g.updateRunners(.01);
+assert(groundRule.batter.progress>=1);
+assert.equal(groundRule.hits.length,1);
+console.log('PASS: per-team music, result cues, fair-ball and first-base timing, force plays and one hit cue per play.');
