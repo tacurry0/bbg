@@ -170,7 +170,7 @@
       '<p>通常試合を自動処理し、学年最初の出場機会や重要な大会では停止します。</p>'+
       act('advance','シーズンを自動進行','season')+'</details>';
   }
-  return section(f?'今日の試合':'今日の行動',contents);
+  return section(f?'今日の試合':'今日の行動',(w.success?.goal?'<p class="cw-goal"><strong>次戦の課題：</strong>'+esc(w.success.goal.label)+'</p>':'')+contents);
  }
  const detailViews={schedule,skills,players:w=>squad(w)+stats(w),life:w=>market(w)+life(w),international,history};
  const detail=(w,id)=>detailViews[id]?.(w)||'';
