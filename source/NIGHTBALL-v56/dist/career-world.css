@@ -74,3 +74,5 @@
 .cw-last-action{background:#f4f8e8;border-left:4px solid #82aa3b;padding:8px 10px;margin:9px 0;border-radius:4px;font-size:.89rem;line-height:1.45}
 .cw-next-buttons{margin-top:12px}
 @media(max-width:360px){.cw-command-grid button{font-size:.87rem}.cw-success-meter>div{padding:7px}}
+
+.cw-goal{padding:8px 10px;border-radius:8px;background:#fdf2cf;color:#5e3d10;border:1px solid #e2c35c;font-size:.88rem;line-height:1.45}
