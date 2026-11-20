@@ -1,3 +1,4 @@
+import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=71';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
@@ -60,7 +61,11 @@ export class StadiumRenderer {
   this.materials=new Map();this.geometries={sphere:new T.SphereGeometry(1,32,24),lowSphere:new T.SphereGeometry(1,10,7),box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,12)};
   this.contactShadowTex=this.gl.isSoftwareRenderer?null:createContactShadowTexture();
   this.vfx=new StadiumVFX(this);
-  this.makeSky();this.makeGround();this.makeStadium();
+  this.makeSky();
+  const groundStart = this.scene.children.length;
+  this.makeGround();
+  rememberOriginalGround(this, this.scene.children.slice(groundStart));
+  this.makeStadium();
   this.pitcher=this.makePlayer('pitcher','away',18);this.batter=this.makePlayer('batter','home',8);this.catcher=this.makePlayer('catcher','away',2);
   this.fielders=Array.from({length:9},(_,i)=>this.makePlayer('fielder','away',i+1));this.runners=Array.from({length:4},(_,i)=>this.makePlayer('runner','home',i+1));
   this.players=[this.pitcher,this.batter,this.catcher,...this.fielders,...this.runners];
@@ -193,6 +198,7 @@ export class StadiumRenderer {
    if(this.lightingMode!==mode)applyParkLighting(this,park,mode);
    return;
   }
+  leaveTokyoDome(this);
   this.parkKey=park.id;
   if(this.grassUniforms){
    const left=park.left??park.corner,right=park.right??park.corner;
@@ -257,6 +263,7 @@ export class StadiumRenderer {
   }
   if(!park.pro&&!VENUE_VISION_PARKS.has(park.id))buildPremiumPark(this,park);
   applyParkLighting(this,park,mode);
+  if (park.id === 'tokyo-dome') showTokyoDome(this);
  }
  loadUniforms(){
   if(typeof location==='undefined')return;
@@ -789,7 +796,7 @@ export class StadiumRenderer {
   const side=replay?(replay==='infield'?20:broadcast?-26:-22):baseSide;
   const target=this.fieldFocus.set(x,Math.max(0,b.z*.43),-centerZ);
   const camera=this.fieldPosition.set(x*.91+side,height,-centerZ+height*(infield?.84:aerial?.76:.63));
-  const roofLimit=(position)=>NightPlayers.roofSurface(park,position.x,-position.z)-3.5;
+  const roofLimit=(position)=>domeCameraLimit(this, position, NightPlayers.roofSurface(park,position.x,-position.z)-3.5);
   const squeeze=Math.max(0,camera.y-roofLimit(camera));
   if(squeeze){
    camera.z+=Math.min(10,squeeze*.65);
