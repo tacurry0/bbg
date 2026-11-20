@@ -2,9 +2,9 @@ const assert=require('node:assert/strict');
 global.window=global;
 const modules=['ratings-data','players','pro-parks','pennant','npb-postseason','npb-data','npb-rosters','kbo-data','kbo-rosters',
  'career-leagues','career-development','career-life','career-extras','career','game',
- 'career-world-data','career-world-identities','career-world-leagues','career-world-international','career-world-school','career-world-match','career-world-save','career-world','career-world-view'];
+ 'career-world-data','career-world-identities','career-world-leagues','career-world-international','career-world-school','career-world-match','career-world-save','career-world-success','career-world','career-world-view'];
 for(const file of modules)require('../dist/'+file+'.js');
-const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld;
+const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld,Z=NightCareerWorldSuccess;
 const countries=['jp','tw','kr'];
 const fresh=(country,extra={})=>new W({country,name:{jp:'早瀬 悠馬',tw:'陳承翰',kr:'キム・ハジュン'}[country],
  region:D.countries[country].region[0],style:'contact',schoolIndex:1,schoolTier:1,
