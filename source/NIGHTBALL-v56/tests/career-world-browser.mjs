@@ -75,9 +75,18 @@ try{
    assert.equal(await page.evaluate(key=>nightSettings.music.assignments[key].cheer,'career:'+seed),'preset:clap');
    await page.locator('[data-action="music-back"]').click();
   }
-  await page.locator('.cw-train summary').click();
   const drill=country==='kr'?'control':'contact';
-  await press('train',drill);
+  await press('success-action','practice');
+  await press('success-skill',drill);
+  for(let round=0;round<3;round++){
+   const key=await page.evaluate(()=>{
+    const w=NightCareerWorld.restore(NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
+    return NightCareerWorldSuccess.currentQuestion(w)[2];
+   });
+   await press('success-choice',String(key));
+  }
+  assert.match(await page.locator('.cw-last-action').innerText(),/基礎練習/);
+  assert.equal((await state()).success.actionWeek,'2027-'+(country==='jp'?'03-29':country==='tw'?'08-09':'03-01'));
   assert.match(await page.locator('.cw-hero').innerText(),new RegExp(name));
   assert.equal(await page.locator('[data-world-action="tab"]').count(),0);
   await press('detail','schedule');
