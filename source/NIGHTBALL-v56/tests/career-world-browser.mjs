@@ -86,6 +86,7 @@ try{
    await press('success-choice',String(key));
   }
   assert.match(await page.locator('.cw-last-action').innerText(),/基礎練習/);
+  assert.equal((await state()).success.goal.skill,drill);
   assert.equal((await state()).success.actionWeek,'2027-'+(country==='jp'?'03-29':country==='tw'?'08-09':'03-01'));
   assert.match(await page.locator('.cw-hero').innerText(),new RegExp(name));
   assert.equal(await page.locator('[data-world-action="tab"]').count(),0);
