@@ -1,0 +1,48 @@
+/* Compact standalone-PWA update notification, shown only outside a match. */
+#nightball-update-banner[hidden] { display: none !important; }
+#nightball-update-banner {
+  position: fixed;
+  z-index: 10010;
+  left: max(12px, env(safe-area-inset-left));
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  max-width: 520px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  border: 1px solid rgba(144, 206, 235, .32);
+  border-radius: 16px;
+  background: rgba(13, 28, 41, .98);
+  color: #f5f9fd;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, .42);
+  padding: 13px 14px;
+  font: 13px/1.5 system-ui, -apple-system, sans-serif;
+}
+#nightball-update-banner .nightball-update-copy {
+  display: grid;
+  gap: 2px;
+  flex: 1 1 220px;
+}
+#nightball-update-banner strong { font-weight: 750; font-size: 14px; }
+#nightball-update-banner span { color: #c6d9e4; font-size: 12px; }
+#nightball-update-banner .nightball-update-actions { display: flex; gap: 8px; align-items: center; }
+#nightball-update-banner button {
+  font: inherit;
+  font-weight: 700;
+  border-radius: 9px;
+  min-height: 37px;
+  padding: 7px 12px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+#nightball-update-banner [data-pwa-apply] { background: #d6f3ff; color: #102d3a; }
+#nightball-update-banner [data-pwa-apply]:disabled { opacity: .6; cursor: wait; }
+#nightball-update-banner [data-pwa-later] { background: transparent; color: #e2eff7; border-color: #587485; }
+@media (max-width: 370px) {
+  #nightball-update-banner { padding: 11px; }
+  #nightball-update-banner .nightball-update-actions { width: 100%; justify-content: flex-end; }
+}
