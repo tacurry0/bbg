@@ -218,7 +218,7 @@
   const keys=w.pitching?M.pitching:M.batting;
   const forms=w.pitching?['オーバー','スリークォーター','サイド']:['基本','振り子','ノーステップ','長打重視'];
   const perks=w.pitching?{pressure:'対ピンチ',lateLife:'球威',recovery:'回復'}:{clutch:'チャンス',discipline:'選球眼',bunt:'バント',speed:'走塁'};
-  return section('練習・能力',`<p>${D.types[w.player.growth]} · 疲労 ${Math.round(w.health.fatigue)} · スランプ ${w.health.slump>=1?'あり':'なし'}</p><div class="cw-grid">${keys.map(k=>act('train',NightCareerWorld.training[k]+' '+Math.round(w.player[k]),k)).join('')}</div>`)+
+  return section('練習・能力',`<p>${D.types[w.player.growth]} · 疲労 ${Math.round(w.health.fatigue)} · スランプ ${w.health.slump>=1?'あり':'なし'}</p><p class="cw-note">練習はメイン画面の「今週の行動」から実行します。</p>${pills('能力',keys.map(k=>'<span>'+NightCareerWorld.training[k]+' '+Math.round(w.player[k])+'</span>').join(''))}`)+
    section('フォーム・転向',`<p>現在のフォーム ${esc(w.form)}</p><div class="cw-grid">${forms.map(x=>act('form',x,x)).join('')}${(w.pitching?['SP','RP','CP']:D.positions).map(x=>act('convert',NightCareer.positionNames[x]||({SP:'先発',RP:'中継ぎ',CP:'抑え'})[x],x)).join('')}</div>`)+
    section('特殊能力・球種',`<p>経験値 ${Math.floor(w.experience)} · 習得に12必要</p><div class="cw-grid">${Object.entries(perks).map(([k,v])=>act('learn',v+(w.perks.includes(k)?' ✓':''),k)).join('')}${w.pitching?NightGame.TYPES.filter(t=>!w.player.pitches.includes(t.id)).map(t=>act('learn',t.name,t.id)).join(''):''}</div>`);
  }
