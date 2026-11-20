@@ -270,6 +270,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
   const change={
    advance:()=>w.run(v),simulate:()=>w.finishDay(),
+   'success-action':()=>NightCareerWorldSuccess.action(w,v),
+   'success-skill':()=>NightCareerWorldSuccess.skill(w,v),
+   'success-choice':()=>NightCareerWorldSuccess.choose(w,v),
+   'success-back':()=>{if(w.success?.pending)return false;NightCareerWorldSuccess.state(w).menu=null;return true;},
    train:()=>w.train(v),form:()=>w.changeForm(v),convert:()=>w.conversion(v),learn:()=>w.learn(v),life:()=>w.lifestyle(v),social:()=>w.lifestyle('social',v),
    'draft-apply':()=>w.draftApply(true),'draft-next':()=>w.draftReveal(false),'draft-all':()=>w.draftReveal(true),
    'draft-sign':()=>w.signDraft(),amateur:()=>w.amateur(v),request:()=>w.openMarket(true),
