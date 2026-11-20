@@ -324,6 +324,7 @@
      p.injury=m()<.035?Math.round(8+m()*26):Math.max(0,p.injury-30);
     }
    }
+   Z.tick(this);
   }
   run(mode){
    if(this.currentGame||Z.state(this).pending)return 0;
