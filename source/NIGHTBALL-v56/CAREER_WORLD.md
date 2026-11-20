@@ -34,3 +34,16 @@
 - 登録表の照合資料は[KBOのアジア枠規定](https://www.koreabaseball.com/MediaNews/Notice/View.aspx?bdSe=11879)、[韓聯社の途中加入・交代記録](https://www.yna.co.kr/view/AKR20260708147051007)、[CPBL外籍登録記事](https://tsna.com/article/202089)、[髙塩將樹の国内枠事例](https://www.cna.com.tw/news/aspt/202407100320.aspx)、[NPB公示](https://npb.jp/announcement/)、および収録済みのAPBC各国代表名簿です。
 - 日本シリーズは第8戦以降を決着制とし、KBOのワイルドカード以外は引き分けの球場で再試合を行います。追加の引き分けが続く場合はゲーム内の決着試合で日程の無限化を防ぎます。CPBLは前後期首位および台湾シリーズ直行に関わる同率時に決定戦を行います。同率が3球団以上の場合はゲーム内の勝ち残り方式です。[NPB日本シリーズ開催要項](https://npb.jp/nippons/2026/information.html)、[KBOポストシーズン告知](https://www.koreabaseball.com/MediaNews/Notice/View.aspx?bdSe=12183)、[CPBLリーグ規約](https://www.cpbl.com.tw/theme/client/download/%E8%81%AF%E7%9B%9F%E8%A6%8F%E7%AB%A0.pdf)
 - WBCは20チームの予選からベスト8、プレミア12は16チームから2次ラウンド・スーパーラウンド、APBCは4チームの総当たりから順位決定戦へ進みます。将来の開催年・組み合わせはゲーム内想定として表示します。WBCとプレミア12の収録リーグ以外の代表には架空ロースターを使い、同率順位や休養日、国籍の例外資格は簡略化しています。[WBC大会形式](https://www.mlb.com/press-release/press-release-rosters-announced-for-the-2026-world-baseball-classic)、[2027年プレミア12大会形式](https://www.wbsc.org/en/news/expanded-wbsc-premier12-2027-unveils-new-format-as-road-to-tokyo-takes-shape)、[APBC大会概要](https://www.japan-baseball.jp/jp/games/apbc2026/index.html)
+
+## 週行動型の新キャリア（2026-11）
+
+既存の3国別学校大会、ドラフト、昇格・移籍、国内ポストシーズン、代表戦、アジアシリーズは維持し、
+新キャリアのメイン画面に1週間1回の練習／特訓／休養／交流／遊びを統合しています。
+練習は状況判断の3問チャレンジ（打撃・走塁・守備・投球）で、正答数と体力に応じて成長します。
+成功すると次の実戦に個別課題が設定され、達成時は監督評価と経験値に反映されます。
+友人・監督・先輩・ライバルとのイベントは選択肢と結果を履歴保存し、好感度・気分・試合評価に影響します。
+同一週の行動重複を防ぎ、途中の練習やイベントもセーブから再開します。
+試合のある日は既存の自分の出番・フル試合・重要場面の操作を優先表示します。
+
+既存の旧キャリアは独立モードとして維持しています。旧キャリアにある全てのイベント／アクション型ミニゲームを
+新キャリアにそのまま移植したものではなく、選択式の週行動を新設した段階です。
