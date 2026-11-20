@@ -30,8 +30,9 @@
 
   function updateReady() {
     if (!hasController) return; // Initial offline installation isn't an app update.
+    // Re-checks must not reopen a notice the player already dismissed.
+    if (!updateAvailable) dismissed = false;
     updateAvailable = true;
-    dismissed = false;
     showNotice();
   }
 
