@@ -1,7 +1,7 @@
 /* Player career state. The 2026 clubs are immutable outside this save. */
 (()=>{
  'use strict';
- const D=NightCareerWorldData,L=NightCareerWorldLeagues,S=NightCareerWorldSchool,M=NightCareerWorldMatch,I=NightCareerWorldInternational;
+ const D=NightCareerWorldData,L=NightCareerWorldLeagues,S=NightCareerWorldSchool,M=NightCareerWorldMatch,I=NightCareerWorldInternational,Z=NightCareerWorldSuccess;
  const {date,stamp,countries,leagueCountries}=D;
  const {clamp,blank,merge}=M;
  const playerId='career-player';
@@ -62,6 +62,7 @@
    this.ensureSchoolClub('school-player',this.school,this.schoolTier,this.region);
    this.ensureSchoolClub('region-player',this.region+'代表',2,this.region);
    this.note(this.school+'に入学');
+   Z.state(this);
   }
   static restore(data){
    if(![1,2].includes(data?.version)||!countries[data.country]||!iso.test(data.day)||data.player?.id!==playerId||
@@ -75,6 +76,7 @@
    }
    world.schoolPlay ||= {};
    world.recentFarm ||= [];
+   Z.state(world);
    if(world.farmStats)world.farmStats.walks ??= 0;
    if(world.queue?.kind==='school'&&!world.currentGame)world.protectSchoolFixture(world.active);
    if(world.country==='tw'&&!countries.tw.region.includes(world.region)){
@@ -187,6 +189,7 @@
   nextGrade(){
    this.academicYear++;this.grade++;this.schoolCursor=0;this.schoolEvents={};this.tournament=null;this.regionalSelected=false;
    this.note('高校'+this.grade+'年に進級');
+   Z.semester(this);
    for(const p of this.people.filter(p=>p.stage==='school'&&p.club)){
     if(this.year-p.born<18){this.grow(p);continue;}
     p.stage='amateur';p.club=null;p.amateur=routing(p.nation,p.growth);
@@ -323,7 +326,7 @@
    }
   }
   run(mode){
-   if(this.currentGame)return 0;
+   if(this.currentGame||Z.state(this).pending)return 0;
    const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1);
    const limit={day:1,week:7,game:370,event:370,season:420}[mode]||1;
    let steps=0;
@@ -431,6 +434,7 @@
     if(p.relationship>24)p.relationship-=.3;
    }
    if(s.g){
+    Z.afterGame(this,f,s);
     const quality=this.pitching?clamp((4.5-M.era(s))*.7,-5,6):clamp((M.ops(s)-.65)*3,-3,6);
     this.ratings.manager=clamp(this.ratings.manager+quality*.48-(s.errors||0),0,100);
     this.ratings.coach=clamp(this.ratings.coach+quality*.3+.08,0,100);
