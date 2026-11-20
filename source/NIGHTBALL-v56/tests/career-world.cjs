@@ -192,6 +192,43 @@ for(const short of [true,false]){
  assert(w.schoolHistory.some(row=>row.name==='大学 リーグ戦'));
  assert.equal(D.countries.jp.region.length,47);
 }
+// Success-style weekly choice, training with multiple answers, story branching and save/load.
+{
+ const w=fresh('jp');
+ assert(Z.available(w));
+ const old=w.player.contact,energy=Z.state(w).energy;
+ assert(Z.action(w,'practice'));
+ assert(Z.skill(w,'contact'));
+ for(let i=0;i<3;i++){
+  const q=Z.currentQuestion(w);
+  assert(q);
+  assert(Z.choose(w,q[2]));
+ }
+ assert.equal(Z.state(w).pending,null);
+ assert.equal(Z.state(w).actionWeek,Z.week(w));
+ assert(w.player.contact>old);
+ assert(Z.state(w).energy<energy);
+ assert(!Z.action(w,'rest'));
+ const saved=roundtrip(w);
+ assert.equal(saved.success.stories.length,1);
+ saved.advanceDate('2027-04-12');
+ assert(Z.available(saved));
+ assert(Z.action(saved,'friend'));
+ assert(saved.success.pending?.type==='story');
+ const previous=saved.ratings.trust;
+ assert(Z.choose(saved,0));
+ assert(saved.ratings.trust>=previous);
+ assert.equal(saved.success.stories.length,2);
+ assert(!Z.available(saved));
+ const kr=fresh('kr',{style:'control'});
+ assert(Z.action(kr,'special'));assert(Z.skill(kr,'control'));
+ for(let i=0;i<3;i++)assert(Z.choose(kr,0));
+ assert.equal(kr.success.actionWeek,Z.week(kr));
+ const tw=fresh('tw');
+ assert(Z.action(tw,'rest'));
+ assert.equal(tw.success.actionWeek,Z.week(tw));
+ assert(tw.success.energy>76);
+}
 const worlds={};
 for(const country of countries){
  let w=fresh(country);
