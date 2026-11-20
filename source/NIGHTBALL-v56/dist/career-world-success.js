@@ -168,9 +168,9 @@
    e.index++;
    if(e.index<drills[e.skill].length)return true;
    const success=e.correct>=2;
-   const boost=(e.hard?.75:.5)+e.correct*(e.hard?1.05:.65);
+   const boost=(e.hard?.28:.16)+e.correct*(e.hard?.29:.16);
    w.improve(e.skill,boost);
-   w.experience+=(e.hard?4:2)+e.correct;
+   w.experience+=(e.hard?2:1)+Math.floor(e.correct/2);
    w.ratings.coach=clamp(w.ratings.coach+(success?2:1),0,100);
    if(w.stage==='school')w.scoutLevel=clamp(w.scoutLevel+(success&&e.hard?1.5:.25),0,95);
    s.energy=clamp(s.energy-(e.hard?34:15),0,100);
@@ -178,6 +178,7 @@
    w.health.fatigue=clamp(w.health.fatigue+(e.hard?17:7),0,100);
    if(!success&&e.hard)w.health.slump=clamp(w.health.slump+.2,0,4);
    w.trainingPlan=e.skill;
+   if(success)s.goal={skill:e.skill,label:({contact:'次の出場で安打を記録',power:'次の出場で長打を記録',run:'次の出場で出塁する',field:'次の出場を失策なしで終える',arm:'次の出場を失策なしで終える',velocity:'次の登板で2奪三振',control:'次の登板を2失点以内に抑える',movement:'次の登板で2奪三振',stamina:'次の登板で3イニング以上投げる'})[e.skill],day:w.day};
    mark(w,e.title, e.correct+' / '+drills[e.skill].length+'問正解 · '+(success?'技術が身についた。':'課題を持ち帰って次週の練習へ。'));
    return true;
   }
@@ -209,6 +210,19 @@
   if(stats.hr||stats.sv){
    s.morale=clamp(s.morale+4,0,100);
   }
+  if(s.goal&&['school','regular','farm','post','asia'].includes(f.kind)){
+   const skill=s.goal.skill;
+   const met=skill==='contact'?stats.h>=1:skill==='power'?stats.tb>=2:skill==='run'?stats.h+stats.bb>0:
+    skill==='field'||skill==='arm'?stats.errors===0:
+    skill==='velocity'||skill==='movement'?stats.k>=2:skill==='control'?stats.er<=2:stats.outs>=9;
+   if(met){
+    w.ratings.manager=clamp(w.ratings.manager+2.5,0,100);
+    w.experience+=2;
+    s.morale=clamp(s.morale+4,0,100);
+   }
+   w.note('練習の課題 · '+s.goal.label+'：'+(met?'達成！ 監督から評価された。':'今回は未達成。次の練習に活かそう。'));
+   s.goal=null;
+  }
  }
  function tick(w){
   const s=state(w);
@@ -219,6 +233,7 @@
  function semester(w){
   const s=state(w);
   s.morale=clamp(s.morale+4,0,100);
+  s.goal=null;
   s.last={day:w.day,title:'新しい学年',summary:'先輩の姿を思い出しながら、次の大会に向けて練習が始まった。'};
   s.stories.push(s.last);
   if(s.stories.length>90)s.stories.shift();
