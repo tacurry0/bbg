@@ -138,12 +138,17 @@
   w.player.form=clamp(Math.round((s.morale-50)/7),-7,7);
  }
  function scene(w,kind){
-  const s=state(w),pool=scenes[w.stage==='pro'?'pro':'school'];
-  const unused=pool.filter(e=>!s.seen[e.id+'/'+w.grade]);
+  const s=state(w),month=Number(w.day.slice(5,7));
+  const pool=scenes[w.stage==='pro'?'pro':'school'].filter(e=>
+   e.id!=='graduation'||w.stage!=='school'||w.grade===3)
+   .filter(e=>e.id!=='entrance'||w.grade>=2)
+   .filter(e=>e.id!=='trip'||w.grade>=2)
+   .filter(e=>!['summer','senior'].includes(e.id)||month>=5&&month<=9);
+  const unused=pool.filter(e=>!s.seen[e.id+'/'+(w.stage==='pro'?w.year:w.grade)]);
   const picks=unused.length?unused:pool;
   const rng=w.random('success/story/'+kind+'/'+week(w));
   const event=picks[Math.floor(rng()*picks.length)];
-  s.seen[event.id+'/'+w.grade]=true;
+  s.seen[event.id+'/'+(w.stage==='pro'?w.year:w.grade)]=true;
   const fellow=w.members(w.player.club).find(p=>p.id!==w.player.id&&p.pos===w.player.pos)||
    w.members(w.player.club).find(p=>p.id!==w.player.id);
   const friend=fellow?.name||'チームメイト';
@@ -296,6 +301,22 @@
   if(!stats?.g)return;
   const s=state(w);
   s.gameCount++;
+  // The first big moments create an optional story, not just a stat increase.
+  const milestone=w.pitching?stats.k>=5&&!s.seen['five-strikeouts']:
+   stats.hr>=1&&!s.seen['first-home-run'];
+  if(milestone){
+   const id=w.pitching?'five-strikeouts':'first-home-run';
+   s.seen[id]=true;
+   if(!s.inbox){
+    s.inbox={type:'story',id,title:w.pitching?'初めての大奪三振':'記念すべき一発',
+     body:w.pitching?'5つ以上の三振を奪った。試合後、チームメイトが声をかけてくれた。':
+      'ホームランでチームを沸かせた。試合後、監督が笑顔で待っていた。',
+     friendId:null,choices:[
+      {label:'みんなで喜ぶ',text:'仲間に祝福され、また頑張ろうと思えた。',energy:-2,morale:10,manager:2,bond:7,skill:null},
+      {label:'次の試合に集中する',text:'余韻を胸に、次の練習目標を決めた。',energy:2,morale:5,manager:3,bond:2,skill:null}
+     ]};
+   }
+  }
   if(f.kind==='school'&&s.gameCount===1){
    s.morale=clamp(s.morale+8,0,100);
    w.note('初めての試合経験。これからの成長につながる一日になった。');
@@ -320,6 +341,14 @@
  function tick(w){
   const s=state(w);
   s.energy=clamp(s.energy+1,0,100);
+  const now=week(w);
+  if(s.storyWeek!==now){
+   s.storyWeek=now;
+   if(isPlaying(w)&&!s.inbox&&!s.pending&&w.random('success/ambient/'+now)()<.17){
+    s.inbox=scene(w,'ambient');
+    w.note('新しいイベント · '+s.inbox.title);
+   }
+  }
   if(s.morale<50)s.morale=Math.min(50,s.morale+.2);
   w.player.form=clamp(Math.round((s.morale-50)/7),-7,7);
  }
