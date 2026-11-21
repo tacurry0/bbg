@@ -215,7 +215,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   try{localStorage.setItem(NightCareer.key,JSON.stringify(career.save()));}
   catch{if(!careerSaveWarned){toast('キャリアを保存できませんでした');careerSaveWarned=true;}}
  }
- let world=null,worldCountry='',worldAlumni=[],worldPickerOpen=false,worldCreating=false;
+ let world=null,worldCountry='',worldAlumni=[],worldPickerOpen=false,worldCreating=null;
  let worldActive=false;
  const worldStore=NightCareerWorldSave;
  try{world=NightCareerWorldSlots.load();}catch{toast('キャリアの保存枠を読み込めませんでした。データは削除していません');}
@@ -245,7 +245,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const recent=worldAlumni.find(a=>a.country===worldCountry);
    if(recent)world.note('入学式でOBの'+recent.name+'が新入生を激励');
   }catch(error){toast(error.message);return;}
-  const committed=NightCareerWorldSlots.create(world);
+  const committed=NightCareerWorldSlots.create(world,worldCreating);
   if(!committed){world=null;toast('新しい保存枠に保存できませんでした。既存データは残っています');return;}
   worldCreating=false;worldPickerOpen=false;worldCountry='';worldDashboard();
  });
@@ -275,7 +275,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='slot-create'){
    if(world&&!saveWorld())return;
    if(NightCareerWorldSlots.list().slots.length>=NightCareerWorldSlots.capacity){toast('選手は最大3人までです');return;}
-   world=null;worldCountry='';worldPickerOpen=false;worldCreating=true;
+   world=null;worldCountry='';worldPickerOpen=false;worldCreating=+v;
    worldDashboard();return;
   }
   if(action==='country'){worldCountry=v;worldDashboard();return;}
@@ -297,6 +297,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    'success-action':()=>NightCareerWorldSuccess.action(w,v),
    'success-skill':()=>NightCareerWorldSuccess.skill(w,v),
    'success-choice':()=>NightCareerWorldSuccess.choose(w,v),
+   'success-event':()=>NightCareerWorldSuccess.openEvent(w),
+   'success-dismiss':()=>{if(!w.success?.inbox)return false;w.success.inbox=null;return true;},
    'success-back':()=>{if(w.success?.pending)return false;NightCareerWorldSuccess.state(w).menu=null;return true;},
    train:()=>w.train(v),form:()=>w.changeForm(v),convert:()=>w.conversion(v),learn:()=>w.learn(v),life:()=>w.lifestyle(v),social:()=>w.lifestyle('social',v),
    'draft-apply':()=>w.draftApply(true),'draft-next':()=>w.draftReveal(false),'draft-all':()=>w.draftReveal(true),
