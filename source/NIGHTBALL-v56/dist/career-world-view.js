@@ -32,7 +32,7 @@
   const cards=Array.from({length:3},(_,i)=>{
    const item=byId.get(i);
    if(!item)return '<article class="career-panel cw-panel cw-slot-card cw-slot-empty"><h3>選手 '+(i+1)+'</h3><p>新しい高校生活を始められます</p>'+
-    act('slot-create','この枠で新しい選手を作る','','primary-button')+'</article>';
+    act('slot-create','この枠で新しい選手を作る',i,'primary-button')+'</article>';
    const c=countries[item.country];
    return '<article class="career-panel cw-panel cw-slot-card"><div class="cw-slot-head"><strong>選手 '+(i+1)+'</strong>'+
     (meta.active===i?'<span class="cw-slot-current">現在の選手</span>':'')+'</div>'+
