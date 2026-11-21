@@ -33,6 +33,7 @@ jobs:
           node --check dist/pennant.js
           node --check dist/npb-postseason.js
           node --check dist/game.js
+          node --check dist/abs-review.js
           for f in dist/career-world*.js; do node --check "$f"; done
           node --check dist/sw.js
           node --check dist/pwa-update.js
@@ -43,9 +44,9 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=85' dist/index.html
+          grep -Fq 'game.js?v=91' dist/index.html
           grep -Fq 'npb-rosters.js?v=74' dist/index.html
-          grep -Fq 'app.js?v=90' dist/index.html
+          grep -Fq 'app.js?v=91' dist/index.html
           grep -Fq 'kbo-rosters.js?v=74' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
           grep -Fq 'stadium3d.js?v=77' dist/app.js
@@ -65,6 +66,7 @@ jobs:
           node tests/career-world.cjs
           node tests/music-v49.mjs
           node tests/rules-v16.cjs
+          node tests/abs.cjs
           node tests/thumb-controls.cjs
           node tests/career-overseas-v54.mjs
           node tests/realistic-field-v58.cjs

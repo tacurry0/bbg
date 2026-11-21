@@ -1,0 +1,89 @@
+#stage-message.pitch-call {
+  transform: translateY(-28px);
+}
+
+#abs-actor {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  z-index: 17;
+  cursor: pointer;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+#abs-actor:focus-visible { outline: 2px solid #d5f36a; }
+.abs-hint {
+  position: absolute;
+  left: 50%;
+  bottom: max(17%, 56px);
+  transform: translateX(-50%);
+  z-index: 16;
+  pointer-events: none;
+  min-width: max-content;
+  padding: 4px 10px;
+  background: #12291eea;
+  color: #eef9db;
+  border: 1px solid #a2bb7780;
+  border-radius: 5px;
+  font-size: .72rem;
+}
+.abs-review {
+  position: absolute;
+  inset: 0;
+  z-index: 32;
+  overflow: hidden;
+  background: #91d0e3;
+}
+#abs-canvas { width: 100%; height: 100%; display: block; }
+.abs-ident {
+  position: absolute;
+  top: clamp(8px, 2.7vw, 20px);
+  left: clamp(8px, 2.7vw, 20px);
+  display: grid;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #e5f8f8;
+  color: #112a30;
+  box-shadow: 1px 4px 12px #112a3042;
+  font: 900 clamp(.72rem, 3.1vw, 1rem)/1.2 system-ui, sans-serif;
+}
+.abs-ident strong { padding: .45em .65em; color: #174738; font-style: italic; }
+.abs-ident span { background: #0d3e63; color: #fff; padding: .43em .65em; }
+.abs-splash {
+  position: absolute;
+  left: 50%;
+  top: 27%;
+  transform: translate(-50%, -50%) rotate(-5deg);
+  display: grid;
+  text-align: center;
+  color: #dcff88;
+  text-shadow: 2px 3px #133e54, 0 0 5px #133e54;
+  font: italic 1000 clamp(30px, 9vw, 75px)/.93 system-ui, sans-serif;
+}
+.abs-splash span { font-size: .37em; margin-top: .28em; }
+.abs-verdict {
+  position: absolute;
+  left: 50%;
+  top: 67%;
+  transform: translateX(-50%);
+  display: grid;
+  min-width: clamp(164px, 47%, 315px);
+  place-items: center;
+  gap: .18em;
+  padding: .5em 1em;
+  border: 2px solid var(--abs-color);
+  border-radius: 4px;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--abs-color), transparent 60%);
+  background: #13161a;
+  color: #f6f7f6;
+  font: 750 clamp(.75rem, 2.9vw, 1rem)/1.2 system-ui, sans-serif;
+  --abs-color: #58db55;
+}
+.abs-verdict[data-strike="true"] { --abs-color: #ff846c; }
+.abs-verdict strong { font-size: clamp(1.85rem, 6vw, 3rem); color: var(--abs-color); }
+.abs-verdict small { font-size: 1em; }
+.abs-verdict span { opacity: .82; }
+#abs-actor[hidden],.abs-hint[hidden],.abs-review[hidden],.abs-splash[hidden],.abs-verdict[hidden] { display: none; }

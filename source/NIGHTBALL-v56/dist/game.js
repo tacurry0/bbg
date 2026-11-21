@@ -394,6 +394,8 @@ window.NightGame=class NightGame{
   }
   dt=Math.min(dt,this.phase==='field'?240:50);if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending)dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
   if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
+  else if(this.phase==='abs-call'&&this.phaseTime>=1450)this.resolveAbsCall(false);
+  else if(this.phase==='abs-review'&&this.phaseTime>=4400)this.resolveAbsCall(true);
   else if(this.phase==='aim'&&this.autoDefense&&this.defending&&this.phaseTime>480)this.autoPitch();
   else if(this.phase==='windup'&&this.phaseTime>(derby?270:700)){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
   else if(this.phase==='pitch'){
@@ -1534,11 +1536,53 @@ window.NightGame=class NightGame{
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
+ // Retain the game's strike zone. Convert its axes to a 43.2 cm plate and
+ // a 60 cm high zone for the review graphic and for the Statcast distance bins.
+ static absLocation(x,y){
+  const edge=1.06,halfWidth=.216,halfHeight=.30;
+  const dx=(Math.abs(x)/edge-1)*halfWidth,dy=(Math.abs(y)/edge-1)*halfHeight;
+  const gap=dx>0||dy>0?Math.hypot(Math.max(0,dx),Math.max(0,dy)):Math.max(dx,dy);
+  return {x:x/edge*halfWidth,y:halfHeight-y/edge*halfHeight,gap};
+ }
+ static absUmpireStrike(gap,roll){
+  // Baseball Savant league called-strike rates for takes 0–1, 1–2, and 2–3
+  // inches from the edge. Outside the near-edge band, use the official zone.
+  // https://baseballsavant.mlb.com/leaderboard/catcher-framing
+  const inside=gap<=0,band=Math.floor(Math.abs(gap)/.0254);
+  const rate=(inside?[.63,.84,.94]:[.38,.17,.06])[band]??Number(inside);
+  return roll<rate;
+ }
+ get absCanChallenge(){return this.phase==='abs-call'&&!!this.absCall&&this.absRemaining>0&&!(this.autoDefense&&this.defending);}
+ requestAbsChallenge(){
+  if(!this.absCanChallenge||this.paused)return false;
+  this.setPhase('abs-review');this.notify();
+  return true;
+ }
+ resolveAbsCall(reviewed){
+  const call=this.absCall;
+  if(!call)return;
+  delete this.absCall;
+  if(reviewed&&call.strike===call.umpireStrike)this.absRemaining--;
+  this.commitCalledPitch(reviewed?call.strike:call.umpireStrike);
+  if(!reviewed&&!this.batFinished)this.phaseTime=720;
+ }
  take(){
-  if(!this.inMatch||!this.pitch.isStrike)this.emit('sound','catch');
+  if(!this.inMatch)this.emit('sound','catch');
   if(this.derby){this.completePitch('take');this.setPhase('result');this.notify();return;}
   if(!this.inMatch){this.completePitch('take');this.message('TAKE','見送り','カーソルをコースへ動かそう');this.setPhase('result');this.notify();return;}
-  if(this.pitch.isStrike){this.strike(false);return;}this.balls++;this.completePitch('ball');
+  if(this.absRemaining===undefined){this.commitCalledPitch(this.pitch.isStrike);return;}
+  const location=NightGame.absLocation(this.pitch.targetX,this.pitch.targetY);
+  const umpireStrike=NightGame.absUmpireStrike(location.gap,Math.random());
+  if(this.absRemaining<=0||this.autoDefense&&this.defending||umpireStrike===this.defending){
+   this.commitCalledPitch(umpireStrike);
+   return;
+  }
+  this.absCall={...location,strike:this.pitch.isStrike,umpireStrike};
+  this.setPhase('abs-call');this.notify();
+ }
+ commitCalledPitch(strike){
+  if(strike){this.strike(false);return;}
+  this.emit('sound','catch');this.balls++;this.completePitch('ball');
   const before=this.battingScore;
   if(this.balls>=4){this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','フォアボール','押し出しにも注意');this.checkEnd();}else this.message('BALL','ボール',`${this.balls}ボール · ${this.strikes}ストライク`);
   this.emit('sound','ball');this.setPhase('result');

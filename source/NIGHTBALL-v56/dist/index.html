@@ -18,6 +18,7 @@
   <link rel="stylesheet" href="./game-hud.css?v=72">
   <link rel="stylesheet" href="./menu-polish.css?v=58">
   <link rel="stylesheet" href="./pwa-update.css?v=1">
+  <link rel="stylesheet" href="./abs.css?v=1">
   <title>NIGHTBALL — ポケット野球</title>
 </head>
 <body>
@@ -90,6 +91,16 @@
       <div id="play-tools" class="play-tools" hidden><output id="hit-readout"></output></div>
       <div id="scoring-chip" class="scoring-chip" role="status" aria-atomic="true" hidden></div>
       <div id="umpire-call" class="umpire-call" role="status" hidden></div>
+      <button id="abs-actor" type="button" hidden></button>
+      <div id="abs-hint" class="abs-hint" aria-hidden="true" hidden></div>
+      <section id="abs-review" class="abs-review" role="region" aria-label="ABSチャレンジ" hidden>
+        <canvas id="abs-canvas" aria-hidden="true"></canvas>
+        <div class="abs-ident"><strong>NIGHTBALL</strong><span>ABS 挑戰系統</span></div>
+        <div id="abs-splash" class="abs-splash" aria-hidden="true"><strong>ABS</strong><span>CHALLENGE</span></div>
+        <div id="abs-verdict" class="abs-verdict" aria-live="polite" hidden>
+          <strong id="abs-word" lang="zh-Hant"></strong><small id="abs-gap" lang="zh-Hant"></small><span id="abs-change"></span>
+        </div>
+      </section>
       <div id="replay-label" class="replay-label" role="status" hidden>REPLAY</div>
       <aside id="challenge-panel" class="challenge-panel" hidden><strong id="challenge-title"></strong><small id="challenge-goal"></small><button id="challenge-retry" type="button" hidden>もう一度</button></aside>
       <div class="stage-bottom"><span id="batter-label">中信兄弟</span><span id="distance"></span></div>
@@ -126,7 +137,7 @@
 <script src="./matchup-data.js?v=56"></script>
 <script src="./audio.js?v=56"></script>
 <script src="./derby.js?v=56"></script>
-<script src="./game.js?v=85"></script>
+<script src="./game.js?v=91"></script>
 <script src="./career-leagues.js?v=56"></script>
 <script src="./career-development.js?v=56"></script>
 <script src="./career-life.js?v=56"></script>
@@ -146,6 +157,6 @@
 <script src="./renderer.js?v=60"></script>
 <script src="./squad.js?v=56"></script>
 <script defer src="./pwa-update.js?v=2"></script>
-<script type="module" src="./app.js?v=90"></script>
+<script type="module" src="./app.js?v=91"></script>
 </body>
 </html>

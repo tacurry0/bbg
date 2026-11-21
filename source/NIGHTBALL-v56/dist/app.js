@@ -1,3 +1,4 @@
+import { AbsReview, absActorBounds } from './abs-review.js?v=1';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=76';
@@ -43,6 +44,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  let game=null,screen='home',modalKind='',saved=false,lastMode='match',lastFocus=null,toastTimer;
  function makeRenderer(id,hero=false){try{return new StadiumRenderer($(id),hero);}catch(e){console.error('3D stadium initialization failed',e);const el=$(id),replacement=el.cloneNode(true);el.parentElement.querySelector('.stadium-hud')?.remove();replacement.dataset.graphics='flat-compat';el.replaceWith(replacement);return new NightRenderer(replacement,hero);}}
  const renderer=makeRenderer('game-canvas');
+ const absReview=new AbsReview($('abs-canvas'));
+ const reduceAbsMotion=matchMedia('(prefers-reduced-motion: reduce)');
  function applyHUDSizes(){
   $('app').style.setProperty('--hud-scale',settings.hudScale/100);
   $('app').style.setProperty('--control-scale',settings.controlsScale/100);
@@ -189,7 +192,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
   if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
- function activateGame(){stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;queuedBench=false;stadiumAudio.stopEffects();screen='game';$('apbc-cup').hidden=true;$('home').hidden=true;$('pennant').hidden=true;$('game').hidden=false;$('pause').hidden=false;$('settings').hidden=false;document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);history.replaceState({nightball:'home'},'',location.href);history.pushState({nightball:'game'},'',location.href);window.scrollTo(0,0);renderer.resize();}
+ function activateGame(){
+  if(game.career||game.worldFixture||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)game.absRemaining??=2;
+  stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;queuedBench=false;stadiumAudio.stopEffects();screen='game';$('apbc-cup').hidden=true;$('home').hidden=true;$('pennant').hidden=true;$('game').hidden=false;$('pause').hidden=false;$('settings').hidden=false;document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);history.replaceState({nightball:'home'},'',location.href);history.pushState({nightball:'game'},'',location.href);window.scrollTo(0,0);renderer.resize();}
  function resumeGame(){try{const snapshot=JSON.parse(localStorage.getItem('nightball.match')||'null');const restored=NightGame.restore(snapshot,onEvent);if(!restored){clearCheckpoint();toast('再開できる試合がありません');return;}closeModal(false);game=restored;saved=false;lastMode=game.competition==='apbc2026'?'apbc':'match';matchContext=lastMode;game.fieldSpeed=settings.fieldSpeed;game.battingAssist=settings.battingAssist;activateGame();onEvent('clear');if(['pitch','windup'].includes(game.phase)){game.setPhase('windup');game.pitch.progress=0;game.pitch.swung=false;game.pitch.cpuActed=false;}else if(game.phase==='result'){const last=game.log.at(-1);if(last)onEvent('message',last);}updateUI();}catch{toast('保存した試合を読み込めませんでした');}}
  let lineupContext='match',pregameTarget=null,matchPickSide='home',matchContext='match',apbcPickSide='own',matchClubGroup=settings.matchTeam?.startsWith('kbo-')?'kbo':settings.matchTeam?.startsWith('npb-')?'npb':'cpbl';
  let career=null,careerSaveWarned=false,careerTab='next',alumni=[];
@@ -1246,7 +1251,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   $('play-tools').hidden=!!review.playback||!$('hit-readout').textContent;
  }
  const playFeedback={score:null,scoreTime:0,callTime:0,pendingReplay:false};
+ let absShownCall=null,absShownResult=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
+  absShownCall=absShownResult=absTouch=absLastTap=null;
+  for(const id of ['abs-actor','abs-hint','abs-review'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
   playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
@@ -1270,6 +1278,58 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     {duration:235,easing:'cubic-bezier(.12,.74,.25,1)'});
   }
  }
+ function updateAbsUI(g,draw=false){
+  const interactive=g.absCanChallenge&&!g.paused&&$('modal').hidden;
+  const actor=$('abs-actor'),hint=$('abs-hint'),panel=$('abs-review'),call=g.absCall;
+  actor.hidden=hint.hidden=!interactive;
+  if(g.phase==='abs-call'&&call!==absShownCall){
+   absShownCall=call;absLastTap=null;
+   const en=call.umpireStrike?'STRIKE':'BALL',ja=call.umpireStrike?'ストライク':'ボール';
+   onEvent('message',{en,ja});
+   const role=g.defending?'投手':'打者';
+   hint.textContent=role+'を2回タップ · ABS残り'+g.absRemaining+'回';
+   actor.setAttribute('aria-label',role+'でABSチャレンジ 残り'+g.absRemaining+'回');
+  }
+  if(interactive){
+   const bounds=absActorBounds(renderer,g);
+   const canvas=$('game-canvas').getBoundingClientRect(),stage=$('stage').getBoundingClientRect();
+   actor.style.left=canvas.left-stage.left+bounds.x+'px';
+   actor.style.top=canvas.top-stage.top+bounds.y+'px';
+   actor.style.width=bounds.w+'px';actor.style.height=bounds.h+'px';
+  }
+  panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
+  if(panel.hidden)return;
+  const showResult=reduceAbsMotion.matches||g.phaseTime>=3550;
+  $('abs-splash').hidden=reduceAbsMotion.matches||g.phaseTime>=450;
+  const result=$('abs-verdict');
+  if(showResult&&absShownResult!==call){
+   absShownResult=call;
+   result.dataset.strike=String(call.strike);
+   $('abs-word').textContent=call.strike?'好球':'壞球';
+   $('abs-gap').textContent=(call.strike?'好球帶內 ':'距離好球帶 ')+(Math.abs(call.gap)*100).toFixed(1)+' 公分';
+   $('abs-change').textContent=call.strike===call.umpireStrike?'判定維持':'判定変更';
+  }
+  result.hidden=!showResult;
+  if(draw)absReview.draw(call,g.phaseTime,reduceAbsMotion.matches);
+ }
+ const absActor=$('abs-actor');
+ absActor.addEventListener('pointerdown',e=>{
+  if(e.button!==0||!game?.absCanChallenge)return;
+  absTouch={x:e.clientX,y:e.clientY,id:e.pointerId,call:game.absCall};
+ });
+ absActor.addEventListener('pointercancel',()=>{absTouch=null;});
+ absActor.addEventListener('pointerup',e=>{
+  const touch=absTouch;absTouch=null;
+  if(!touch||touch.id!==e.pointerId||touch.call!==game?.absCall||Math.hypot(e.clientX-touch.x,e.clientY-touch.y)>16)return;
+  const time=performance.now(),call=game.absCall;
+  if(absLastTap?.call===call&&time-absLastTap.time<=460){
+   absLastTap=null;
+   if(game.requestAbsChallenge())sound('tap');
+  }else absLastTap={call,time};
+ });
+ absActor.addEventListener('click',e=>{
+  if(e.detail===0&&game?.requestAbsChallenge())sound('tap');
+ });
  function updateScoringChip(g){
   const score=g.displayScore(),previous=playFeedback.score;
   if(previous&&score.away===previous.away&&score.home===previous.home)return;
@@ -1319,7 +1379,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      const stage=$('stage-message');
      const kind=data.kind||(/^(SINGLE|DOUBLE|TRIPLE|GROUND-RULE DOUBLE|BUNT HIT)$/.test(data.en)?'hit':
       data.en==='HOME RUN'?'homer':/OUT|DOUBLE PLAY/.test(data.en)?'out':'neutral');
-     stage.className='stage-message show '+kind;
+     const pitchCall=['BALL','STRIKE','STRIKEOUT','WALK','SWING & MISS'].includes(data.en);
+     stage.className='stage-message show '+kind+(pitchCall?' pitch-call':'');
      const banner=stage.querySelector('.stage-call');
      if(typeof banner.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
@@ -1405,7 +1466,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const auto=g.autoDefense&&def,speed=auto?g.defenseSpeed:g.fieldSpeed;$('field-speed').hidden=!!g.derby;$('field-speed').textContent=`${auto?'自動守備':'打球後'} ×${speed}`;$('field-speed').classList.toggle('active',speed===2);$('field-speed').setAttribute('aria-pressed',String(speed===2));$('field-speed').setAttribute('aria-label',auto?'自動守備の速度を切り替え':'打球後の速度を切り替え');$('auto-defense').hidden=!g.isFixture||!def||g.phase==='ended';$('auto-defense').textContent=auto?'手動に戻す':'守備を自動で進行';$('auto-defense').setAttribute('aria-pressed',String(!!auto));$('game').classList.toggle('auto-defense',!!auto);document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);
    $('game').classList.toggle('career-running-match',g.mode==='career-bat');
    updatePlayerHUD($('player-card'),$('pitcher-card'),g);
-   $('practice-tool').hidden=!['practice','pitching'].includes(g.mode);$('practice-tool').disabled=g.phase==='field';$('tactics-tool').hidden=!g.inMatch;checkpoint();
+   $('practice-tool').hidden=!['practice','pitching'].includes(g.mode);$('practice-tool').disabled=g.phase==='field';$('tactics-tool').hidden=!g.inMatch;updateAbsUI(g);checkpoint();
  }
  function updateRunningUI(g){
   const available=g.isFixture||g.mode==='career-bat',playing=!!g.field&&['field','result'].includes(g.phase);
@@ -1702,7 +1763,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
     if(game.phase==='ended')queuedBench=false;
     if(game.phase==='field')renderer.adaptResolution?.(dt);
-    renderer.render(game,game.time);updateRunningUI(game);updateCoach(game);
+    if(game.phase!=='abs-review')renderer.render(game,game.time);
+    updateAbsUI(game,true);updateRunningUI(game);updateCoach(game);
    }
   }
  }
