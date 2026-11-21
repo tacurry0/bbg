@@ -1322,10 +1322,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const touch=absTouch;absTouch=null;
   if(!touch||touch.id!==e.pointerId||touch.call!==game?.absCall||Math.hypot(e.clientX-touch.x,e.clientY-touch.y)>16)return;
   const time=e.timeStamp,call=game.absCall;
-  if(absLastTap?.call===call&&time-absLastTap.time<=560){
+  // A slow frame can delay delivery of the second touch. Count the same
+  // time visible on the pitch-decision screen as well as the event time.
+  const close=absLastTap?.call===call&&
+   (time-absLastTap.time<=560||game.phaseTime-absLastTap.phaseTime<=400);
+  if(close){
    absLastTap=null;
    if(game.requestAbsChallenge())sound('tap');
-  }else absLastTap={call,time};
+  }else absLastTap={call,time,phaseTime:game.phaseTime};
  });
  absActor.addEventListener('click',e=>{
   if(e.detail===0&&game?.requestAbsChallenge())sound('tap');
