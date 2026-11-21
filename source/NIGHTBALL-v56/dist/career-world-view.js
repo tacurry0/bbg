@@ -132,9 +132,9 @@
    const e=s.pending;
    if(e.type==='drill'){
     const q=Z.currentQuestion(w);
-    return meter+'<div class="cw-success-scene" role="group" aria-label="実戦練習"><p class="cw-scene-kicker">練習チャレンジ · '+(e.index+1)+'/3問</p>'+
+    return meter+'<div class="cw-success-scene" role="group" aria-label="実戦練習"><p class="cw-scene-kicker">実戦特訓 · '+(e.index+1)+'/3回</p>'+
      '<h3>'+esc(e.title)+'</h3><p>'+esc(q[0])+'</p><div class="cw-choices">'+q[1].map((label,i)=>act('success-choice',label,i,i===0?'primary-button':'secondary-button')).join('')+'</div>'+
-     '<p class="cw-note">正解 '+e.correct+'問 · 選択によって成長量が変化します。</p></div>';
+     '<p class="cw-note">成功 '+e.correct+'回 / 3回 · '+esc(e.results?.at(-1)?.message||'安全策と大胆な挑戦で成功率と成長量が変わります。')+'</p></div>';
    }
    return meter+'<div class="cw-success-scene" role="group" aria-label="キャリアイベント"><p class="cw-scene-kicker">今週のイベント</p>'+
     '<h3>'+esc(e.title)+'</h3><p>'+esc(e.body)+'</p><div class="cw-choices">'+
@@ -143,18 +143,19 @@
   if(s.menu){
    const keys=w.pitching?M.pitching:M.batting;
    return meter+'<div class="cw-success-scene"><p class="cw-scene-kicker">'+(s.menu==='special'?'実戦特訓':'基礎練習')+'</p>'+
-    '<h3>伸ばしたい能力を選ぶ</h3><p class="cw-note">野球の場面を判断する3問の練習。正解が多いほど能力が伸びます。</p>'+
+    '<h3>伸ばしたい能力を選ぶ</h3><p class="cw-note">'+(s.menu==='special'?'3回の実戦チャレンジ。安全策は成功しやすく、大胆な挑戦は上振れを狙えます。':'通常練習は選択後すぐに結果が出ます。好調・大成功だけでなく、伸び悩む週もあります。')+'</p>'+
     '<div class="cw-grid">'+keys.map(key=>act('success-skill',NightCareerWorld.training[key]+' '+Math.round(w.player[key]),key)).join('')+
     act('success-back','戻る')+'</div></div>';
   }
+  const inbox=s.inbox?'<div class="cw-success-inbox"><strong>新しいイベント：'+esc(s.inbox.title)+'</strong><p>今週の出来事を確認できます。</p>'+act('success-event','イベントを見る','','primary-button')+act('success-dismiss','今回は見送る')+'</div>':'';
   if(Z.available(w)){
-   return meter+'<div class="cw-success-cmd"><h3>今週の行動を選ぶ</h3><p class="cw-note">1週間に1つ。選んだ行動で成長・体力・仲間との関係が変わります。</p>'+
+   return meter+inbox+'<div class="cw-success-cmd"><h3>今週の行動を選ぶ</h3><p class="cw-note">1週間に1つ。選んだ行動で成長・体力・仲間との関係が変わります。</p>'+
     '<div class="cw-grid cw-command-grid">'+act('success-action','⚾ 練習','practice','primary-button')+
     act('success-action','🔥 実戦特訓','special')+act('success-action','🛌 休む','rest')+
     act('success-action','💬 交流','friend')+act('success-action','🌿 遊ぶ','outing')+'</div></div>'+
     (s.last?'<p class="cw-last-action"><strong>前回：</strong>'+esc(s.last.title)+' · '+esc(s.last.summary)+'</p>':'');
   }
-  return meter+'<p class="cw-last-action"><strong>今週の行動は完了</strong>'+
+  return meter+inbox+'<p class="cw-last-action"><strong>今週の行動は完了</strong>'+
    (s.last?' · '+esc(s.last.title)+'：'+esc(s.last.summary):' · 次の週へ進めます')+'</p>';
  }
  function daily(w,f,next){
