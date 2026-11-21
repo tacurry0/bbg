@@ -251,7 +251,8 @@
    const peer=this.members(this.club).filter(p=>p.id!==playerId&&p.positions.includes(this.player.pos))
     .sort((a,b)=>this.ability(b)-this.ability(a))[0];
    let reason;
-   if(level==='first')reason=M.farmForm(this)>=5?'二軍での好成績が評価され、一軍に昇格しました。':
+   if(level==='first')reason=this.history.at(-1)?.year===this.year-1&&this.history.at(-1)?.awards?.length&&this.playerYear.g<8?
+    '前年のタイトル獲得が評価され、今季も一軍で起用されます。':M.farmForm(this)>=5?'二軍での好成績が評価され、一軍に昇格しました。':
     peer?.injury?peer.name+'の離脱で一軍に昇格しました。':'能力と監督・コーチ評価をもとに一軍に選ばれました。';
    else reason=previous==='first'?(peer&&!peer.injury?peer.name+'との起用競争と直近の成績を受け、二軍に降格しました。':'直近の成績を受け、二軍で調整します。'):
     '二軍で開幕。出場を重ねて昇格を目指します。';
@@ -839,12 +840,19 @@
   startSeason(year){
    this.proYear++;
    this.stage='pro';
+   const fate=this.random('player-season-fortune/'+year);
+   this.fortune={year,swing:Math.round((fate()+fate()+fate()-1.5)*11)};
    this.advanceDate(date(year,'03-01'));
    this.nationalEvent=null;
    this.representation('spring');
    this.standings=L.tables();this.post=null;this.asiaAnnounced=false;this.queue=null;delete this._days;
    this.daysPlayed=0;this.seasonDays=0;this.offers=[];this.health.fatigue=0;
    this.playerYear=blank();this.farmStats=blank();this.recentFarm=[];this.selection=null;this.playerPost=blank();
+   const previous=this.history.at(-1);
+   if(previous?.year===year-1&&previous?.awards?.length){
+    this.selection={level:'first',day:this.day,reason:'前季の'+previous.awards.join('・')+'を評価し、今季は一軍からスタート。'};
+    this.note(this.selection.reason);
+   }
    const rng=this.random('world/'+year);
    const openings=[];
    for(const p of this.people){
