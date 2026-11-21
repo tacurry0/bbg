@@ -12,9 +12,11 @@
  const info=(id,w)=>({id,name:w.name,country:w.country,stage:w.stage,day:w.day,
   yearLabel:w.yearLabel,club:w.club||null,updated:new Date().toISOString()});
  const read=()=>{
+  const text=localStorage.getItem(registryKey);
+  if(text===null)return {version:1,active:null,slots:[]};
   let raw;
-  try{raw=JSON.parse(localStorage.getItem(registryKey)||'null');}catch{}
-  if(!raw)return {version:1,active:null,slots:[]};
+  try{raw=JSON.parse(text);}catch{throw Error('保存枠の管理情報が破損しています');}
+  if(!raw)throw Error('保存枠の管理情報を読み込めません');
   if(raw.version!==1||!Array.isArray(raw.slots)||raw.slots.length>capacity||
      !raw.slots.every(s=>Number.isInteger(s.id)&&s.id>=0&&s.id<capacity)||
      new Set(raw.slots.map(s=>s.id)).size!==raw.slots.length)throw Error('保存枠の管理情報を読み込めません');
@@ -37,8 +39,9 @@
   const m=migrate();
   if(m.active===null)return null;
   if(!m.slots.some(s=>s.id===m.active))return null;
-  // The original key is a live mirror; preserve external save/checkpoint writes.
-  return valid(localStorage.getItem(base))||valid(localStorage.getItem(key(m.active)));
+  // A mismatched active mirror is ignored (for example after an interrupted switch).
+  const mirror=valid(localStorage.getItem(base)),archived=valid(localStorage.getItem(key(m.active)));
+  return mirror&&archived&&mirror.seed!==archived.seed?archived:mirror||archived;
  }
  function save(w){
   if(!w)return false;
