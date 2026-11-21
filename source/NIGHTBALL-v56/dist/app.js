@@ -215,13 +215,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   try{localStorage.setItem(NightCareer.key,JSON.stringify(career.save()));}
   catch{if(!careerSaveWarned){toast('キャリアを保存できませんでした');careerSaveWarned=true;}}
  }
- let world=null,worldCountry='',worldAlumni=[];
+ let world=null,worldCountry='',worldAlumni=[],worldPickerOpen=false,worldCreating=false;
  let worldActive=false;
  const worldStore=NightCareerWorldSave;
- try{world=NightCareerWorld.restore(worldStore.decode(localStorage.getItem(NightCareerWorld.key)));}catch{}
+ try{world=NightCareerWorldSlots.load();}catch{toast('キャリアの保存枠を読み込めませんでした。データは削除していません');}
  try{worldAlumni=JSON.parse(localStorage.getItem(NightCareerWorld.alumniKey)||'[]');}catch{}
  function saveWorld(){
-  try{localStorage.setItem(NightCareerWorld.key,worldStore.encode(world));return true;}
+  try{if(NightCareerWorldSlots.save(world))return true;throw Error('slot save failed');}
   catch{toast('選手キャリアを保存できませんでした');return false;}
  }
  function worldDashboard(keepScroll=false){
@@ -230,8 +230,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.worldFixture||game?.career){stadiumAudio.stopEffects();game=null;}
   screen='career';
   for(const id of ['home','game','pennant','apbc-cup','pause'])$(id).hidden=true;
-  $('career').innerHTML=world?NightCareerWorldView.dashboard(world,!!career):
-   NightCareerWorldView.setup(worldCountry,!!career,worldAlumni);
+  $('career').innerHTML=worldPickerOpen?NightCareerWorldView.slots(NightCareerWorldSlots.list(),!!career):
+   world?NightCareerWorldView.dashboard(world,!!career):NightCareerWorldView.setup(worldCountry,!!career,worldAlumni);
   $('career').hidden=false;
   history.replaceState({nightball:'career'},'',location.href);
   if(!keepScroll)window.scrollTo(0,0);
@@ -245,7 +245,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const recent=worldAlumni.find(a=>a.country===worldCountry);
    if(recent)world.note('入学式でOBの'+recent.name+'が新入生を激励');
   }catch(error){toast(error.message);return;}
-  saveWorld();worldDashboard();
+  const committed=NightCareerWorldSlots.create(world);
+  if(!committed){world=null;toast('新しい保存枠に保存できませんでした。既存データは残っています');return;}
+  worldCreating=false;worldPickerOpen=false;worldCountry='';worldDashboard();
  });
  function worldAction(e){
   const b=e.target.closest('[data-world-action]');
@@ -254,6 +256,28 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const action=b.dataset.worldAction,v=b.dataset.value;
   if(action==='home'){home();return;}
   if(action==='legacy'){careerTab='next';careerDashboard();return;}
+  if(action==='slots'){
+   if(world&&!saveWorld())return;
+   worldPickerOpen=true;worldDashboard();return;
+  }
+  if(action==='slots-close'){
+   worldPickerOpen=false;worldCreating=false;
+   try{world=NightCareerWorldSlots.load();}catch{toast('保存枠の読み込みに失敗しました');}
+   worldDashboard();return;
+  }
+  if(action==='slot-open'){
+   if(world&&!saveWorld())return;
+   const selected=NightCareerWorldSlots.open(+v);
+   if(!selected){toast('この選手データは読み込めません。既存データは削除していません');return;}
+   world=selected;worldPickerOpen=false;worldCreating=false;worldCountry='';
+   worldDashboard();return;
+  }
+  if(action==='slot-create'){
+   if(world&&!saveWorld())return;
+   if(NightCareerWorldSlots.list().slots.length>=NightCareerWorldSlots.capacity){toast('選手は最大3人までです');return;}
+   world=null;worldCountry='';worldPickerOpen=false;worldCreating=true;
+   worldDashboard();return;
+  }
   if(action==='country'){worldCountry=v;worldDashboard();return;}
   const w=world;
   if(!w)return;
@@ -281,9 +305,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    retire:()=>{if(!window.confirm('この選手は現役を引退します。続けますか？'))return false;return w.retire();},
    new:()=>{
     worldAlumni=[{name:w.name,country:w.country,games:w.lifetime.g},...worldAlumni].slice(0,16);
-    try{localStorage.setItem(NightCareerWorld.alumniKey,JSON.stringify(worldAlumni));localStorage.removeItem(NightCareerWorld.key);}
+    try{localStorage.setItem(NightCareerWorld.alumniKey,JSON.stringify(worldAlumni));}
     catch{toast('OB記録を保存できませんでした');return false;}
-    world=null;worldCountry='';worldDashboard();return true;
+    if(!saveWorld())return false;
+    worldPickerOpen=true;worldDashboard();return true;
    }
   };
   if(action==='play'){playWorld(v||'self');return;}
