@@ -175,16 +175,69 @@
   }
   return false;
  }
+ const goalLabels={
+  contact:'次の出場で安打を記録',power:'次の出場で長打を記録',
+  run:'次の出場で出塁する',field:'次の出場を失策なしで終える',
+  arm:'次の出場を失策なしで終える',velocity:'次の登板で2奪三振',
+  control:'次の登板を2失点以内に抑える',movement:'次の登板で2奪三振',
+  stamina:'次の登板で3イニング以上投げる'
+ };
+ const challengeTexts={
+  contact:['速球への対応','追い込まれた打席','走者を返す一打'],
+  power:['甘い球を狙う','長打を放つ集中力','逆方向への強い打球'],
+  run:['スタートの第一歩','二塁への加速','状況判断とスピード'],
+  field:['正面のゴロ','左右への一歩','素早い捕球と送球'],
+  arm:['一塁への正確な送球','体勢を変えた送球','素早い握り替え'],
+  velocity:['球威のある直球','下半身を使った投球','連続投球のフォーム'],
+  control:['低めへの制球','走者を背負った投球','追い込んでからの一球'],
+  movement:['変化球の握り','直球との組み合わせ','打者のタイミングを外す'],
+  stamina:['長い回を想定した投球','ペース配分','疲労時のフォーム']
+ };
+ const tactics=[
+  ['確実に決める（成功しやすい・成長は小）',.82,1],
+  ['普段どおり挑む（バランス重視）',.61,2],
+  ['大胆に挑戦（失敗しやすい・大成長）',.40,3.6]
+ ];
  function skill(w,key){
-  if(!available(w)||!Object.hasOwn(drills,key))return false;
-  const s=state(w);
-  if(!['practice','special'].includes(s.menu))return false;
+  if(!available(w)||!Object.hasOwn(goalLabels,key))return false;
+  const s=state(w),menu=s.menu;
+  if(!['practice','special'].includes(menu))return false;
   if(!(w.pitching?arms:bats).includes(key))return false;
-  const hard=s.menu==='special';
+  const hard=menu==='special';
   if(s.energy<(hard?32:12))return false;
-  s.pending={type:'drill',title:(hard?'実戦特訓':'基礎練習')+' · '+NightCareerWorld.training[key],
-   skill:key,hard,index:0,correct:0,results:[]};
-  s.menu=null;return true;
+  if(hard){
+   s.pending={type:'drill',title:'実戦特訓 · '+NightCareerWorld.training[key],
+    skill:key,hard:true,index:0,correct:0,points:0,results:[]};
+   s.menu=null;return true;
+  }
+  // Normal practice is a single meaningful weekly choice. Talent, fatigue and
+  // luck produce excellent days, ordinary growth, stalls and rare setbacks.
+  const rng=w.random('success/weekly-practice/'+week(w)+'/'+key);
+  const condition=clamp((s.energy-60)*.0018+(s.morale-50)*.001, -.09,.09);
+  const chance=rng()+condition;
+  const outcome=chance<.07?'失敗':chance<.24?'不調':chance<.81?'成功':'大成功';
+  const delta={失敗:-.28,不調:.32,成功:1.08,大成功:2.45}[outcome];
+  w.improve(key,delta);
+  w.trainingPlan=key;
+  const injuryRisk=s.energy<35&&rng()<.11;
+  if(injuryRisk)w.health.injury=Math.max(w.health.injury,3+Math.floor(rng()*7));
+  s.energy=clamp(s.energy-18,0,100);
+  s.morale=clamp(s.morale+(outcome==='大成功'?7:outcome==='失敗'?-6:outcome==='不調'?-2:2),0,100);
+  w.health.fatigue=clamp(w.health.fatigue+9,0,100);
+  w.ratings.coach=clamp(w.ratings.coach+(delta>0?1.2:-.4),0,100);
+  w.experience+=outcome==='大成功'?3:outcome==='成功'?1:0;
+  if(w.stage==='school'&&outcome==='大成功')w.scoutLevel=clamp(w.scoutLevel+.75,0,95);
+  s.goal={skill:key,label:goalLabels[key],day:w.day};
+  mark(w,'通常練習 · '+NightCareerWorld.training[key],outcome+' · '+
+   (outcome==='大成功'?'思いがけない手応えがあった。':outcome==='失敗'?'調子が合わず、修正点が見えた。':
+    outcome==='不調'?'伸び悩んだが、課題が残った。':'着実に手応えを積み重ねた。')+
+   (injuryRisk?' 軽い故障が発生。':''));
+  return true;
+ }
+ function openEvent(w){
+  const s=state(w);
+  if(!usable(w)||s.pending||!s.inbox)return false;
+  s.pending=s.inbox;s.inbox=null;return true;
  }
  function choose(w,value){
   const s=state(w),e=s.pending;
@@ -192,26 +245,34 @@
   const number=Number(value);
   if(!Number.isInteger(number)||number<0)return false;
   if(e.type==='drill'){
-   const q=drills[e.skill]?.[e.index];
-   if(!q||number>=q[1].length)return false;
-   const hit=number===q[2];
-   e.results.push({question:q[0],correct:hit});
-   if(hit)e.correct++;
+   if(number>=tactics.length||e.index>=3)return false;
+   const [label,base,reward]=tactics[number];
+   const rng=w.random('success/challenge/'+week(w)+'/'+e.skill+'/'+e.index);
+   const ability=(w.player[e.skill]||55)-(e.skill==='velocity'?135:55);
+   const chance=clamp(base+ability*.0035+(s.morale-50)*.001-(60-s.energy)*.0015,.19,.96);
+   const success=rng()<chance;
+   const points=success?reward:-.45-number*.35;
+   e.points=(e.points||0)+points;
+   e.results.push({tactic:label,correct:success,message:success?'成功！ '+label.split('（')[0]+'が決まった。':'失敗。次の挑戦で取り返そう。'});
+   if(success)e.correct++;
    e.index++;
-   if(e.index<drills[e.skill].length)return true;
-   const success=e.correct>=2;
-   const boost=(e.hard?.28:.16)+e.correct*(e.hard?.29:.16);
+   if(e.index<3)return true;
+   const perfect=e.correct===3,breakthrough=e.points>=6;
+   const boost=clamp(.16+e.points*.29,-.55,3.6);
    w.improve(e.skill,boost);
-   w.experience+=(e.hard?2:1)+Math.floor(e.correct/2);
-   w.ratings.coach=clamp(w.ratings.coach+(success?2:1),0,100);
-   if(w.stage==='school')w.scoutLevel=clamp(w.scoutLevel+(success&&e.hard?1.5:.25),0,95);
-   s.energy=clamp(s.energy-(e.hard?34:15),0,100);
-   s.morale=clamp(s.morale+(success?e.hard?6:3:-3),0,100);
-   w.health.fatigue=clamp(w.health.fatigue+(e.hard?17:7),0,100);
-   if(!success&&e.hard)w.health.slump=clamp(w.health.slump+.2,0,4);
    w.trainingPlan=e.skill;
-   if(success)s.goal={skill:e.skill,label:({contact:'次の出場で安打を記録',power:'次の出場で長打を記録',run:'次の出場で出塁する',field:'次の出場を失策なしで終える',arm:'次の出場を失策なしで終える',velocity:'次の登板で2奪三振',control:'次の登板を2失点以内に抑える',movement:'次の登板で2奪三振',stamina:'次の登板で3イニング以上投げる'})[e.skill],day:w.day};
-   mark(w,e.title, e.correct+' / '+drills[e.skill].length+'問正解 · '+(success?'技術が身についた。':'課題を持ち帰って次週の練習へ。'));
+   w.experience+=Math.max(0,Math.round(e.points));
+   w.ratings.coach=clamp(w.ratings.coach+(breakthrough?3:e.correct>=2?1.5:-.5),0,100);
+   s.energy=clamp(s.energy-34,0,100);
+   s.morale=clamp(s.morale+(breakthrough?8:perfect?6:e.correct===0?-8:-1),0,100);
+   w.health.fatigue=clamp(w.health.fatigue+17,0,100);
+   const injuryRisk=e.correct===0&&rng()<.07;
+   if(injuryRisk)w.health.injury=Math.max(w.health.injury,3+Math.floor(rng()*11));
+   if(w.stage==='school'&&breakthrough)w.scoutLevel=clamp(w.scoutLevel+1.5,0,95);
+   s.goal={skill:e.skill,label:goalLabels[e.skill],day:w.day};
+   mark(w,e.title,e.correct+'/3回成功 · '+(breakthrough?'大成功！ いつも以上の成長。':
+    e.correct>=2?'しっかり手応えをつかんだ。':'思うようにいかず、次週への課題が残った。')+
+    (injuryRisk?' 無理がたたり、軽い故障が発生。':''));
    return true;
   }
   if(e.type==='story'){
@@ -272,7 +333,7 @@
  }
  const currentQuestion=w=>{
   const e=state(w).pending;
-  return e?.type==='drill'?drills[e.skill]?.[e.index]||null:null;
+  return e?.type==='drill'?[challengeTexts[e.skill]?.[e.index]||'集中してプレーを決めよう',tactics.map(t=>t[0])]:null;
  };
- window.NightCareerWorldSuccess={state,week,available,action,skill,choose,afterGame,tick,semester,currentQuestion};
+ window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion};
 })();
