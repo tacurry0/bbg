@@ -1,4 +1,4 @@
-import { AbsReview, absActorBounds } from './abs-review.js?v=1';
+import { AbsReview, absActorBounds } from './abs-review.js?v=2';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=76';
@@ -1251,9 +1251,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   $('play-tools').hidden=!!review.playback||!$('hit-readout').textContent;
  }
  const playFeedback={score:null,scoreTime:0,callTime:0,pendingReplay:false};
- let absShownCall=null,absShownResult=null,absTouch=null,absLastTap=null;
+ let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
-  absShownCall=absShownResult=absTouch=absLastTap=null;
+  absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-hint','abs-review'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
   playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;
@@ -1321,8 +1321,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  absActor.addEventListener('pointerup',e=>{
   const touch=absTouch;absTouch=null;
   if(!touch||touch.id!==e.pointerId||touch.call!==game?.absCall||Math.hypot(e.clientX-touch.x,e.clientY-touch.y)>16)return;
-  const time=performance.now(),call=game.absCall;
-  if(absLastTap?.call===call&&time-absLastTap.time<=460){
+  const time=e.timeStamp,call=game.absCall;
+  if(absLastTap?.call===call&&time-absLastTap.time<=560){
    absLastTap=null;
    if(game.requestAbsChallenge())sound('tap');
   }else absLastTap={call,time};
@@ -1763,7 +1763,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
     if(game.phase==='ended')queuedBench=false;
     if(game.phase==='field')renderer.adaptResolution?.(dt);
-    if(game.phase!=='abs-review')renderer.render(game,game.time);
+    if(game.phase!=='abs-review'&&(game.phase!=='abs-call'||absFrozenCall!==game.absCall)){
+     absFrozenCall=game.absCall;
+     renderer.render(game,game.time);
+    }
     updateAbsUI(game,true);updateRunningUI(game);updateCoach(game);
    }
   }

@@ -40,7 +40,16 @@ try{
  await page.locator('[data-action="match-team-next"]').click();
  await page.locator('[data-action="match-lineup"]').click();
  await page.locator('[data-action="lineup-play"]').click();
- await page.waitForFunction(()=>!!window.absTest?.game);
+ await page.waitForFunction(()=>window.absTest?.game.phase==='aim');
+ await page.evaluate(()=>{
+  window.absTouches=[];
+  for(const type of ['pointerdown','pointerup','pointercancel','click']){
+   document.addEventListener(type,e=>{
+    window.absTouches.push({type,id:e.target.id,t:Math.round(e.timeStamp),button:e.button,
+     phase:window.absTest.game.phase,at:Math.round(window.absTest.game.phaseTime)});
+   },true);
+  }
+ });
  await mkdir('tests/screenshots',{recursive:true});
  for(const defending of [true,false]){
   await page.evaluate(defending=>{
@@ -57,11 +66,15 @@ try{
   assert(box&&box.width>=44&&box.height>=44);
   assert.match(await actor.getAttribute('aria-label'),defending?/投手/:/打者/);
   const x=box.x+box.width/2,y=box.y+box.height/2;
+  assert.equal(await page.evaluate(({x,y})=>document.elementFromPoint(x,y)?.id,{x,y}),'abs-actor','actor center receives touch');
   // One physical touch never opens a review; the second touch on the player does.
   await page.touchscreen.tap(x,y);
   assert(await page.locator('#abs-review').isHidden());
   await page.touchscreen.tap(x,y);
-  await page.locator('#abs-review').waitFor({state:'visible'});
+  try{await page.locator('#abs-review').waitFor({state:'visible',timeout:6000});}
+  catch(error){
+   throw Error((defending?'pitcher':'batter')+' touches: '+JSON.stringify(await page.evaluate(()=>window.absTouches)),{cause:error});
+  }
   await page.locator('#abs-verdict').waitFor({state:'visible',timeout:18000});
   assert.equal(await page.locator('#abs-word').textContent(),defending?'好球':'壞球');
   assert.equal(await page.locator('#abs-change').textContent(),'判定変更');
