@@ -8,6 +8,16 @@
  const blank=()=>({g:0,pa:0,ab:0,h:0,hr:0,tb:0,r:0,rbi:0,bb:0,k:0,sb:0,outs:0,er:0,w:0,rw:0,sv:0,hd:0,walks:0,errors:0});
  const merge=(dst,src)=>{for(const key of Object.keys(dst))dst[key]+=Number(src[key])||0;return dst;};
  const rate=(n,d)=>d?n/d:0;
+ const weekNumber=day=>Math.floor(Date.parse(day+'T00:00:00Z')/604800000);
+ const fluctuation=(w,p,day=w.day)=>{
+  const rng=w.random('career-form/'+p.id+'/'+weekNumber(day));
+  return clamp((rng()+rng()+rng()-1.5)*8,-11,11);
+ };
+ const recentHonors=(w)=>{
+  if(w.stage!=='pro')return [];
+  const last=w.history?.at(-1);
+  return last?.year===w.year-1&&Array.isArray(last.awards)?last.awards:[];
+ };
  const ops=s=>rate(s.h+s.bb,s.pa)+rate(s.tb,s.ab);
  const era=s=>s.outs?27*s.er/s.outs:99;
  function farmForm(w){
@@ -30,7 +40,7 @@
   const s=p.stats;
   const base=w.ability(p)+(p.nation in D.countries?D.countries[p.origin||league].level-D.countries[league].level:0);
   const fluency=p.club===w.club&&p.id===w.player.id?w.adaptation:0;
-  const form=p.form||0,penalty=p.injury>0?40:0;
+  const form=(p.form||0)+fluctuation(w,p),penalty=p.injury>0?40:0;
   const formScore=p.pos==='P'?s.outs>=12?clamp((4.6-era(s))*5,-17,18)*Math.min(1,s.outs/42):0:
    s.pa>=8?clamp((ops(s)-.68)*48,-19,19)*Math.min(1,s.pa/36):0;
   const glove=p.pos==='P'?0:p.pos===pos?7:p.positions.includes(pos)?3:pos==='DH'?-1:-16;
@@ -39,7 +49,19 @@
   const firstTeamSample=p.pos==='P'?s.outs/45:s.pa/44;
   const promotion=p.id===w.player.id&&w.stage==='pro'?farmForm(w)*(1-Math.min(.88,firstTeamSample))+
    (w.ratings.coach-50)*.1:0;
-  return base+formScore+glove+form+trust+promotion-fluency-penalty-(age>38?2:0);
+  const last=w.history?.at(-1),honors=p.id===w.player.id?recentHonors(w):[];
+  const battingHonors=honors.filter(x=>['首位打者','本塁打王','打点王','最多安打','最高出塁率'].includes(x)).length;
+  const pitchingHonors=honors.filter(x=>['最多勝','最優秀防御率','最多奪三振','最多セーブ','最優秀中継ぎ','最多ホールド'].includes(x)).length;
+  const priorPlayed=last&&last.year===w.year-1&&last.club===w.club&&
+   (p.pos==='P'?last.stats?.outs>=30:last.stats?.pa>=30);
+  // Accomplished veterans keep the benefit of the doubt when a new season starts.
+  // A prolonged current-season slump can eventually erode the carry-over.
+  const sample=p.pos==='P'?(w.playerYear?.outs||0):w.playerYear?.pa||0;
+  const proof=honors.length?Math.min(54,20+Math.min(3,p.pos==='P'?pitchingHonors:battingHonors)*13):
+   priorPlayed?12:0;
+  const carry=p.id===w.player.id&&w.stage==='pro'?proof*Math.max(.20,1-sample/(p.pos==='P'?110:150)):0;
+  const seasonLuck=p.id===w.player.id&&(w.fortune?.year===w.year)?w.fortune.swing:0;
+  return base+formScore+glove+form+trust+promotion+carry+seasonLuck-fluency-penalty-(age>38?2:0);
  }
  function lineup(w,id,country,day,{farm=false,withoutPlayer=false,development=false}={}){
   const roster=w.members(id).filter(p=>p.id!==w.player.id||(!withoutPlayer&&w.health.injury===0));
@@ -79,6 +101,10 @@
    }
   }
   if(own&&development&&['inactive','bench'].includes(usage))usage=pitching?'setup':'pinch';
+  // Last year's award winners cannot be exiled to the farm solely because
+  // their new-season counters were reset. Form and injuries still matter.
+  if(own&&!farm&&!w.health.injury&&recentHonors(w).length&&['inactive','bench'].includes(usage))
+   usage=pitching?'setup':'pinch';
   const bench=own&&!pitching&&usage!=='inactive'&&usage!=='starter'?w.player:reserves[0];
   // Rotate the bottom third across the season so position battles also depend on live form.
   const order=starters.slice().sort((a,b)=>b.contact+b.run*.22-a.contact-a.run*.22);
@@ -87,11 +113,13 @@
  function playerFor(w,p,country){
   const keys=p.pos==='P'?pitching:batting;
   const quality=(D.countries[p.origin||country].level-D.countries[country].level)*.7+(p.form||0)*.5;
+  const dayLuck=fluctuation(w,p,w.day)*(p.id===w.player.id?1:.45);
+  const yearLuck=p.id===w.player.id&&w.fortune?.year===w.year?w.fortune.swing*.35:0;
   const player=p.id===w.player.id;
   const partner=player?w.members(p.club||'school-player').find(q=>q.id!==p.id&&q.relationship>=65&&
    (p.pos==='P'&&q.pos==='C'||p.pos==='SS'&&q.pos==='2B'||p.pos==='2B'&&q.pos==='SS')):null;
   const pressure=player?w.health.fatigue*.05+w.health.slump*2+w.adaptation-(partner?2:0):0;
-  const calibrated=Object.fromEntries(keys.map(k=>[k,clamp(p[k]+quality-pressure,k==='velocity'?111:18,k==='velocity'?166:99)]));
+  const calibrated=Object.fromEntries(keys.map(k=>[k,clamp(p[k]+quality-pressure+dayLuck+yearLuck,k==='velocity'?111:18,k==='velocity'?166:99)]));
   return {...p,...calibrated,careerPerks:player?Object.fromEntries(w.perks.map(key=>[key,1])):{},careerForm:player?w.ratings.coach:50};
  }
  function team(w,l,country){
