@@ -103,8 +103,11 @@
   if(own&&development&&['inactive','bench'].includes(usage))usage=pitching?'setup':'pinch';
   // Last year's award winners cannot be exiled to the farm solely because
   // their new-season counters were reset. Form and injuries still matter.
-  if(own&&!farm&&!w.health.injury&&recentHonors(w).length&&['inactive','bench'].includes(usage))
-   usage=pitching?'setup':'pinch';
+  if(own&&!farm&&!w.health.injury&&recentHonors(w).length&&['inactive','bench'].includes(usage)){
+   const year=w.playerYear||blank();
+   const struggling=pitching?year.outs>=75&&era(year)>7.0:year.pa>=90&&ops(year)<.52;
+   if(!struggling)usage=pitching?'setup':'pinch';
+  }
   const bench=own&&!pitching&&usage!=='inactive'&&usage!=='starter'?w.player:reserves[0];
   // Rotate the bottom third across the season so position battles also depend on live form.
   const order=starters.slice().sort((a,b)=>b.contact+b.run*.22-a.contact-a.run*.22);
