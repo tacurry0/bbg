@@ -15,7 +15,7 @@
   `<span>${s.g}登板</span><span>${Math.floor(s.outs/3)}${s.outs%3?'.'+s.outs%3:''}回</span><span>防御率 ${s.outs?fmt(M.era(s),2):'—'}</span><span>${s.k}奪三振</span><span>${s.sv}S</span>`:
   `<span>${s.g}試合</span><span>打率 ${s.ab?fmt(M.rate(s.h,s.ab)):'—'}</span><span>${s.hr}本</span><span>${s.rbi}打点</span><span>${s.sb}盗塁</span>`;
  const pills=(label,inner)=>`<div class="cw-pills" aria-label="${esc(label)}">${inner}</div>`;
- const title=(screen,legacy)=>`<div class="career-heading"><button type="button" class="career-back" data-world-action="home">◀ ホーム</button><h1>${esc(screen)}</h1>${legacy?act('legacy','従来キャリア','','career-back'):''}</div>`;
+ const title=(screen,legacy)=>`<div class="career-heading"><button type="button" class="career-back" data-world-action="home">◀ ホーム</button><h1>${esc(screen)}</h1>${act('slots','選手データ（最大3人）','','career-back')}${legacy?act('legacy','従来キャリア','','career-back'):''}</div>`;
  function matchResult(w){
   const {name,day,team,opponent,score,stat:s,inning,pitching=w.pitching}=w.last;
   const [own,rival]=score;
@@ -26,6 +26,22 @@
   return `<p class="modal-note">${esc(day)} · ${esc(name)}${inning?' · '+inning+'回':''}</p>
    <div class="career-result-banner${own<rival?' career-lost':''}"><div><small>${esc(team||w.clubName(w.player.club))} 対 ${esc(opponent)}</small>
    <b>${own} − ${rival}</b></div><strong>${outcome}</strong></div><h3>${esc(w.name)}の成績</h3>${performance}`;
+ }
+ function slots(meta,legacy){
+  const byId=new Map(meta.slots.map(slot=>[slot.id,slot]));
+  const cards=Array.from({length:3},(_,i)=>{
+   const item=byId.get(i);
+   if(!item)return '<article class="career-panel cw-panel cw-slot-card cw-slot-empty"><h3>選手 '+(i+1)+'</h3><p>新しい高校生活を始められます</p>'+
+    act('slot-create','この枠で新しい選手を作る','','primary-button')+'</article>';
+   const c=countries[item.country];
+   return '<article class="career-panel cw-panel cw-slot-card"><div class="cw-slot-head"><strong>選手 '+(i+1)+'</strong>'+
+    (meta.active===i?'<span class="cw-slot-current">現在の選手</span>':'')+'</div>'+
+    '<h3>'+esc(item.name)+'</h3><p>'+esc(c?.label||'—')+' · '+esc(item.yearLabel||item.stage||'—')+'</p>'+
+    '<p>'+esc(item.day||'—')+'</p>'+act('slot-open',meta.active===i?'この選手で続ける':'この選手を読み込む',i,'primary-button')+'</article>';
+  }).join('');
+  return title('選手データ',legacy)+
+   '<p class="cw-note">保存は選手ごとに独立しています。既存の選手を削除せず、最大3人まで作成できます。試合途中の状態も保存します。</p>'+
+   '<div class="cw-slot-list">'+cards+'</div>'+act('slots-close','前の画面に戻る','','secondary-button');
  }
  function setup(country,legacy,alumni=[]){
   if(!country)return title('選手キャリア',legacy)+section('高校生活を始める国・地域',`<div class="cw-grid">${Object.entries(countries).map(([id,c])=>
@@ -306,5 +322,5 @@
    w.moves.map(x=>`<p>${x.day} · ${club(w,x.from)} → ${club(w,x.to)} · ${esc(x.type)}</p>`).join('')+
    act('new','OB記録を保存して新しいキャリアへ','','primary-button'))+history(w);
  }
- window.NightCareerWorldView={setup,dashboard,detail,matchResult};
+ window.NightCareerWorldView={setup,dashboard,detail,matchResult,slots};
 })();
