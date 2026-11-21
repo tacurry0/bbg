@@ -193,7 +193,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
  function activateGame(){
-  if(game.career||game.worldFixture||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)game.absRemaining??=2;
+  if(game.career||game.worldFixture||game.mode==='match'&&!game.competition&&!game.apbcFixtureId){
+   game.absRemaining??=2;
+   game.absCpuRemaining??=2;
+  }
   stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;queuedBench=false;stadiumAudio.stopEffects();screen='game';$('apbc-cup').hidden=true;$('home').hidden=true;$('pennant').hidden=true;$('game').hidden=false;$('pause').hidden=false;$('settings').hidden=false;document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);history.replaceState({nightball:'home'},'',location.href);history.pushState({nightball:'game'},'',location.href);window.scrollTo(0,0);renderer.resize();}
  function resumeGame(){try{const snapshot=JSON.parse(localStorage.getItem('nightball.match')||'null');const restored=NightGame.restore(snapshot,onEvent);if(!restored){clearCheckpoint();toast('再開できる試合がありません');return;}closeModal(false);game=restored;saved=false;lastMode=game.competition==='apbc2026'?'apbc':'match';matchContext=lastMode;game.fieldSpeed=settings.fieldSpeed;game.battingAssist=settings.battingAssist;activateGame();onEvent('clear');if(['pitch','windup'].includes(game.phase)){game.setPhase('windup');game.pitch.progress=0;game.pitch.swung=false;game.pitch.cpuActed=false;}else if(game.phase==='result'){const last=game.log.at(-1);if(last)onEvent('message',last);}updateUI();}catch{toast('保存した試合を読み込めませんでした');}}
  let lineupContext='match',pregameTarget=null,matchPickSide='home',matchContext='match',apbcPickSide='own',matchClubGroup=settings.matchTeam?.startsWith('kbo-')?'kbo':settings.matchTeam?.startsWith('npb-')?'npb':'cpbl';
@@ -1296,8 +1299,17 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    actor.style.top=canvas.top-stage.top+bounds.y+'px';
    actor.style.width=bounds.w+'px';actor.style.height=bounds.h+'px';
   }
+  const opening=panel.hidden;
   panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
   if(panel.hidden)return;
+  if(opening){
+   const challenger=$('abs-challenger');
+   challenger.hidden=!call.cpu;
+   if(call.cpu){
+    const opponent=g.teams[g.userSide==='home'?'away':'home'];
+    challenger.textContent=opponent.short+' · '+(g.defending?'打者':'捕手')+'のチャレンジ';
+   }
+  }
   const showResult=reduceAbsMotion.matches||g.phaseTime>=NightGame.ABS_TIMING.reviewReveal;
   $('abs-splash').hidden=reduceAbsMotion.matches||g.phaseTime>=530;
   const result=$('abs-verdict');
@@ -1386,7 +1398,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
      const samePitchCall=pitchCall&&previousCall===data.en&&stage.classList.contains('pitch-call');
-     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-'+pitchCall:'');
+     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'');
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());

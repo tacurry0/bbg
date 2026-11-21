@@ -1,18 +1,19 @@
 #stage-message.pitch-call {
-  transform: translateY(clamp(-69px, -8svh, -42px));
+  inset: max(20%, calc(18px + 91 * var(--hud-u))) 0 auto;
+  padding: 0 14px;
 }
-#stage-message.pitch-strike .stage-call {
+#stage-message.pitch-call--strike .stage-call {
   --call-accent: #ffe054;
   --call-ink: #332403;
   --call-panel: #38300ef7;
 }
-#stage-message.pitch-ball .stage-call {
+#stage-message.pitch-call--ball .stage-call {
   --call-accent: #7cea75;
   --call-ink: #102c16;
   --call-panel: #163723f7;
 }
 @media (max-height: 470px) and (orientation: landscape) {
-  #stage-message.pitch-call { transform: translateY(-36px); }
+  #stage-message.pitch-call { top: max(20%, 72px); }
 }
 
 #abs-actor {
@@ -49,6 +50,7 @@
   font: 900 clamp(.72rem, 3.1vw, 1rem)/1.2 system-ui, sans-serif;
 }
 .abs-ident strong { padding: .45em .65em; color: #174738; font-style: italic; }
+.abs-ident small { padding: .43em .65em; font-size: .80em; }
 .abs-ident span { background: #0d3e63; color: #fff; padding: .43em .65em; }
 .abs-splash {
   position: absolute;

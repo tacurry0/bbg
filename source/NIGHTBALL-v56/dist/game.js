@@ -392,8 +392,11 @@ window.NightGame=class NightGame{
    derby.remaining=Math.max(0,derby.remaining-dt);
    if(!derby.remaining&&!['field','miss'].includes(this.phase)){this.finishDerbyTurn();return;}
   }
-  dt=Math.min(dt,this.phase==='field'?240:50);if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending)dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
+  dt=Math.min(dt,this.phase==='field'?240:50);if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&this.phase!=='abs-call'&&this.phase!=='abs-review')dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
   if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
+  else if(this.phase==='abs-call'&&this.absCall?.cpu&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
+   this.setPhase('abs-review');this.notify();
+  }
   else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call)this.resolveAbsCall(false);
   else if(this.phase==='abs-review'&&this.phaseTime>=NightGame.ABS_TIMING.reviewEnd)this.resolveAbsCall(true);
   else if(this.phase==='aim'&&this.autoDefense&&this.defending&&this.phaseTime>480)this.autoPitch();
@@ -1536,7 +1539,7 @@ window.NightGame=class NightGame{
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
- static ABS_TIMING=Object.freeze({call:1700,pitchResult:980,reviewReveal:4200,reviewEnd:5450});
+ static ABS_TIMING=Object.freeze({call:1700,cpuCall:650,pitchResult:980,reviewReveal:4200,reviewEnd:5450});
 
  // Retain the game's strike zone. Convert its axes to a 43.2 cm plate and
  // a 60 cm high zone for the review graphic and for the Statcast distance bins.
@@ -1554,7 +1557,26 @@ window.NightGame=class NightGame{
   const rate=(inside?[.63,.84,.94]:[.38,.17,.06])[band]??Number(inside);
   return roll<rate;
  }
- get absCanChallenge(){return this.phase==='abs-call'&&!!this.absCall&&this.absRemaining>0&&!(this.autoDefense&&this.defending);}
+ shouldCpuChallenge(gap){
+  if(!(this.absCpuRemaining>0)||Math.abs(gap)>.0762)return false;
+  // A batter reads the outside of the zone; the catcher's view is more precise.
+  // Tune their estimates against the 2026 MLB Statcast 49%/58% overturn rates.
+  // https://baseballsavant.mlb.com/abs?gameType=regular&level=mlb&year=2026
+  const batter=this.defending;
+  const terminal=batter?this.strikes===2:this.balls===3;
+  const late=this.inning>=Math.max(3,this.totalInnings-2)&&Math.abs(this.homeScore-this.awayScore)<=2;
+  const saving=this.absCpuRemaining===1&&!late;
+  const perceived=(batter?gap:-gap)+rnd(batter?-.09:-.068,batter?.09:.068);
+  const threshold=.015-(terminal?.006:0)-(late?.005:0)+(saving?.006:0);
+  if(perceived<threshold)return false;
+  const attempt=(batter?.14:.20)*(terminal?(batter?2.6:1.8):1)*(late?1.45:1)*
+   (this.bases[1]||this.bases[2]?1.15:1)*(saving?.67:1);
+  return Math.random()<attempt;
+ }
+ get absCanChallenge(){
+  return this.phase==='abs-call'&&!!this.absCall&&!this.absCall.cpu&&this.absRemaining>0&&!(this.autoDefense&&this.defending);
+ }
+
  requestAbsChallenge(){
   if(!this.absCanChallenge||this.paused)return false;
   this.setPhase('abs-review');this.notify();
@@ -1564,7 +1586,10 @@ window.NightGame=class NightGame{
   const call=this.absCall;
   if(!call)return;
   delete this.absCall;
-  if(reviewed&&call.strike===call.umpireStrike)this.absRemaining--;
+  if(reviewed&&call.strike===call.umpireStrike){
+   if(call.cpu)this.absCpuRemaining--;
+   else this.absRemaining--;
+  }
   this.commitCalledPitch(reviewed?call.strike:call.umpireStrike);
   if(!reviewed&&!this.batFinished)this.phaseTime=NightGame.ABS_TIMING.pitchResult;
  }
@@ -1575,11 +1600,13 @@ window.NightGame=class NightGame{
   if(this.absRemaining===undefined){this.commitCalledPitch(this.pitch.isStrike);return;}
   const location=NightGame.absLocation(this.pitch.targetX,this.pitch.targetY);
   const umpireStrike=NightGame.absUmpireStrike(location.gap,Math.random());
-  if(this.absRemaining<=0||this.autoDefense&&this.defending||umpireStrike===this.defending){
+  const cpu=umpireStrike===this.defending;
+  const challenge=cpu?this.shouldCpuChallenge(location.gap):this.absRemaining>0&&!(this.autoDefense&&this.defending);
+  if(!challenge){
    this.commitCalledPitch(umpireStrike);
    return;
   }
-  this.absCall={...location,strike:this.pitch.isStrike,umpireStrike};
+  this.absCall={...location,strike:this.pitch.isStrike,umpireStrike,cpu};
   this.setPhase('abs-call');this.notify();
  }
  commitCalledPitch(strike){

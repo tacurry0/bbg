@@ -67,6 +67,7 @@ try{
   }
  });
  await mkdir('tests/screenshots',{recursive:true});
+ let bannerTop;
  for(const [defending,corrected] of [[true,true],[false,true],[false,false]]){
   const expectedColor=defending?'#7cea75':'#ffe054';
   await page.evaluate(({defending,corrected})=>{
@@ -80,8 +81,19 @@ try{
    finally{Math.random=random;}
   },{defending,corrected});
   const call=page.locator('#stage-message');
-  assert(await call.evaluate(e=>e.classList.contains('pitch-call')));
-  assert.equal(await call.locator('.stage-call').evaluate(e=>getComputedStyle(e).getPropertyValue('--call-accent').trim()),expectedColor);
+  const layout=await call.evaluate(e=>{
+   const stage=document.getElementById('stage').getBoundingClientRect();
+   const banner=e.querySelector('.stage-call'),box=banner.getBoundingClientRect();
+   const pitcher=window.absTest.renderer.project(0,2.22,18.4);
+   const style=getComputedStyle(e);
+   return {top:parseFloat(style.top),bottom:box.bottom-stage.top,head:pitcher.y,height:stage.height,
+    oldClass:e.classList.contains('pitch-ball'),color:getComputedStyle(banner).getPropertyValue('--call-accent').trim()};
+  });
+  assert(!layout.oldClass,'the pitch selector sprite class must not style the call banner');
+  assert.equal(layout.color,expectedColor);
+  assert(layout.top<layout.height*.24&&layout.bottom<layout.head,'banner sits above the pitcher');
+  bannerTop??=layout.top;
+  assert.equal(layout.top,bannerTop,'balls and strikes use the same banner position');
   assert(await initialCount.isVisible());
   const actor=page.locator('#abs-actor'),box=await actor.boundingBox();
   assert(box&&box.width>=44&&box.height>=44);
@@ -104,8 +116,26 @@ try{
   await page.locator('#abs-review').waitFor({state:'hidden',timeout:15000});
   assert.equal(await page.locator('#abs-remaining').textContent(),corrected?'2':'1');
  }
+ // A correctly called borderline strike can still draw an unsuccessful CPU challenge.
+ await page.evaluate(()=>{
+  const {game:g}=window.absTest;
+  g.half=g.userHome?'top':'bottom';
+  g.balls=0;g.strikes=0;
+  g.createPitch(NightGame.TYPES[0],{x:1.04,y:.65});
+  g.pitch.delivered=true;g.setPhase('pitch');
+  const draws=[0,.99,0],random=Math.random;
+  try{Math.random=()=>draws.shift()??0;g.take();}finally{Math.random=random;}
+ });
+ await page.locator('#abs-review').waitFor({state:'visible',timeout:14000});
+ assert(await page.locator('#abs-actor').isHidden());
+ assert.match(await page.locator('#abs-challenger').textContent(),/打者のチャレンジ/);
+ await page.locator('#abs-verdict').waitFor({state:'visible',timeout:18000});
+ assert.equal(await page.locator('#abs-change').textContent(),'判定維持');
+ await page.locator('#abs-review').waitFor({state:'hidden',timeout:15000});
+ assert.equal(await page.evaluate(()=>window.absTest.game.absCpuRemaining),1);
+ assert.equal(await page.locator('#abs-remaining').textContent(),'1');
  assert.deepEqual(errors,[]);
- console.log('PASS: actual mobile double taps on pitcher and batter, 3D replay, 好球 and 壞球, and corrected calls.');
+ console.log('PASS: actual mobile double taps on pitcher and batter, banner positions, 3D replay, and unsuccessful CPU appeal.');
 }finally{
  await browser?.close();
  await new Promise(done=>server.close(done));
