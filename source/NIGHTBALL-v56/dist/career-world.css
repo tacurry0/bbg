@@ -76,3 +76,18 @@
 @media(max-width:360px){.cw-command-grid button{font-size:.87rem}.cw-success-meter>div{padding:7px}}
 
 .cw-goal{padding:8px 10px;border-radius:8px;background:#fdf2cf;color:#5e3d10;border:1px solid #e2c35c;font-size:.88rem;line-height:1.45}
+
+/* Persistent career slot selection: no overwrites and phone-friendly controls. */
+.cw-slot-list{display:grid;gap:10px;margin:10px 0 14px}
+.cw-slot-card{display:grid;gap:5px;margin:0!important;background:linear-gradient(135deg,#fff,#f3faff)}
+.cw-slot-card h3{font-size:1.15rem;margin:3px 0!important;color:#174661}
+.cw-slot-card p{font-size:.86rem;margin:0!important;color:#35576c}
+.cw-slot-card .primary-button{margin-top:8px;min-height:44px}
+.cw-slot-head{display:flex;align-items:center;gap:8px;justify-content:space-between;color:#234a5f;font-size:.81rem}
+.cw-slot-current{background:#ffdb79;color:#593a0a;padding:4px 7px;border-radius:6px;font-weight:800}
+.cw-slot-empty{border-style:dashed;background:#f8fbfd}
+.cw-success-inbox{background:#fef6e4;border:1px solid #e4bd72;border-radius:10px;padding:10px 12px;margin:9px 0;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.cw-success-inbox strong{color:#75490e;flex-basis:100%}
+.cw-success-inbox p{margin:0 0 4px;font-size:.87rem;flex-basis:100%}
+.cw-success-inbox button{margin:2px 0;min-height:42px}
+@media(min-width:660px){.cw-slot-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
