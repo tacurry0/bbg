@@ -37,6 +37,7 @@ try{
   };
  });
  await page.locator('[data-mode="match"]').click();
+ await page.locator('[data-action="match-team-next"]').click();
  await page.locator('[data-action="match-lineup"]').click();
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>!!window.absTest?.game);
