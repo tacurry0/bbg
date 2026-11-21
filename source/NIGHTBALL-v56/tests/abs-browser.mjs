@@ -41,6 +41,22 @@ try{
  await page.locator('[data-action="match-lineup"]').click();
  await page.locator('[data-action="lineup-play"]').click();
  await page.waitForFunction(()=>window.absTest?.game.phase==='aim');
+ const initialCount=page.locator('#abs-count');
+ assert(await initialCount.isVisible());
+ assert.equal(await page.locator('#abs-remaining').textContent(),'2');
+ const counters=await page.evaluate(()=>{
+  const a=document.getElementById('abs-count').getBoundingClientRect();
+  const w=document.getElementById('wind-hud').getBoundingClientRect();
+  return {gap:w.left-a.right,topMatch:Math.abs(w.top-a.top)};
+ });
+ assert(counters.gap>0&&counters.gap<12&&counters.topMatch<2,'ABS is immediately left of wind');
+ assert.equal(await page.locator('#abs-hint').count(),0);
+ const poses=await page.evaluate(async()=>{
+  const {absCameraPose}=await import('./abs-review.js?v=3');
+  const ball=[.22,.8,-.015],reveal=NightGame.ABS_TIMING.reviewReveal;
+  return [0,1260,2040,reveal].map(t=>absCameraPose(ball,t,true,reveal).eye);
+ });
+ assert(poses[0][2]>0&&poses[1][0]<-2.5&&Math.abs(poses[1][2])<.01&&poses[2][2]<-2&&poses[3][2]<0);
  await page.evaluate(()=>{
   window.absTouches=[];
   for(const type of ['pointerdown','pointerup','pointercancel','click']){
@@ -51,17 +67,22 @@ try{
   }
  });
  await mkdir('tests/screenshots',{recursive:true});
- for(const defending of [true,false]){
-  await page.evaluate(defending=>{
+ for(const [defending,corrected] of [[true,true],[false,true],[false,false]]){
+  const expectedColor=defending?'#7cea75':'#ffe054';
+  await page.evaluate(({defending,corrected})=>{
    const {game:g}=window.absTest;
    g.half=defending===g.userHome?'top':'bottom';
    g.balls=0;g.strikes=0;g.field=null;g.hit=null;
-   g.createPitch(NightGame.TYPES[0],{x:defending?1.04:1.08,y:.65});
+   g.createPitch(NightGame.TYPES[0],{x:defending?1.04:corrected?1.08:0,y:.65});
    g.pitch.delivered=true;g.setPhase('pitch');
    const random=Math.random;
    try{Math.random=()=>defending?.99:0;g.take();}
    finally{Math.random=random;}
-  },defending);
+  },{defending,corrected});
+  const call=page.locator('#stage-message');
+  assert(await call.evaluate(e=>e.classList.contains('pitch-call')));
+  assert.equal(await call.locator('.stage-call').evaluate(e=>getComputedStyle(e).getPropertyValue('--call-accent').trim()),expectedColor);
+  assert(await initialCount.isVisible());
   const actor=page.locator('#abs-actor'),box=await actor.boundingBox();
   assert(box&&box.width>=44&&box.height>=44);
   assert.match(await actor.getAttribute('aria-label'),defending?/投手/:/打者/);
@@ -76,12 +97,12 @@ try{
    throw Error((defending?'pitcher':'batter')+' touches: '+JSON.stringify(await page.evaluate(()=>window.absTouches)),{cause:error});
   }
   await page.locator('#abs-verdict').waitFor({state:'visible',timeout:18000});
-  assert.equal(await page.locator('#abs-word').textContent(),defending?'好球':'壞球');
-  assert.equal(await page.locator('#abs-change').textContent(),'判定変更');
+  assert.equal(await page.locator('#abs-word').textContent(),defending||!corrected?'好球':'壞球');
+  assert.equal(await page.locator('#abs-change').textContent(),corrected?'判定変更':'判定維持');
   assert.match(await page.locator('#abs-gap').textContent(),/\d\.\d 公分/);
-  if(!defending)await page.locator('#abs-review').screenshot({path:'tests/screenshots/abs-ball.png',timeout:6000});
+  if(!defending&&corrected)await page.locator('#abs-review').screenshot({path:'tests/screenshots/abs-ball.png',timeout:6000});
   await page.locator('#abs-review').waitFor({state:'hidden',timeout:15000});
-  assert.equal(await page.evaluate(()=>window.absTest.game.absRemaining),2);
+  assert.equal(await page.locator('#abs-remaining').textContent(),corrected?'2':'1');
  }
  assert.deepEqual(errors,[]);
  console.log('PASS: actual mobile double taps on pitcher and batter, 3D replay, 好球 and 壞球, and corrected calls.');

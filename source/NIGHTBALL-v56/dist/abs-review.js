@@ -20,15 +20,23 @@ const clip=(value,lo,hi)=>Math.max(lo,Math.min(hi,value));
 const smooth=u=>u*u*(3-2*u);
 const blend=(from,to,u)=>from.map((n,i)=>n+(to[i]-n)*u);
 const plate=[[-.216,0,-.216],[.216,0,-.216],[.216,0,0],[0,0,.216],[-.216,0,0]];
-const frameFor=(ball,portrait)=>[
- {at:0,eye:[0,1.8,4.3],look:[0,.77,-.65],fov:34},
- {at:550,eye:[0,1.43,3.2],look:[0,.65,-.46],fov:35},
- {at:1160,eye:[-2.5,.98,.59],look:[0,.68,-.12],fov:44},
- {at:1700,eye:[0,1.12,2.67],look:[0,.67,-.32],fov:43},
- {at:3020,eye:[0,1.12,2.67],look:[0,.67,-.32],fov:43},
- {at:3550,eye:[ball[0],ball[1]+.035,portrait?.35:.42],look:ball,fov:34},
- {at:4400,eye:[ball[0],ball[1]+.035,portrait?.34:.41],look:ball,fov:34}
-];
+const ORBIT_BEGIN=480,ORBIT_END=2040,ZOOM_BEGIN=3260;
+
+export function absCameraPose(ball,time,portrait,reveal){
+ if(time<ORBIT_BEGIN){
+  const u=smooth(clip(time/ORBIT_BEGIN,0,1));
+  return {eye:blend([0,1.8,4.3],[0,1.43,3.2],u),look:blend([0,.77,-.65],[0,.65,-.46],u),fov:34+u};
+ }
+ if(time<ORBIT_END){
+  // Orbit on a half-circle from behind the catcher to the pitcher's side.
+  const u=smooth((time-ORBIT_BEGIN)/(ORBIT_END-ORBIT_BEGIN)),angle=Math.PI*u,radius=3.2-.53*u;
+  const eye=[-Math.sin(angle)*radius,1.43-.31*u,Math.cos(angle)*radius];
+  return {eye,look:[0,.65+.02*u,-.46+.78*u],fov:35+8*Math.sin(Math.PI*u/2)};
+ }
+ const u=smooth(clip((time-ZOOM_BEGIN)/(reveal-ZOOM_BEGIN),0,1));
+ const end=[ball[0],ball[1]+.035,portrait?-.36:-.43];
+ return {eye:blend([0,1.12,-2.67],end,u),look:blend([0,.67,.32],ball,u),fov:43-9*u};
+}
 
 export class AbsReview {
  constructor(canvas){
@@ -43,18 +51,19 @@ export class AbsReview {
   const w=Math.round(r.width*scale),h=Math.round(r.height*scale);
   if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h;}
   this.width=w;this.height=h;
-  const camera=this.camera,ball=[call.x,.66+call.y,-.015],frames=frameFor(ball,w<h);
-  const t=reducedMotion?3550:time;
-  const next=frames.findIndex(f=>f.at>t),index=next===-1?frames.length-1:Math.max(0,next-1);
-  const from=frames[index],to=frames[Math.min(index+1,frames.length-1)];
-  const u=from===to?0:smooth(clip((t-from.at)/(to.at-from.at),0,1));
-  camera.position.set(...blend(from.eye,to.eye,u));
-  camera.lookAt(...blend(from.look,to.look,u));
+  const camera=this.camera,ball=[call.x,.66+call.y,-.015],reveal=NightGame.ABS_TIMING.reviewReveal;
+  const portrait=w<h,pose=absCameraPose(ball,reducedMotion?reveal:time,portrait,reveal);
+  camera.position.set(...pose.eye);
+  camera.lookAt(...pose.look);
   camera.aspect=w/h;
-  camera.fov=from.fov+(to.fov-from.fov)*u+(w<h?10:0);
+  camera.fov=pose.fov+(portrait?10:0);
   camera.updateProjectionMatrix();camera.updateMatrixWorld();
   c.fillStyle='#91d0e3';c.fillRect(0,0,w,h);
-  this.polygon([[-120,-.04,-100],[120,-.04,-100],[120,-.04,14],[-120,-.04,14]],'#2d513d');
+  // The horizon stays level throughout the turn, including the side-on view.
+  const far=camera.getWorldDirection(new Vector3());
+  far.y=0;far.normalize().multiplyScalar(100).add(camera.position);far.y=0;
+  const horizon=clip(this.screen(far.applyMatrix4(camera.matrixWorldInverse)).y,0,h);
+  c.fillStyle='#2d513d';c.fillRect(0,horizon,w,h-horizon);
   this.polygon([[-6,-.025,8],[-5,-.025,-3],[0,-.025,-7],[5,-.025,-3],[6,-.025,8]],'#42352d');
   this.polygon([[-42,-.026,-43],[-41.75,-.026,-43],[-.19,.002,-.19],[-.235,.002,-.19]],'#f5eddf');
   this.polygon([[42,-.026,-43],[41.75,-.026,-43],[.19,.002,-.19],[.235,.002,-.19]],'#f5eddf');

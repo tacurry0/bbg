@@ -1,4 +1,4 @@
-import { AbsReview, absActorBounds } from './abs-review.js?v=2';
+import { AbsReview, absActorBounds } from './abs-review.js?v=3';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML} from './results.js?v=76';
@@ -1254,7 +1254,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
-  for(const id of ['abs-actor','abs-hint','abs-review'])$(id).hidden=true;
+  for(const id of ['abs-actor','abs-count','abs-review'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
   playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
@@ -1280,14 +1280,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function updateAbsUI(g,draw=false){
   const interactive=g.absCanChallenge&&!g.paused&&$('modal').hidden;
-  const actor=$('abs-actor'),hint=$('abs-hint'),panel=$('abs-review'),call=g.absCall;
-  actor.hidden=hint.hidden=!interactive;
+  const actor=$('abs-actor'),panel=$('abs-review'),call=g.absCall;
+  actor.hidden=!interactive;
   if(g.phase==='abs-call'&&call!==absShownCall){
    absShownCall=call;absLastTap=null;
    const en=call.umpireStrike?'STRIKE':'BALL',ja=call.umpireStrike?'ストライク':'ボール';
    onEvent('message',{en,ja});
    const role=g.defending?'投手':'打者';
-   hint.textContent=role+'を2回タップ · ABS残り'+g.absRemaining+'回';
    actor.setAttribute('aria-label',role+'でABSチャレンジ 残り'+g.absRemaining+'回');
   }
   if(interactive){
@@ -1299,8 +1298,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
   panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
   if(panel.hidden)return;
-  const showResult=reduceAbsMotion.matches||g.phaseTime>=3550;
-  $('abs-splash').hidden=reduceAbsMotion.matches||g.phaseTime>=450;
+  const showResult=reduceAbsMotion.matches||g.phaseTime>=NightGame.ABS_TIMING.reviewReveal;
+  $('abs-splash').hidden=reduceAbsMotion.matches||g.phaseTime>=530;
   const result=$('abs-verdict');
   if(showResult&&absShownResult!==call){
    absShownResult=call;
@@ -1378,21 +1377,24 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  };
  function onEvent(type,data){
    if(type==='message'){
+     const previousCall=$('message-en').textContent;
      $('message-en').textContent=data.en;$('message-ja').textContent=data.ja;$('message-sub').textContent=data.sub||'';
      if(game?.challenge&&data.en==='STRIKEOUT')updateChallenge(true);
      const stage=$('stage-message');
      const kind=data.kind||(/^(SINGLE|DOUBLE|TRIPLE|GROUND-RULE DOUBLE|BUNT HIT)$/.test(data.en)?'hit':
       data.en==='HOME RUN'?'homer':/OUT|DOUBLE PLAY/.test(data.en)?'out':'neutral');
-     const pitchCall=['BALL','STRIKE','STRIKEOUT','WALK','SWING & MISS'].includes(data.en);
-     stage.className='stage-message show '+kind+(pitchCall?' pitch-call':'');
+     const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
+      ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
+     const samePitchCall=pitchCall&&previousCall===data.en&&stage.classList.contains('pitch-call');
+     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-'+pitchCall:'');
      const banner=stage.querySelector('.stage-call');
-     if(typeof banner.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+     if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
       const impact=['out','hit','homer'].includes(kind);
       banner.animate([
        {opacity:0,transform:impact?'translateX(-14px) scale(.94)':'translateY(8px)'},
        {opacity:1,transform:'none'}
-      ],{duration:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
+      ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
    }else if(type==='clear'){$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;}
    else if(type==='sound')sound(data);
@@ -1448,10 +1450,17 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(g.inMatch){$('count').innerHTML=[['B',g.balls,3,'b'],['S',g.strikes,2,'s'],['O',g.outs,3,'o']].map(([l,n,max,cl])=>`<div class="count-group ${cl}"><span>${l}</span>${Array.from({length:max},(_,i)=>`<i class="${i<n?'on':''}"></i>`).join('')}</div>`).join('');$('count').setAttribute('aria-label',`${g.balls}ボール ${g.strikes}ストライク ${g.outs}アウト`);}else $('count').innerHTML=`<span>${g.session.hits} HITS</span>`;
    $('bases').hidden=!g.inMatch;[...$('bases').children].forEach((e,i)=>e.classList.toggle('on',g.bases[i]));$('bases').setAttribute('aria-label',g.bases.some(Boolean)?g.bases.map((b,i)=>b?`${i+1}塁`:null).filter(Boolean).join('・')+'に走者':'走者なし');
    $('role-tag').textContent=field?'LIVE FIELD':def?'PITCHING / YOU':'BATTING / YOU';$('role-tag').classList.toggle('pitching',def);
-   const pitchVisible=!!g.pitch&&['pitch','miss','field','result'].includes(g.phase);
+   const pitchVisible=!!g.pitch&&['pitch','miss','field','result','abs-call'].includes(g.phase);
    $('pitch-label').textContent=pitchVisible?g.pitch.name:'';
    $('pitch-speed').textContent=pitchVisible?g.pitch.speed:'';
    $('pitch-label').parentElement.hidden=!pitchVisible;
+   const absCount=$('abs-count');
+   absCount.hidden=g.absRemaining===undefined;
+   if(!absCount.hidden){
+    $('abs-remaining').textContent=g.absRemaining;
+    absCount.dataset.empty=String(g.absRemaining===0);
+    absCount.setAttribute('aria-label','ABS 残り'+g.absRemaining+'回');
+   }
    const wind=g.park.wind||0,windHUD=$('wind-hud');
    $('wind-speed').textContent=Math.abs(wind).toLocaleString('ja-JP',{maximumFractionDigits:1});
    windHUD.dataset.direction=wind<0?'in':wind?'out':'calm';

@@ -394,8 +394,8 @@ window.NightGame=class NightGame{
   }
   dt=Math.min(dt,this.phase==='field'?240:50);if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending)dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
   if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
-  else if(this.phase==='abs-call'&&this.phaseTime>=1450)this.resolveAbsCall(false);
-  else if(this.phase==='abs-review'&&this.phaseTime>=4400)this.resolveAbsCall(true);
+  else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call)this.resolveAbsCall(false);
+  else if(this.phase==='abs-review'&&this.phaseTime>=NightGame.ABS_TIMING.reviewEnd)this.resolveAbsCall(true);
   else if(this.phase==='aim'&&this.autoDefense&&this.defending&&this.phaseTime>480)this.autoPitch();
   else if(this.phase==='windup'&&this.phaseTime>(derby?270:700)){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
   else if(this.phase==='pitch'){
@@ -404,7 +404,7 @@ window.NightGame=class NightGame{
    if(this.phase==='pitch'&&this.pitch.progress>1.24)this.take();
   }else if(this.phase==='miss'&&this.phaseTime>330)this.strike(true);
   else if(this.phase==='field'){let remaining=dt/1000;while(remaining>1e-6&&this.phase==='field'){const untilCatch=this.field?.throw?Math.max(.000001,this.field.throw.duration-this.field.throw.t):Infinity;const step=Math.min(remaining,1/120,untilCatch);this.updateField(step);remaining-=step;}}
-  else if(this.phase==='result'&&!holdResult&&this.phaseTime>(derby?(this.hit?.kind==='hr'?700:240):this.field?(this.runningDemo?3300:620):720)){
+  else if(this.phase==='result'&&!holdResult&&this.phaseTime>(derby?(this.hit?.kind==='hr'?700:240):this.field?(this.runningDemo?3300:620):this.pitch?.callResult?NightGame.ABS_TIMING.pitchResult:720)){
    if(this.challenge&&(this.field&&!this.field.foul||this.outs>=3))return;
    if(this.field&&this.phaseTime<18000&&this.field.runners.some(r=>!r.out&&Math.abs(r.progress-(r.target??r.start))>.01))return;
    if(typeof this.career?.queuedRunningMode==='boolean'){
@@ -1536,6 +1536,8 @@ window.NightGame=class NightGame{
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
+ static ABS_TIMING=Object.freeze({call:1700,pitchResult:980,reviewReveal:4200,reviewEnd:5450});
+
  // Retain the game's strike zone. Convert its axes to a 43.2 cm plate and
  // a 60 cm high zone for the review graphic and for the Statcast distance bins.
  static absLocation(x,y){
@@ -1564,7 +1566,7 @@ window.NightGame=class NightGame{
   delete this.absCall;
   if(reviewed&&call.strike===call.umpireStrike)this.absRemaining--;
   this.commitCalledPitch(reviewed?call.strike:call.umpireStrike);
-  if(!reviewed&&!this.batFinished)this.phaseTime=720;
+  if(!reviewed&&!this.batFinished)this.phaseTime=NightGame.ABS_TIMING.pitchResult;
  }
  take(){
   if(!this.inMatch)this.emit('sound','catch');
@@ -1582,6 +1584,7 @@ window.NightGame=class NightGame{
  }
  commitCalledPitch(strike){
   if(strike){this.strike(false);return;}
+  this.pitch.callResult=true;
   this.emit('sound','catch');this.balls++;this.completePitch('ball');
   const before=this.battingScore;
   if(this.balls>=4){this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','フォアボール','押し出しにも注意');this.checkEnd();}else this.message('BALL','ボール',`${this.balls}ボール · ${this.strikes}ストライク`);
@@ -1590,6 +1593,7 @@ window.NightGame=class NightGame{
   this.notify();
  }
  strike(swung){
+  if(this.pitch)this.pitch.callResult=true;
   this.completePitch('miss');this.emit('sound','catch');this.emit('sound','strike');
   if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'ストライク',`${this.balls}ボール · ${this.strikes}ストライク`);}
   else if(!this.derby)this.message('SWING & MISS','空振り','ボールの位置とカーソルを合わせよう');

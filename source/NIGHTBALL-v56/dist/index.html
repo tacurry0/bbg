@@ -15,10 +15,10 @@
 <link rel="stylesheet" href="./arcade.css?v=77">
   <link rel="stylesheet" href="./career.css?v=56">
   <link rel="stylesheet" href="./career-world.css?v=90">
-  <link rel="stylesheet" href="./game-hud.css?v=72">
+  <link rel="stylesheet" href="./game-hud.css?v=73">
   <link rel="stylesheet" href="./menu-polish.css?v=58">
   <link rel="stylesheet" href="./pwa-update.css?v=1">
-  <link rel="stylesheet" href="./abs.css?v=1">
+  <link rel="stylesheet" href="./abs.css?v=2">
   <title>NIGHTBALL — ポケット野球</title>
 </head>
 <body>
@@ -71,7 +71,10 @@
     <div class="game-stage" id="stage"><div class="scoreboard" id="scoreboard"></div><canvas id="game-canvas" tabindex="0" aria-label="押したまま狙い、離すとスイングまたは投球"></canvas>
       <button id="player-card" type="button" class="hud-player-card hud-batter" aria-label="打者の能力を見る"></button>
       <button id="pitcher-card" type="button" class="hud-player-card hud-pitcher" aria-label="投手の能力を見る"></button>
-      <div id="wind-hud" class="wind-hud"><i aria-hidden="true">⬆</i><b id="wind-speed">0</b><span>m</span></div>
+      <div class="pitch-meta-hud">
+        <div id="abs-count" class="abs-count" hidden><span>ABS</span><b id="abs-remaining">2</b></div>
+        <div id="wind-hud" class="wind-hud"><i aria-hidden="true">⬆</i><b id="wind-speed">0</b><span>m</span></div>
+      </div>
       <div class="role-tag" id="role-tag">BATTING</div><button id="bench-button" class="bench-chip" aria-label="選手交代・ベンチ" hidden>ベンチ</button><button id="field-speed" class="speed-chip" aria-label="打球後の速度を切り替え" aria-pressed="false">打球後 ×1</button><button id="auto-defense" class="auto-defense-chip" aria-pressed="false" hidden>守備を自動で進行</button><button id="running-mode" class="running-mode-chip" aria-pressed="false" hidden>走塁：自動</button><div class="pitch-info"><span id="pitch-label">READY</span><span><b id="pitch-speed">—</b><small>km/h</small></span></div>
       <div class="stage-message" id="stage-message" aria-live="polite" aria-atomic="true">
         <div class="stage-call"><div class="stage-call-head"><span id="message-en"></span></div>
@@ -92,7 +95,6 @@
       <div id="scoring-chip" class="scoring-chip" role="status" aria-atomic="true" hidden></div>
       <div id="umpire-call" class="umpire-call" role="status" hidden></div>
       <button id="abs-actor" type="button" hidden></button>
-      <div id="abs-hint" class="abs-hint" aria-hidden="true" hidden></div>
       <section id="abs-review" class="abs-review" role="region" aria-label="ABSチャレンジ" hidden>
         <canvas id="abs-canvas" aria-hidden="true"></canvas>
         <div class="abs-ident"><strong>NIGHTBALL</strong><span>ABS 挑戰系統</span></div>
@@ -137,7 +139,7 @@
 <script src="./matchup-data.js?v=56"></script>
 <script src="./audio.js?v=56"></script>
 <script src="./derby.js?v=56"></script>
-<script src="./game.js?v=91"></script>
+<script src="./game.js?v=94"></script>
 <script src="./career-leagues.js?v=56"></script>
 <script src="./career-development.js?v=56"></script>
 <script src="./career-life.js?v=56"></script>
@@ -157,6 +159,6 @@
 <script src="./renderer.js?v=60"></script>
 <script src="./squad.js?v=56"></script>
 <script defer src="./pwa-update.js?v=2"></script>
-<script type="module" src="./app.js?v=93"></script>
+<script type="module" src="./app.js?v=94"></script>
 </body>
 </html>

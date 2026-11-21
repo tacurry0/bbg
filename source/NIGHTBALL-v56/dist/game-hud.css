@@ -98,13 +98,20 @@
 [data-hud-grade=C]{color:#ffac29}[data-hud-grade=D]{color:#ffe42e}[data-hud-grade=E]{color:#37eb54}
 [data-hud-grade=F]{color:#1bddff}[data-hud-grade=G]{color:#c5d1e2}
 
-.wind-hud{
+.pitch-meta-hud{
  position:absolute;z-index:6;top:calc(13px + 70 * var(--hud-u));right:var(--hud-edge);
+ display:flex;align-items:stretch;gap:calc(5 * var(--hud-u));pointer-events:none;
+}
+.wind-hud,.abs-count{
  display:flex;align-items:center;gap:calc(3 * var(--hud-u));padding:calc(2.5 * var(--hud-u)) calc(7 * var(--hud-u));
  border:1px solid #88c9ff;border-radius:999px;color:#f6fbff;
  background:linear-gradient(#176ab1ea,#072044ed);box-shadow:0 2px 4px #001b3d80;
  line-height:1;font-size:calc(12 * var(--hud-u));font-weight:850;
 }
+.abs-count{gap:calc(4 * var(--hud-u));font-variant-numeric:tabular-nums}
+.abs-count[hidden]{display:none}
+.abs-count span{color:#bde9ff}
+.abs-count[data-empty="true"]{opacity:.72}
 .wind-hud i{font:900 calc(17 * var(--hud-u))/1 Arial,sans-serif;color:#40cdff;text-shadow:0 0 6px #51bcf9;font-style:normal}
 .wind-hud[data-direction=in] i{transform:rotate(180deg)}
 .wind-hud[data-direction=calm] i{opacity:.47}
@@ -171,7 +178,7 @@
 .game-stage .run-actions>button{min-height:max(34px,calc(40 * var(--btn-u)));padding:.35em .7em;font-size:calc(12 * var(--btn-u))}
 .game-stage .run-actions{z-index:20}
 .in-play .hud-batter,.in-play .pitch-info{visibility:hidden}
-.career-presentation :is(.hud-player-card,.wind-hud),.game-screen:has(.half-break:not([hidden])) :is(.hud-player-card,.wind-hud){visibility:hidden}
+.career-presentation :is(.hud-player-card,.pitch-meta-hud),.game-screen:has(.half-break:not([hidden])) :is(.hud-player-card,.pitch-meta-hud){visibility:hidden}
 .game-stage .scoring-chip{top:calc(19px + 108 * var(--hud-u));scale:var(--hud-scale,1)}
 .game-stage .umpire-call{scale:var(--hud-scale,1)}
 .hud-settings{padding:6px 10px;margin:2px 0 16px;border:1px solid #a6d2ed;border-radius:9px;background:#eaf6ff}

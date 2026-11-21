@@ -1,5 +1,18 @@
 #stage-message.pitch-call {
-  transform: translateY(-28px);
+  transform: translateY(clamp(-69px, -8svh, -42px));
+}
+#stage-message.pitch-strike .stage-call {
+  --call-accent: #ffe054;
+  --call-ink: #332403;
+  --call-panel: #38300ef7;
+}
+#stage-message.pitch-ball .stage-call {
+  --call-accent: #7cea75;
+  --call-ink: #102c16;
+  --call-panel: #163723f7;
+}
+@media (max-height: 470px) and (orientation: landscape) {
+  #stage-message.pitch-call { transform: translateY(-36px); }
 }
 
 #abs-actor {
@@ -15,21 +28,6 @@
   -webkit-tap-highlight-color: transparent;
 }
 #abs-actor:focus-visible { outline: 2px solid #d5f36a; }
-.abs-hint {
-  position: absolute;
-  left: 50%;
-  bottom: max(17%, 56px);
-  transform: translateX(-50%);
-  z-index: 16;
-  pointer-events: none;
-  min-width: max-content;
-  padding: 4px 10px;
-  background: #12291eea;
-  color: #eef9db;
-  border: 1px solid #a2bb7780;
-  border-radius: 5px;
-  font-size: .72rem;
-}
 .abs-review {
   position: absolute;
   inset: 0;
@@ -82,8 +80,8 @@
   font: 750 clamp(.75rem, 2.9vw, 1rem)/1.2 system-ui, sans-serif;
   --abs-color: #58db55;
 }
-.abs-verdict[data-strike="true"] { --abs-color: #ff846c; }
+.abs-verdict[data-strike="true"] { --abs-color: #ffe054; }
 .abs-verdict strong { font-size: clamp(1.85rem, 6vw, 3rem); color: var(--abs-color); }
 .abs-verdict small { font-size: 1em; }
 .abs-verdict span { opacity: .82; }
-#abs-actor[hidden],.abs-hint[hidden],.abs-review[hidden],.abs-splash[hidden],.abs-verdict[hidden] { display: none; }
+#abs-actor[hidden],.abs-review[hidden],.abs-splash[hidden],.abs-verdict[hidden] { display: none; }
