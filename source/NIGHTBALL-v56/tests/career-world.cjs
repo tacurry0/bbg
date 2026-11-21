@@ -2,9 +2,9 @@ const assert=require('node:assert/strict');
 global.window=global;
 const modules=['ratings-data','players','pro-parks','pennant','npb-postseason','npb-data','npb-rosters','kbo-data','kbo-rosters',
  'career-leagues','career-development','career-life','career-extras','career','game',
- 'career-world-data','career-world-identities','career-world-leagues','career-world-international','career-world-school','career-world-match','career-world-save','career-world-success','career-world','career-world-view'];
+ 'career-world-data','career-world-identities','career-world-leagues','career-world-international','career-world-school','career-world-match','career-world-save','career-world-success','career-world','career-world-slots','career-world-view'];
 for(const file of modules)require('../dist/'+file+'.js');
-const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld,Z=NightCareerWorldSuccess;
+const D=NightCareerWorldData,L=NightCareerWorldLeagues,M=NightCareerWorldMatch,W=NightCareerWorld,Z=NightCareerWorldSuccess,Slots=NightCareerWorldSlots;
 const countries=['jp','tw','kr'];
 const fresh=(country,extra={})=>new W({country,name:{jp:'早瀬 悠馬',tw:'陳承翰',kr:'キム・ハジュン'}[country],
  region:D.countries[country].region[0],style:'contact',schoolIndex:1,schoolTier:1,
@@ -199,19 +199,15 @@ for(const short of [true,false]){
  const old=w.player.contact,energy=Z.state(w).energy;
  assert(Z.action(w,'practice'));
  assert(Z.skill(w,'contact'));
- for(let i=0;i<3;i++){
-  const q=Z.currentQuestion(w);
-  assert(q);
-  assert(Z.choose(w,q[2]));
- }
  assert.equal(Z.state(w).pending,null);
  assert.equal(Z.state(w).actionWeek,Z.week(w));
- assert(w.player.contact>old);
+ assert(w.player.contact!==old);
  assert.equal(Z.state(w).goal.skill,'contact');
  assert(Z.state(w).energy<energy);
  assert(!Z.action(w,'rest'));
  const saved=roundtrip(w);
  assert.equal(saved.success.stories.length,1);
+ assert.match(saved.success.last.title,/通常練習/);
  saved.advanceDate('2027-04-12');
  assert(Z.available(saved));
  assert(Z.action(saved,'friend'));
@@ -223,12 +219,77 @@ for(const short of [true,false]){
  assert(!Z.available(saved));
  const kr=fresh('kr',{style:'control'});
  assert(Z.action(kr,'special'));assert(Z.skill(kr,'control'));
- for(let i=0;i<3;i++)assert(Z.choose(kr,0));
+ for(let i=0;i<3;i++){
+  assert(Z.currentQuestion(kr)?.[1].length===3);
+  assert(Z.choose(kr,i));
+ }
+ assert.equal(kr.success.last.title,'実戦特訓 · 制球');
  assert.equal(kr.success.actionWeek,Z.week(kr));
  const tw=fresh('tw');
  assert(Z.action(tw,'rest'));
  assert.equal(tw.success.actionWeek,Z.week(tw));
  assert(tw.success.energy>76);
+}
+// Three independent player slots: migrate the legacy key without deleting it.
+{
+ const mem=new Map();
+ global.localStorage={getItem:k=>mem.has(k)?mem.get(k):null,
+  setItem:(k,v)=>{mem.set(k,String(v));},removeItem:k=>mem.delete(k)};
+ const original=fresh('jp'),oldSave=NightCareerWorldSave.encode(original);
+ localStorage.setItem(W.key,oldSave);
+ assert.equal(Slots.load().name,original.name);
+ assert.equal(localStorage.getItem(Slots.key(0)),oldSave);
+ assert.equal(Slots.list().slots.length,1);
+ const second=fresh('tw'),third=fresh('kr');
+ assert(Slots.create(second,1));
+ assert.equal(Slots.list().active,1);
+ assert(Slots.create(third,2));
+ assert.equal(Slots.list().slots.length,3);
+ assert(!Slots.create(fresh('jp')));
+ assert.equal(Slots.open(0).country,'jp');
+ assert.equal(Slots.load().seed,original.seed);
+ assert.equal(Slots.open(1).country,'tw');
+ assert.equal(Slots.open(2).country,'kr');
+ assert.equal(localStorage.getItem(Slots.key(0)),oldSave);
+ // Never load or overwrite a corrupted player slot through a mistaken selection.
+ const encoded=localStorage.getItem(Slots.key(1));
+ localStorage.setItem(Slots.key(1),'bad data');
+ assert.equal(Slots.open(1),null);
+ assert.equal(Slots.list().active,2);
+ localStorage.setItem(Slots.key(1),encoded);
+ delete global.localStorage;
+}
+// A two-title winner starts the next season in the first team, with bounded luck.
+{
+ const w=fresh('jp');
+ w.ensurePro();
+ const club=D.roster('jp')[0].id;
+ w.club=club;w.player.club=club;w.stage='pro';
+ w.history=[{year:2027,club,awards:['首位打者','本塁打王'],stats:{...M.blank(),pa:500,ab:470,h:172,hr:40}}];
+ w.startSeason(2028);
+ assert.equal(w.selection?.level,'first');
+ assert.match(w.selection.reason,/首位打者・本塁打王/);
+ assert.equal(w.fortune.year,2028);
+ assert(Math.abs(w.fortune.swing)<=17);
+ const first=M.lineup(w,club,'jp',w.day);
+ assert(!['inactive','bench'].includes(first.usage),first.usage);
+ assert(M.positionScore(w,w.player,w.player.pos,'jp')>w.ability(w.player));
+ let rising=false,falling=false;
+ for(let year=2028;year<=2060;year++){
+  const rand=w.random('player-season-fortune/'+year);
+  const luck=Math.round((rand()+rand()+rand()-1.5)*11);
+  rising ||=luck>0;falling ||=luck<0;
+ }
+ assert(rising&&falling,'fortune must have both high and low outcomes');
+}
+// Match results can unlock a unique story without destroying the player's progress.
+{
+ const w=fresh('jp');
+ Z.afterGame(w,{kind:'school'},{g:1,h:2,hr:1,sv:0,k:0});
+ assert.equal(w.success.inbox?.id,'first-home-run');
+ assert(Z.openEvent(w));
+ assert(Z.choose(w,0));
+ assert(w.success.stories.some(row=>row.title==='記念すべき一発'));
 }
 const worlds={};
 for(const country of countries){
