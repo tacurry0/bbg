@@ -55,10 +55,12 @@
    return true;
   }catch{return false;}
  }
- function create(w){
+ function create(w,requested=null){
   try{
    const m=migrate();
-   const id=Array.from({length:capacity},(_,i)=>i).find(i=>!m.slots.some(s=>s.id===i));
+   const wanted=Number(requested);
+   const id=requested!==null&&Number.isInteger(wanted)&&wanted>=0&&wanted<capacity&&!m.slots.some(s=>s.id===wanted)?wanted:
+    Array.from({length:capacity},(_,i)=>i).find(i=>!m.slots.some(s=>s.id===i));
    if(id===undefined)return false;
    const encoded=codec.encode(w);
    // No existing slot or archived player is ever overwritten.
