@@ -78,17 +78,23 @@ try{
   const drill=country==='kr'?'control':'contact';
   await press('success-action','practice');
   await press('success-skill',drill);
-  for(let round=0;round<3;round++){
-   const key=await page.evaluate(()=>{
-    const w=NightCareerWorld.restore(NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
-    return NightCareerWorldSuccess.currentQuestion(w)[2];
-   });
-   await press('success-choice',String(key));
-  }
-  assert.match(await page.locator('.cw-last-action').innerText(),/基礎練習/);
+  assert.match(await page.locator('.cw-last-action').innerText(),/通常練習/);
   assert.equal((await state()).success.goal.skill,drill);
   assert.equal((await state()).success.actionWeek,'2027-'+(country==='jp'?'03-29':country==='tw'?'08-09':'03-01'));
   assert.match(await page.locator('.cw-hero').innerText(),new RegExp(name));
+  // Create a second high-school player, then return to the original, saved athlete.
+  const originalSeed=(await state()).seed;
+  await press('slots');
+  assert.equal(await page.locator('.cw-slot-card').count(),3);
+  await press('slot-create','1');
+  await press('country',country);
+  await page.locator('[name="name"]').fill(country==='jp'?'別の高校生':country==='tw'?'陳新的':'キム・セジュン');
+  await page.locator('#world-create [type="submit"]').click();
+  assert.notEqual((await state()).seed,originalSeed);
+  await press('slots');
+  await press('slot-open','0');
+  assert.equal((await state()).seed,originalSeed);
+  assert.equal((await state()).success.goal.skill,drill);
   assert.equal(await page.locator('[data-world-action="tab"]').count(),0);
   await press('detail','schedule');
   if(country==='tw')assert.match(await page.locator('#modal-content').innerText(),/黑豹旗/);
