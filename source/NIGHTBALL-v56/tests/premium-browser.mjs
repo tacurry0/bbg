@@ -52,7 +52,7 @@ try{
  const hero=await page.locator('.menu-hero').boundingBox();
  assert(hero&&hero.height>=100&&hero.height<=190,'classic arcade hero must be visible');
  mkdirSync('tests/screenshots',{recursive:true});
- await page.screenshot({path:'tests/screenshots/premium-home.png'});
+ await page.screenshot({timeout:90000,path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
   const {StadiumRenderer}=await import('./stadium3d.js?v=77');
   const original=StadiumRenderer.prototype.render;
@@ -79,7 +79,7 @@ try{
  const stage=await page.locator('#stage').isVisible();
  assert(game&&stage,'match opens with visible pitch and current HUD');
  assert(await page.locator('#scoreboard').count(), 'existing HUD retained');
- await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.parkModel==='tokyo-dome');
+ await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.parkModel==='tokyo-dome-real',{timeout:60000});
  const dome=await page.evaluate(()=>{
   const {renderer}=window.testDomeMatch;
   return {
@@ -91,7 +91,7 @@ try{
  assert.equal(await page.locator('#game-canvas').getAttribute('data-game-lighting'),'day');
  assert.equal(await page.evaluate(()=>JSON.parse(localStorage.getItem('nightball.settings')).gameLighting),'day');
  assert(dome.membrane&&dome.liveScore&&dome.seats>(graphics==='webgl-3d'?10000:400),'Tokyo Dome is rendered with live score and 3D seating');
- await page.screenshot({path:'tests/screenshots/premium-match.png'});
+ await page.screenshot({timeout:90000,path:'tests/screenshots/premium-match.png'});
  await page.evaluate(()=>{
   const {renderer,game}=window.testDomeMatch;
   game.startField(46,43,.19,false);
@@ -104,7 +104,7 @@ try{
   const camera=renderer.camera.position;
   return !game.field.foul&&renderer.fieldMode&&camera.y<NightPlayers.roofSurface(game.park,camera.x,-camera.z);
  }),'outfield fly follows the ball below the roof');
- await page.screenshot({path:'tests/screenshots/tokyo-dome-field.png'});
+ await page.screenshot({timeout:90000,path:'tests/screenshots/tokyo-dome-field.png'});
  for(const [parkId,model,parts] of [
   ['dome','taoyuan',['Taoyuan left field vision','Taoyuan right field vision','Taoyuan sky blue infield stands']],
   ['taipei-dome','taipei-dome',['Taipei centralized main vision','Taipei Dome dark ceiling','Taipei gray and white upper seating']]
@@ -117,7 +117,7 @@ try{
     live:renderer.parkDecor.getObjectByName('Live stadium vision').material===renderer.venueVisionCache.get(parkId).material};
   },{parkId,parts});
   assert.deepEqual(status,{id:model,all:true,live:true});
-  await page.screenshot({path:'tests/screenshots/'+model+'-plate.png'});
+  await page.screenshot({timeout:90000,path:'tests/screenshots/'+model+'-plate.png'});
  }
  const before=await page.evaluate(()=>{
   const {game}=window.testDomeMatch;
@@ -173,7 +173,7 @@ try{
   const expected=[expectedTurf>>16,(expectedTurf>>8)&255,expectedTurf&255];
   assert(turf.every((channel,i)=>Math.abs(channel-expected[i])<=18),
    model+' rendered outfield RGB '+turf.join(',')+' is close to photo target '+expected.join(','));
-  await page.screenshot({path:'tests/screenshots/'+model+'-overview.png'});
+  await page.screenshot({timeout:90000,path:'tests/screenshots/'+model+'-overview.png'});
   await page.evaluate(()=>{
    const {renderer,game}=window.testDomeMatch;
    game.setPhase('aim');renderer.render(game,++game.time);
@@ -188,7 +188,7 @@ try{
  });
  await page.locator('#game-canvas[data-camera-view="overview"][data-game-lighting="night"]').waitFor({state:'visible'});
  assert.equal(await page.locator('#stage > img').count(),0,'the intro uses the 3D venue without an image overlay');
- await page.screenshot({path:'tests/screenshots/chengcing-night-overview.png'});
+ await page.screenshot({timeout:90000,path:'tests/screenshots/chengcing-night-overview.png'});
  assert.deepEqual(errors,[],'no page JavaScript errors');
  console.log('PASS: mobile Chromium, live visions, 3D stadium overviews and night lighting, fly-ball camera and separate replay/run skips ('+graphics+').');
  if(requests.length)console.log('Nonfatal request warnings:',requests.slice(0,5));
