@@ -932,11 +932,23 @@ window.NightGame=class NightGame{
   this.playEvents.push({type,fielder:index,time:f.elapsed});
   this.message(en,ja,actor.player,type==='wild'||type==='bobble'?'neutral':'out');
  }
+ dropFly(index){
+  const f=this.field,b=f.ball,p=f.fielders[index];
+  if(f.misplay||f.buntResult||this.runningDemo||p.fieldRating==null)return false;
+  const hard=b.z>5||Math.hypot(p.x-p.startX,p.y-p.startY)>9;
+  if(!hard||Math.random()>=clamp((90-p.fieldRating)*.0038,0,.14))return false;
+  const errors=(this.side==='home'?'away':'home')+'Errors';
+  this[errors]=(this[errors]||0)+1;
+  f.misplay='drop';f.groundRead=null;p.recoverAt=f.elapsed+.7;
+  b.z=0;b.vz=0;b.bounces=Math.max(1,b.bounces);b.vx*=.35;b.vy*=.35;
+  this.fieldingAction(index,'bobble');this.emit('sound','bounce');
+  return true;
+ }
  bobbleGrounder(index){
   const f=this.field,b=f.ball,p=f.fielders[index];
   const speed=Math.hypot(b.vx,b.vy),difficult=speed>23||speed>13&&b.z>.30;
-  if(f.misplay||f.buntResult||this.runningDemo||!difficult||p.fieldRating==null||p.fieldRating>=73)return false;
-  if(Math.random()>=clamp((77-p.fieldRating)*.0033,0,.19))return false;
+  if(f.misplay||f.buntResult||this.runningDemo||!difficult||p.fieldRating==null||p.fieldRating>=78)return false;
+  if(Math.random()>=clamp((80-p.fieldRating)*.005,0,.2))return false;
   const errors=(this.side==='home'?'away':'home')+'Errors';
   this[errors]=(this[errors]||0)+1;
   f.misplay='bobble';f.groundRead=null;p.recoverAt=f.elapsed+.48;
@@ -946,8 +958,8 @@ window.NightGame=class NightGame{
  }
  prepareFieldThrow(plan){
   const f=this.field,p=f.fielders[plan.fromIndex],length=dist(plan.from,plan.to);
-  if(f.misplay||this.runningDemo||length<31||p?.fieldRating==null||p.fieldRating>=73)return plan;
-  const error=clamp((77-p.fieldRating)*.0026*(length>42?1:.55),0,.15);
+  if(f.misplay||this.runningDemo||length<31||p?.fieldRating==null||p.fieldRating>=78)return plan;
+  const error=clamp((80-p.fieldRating)*.004*(length>42?1:.55),0,.16);
   if(Math.random()>=error)return plan;
   const offset=rnd(2.5,4.3)*(Math.random()<.5?-1:1);
   const wanted=plan.to;
@@ -1026,14 +1038,15 @@ window.NightGame=class NightGame{
     else if(i===2)dest=BASES[1];
     else if(i===second)dest=BASES[2];
     else if(i===3||i===4)dest={x:target.x*.35,y:Math.min(48,target.y*.5)};
-    else if(i>=6)dest={x:p.startX+(target.x-p.startX)*.18,y:p.startY+(target.y-p.startY)*.18};
-    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,p.speed*(i<6&&dest.y>p.startY+2?.6:1));else p.running=false;
+    else if(i>=6){const drift=grounded&&target.y>45?.5:.18;dest={x:p.startX+(target.x-p.startX)*drift,y:p.startY+(target.y-p.startY)*drift};}
+    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,p.speed*(i<6&&dest.y>p.startY+2?.6:i>=6&&i===f.chaser?1.15:1));else p.running=false;
    });
    for(let i=0;i<f.fielders.length;i++){
     const p=f.fielders[i];if(f.elapsed<Math.max(p.reaction,p.recoverAt??0))continue;
     const distance=dist(p,b);
     const catchKind=!f.buntResult&&!grounded&&b.vz<0?catchType(p,b,distance,i===f.chaser&&!f.foul):null;
     if(catchKind){
+     if(f.manual&&!f.foul&&this.dropFly(i))return;
      this.fieldingAction(i,catchKind);
      if(f.manual&&!f.foul)this.secureManualBall(i,true);else this.finishBall('flyout');return;
     }
@@ -1085,7 +1098,7 @@ window.NightGame=class NightGame{
    const eta=dist(candidate,to)/candidate.speed;
    if(eta<coverTime){receiver=i;coverTime=eta;}
   }
-  const flight=dist(from,to)/f.fielders[holder].arm;
+  const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?1.15:1));
   // Give the covering player time to arrive by holding the release briefly.
   // The actual arrival still requires the ball to meet the receiving glove.
   const extraHold=base==null?1.65:outfieldPickup(holder,from)?.48:2.5;
@@ -1248,12 +1261,12 @@ window.NightGame=class NightGame{
     returnTime=Math.max(0,returning.duration-returning.t);
     if(next!==returning.base)returnTime+=this.baseThrow(returning.receiver,next,.27,returning.to).duration;
    }else{
-    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(Math.hypot(f.landing.x,f.landing.y)>=57?2.45:.88):.54);
+    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(Math.hypot(f.landing.x,f.landing.y)>=57&&f.trajectory!=='ground'?2.45:.88):.54);
     returnTime=pickupDelay+this.baseThrow(pickupIndex,next,next===4?.72:next===2?.62:.53,pickup).duration;
    }
    // The coach has less to lose on a clear drive into a gap than on a ball straight to an outfielder.
    const onTheRun=Math.abs(pickup.x-pickup.y*.025)>pickup.y*.23||f.wallHit;
-   const margin=next===2?.15:r.batter&&next===3?.82:next===4?.08:onTheRun&&depth>=68?-1.24:-.28;
+   const margin=next===2?(f.trajectory==='ground'&&!f.wallHit?.75:.15):r.batter&&next===3?.82:next===4?.08:onTheRun&&depth>=68?-1.24:-.28;
    if(returnTime>runTime(r,next)+margin)r.command=next;
   }
  }
@@ -1302,7 +1315,7 @@ window.NightGame=class NightGame{
   const cover=this.secondBaseCover(index,f.ball);
   if(cover!==null)f.fielders[cover].target=BASES[2];
   const player=f.fielders[index],acrobatics=['dive','jump'].includes(player.action?.type);
-  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?(Math.hypot(f.landing.x,f.landing.y)>=57?2.45:.88):.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
+  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?(Math.hypot(f.landing.x,f.landing.y)>=57&&f.trajectory!=='ground'?2.45:.88):.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
   f.ball.vx=f.ball.vy=f.ball.vz=0;f.trail=[];this.playEvents.push({type:fly?'catch':'pickup',fielder:index,time:f.elapsed});
   if(fly){
    this.emit('sound','catch');this.manualOut(f.runners.find(r=>r.batter),'catch');
