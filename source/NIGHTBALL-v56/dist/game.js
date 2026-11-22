@@ -112,7 +112,7 @@ window.NightGame=class NightGame{
   this.drawClinches=this.npbPostseason&&options.drawClinches===true||!!this.worldFixture&&options.worldDrawClinches===true;
   this.totalInnings=(mode==='pennant'&&!this.npbPostseason)||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
   this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.lastPitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
-  this.halfBreak=null;this.autoDefense=false;this.autoBatting=false;this.fastForward=false;this.spectate=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
+  this.wind=Number.isFinite(options.wind)?options.wind:null;this.halfBreak=null;this.autoDefense=false;this.autoBatting=false;this.fastForward=false;this.spectate=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
   const order=(options.order||[]).map(id=>this.teams[this.userSide].batters.find(p=>p.id===id)).filter(Boolean);
   this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=options.opponentPitcher??0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;
   this.session={hits:0,hr:0,maxDistance:0,perfect:0,swings:0,contacts:0,pitches:0,runs:0,history:[],thrown:0,ks:0,allowed:0,grandSlam:false};
@@ -718,12 +718,12 @@ window.NightGame=class NightGame{
   if(counter&&type.id!=='fast')y=Math.max(.18,y);
   if(two&&['fork','split','change','vslider','curve'].includes(type.id))y=rnd(.5,.93);
   if(!strike){if(['fork','split','change','vslider','curve'].includes(type.id))y=rnd(1.14,1.51)+lostCommand*.16;else x=outside*(rnd(1.14,1.53)+lostCommand*.16);}
-  const error=.025+(100-control)*.0027+lostCommand*.14;
+  const error=.025+(100-control)*.0045+lostCommand*.2;
   return {type,target:{x:x+rnd(-error,error),y:y+rnd(-error,error)}};
  }
 
  createPitch(type,target){
-  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),ceiling=type.id==='fast'?(pitcher.velocityEvidence?.fastMax||spec.speed+3):spec.speed+2,velocity=Math.round(Math.min(ceiling,spec.speed+rnd(-2,2)));
+  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),ceiling=type.id==='fast'?(pitcher.velocityEvidence?.fastMax||spec.speed+3):spec.speed+2,velocity=Math.round(Math.min(ceiling,spec.speed+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
   this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1),by:spec.by,targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/velocity,progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){
@@ -763,11 +763,11 @@ window.NightGame=class NightGame{
   const type=TYPES.find(t=>t.id===this.pitchType)||TYPES[0];
   const pressure=this.inning>=7&&this.bases.some(Boolean)?(this.pitcher.careerPerks?.pressure||0)*5:0;
   const control=clamp(this.pitcher.control+pressure+this.conditionFor(this.pitcher)*3,0,99),fatigue=this.pitchFatigue(),lostCommand=fatigue*fatigue;
-  const error=.035+(100-control)*.004+lostCommand*.32;
+  const error=.03+(100-control)*.006+lostCommand*.35;
   let target=autoTarget;
   if(!target){
    target={x:this.cursor.x+rnd(-error,error),y:this.cursor.y+rnd(-error,error)};
-   const missChance=clamp(.015+(70-control)*.002+lostCommand*.16,.005,.28);
+   const missChance=clamp(.01+(70-control)*.0035+lostCommand*.18,.005,.32);
    if(Math.abs(this.cursor.x)<=1.06&&Math.abs(this.cursor.y)<=1.06&&Math.random()<missChance){
     const axis=Math.abs(this.cursor.x)>Math.abs(this.cursor.y)?'x':'y';
     const sign=Math.sign(this.cursor[axis])||(Math.random()<.5?-1:1);
@@ -831,7 +831,7 @@ window.NightGame=class NightGame{
  planIntercepts(){
   const f=this.field,b={...f.ball},samples=[];
   for(let t=.025;t<=f.landingTime+.035;t+=.025){
-   moveBattedBall(b,.025,this.park.wind||0);
+   moveBattedBall(b,.025,(this.wind??this.park.wind)||0);
    if(b.bounces)break;
    if(b.vz<0)samples.push({x:b.x,y:b.y,z:b.z,t});
   }
@@ -851,7 +851,7 @@ window.NightGame=class NightGame{
  predictLanding(initial){
   const b={...initial};
   for(let i=1;i<=1600;i++){
-   moveBattedBall(b,.01,this.park.wind||0);
+   moveBattedBall(b,.01,(this.wind??this.park.wind)||0);
    if(b.bounces)return{x:b.x,y:b.y,time:i*.01};
   }
   return{x:b.x,y:b.y,time:16};
@@ -859,7 +859,7 @@ window.NightGame=class NightGame{
  readGroundBall(){
   const f=this.field;
   if(f.groundRead&&f.elapsed<f.groundRead.until)return f.groundRead;
-  const b={...f.ball},wind=this.park.wind||0;
+  const b={...f.ball},wind=(this.wind??this.park.wind)||0;
   let best=null;
   for(let i=0;i<=36&&!best;i++){
    const t=i*.1;
@@ -985,7 +985,7 @@ window.NightGame=class NightGame{
    }
    return;
   }
-  if(moveBattedBall(b,dt,this.park.wind||0)&&b.bounces<=2){
+  if(moveBattedBall(b,dt,(this.wind??this.park.wind)||0)&&b.bounces<=2){
    f.impact={type:'bounce',x:b.x,y:b.y,time:f.elapsed};
    this.emit('sound','bounce');
   }

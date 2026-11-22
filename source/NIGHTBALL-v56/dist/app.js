@@ -1197,7 +1197,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    :arcadeClub(settings[mode==='derby'?'derbyClub':mode==='pitching'?'pitchingClub':'practiceClub']);
   const selectedPitcher=club.pitchers.findIndex(p=>p.id===settings.pitchingPlayer);
   if(mode==='derby')onEvent('clear');
-  game=new NightGame(mode,settings.difficulty,onEvent,{clubs:mode==='derby'&&club.alumni?{home:club,away:trainingOpponent(club.id)}:undefined,homeTeamId:club.id,arcadeRoster:training||mode==='derby',awayTeamId:mode==='match'?(settings.matchUserHome?settings.matchOpponent:settings.matchTeam):trainingOpponent(club.id).id,userHome:mode==='match'?settings.matchUserHome:true,defenseSpeed:settings.defenseSpeed,innings:settings.innings,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,park:fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park),pitcher:matchConfig?matchConfig.pitcher:selectedPitcher>=0?selectedPitcher:settings.pitcher,practicePitch:settings.practicePitch,practiceBatter:mode==='derby'?settings.derbyBatter:settings.practiceBatter,order:matchConfig?.order??(club.id==='owls'?settings.order:undefined),fielding:matchConfig?.fielding,battingAssist:settings.battingAssist});
+  const windPark=NightPlayers.parks.find(p=>p.id===(fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park)));const matchWind=(!training&&mode!=='derby'&&windPark&&windPark.theme!=='dome'&&!windPark.id.includes('dome'))?(Math.random()<.25?0:Math.round((Math.random()*10-5)*2)/2):0;
+  game=new NightGame(mode,settings.difficulty,onEvent,{wind:matchWind,clubs:mode==='derby'&&club.alumni?{home:club,away:trainingOpponent(club.id)}:undefined,homeTeamId:club.id,arcadeRoster:training||mode==='derby',awayTeamId:mode==='match'?(settings.matchUserHome?settings.matchOpponent:settings.matchTeam):trainingOpponent(club.id).id,userHome:mode==='match'?settings.matchUserHome:true,defenseSpeed:settings.defenseSpeed,innings:settings.innings,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,park:fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park),pitcher:matchConfig?matchConfig.pitcher:selectedPitcher>=0?selectedPitcher:settings.pitcher,practicePitch:settings.practicePitch,practiceBatter:mode==='derby'?settings.derbyBatter:settings.practiceBatter,order:matchConfig?.order??(club.id==='owls'?settings.order:undefined),fielding:matchConfig?.fielding,battingAssist:settings.battingAssist});
   if(pendingSpectate&&mode==='match'){game.spectate=true;game.autoBatting=true;game.autoDefense=true;pendingSpectate=false;}
   if(scenario){
    game.challenge=challengeId;
@@ -1476,11 +1477,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     absCount.dataset.empty=String(g.absRemaining===0);
     absCount.setAttribute('aria-label','ABS 残り'+g.absRemaining+'回');
    }
-   const wind=g.park.wind||0,windHUD=$('wind-hud');
+   const wind=g.wind??g.park.wind??0,windHUD=$('wind-hud');
    $('wind-speed').textContent=Math.abs(wind).toLocaleString('ja-JP',{maximumFractionDigits:1});
    windHUD.dataset.direction=wind<0?'in':wind?'out':'calm';
    windHUD.setAttribute('aria-label',wind?(wind<0?'向かい風 ':'追い風 ')+Math.abs(wind)+' m':'無風');
-   $('batter-label').innerHTML=`${g.park.name}${g.park.wind?' · 追い風':''}　${def?g.pitcher.name+' <span class="stamina"><i style="width:'+g.stamina+'%"></i></span> '+g.session.thrown+'球':''}`;
+   $('batter-label').innerHTML=`${g.park.name}${wind?' · '+(wind>0?'追い風':'向かい風'):''}　${def?g.pitcher.name+' <span class="stamina"><i style="width:'+g.stamina+'%"></i></span> '+g.session.thrown+'球':(g.isFixture?g.pitcher.name+' '+(g.pitchingStats?.[g.pitcher.id]?.pitches||0)+'球':'')}`;
    $('difficulty-label').textContent=g.difficulty.toUpperCase();
    $('control-hint').textContent=def?'画面で狙い、離して投げる':'押したまま狙い、離して打つ';
    $('swing').disabled=g.paused||(def?g.phase!=='aim':g.phase!=='pitch');
