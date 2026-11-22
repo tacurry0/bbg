@@ -114,7 +114,7 @@ window.NightGame=class NightGame{
   this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.steal=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.lastPitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
   this.wind=Number.isFinite(options.wind)?options.wind:null;this.tiebreak=!!options.tiebreak;this.halfBreak=null;this.autoDefense=false;this.autoBatting=false;this.fastForward=false;this.spectate=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
   const order=(options.order||[]).map(id=>this.teams[this.userSide].batters.find(p=>p.id===id)).filter(Boolean);
-  this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=options.opponentPitcher??0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;const umpRoll=Math.random();this.umpireBias=umpRoll<.25?-.0127:umpRoll<.75?0:.0127;this.umpireLabel=this.umpireBias<0?'ゾーン狭め':this.umpireBias>0?'ゾーン広め':'ゾーン標準';this.pitchMemory={};const dome=this.park?.theme==='dome';const wRoll=Math.random();this.weather=dome?'clear':wRoll<.55?'clear':wRoll<.85?'cloudy':'rain';this.weatherLabel=this.weather==='rain'?'雨':this.weather==='cloudy'?'曇り':'晴れ';this.shift='none';this.cpuShiftNow=false;this.remoteSide=options.remoteSide||null;this.remotePitching=false;this.remoteBatter=false;this.mirror=false;this.mirrorSend=null;this._mirrorPitchSeq=-1;this._mirrorSwung=false;this._mirrorThrew=false;this._sentSteal=false;this._ptAt=null;this._ptBase=0;this._fieldPrev=null;this._fieldCurr=null;
+  this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=options.opponentPitcher??0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;const umpRoll=Math.random();this.umpireBias=umpRoll<.25?-.0127:umpRoll<.75?0:.0127;this.umpireLabel=this.umpireBias<0?'ゾーン狭め':this.umpireBias>0?'ゾーン広め':'ゾーン標準';this.pitchMemory={};const dome=this.park?.theme==='dome';const wRoll=Math.random();this.weather=dome?'clear':wRoll<.55?'clear':wRoll<.85?'cloudy':'rain';this.weatherLabel=this.weather==='rain'?'雨':this.weather==='cloudy'?'曇り':'晴れ';this.shift='none';this.cpuShiftNow=false;this.remoteSide=options.remoteSide||null;this.remotePitching=false;this.remoteBatter=false;this.mirror=false;this.mirrorSend=null;this._mirrorPitchSeq=-1;this._mirrorSwung=false;this._mirrorThrew=false;this._sentSteal=false;this._ptAt=null;this._ptBase=0;this._fieldPrev=null;this._fieldCurr=null;this._mirrorFseq=-1;this._mirrorRunners=new Map();
   if(options.injured){for(const side of ['home','away']){const out=new Set(options.injured[side]||[]);if(!out.size)continue;const club=this.teams[side],lineup=this.lineups[side],used=new Set(lineup.map(p=>p.id)),bench=club.batters.filter(p=>!used.has(p.id)&&!out.has(p.id)).sort((a,b)=>(b.contact+b.power)-(a.contact+a.power));for(let i=0;i<lineup.length;i++)if(out.has(lineup[i].id)&&bench.length){const sub=bench.shift();lineup[i]={...sub,fieldPos:lineup[i].fieldPos};}this.participants[side]=lineup.map(p=>p.id);}}
   this.session={hits:0,hr:0,maxDistance:0,perfect:0,swings:0,contacts:0,pitches:0,runs:0,history:[],thrown:0,ks:0,allowed:0,grandSlam:false};
   if(this.loadedStart)this.seedRunners(3,2);
@@ -918,8 +918,8 @@ window.NightGame=class NightGame{
   if(s.absCall){const a=this.absCall;if(!a||a.gap!==s.absCall.gap||a.strike!==s.absCall.strike||a.umpireStrike!==s.absCall.umpireStrike||a.cpu!==s.absCall.cpu)this.absCall=s.absCall;}
   else if(this.absCall)delete this.absCall;
   const mp=this.pitcher;if(mp)this.session.thrown=this.pitchingStats[mp.id]?.pitches||0;
-  if(s.field){this._fieldPrev=this._fieldCurr||null;this._fieldCurr={t:now,f:s.field,fs:s.fs||1};if(!this.field)this.field=s.field;}
-  else{this.field=null;this._fieldPrev=null;this._fieldCurr=null;}
+  if(s.field){this._fieldPrev=this._fieldCurr&&this._fieldCurr.fsq===s.fsq?this._fieldCurr:null;this._fieldCurr={t:now,f:s.field,fs:s.fs||1,fsq:s.fsq};}
+  else{this._fieldPrev=null;this._fieldCurr=null;}
  }
  mirrorTick(dt){
   const now=performance.now();
@@ -930,19 +930,32 @@ window.NightGame=class NightGame{
    if(this.mirrorSend&&this.steal!==this._sentSteal){this._sentSteal=this.steal;this.mirrorSend({t:'steal',on:!!this.steal});}
   }
   const cur=this._fieldCurr;
-  if(cur&&this.field){
-   const prev=this._fieldPrev,f={...cur.f},cf=cur.f;
-   if(prev&&cur.t>prev.t){
-    const a=Math.max(0,Math.min(1,(now-(cur.t-prev.t)-prev.t)/(cur.t-prev.t))),pf=prev.f,lerp=(p,c)=>p+(c-p)*a;
-    f.ball={...cf.ball,x:lerp(pf.ball.x,cf.ball.x),y:lerp(pf.ball.y,cf.ball.y),z:lerp(pf.ball.z,cf.ball.z)};
-    f.fielders=cf.fielders.map((p,i)=>pf.fielders[i]?{...p,x:lerp(pf.fielders[i].x,p.x),y:lerp(pf.fielders[i].y,p.y)}:p);
-    f.runners=cf.runners.map((r,i)=>pf.runners[i]&&pf.runners[i].id===r.id?{...r,x:lerp(pf.runners[i].x,r.x),y:lerp(pf.runners[i].y,r.y),progress:lerp(pf.runners[i].progress,r.progress)}:r);
-   }
-   f.elapsed=cf.elapsed+Math.max(0,(now-cur.t)/1000)*cur.fs;
-   const trail=this.field.trail||[];
-   f.trail=trail;trail.push({x:f.ball.x,y:f.ball.y,z:f.ball.z});if(trail.length>40)trail.shift();
-   this.field=f;
+  if(!cur){this.field=null;this._mirrorFseq=-1;return;}
+  const cf=cur.f,prev=this._fieldPrev,span=prev?Math.max(16,cur.t-prev.t):0;
+  const a=prev?Math.max(0,Math.min(1,(now-span-prev.t)/span)):1,lerp=(p,c)=>p+(c-p)*a;
+  if(this._mirrorFseq!==cur.fsq||!this.field){
+   // New play: fresh field objects exactly once. The 3D camera resets and
+   // re-aims whenever the field object identity changes, so identity must
+   // stay stable for the whole play or the camera jitters and never
+   // follows the ball.
+   this._mirrorFseq=cur.fsq;
+   this.field={...cf,ball:{...cf.ball},fielders:cf.fielders.map(p=>({...p})),runners:cf.runners.map(r=>({...r})),trail:[]};
+   this._mirrorRunners=new Map(this.field.runners.map(r=>[r.id,r]));
+  }else{
+   const F=this.field,pf=prev?prev.f:null;
+   for(const k in cf){if(k!=='ball'&&k!=='fielders'&&k!=='runners'&&k!=='trail')F[k]=cf[k];}
+   const pb=pf?pf.ball:cf.ball;
+   F.ball.x=lerp(pb.x,cf.ball.x);F.ball.y=lerp(pb.y,cf.ball.y);F.ball.z=lerp(pb.z||0,cf.ball.z||0);
+   for(const k in cf.ball){if(k!=='x'&&k!=='y'&&k!=='z')F.ball[k]=cf.ball[k];}
+   cf.fielders.forEach((p,i)=>{const tf=F.fielders[i];if(!tf){F.fielders[i]={...p};return;}const q=pf?pf.fielders[i]:null;if(q){tf.x=lerp(q.x,p.x);tf.y=lerp(q.y,p.y);}for(const k in p){if(k!=='x'&&k!=='y')tf[k]=p[k];}});
+   const order=[];
+   for(const r of cf.runners){let tr=this._mirrorRunners.get(r.id);const q=pf?pf.runners.find(x=>x.id===r.id):null;if(!tr){tr={...r};this._mirrorRunners.set(r.id,tr);}else{if(q){tr.x=lerp(q.x,r.x);tr.y=lerp(q.y,r.y);tr.progress=lerp(q.progress||0,r.progress||0);}for(const k in r){if(k!=='x'&&k!=='y'&&k!=='progress')tr[k]=r[k];}}order.push(tr);}
+   F.runners=order;
+   for(const id of[...this._mirrorRunners.keys()])if(!cf.runners.some(r=>r.id===id)&&!(pf&&pf.runners.some(r=>r.id===id)))this._mirrorRunners.delete(id);
   }
+  const F=this.field;
+  F.elapsed=cf.elapsed+Math.max(0,(now-cur.t)/1000)*cur.fs;
+  F.trail.push({x:F.ball.x,y:F.ball.y,z:F.ball.z});if(F.trail.length>40)F.trail.shift();
  }
  pitchAt(u){
   const p=this.pitch,k=Math.pow(clamp(u,0,1.3),1.65),late=Math.pow(clamp(u,0,1.3),4.4);

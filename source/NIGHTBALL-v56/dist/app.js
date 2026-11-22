@@ -1455,7 +1455,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(data.ja+(data.sub?'。'+data.sub:''));u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
  }
  function onEvent(type,data){
-   if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
+   if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
    if(type==='message'){
      speakPlay(data);
      if(data.en==='HOME RUN'){const hr=$('hr-celebration');if(hr){$('hr-distance').textContent=data.sub||'';hr.hidden=false;hr.classList.remove('play');void hr.offsetWidth;hr.classList.add('play');clearTimeout(hr._hideTimer);hr._hideTimer=setTimeout(()=>{hr.hidden=true;},3000);}}
@@ -1721,7 +1721,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const g=game;if(!g||!o.started)return;
    if(m.t==='pitch-decision'&&g.phase==='aim'&&g.remotePitching){
      if(m.ibb){g.intentionalWalk(false);return;}
-     g.pitchType=m.pitchType;g.setCursor(m.aim?.x||0,m.aim?.y||0);g.shift=m.shift?'pull':'none';g.remoteThrowPitch();
+     const kx=g.cursor.x,ky=g.cursor.y;g.pitchType=m.pitchType;g.setCursor(m.aim?.x||0,m.aim?.y||0);g.shift=m.shift?'pull':'none';g.remoteThrowPitch();g.cursor.x=kx;g.cursor.y=ky;
    }else if(m.t==='swing'&&g.phase==='pitch'&&g.remoteBatter&&g.pitch&&!g.pitch.swung){
      if(m.bunt){g.bunt=true;g.buntBall();}
      else g.attempt({x:m.aim?.x||0,y:m.aim?.y||0},!!m.power,Math.max(-1.2,Math.min(1.2,Number(m.delta)||0)),false);
@@ -1743,6 +1743,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const fieldPhase=['field','result'].includes(g.phase)&&g.field;
    let field=null;
    if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,userControlled:false}:g.field.manual};}
+   let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
      phase:g.phase,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
      hs:g.homeScore,as:g.awayScore,home:g.home.slice(),away:g.away.slice(),hh:g.homeHits,ah:g.awayHits,he:g.homeErrors,ae:g.awayErrors,
@@ -1751,7 +1752,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      pi:{u:g.homePitcherIndex,c:g.awayPitcherIndex},usedU:g.usedPitchers.slice(),usedC:g.usedCpuPitchers.slice(),
      ps:g.pitchingStats,box:g.box,pitch:g.pitch||null,pitchSeq:o.pitchSeq,
      lastPitch:g.lastPitch?{name:g.lastPitch.name,speed:g.lastPitch.speed,id:g.lastPitch.id}:null,
-     field,fs:g.fieldSpeed,hit:g.hit?{kind:g.hit.kind,distance:g.hit.distance}:null,swingAge:g.swingAge,
+     field,fs:g.fieldSpeed,fsq,hit:g.hit?{kind:g.hit.kind,distance:g.hit.distance}:null,swingAge:g.swingAge,
      absCall:g.absCall||null,absU:g.absRemaining,absCpu:g.absCpuRemaining,halfBreak:g.halfBreak||null,
      weather:g.weather,weatherLabel:g.weatherLabel,wind:g.wind,next:g.next,umpireLabel:g.umpireLabel,
      batId:g.batter?.id||'',pitId:g.pitcher?.id||''
@@ -1780,6 +1781,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      $('distance').textContent=s.hit?.distance?s.hit.distance+' m':'';
    }
    else if(m.t==='msg')onEvent('message',m.d);
+   else if(m.t==='clear')onEvent('clear');
    else if(m.t==='snd')onEvent('sound',m.d);
    else if(m.t==='music')onEvent('music-result',m.d);
    else if(m.t==='end'){
@@ -1834,7 +1836,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const aim=renderer.screenToAim?renderer.screenToAim(x,y):{x:(x/r.width*480-265)/75,y:(y/r.height*540-400)/64};game.setCursor(aim.x,aim.y);game.touch={x:(e.clientX-r.left)/r.width*480,y:(e.clientY-r.top)/r.height*540};
   };
   el.addEventListener('pointerdown',e=>{
-   if(gesture||!game||game.paused||game.autoDefense&&game.defending||screen!=='game'||e.button!==0||(game.defending?game.phase!=='aim':!['intro','windup','pitch'].includes(game.phase)))return;
+   if(gesture||!game||game.paused||game.autoDefense&&game.defending||screen!=='game'||e.button!==0||(game.defending?game.phase!=='aim':!['intro','windup','pitch'].includes(game.phase)&&!(game.phase==='aim'&&(game.remotePitching||game.mirror))))return;
    e.preventDefault();unlockAudio();gesture={pointer:e.pointerId,game,half:game.half,inning:game.inning,defending:game.defending};el.setPointerCapture(e.pointerId);move(e);
   });
   el.addEventListener('pointermove',move);
