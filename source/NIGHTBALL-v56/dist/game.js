@@ -240,6 +240,10 @@ window.NightGame=class NightGame{
  get batter(){return (['practice','derby'].includes(this.mode)||this.mode==='career-bat'&&!this.career?.continuous)?this.teams.home.batters.find(p=>p.id===this.practiceBatter)||this.lineups.home[0]:this.lineups[this.side][this.battingIndex[this.side]%9];}
  get pitcher(){return this.pitchingStaff[this.side==='home'?'away':'home'][this.defending?this.homePitcherIndex:this.awayPitcherIndex];}
  get battingHand(){return this.batter.hand==='S'?(this.pitcher.hand==='L'?'R':'L'):this.batter.hand;}
+ static clutchFor(p){
+  const s=p?.stats;if(!s||!(s.pa>=150)||!Number.isFinite(s.rbi))return 0;
+  const rate=s.rbi/s.pa;return rate>=.155?1:rate<=.085?-1:0;
+ }
  conditionFor(player){
   if(Number.isFinite(player?.gameCondition))return player.gameCondition;
   if(!player?.id||!this.isFixture&&!this.career)return 0;
@@ -249,7 +253,7 @@ window.NightGame=class NightGame{
   const roll=(hash>>>0)%100;
   return roll<7?-2:roll<25?-1:roll<75?0:roll<93?1:2;
  }
- get batSize(){const scale=.62+this.matchup().contact/150+(this.batter.trait==='勝負強い'&&(this.bases[1]||this.bases[2])?.08:0);return {rx:(this.power?.24:.44)*scale,ry:(this.power?.24:.31)*scale};}
+ get batSize(){const scale=.62+this.matchup().contact/150+((this.batter.trait==='勝負強い'||NightGame.clutchFor(this.batter)>0)&&(this.bases[1]||this.bases[2])?.08:0);return {rx:(this.power?.24:.44)*scale,ry:(this.power?.24:.31)*scale};}
  matchup(p=this.batter){
   const condition=this.conditionFor(p);
   const split=p.matchupEvidence?.splits?.[this.pitcher.hand==='L'?'L':'R'];
@@ -257,11 +261,12 @@ window.NightGame=class NightGame{
   if(!split||!Number.isFinite(sample)||sample<20||!Number.isFinite(split.avg)){
    const perks=p.careerPerks||{};
    const left=this.pitcher.hand==='L'?((p.careerVsLeft||0)+(perks.left||0))*3:0;
-   const clutch=this.inning>=7&&(this.bases[1]||this.bases[2])?(perks.clutch||0)*4:0;
-   return {contact:clamp(p.contact+left+clutch+condition*3,10,99),power:clamp(p.power+condition*3,10,99),source:null};
+   const platoon=p.hand==='S'?3:this.pitcher.hand===p.hand?-4:3;
+   const clutch=(this.inning>=7&&(this.bases[1]||this.bases[2])?((perks.clutch||0)+NightGame.clutchFor(p))*4:0);
+   return {contact:clamp(p.contact+left+clutch+condition*3+platoon,10,99),power:clamp(p.power+condition*3+Math.round(platoon/2),10,99),source:null};
   }
   const weight=sample/(sample+120),avg=p.stats?.avg??split.avg,iso=(p.stats?.slg??avg)-avg;
-  return {contact:clamp(p.contact+condition*3+(split.avg-avg)*140*weight,20,99),power:clamp(p.power+condition*3+(Number.isFinite(split.slg)?split.slg-split.avg-iso:0)*100*weight,20,99),source:split.source};
+  return {contact:clamp(p.contact+condition*3+(split.avg-avg)*140*weight+(this.inning>=7&&(this.bases[1]||this.bases[2])?NightGame.clutchFor(p)*4:0),20,99),power:clamp(p.power+condition*3+(Number.isFinite(split.slg)?split.slg-split.avg-iso:0)*100*weight,20,99),source:split.source};
  }
  get activeBatter(){return {...this.batter,...this.matchup()};}
  runnerRating(p){return p?.run??65;}
