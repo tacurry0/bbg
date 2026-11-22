@@ -477,8 +477,9 @@ window.NightGame=class NightGame{
   if(this.phase!=='change'||this.paused)return false;this.beginHalf();return true;
  }
  beginCareerBat(){
-  const c=this.career,situation=c.scenarios[c.completed];
-  if(c.continuous){this.advanceCareer();return;}
+  const c=this.career,situation=c.scenarios?.[c.completed];
+  if(c.continuous||!c.scenarios){this.advanceCareer();return;}
+  if(!situation){this.finish();return;}
   const previous=c.scenarios[c.completed-1];
   this.inning=situation.inning;
   let rallyRuns=0;
@@ -976,13 +977,13 @@ window.NightGame=class NightGame{
   const form=this.batter.careerForm;
   const tight=!cpu&&this.career?.difficulty!=='relaxed'&&(this.career?.difficulty?1:0);
   const penalty=(!cpu&&p.id!=='fast'&&this.batter.careerWeakness>=2?.018:0)+(form==='legkick'?.024:0);
-  const timeWindow={casual:.24,standard:.21,pro:.18}[this.difficulty]-(tight?.027:0)-penalty
+  const timeWindow=(cpu?{casual:.24,standard:.21,pro:.18}:{casual:.22,standard:.185,pro:.16})[this.difficulty]-(tight?.027:0)-penalty
    +(!cpu&&this.career?.scouted?.012:0)+(form==='compact'?.009:0);
   if(Math.abs(delta)>timeWindow||contactError>1.07){if(!cpu)this.emit('timing',{text:contactError>1.07?'カーソルが合っていない':delta<0?'振り出しが早い':'振り遅れ'});this.setPhase('miss');this.notify();return;}
   const core=clamp(1-contactError,0,1),timing=clamp(1-Math.abs(delta)/timeWindow,0,1),quality=core*.82+timing*.18;
   if(!cpu){this.session.contacts++;if(core>.82&&timing>.7)this.session.perfect++;this.emit('timing',{text:core>.82?'芯で捉えた！':core>.45?'ナイスミート':'バットの端に当たった'});}
   // Off-center contact sets launch angle and spray; contact is spatially required.
-  const spray=clamp(delta*3.0*(this.battingHand==='L'?-1:1)+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
+  const spray=clamp(delta*(cpu?3.0:4.6)*(this.battingHand==='L'?-1:1)+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
   const launch=clamp(13+(this.batter.trait==='長距離砲'&&power?3:0)+(aim.y-p.targetY)*77+(power?12:0)+rnd(-4,4),-8,65);
   const exitSpeed=22+quality*19+(this.matchup().power-60)*.12+(power?6:0)+(this.batter.trait==='勝負強い'&&(this.bases[1]||this.bases[2])?1.5:0);
   this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,core>.82);
@@ -1167,7 +1168,7 @@ window.NightGame=class NightGame{
   if(f.manual?.secured){this.updateManualDefense(dt,move);return;}
   if(f.throw){
    const th=f.throw,arrived=this.stepReturn(th,b,dt);
-   f.fielders.forEach((p,i)=>{if(i!==th.fromIndex)move(p,i===th.receiver?th.to:p.target,p.speed);});
+   f.fielders.forEach((p,i)=>{if(i!==th.fromIndex)move(p,i===th.receiver?th.to:p.target,p.speed);else p.running=false;});
    if(arrived){
     const caught=!!f.fielders[th.receiver]&&dist(f.fielders[th.receiver],th.to)<=BAG_REACH;
     if(caught)this.emit('sound','catch');
@@ -1619,6 +1620,7 @@ window.NightGame=class NightGame{
    return;
   }
   const holder=f.fielders[m.holder];b.x=holder.x;b.y=holder.y;b.z=2;m.recovery-=dt;
+  for(const p of f.fielders)p.running=false;
   const cover=m.outfield?this.secondBaseCover(m.holder,holder):null;
   if(cover!==null){
    const receiver=f.fielders[cover];receiver.target=BASES[2];
