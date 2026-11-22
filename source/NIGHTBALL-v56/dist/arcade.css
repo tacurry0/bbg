@@ -189,3 +189,5 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 .npb-bracket>summary>span{font-size:11px}
 .pennant-league-options>button[aria-pressed=true]{background:linear-gradient(#ffea73,#ffab22);color:#653000;border-color:#fff4b1}
 .pennant-screen :is(.standing-club,.league-versus,.fixture-team,.playoff-seeds) :is(b,strong,span){overflow-wrap:anywhere}
+.dream-pick{display:block;width:100%;margin:10px 0 2px;padding:11px;border-radius:12px;border:2px solid #ffd34d;background:linear-gradient(#4b3a9e,#7a5cff);color:#fff;font-weight:900;font-size:13px;box-shadow:0 3px #372a75}
+.dream-pick.selected{outline:3px solid #ffd34d;background:linear-gradient(#6a55e0,#9a86ff)}
