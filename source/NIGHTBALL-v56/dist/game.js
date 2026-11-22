@@ -364,8 +364,10 @@ window.NightGame=class NightGame{
  }
  cpuRelief(){
   if(!this.isFixture&&!this.career?.continuous)return;const current=this.pitchingStaff[this.opponentSide][this.awayPitcherIndex],record=this.pitcherRecord(current),late=this.inning>=this.totalInnings&&this.totalInnings>1;
+  const shelled=record.runs>=4&&record.pitches>=25;
+  const lateHook=this.isFixture&&this.awayPitcherIndex===0&&this.inning>=Math.max(3,Math.ceil(this.totalInnings*.6))&&record.pitches>=30;
   if(record.pitches<(current.role==='SP'?(this.career?.continuous?76:45):this.career?.continuous?25:18)&&
-   !(this.isFixture&&this.inning>=3&&this.awayPitcherIndex===0)&&!(late&&current.role!=='CP'&&this.pitchingStaff[this.opponentSide].some((p,i)=>p.role==='CP'&&!this.usedCpuPitchers.includes(i))))return;
+   !shelled&&!lateHook&&!(late&&current.role!=='CP'&&this.pitchingStaff[this.opponentSide].some((p,i)=>p.role==='CP'&&!this.usedCpuPitchers.includes(i))))return;
   const unused=this.pitchingStaff[this.opponentSide].map((p,i)=>({p,i})).filter(({i})=>!this.usedCpuPitchers.includes(i));
   const choice=unused.filter(({p})=>p.role===(late?'CP':'RP')).sort((a,b)=>b.p.movement+b.p.control-a.p.movement-a.p.control)[0]||unused.find(({p})=>p.role!=='SP')||unused[0];
   if(choice){this.awayPitcherIndex=choice.i;this.usedCpuPitchers.push(choice.i);}
@@ -744,6 +746,8 @@ window.NightGame=class NightGame{
    const strikeSwing=clamp(aggression+(repeat+locationRepeat)*.025-(edge>.78?.08:0)+(this.balls===3?.05:0)-discipline*.4,.26,.94);
    const chase=clamp((this.strikes===2?.29:.14)-(edge-1.06)*.24+(80-contact)*.002-discipline*.45,.02,.32);
    this.pitch.cpuSwing=Math.random()<(this.pitch.isStrike?strikeSwing:chase);
+   const buntSpot=(this.bases[0]||this.bases[1])&&!this.bases[2]&&this.outs<2&&this.inning>=Math.max(2,this.totalInnings-2)&&Math.abs(this.homeScore-this.awayScore)<=1&&this.batter.contact<64&&this.batter.power<62;
+   this.pitch.cpuBunt=buntSpot&&Math.random()<.5;if(this.pitch.cpuBunt)this.pitch.cpuSwing=false;
    const skill={casual:.09,standard:0,pro:-.07}[this.difficulty];
    const error=clamp(.35+(80-contact)*.004+(kRate-.16)*.75+skill+.17*Math.hypot(this.pitch.bx,this.pitch.by)+Math.max(0,velocity-145)*.004-.05*repeat-.025*locationRepeat-(repeated?(this.career.scouted?.025:.085):0),.17,.88);
    this.pitch.cpuAim={x:target.x+rnd(-error,error)-this.pitch.bx*.16,y:target.y+rnd(-error,error)-this.pitch.by*.12};
@@ -815,7 +819,7 @@ window.NightGame=class NightGame{
   const roll=Math.random();this.startField(9,1,rnd(-.3,.3),false);
   this.field.manual=null;this.field.buntResult=roll<.90?'sacrifice':roll<.95?'buntout':'buntsingle';
  }
- cpuBat(){if(this.pitch.cpuSwing)this.attempt(this.pitch.cpuAim,Math.random()<(this.matchup().power>80?.50:.27),this.pitch.cpuTime-1,true);}
+ cpuBat(){if(this.pitch.cpuBunt){this.buntBall();return;}if(this.pitch.cpuSwing)this.attempt(this.pitch.cpuAim,Math.random()<(this.matchup().power>80?.50:.27),this.pitch.cpuTime-1,true);}
  attempt(aim,power,delta,cpu){
   const p=this.pitch;p.swung=true;this.swingAge=0;this.emit('sound','swing');if(!cpu)this.session.swings++;
   const previousPower=this.power;this.power=power;const {rx,ry}=this.batSize;this.power=previousPower;

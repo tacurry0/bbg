@@ -924,6 +924,7 @@
    const user=plans[userHome?'home':'away'],rival=plans[userHome?'away':'home'];
    const ownTeam=user.team;
    const pId=player.id;
+   const rotIndex=(team,seed)=>{const pool=team.pitchers.map((p,i)=>i).filter(i=>team.pitchers[i].role==='SP');const list=pool.length?pool:team.pitchers.map((_,i)=>i).slice(0,4);let h=0;for(const ch of String(seed))h=(h*31+ch.charCodeAt(0))>>>0;return list[h%list.length];};
    let userStarter=0;
    const pitchRole={rotation:1,setup:7,closer:9};
    const pinching=!this.pitching&&!ownTeam.startingOrder.includes(pId);
@@ -946,7 +947,7 @@
     reservePitcher:1,shortIntro:true,prospect:true,keyOnly:format==='key',firstAppearance:f.development===true,important:!!f.important||f.kind==='post'||f.kind==='asia',completed:0};
    return {worldFixture:f.id,career:format==='full'?null:activity,homeTeamId:f.home,awayTeamId:f.away,
     worldMusic:{teamSeed:this.seed,playerId:pId},
-    clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:userStarter,opponentPitcher:0,
+    clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:this.pitching?userStarter:rotIndex(ownTeam,f.id+'/own'),opponentPitcher:rotIndex(plans.away.team,f.id+'/opp'),
     order:ownTeam.startingOrder,fielding:ownTeam.startingFielding,practiceBatter:pId,
     worldMaxInnings:L.inningLimit(f),worldDrawClinches:f.drawClinches,
     worldRival:rival.team.id};

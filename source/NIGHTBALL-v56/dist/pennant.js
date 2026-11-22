@@ -72,7 +72,7 @@
    const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
    if(!leagueId)throw Error('Unknown club');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -89,7 +89,7 @@
    if(!s.schedule[s.round].some(f=>[f.home,f.away].includes(s.clubId)))return null;
    if(split&&!validSchedule(s.otherSchedule,clubsFor(otherLeague(leagueId)),count))return null;
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
-   p.results ||= {};p.postseason ||= null;
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -104,8 +104,15 @@
   get completed(){return this.round===this.schedule.length-1&&this.roundDone;}
   get played(){return Object.values(this.results).filter(r=>[r.home,r.away].includes(this.clubId)).length;}
   next(){if(!this.roundDone||this.completed)return false;this.round++;this.currentGame=null;this.advanceByes();return true;}
+  starterIndexFor(clubId){
+   const club=NightTeams.get(clubId);if(!club)return 0;
+   const pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP');
+   const list=pool.length?pool:club.pitchers.map((_,i)=>i).slice(0,4);
+   return list[(this.rotation[clubId]||0)%list.length];
+  }
+  advanceRotation(f){if(!f)return;for(const id of [f.home,f.away])if(id)this.rotation[id]=(this.rotation[id]||0)+1;}
   simulateRound(fixtures,results){
-   for(const f of fixtures)if(!results[f.id])results[f.id]={...f,...this.simulate(f)};
+   for(const f of fixtures)if(!results[f.id]){results[f.id]={...f,...this.simulate(f)};this.advanceRotation(f);}
   }
   advanceByes(){
    while(!this.fixture){
@@ -117,7 +124,7 @@
   completeRound(score){
    const f=this.fixture;if(this.roundDone)return false;
    if(!Number.isInteger(score.homeScore)||!Number.isInteger(score.awayScore)||score.homeScore<0||score.awayScore<0||score.homeScore===score.awayScore)throw Error('A pennant game needs a winner');
-   this.results[f.id]={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||1,home: f.home,away:f.away};
+   this.results[f.id]={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||1,home: f.home,away:f.away};this.advanceRotation(f);this.pitcher=this.starterIndexFor(this.clubId);
    this.simulateRound(this.schedule[this.round],this.results);
    if(this.isNPB)this.simulateRound(this.otherSchedule[this.round],this.otherResults);
    this.currentGame=null;return true;
@@ -163,7 +170,7 @@
    if(!f||![score.homeScore,score.awayScore].every(n=>Number.isInteger(n)&&n>=0)||score.homeScore===score.awayScore)throw Error('A playoff game needs a winner');
    if(score.leagueFixtureId&&score.leagueFixtureId!==f.id)return false;
    if(score.teams&&(score.teams.home.id!==f.home||score.teams.away.id!==f.away))return false;
-   const result={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||score.innings||1},winner=score.homeScore>score.awayScore?f.home:f.away;
+   const result={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||score.innings||1},winner=score.homeScore>score.awayScore?f.home:f.away;this.advanceRotation(f);this.pitcher=this.starterIndexFor(this.clubId);
    series.games.push(result);series.wins[winner]++;if(series.wins[winner]>=series.target)series.winner=winner;
    this.postseason.awaitingNext=true;this.currentGame=null;
    if(series.id==='final'&&series.winner){this.postseason.stage='complete';this.postseason.champion=series.winner;}
@@ -202,7 +209,7 @@
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
     const runsToEnd=scores.away+(f.drawClinches&&innings===limit?0:1);
-    const hitters=NightTeams.get(f[side]).batters.slice(0,9),pitcher=NightTeams.get(f[side==='home'?'away':'home']).pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    const hitters=NightTeams.get(f[side]).batters.slice(0,9),defClub=NightTeams.get(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
     let outs=full?0:2,bases=Array(3).fill(!full);
     while(outs<3){const b=hitters[orders[side]++%9],v=rand(),walk=.07+(80-pitcher.control)*.0006,hit=.24+(b.contact-75)*.002+(145-pitcher.velocity)*.001,hr=.017+Math.max(0,b.power-65)*.001;
      if(v<walk){if(bases.every(Boolean))scores[side]++;if(bases[0]&&bases[1])bases[2]=true;if(bases[0])bases[1]=true;bases[0]=true;}
