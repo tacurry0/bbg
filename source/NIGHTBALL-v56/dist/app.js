@@ -69,7 +69,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function unlockAudio(){stadiumAudio.unlock();syncAudio();}
  function sound(name){syncAudio();stadiumAudio.play(name,{hand:game?.batter?.hand});if(name==='homer')vibrate([30,30,60]);else if(name==='hit'||name==='perfect')vibrate(20);}
  function vibrate(v){if(settings.vibration&&navigator.vibrate)try{navigator.vibrate(v);}catch{}}
- function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.remove('show'),2500);}
+ function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').classList.remove('show');$('toast').textContent='';},2500);}
  function modal(html,kind){$('modal-content').dataset.kind=kind;if(game?.phase!=='ended')stadiumAudio.stopEffects();if(kind!=='music-settings')ballparkMusic.stop('preview');const same=modalKind===kind;if(!same)lastFocus=document.activeElement;modalKind=kind;$('modal-content').innerHTML=html;$('modal-content').scrollTop=0;$('modal').hidden=false;document.body.style.overflow='hidden';if(!same)setTimeout(()=>{if(modalKind===kind)$('modal-content').querySelector('button')?.focus({preventScroll:true});},30);}
  function closeModal(resume=true){const previous=modalKind;ballparkMusic.stop('preview');$('modal').hidden=true;document.body.style.overflow='';modalKind='';if(resume&&game&&screen==='game'&&game.phase!=='ended')game.paused=false;lastFocus?.focus?.({preventScroll:true});if(resume&&game?.phase==='career-ready')$('career-field-overlay').querySelector('button')?.focus({preventScroll:true});if(resume&&screen==='game'&&game?.phase==='ended'&&!['result','career-result'].includes(previous))finish(game);}
  const modalTitle=(en,ja,close=true)=>`<div class="modal-top"><h2 id="modal-title">${({'今夜の試合':'試合設定','親指の操作・ゲーム設定':'設定','押して、狙って、離す。':'遊び方','ひと休み。':'タイム','練習おつかれさま':'練習結果','選手・ベンチ':'選手データ'})[ja]||ja}</h2>${close?'<button class="close-button" data-action="close" aria-label="閉じる">×</button>':''}</div>`;
@@ -1210,6 +1210,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    game.practicePitch='fast';
   }
   activateGame();updateStyle();updateUI();
+  if(mode==='derby')onEvent('clear');
   updateChallenge();
  }
  const DOME_SCENES={
@@ -1535,7 +1536,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    modal(`${modalTitle('',title,false)}${match?`<div class="result-hero"><div class="league-versus final-versus"><div>${clubBadge(g.teams.away.id)}<b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div>${clubBadge(g.teams.home.id)}<b>${g.teams.home.name}</b></div></div></div>${resultReportHTML(buildMatchReport(g))}`:`<div class="result-stats">${stats.map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>`}
    ${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}<button class="primary-button" data-action="restart">もう一度プレイ</button>${match?'<button class="secondary-button" data-action="box-score">選手別の成績を見る</button>':''}<button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
  }
- function home(){stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
+ function home(){stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;onEvent('clear');screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
  function swing(){if(!game)return;const done=game.defending?game.throwPitch():game.swing();if(done)$('swing').disabled=true;}
  const types=NightGame.TYPES;
  function renderPitchDirections(g){
@@ -1549,7 +1550,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const clear=()=>{if(gesture)gesture.game.touch=null;gesture=null;};
   const valid=()=>gesture&&gesture.game===game&&!game.paused&&!(game.autoDefense&&game.defending)&&screen==='game'&&gesture.half===game.half&&gesture.inning===game.inning&&gesture.defending===game.defending;
   const move=e=>{if(!gesture||gesture.pointer!==e.pointerId||!valid()||!['aim','windup','pitch'].includes(game.phase))return;const r=el.getBoundingClientRect();
-   const x=e.clientX-r.left+(settings.leftHanded?settings.cursorShift:-settings.cursorShift),y=e.clientY-r.top-settings.cursorLift;
+   const thumb=e.pointerType!=='mouse'&&e.pointerType!=='pen';
+   const x=e.clientX-r.left+(thumb?(settings.leftHanded?settings.cursorShift:-settings.cursorShift):0),y=e.clientY-r.top-(thumb?settings.cursorLift:0);
    const aim=renderer.screenToAim?renderer.screenToAim(x,y):{x:(x/r.width*480-265)/75,y:(y/r.height*540-400)/64};game.setCursor(aim.x,aim.y);game.touch={x:(e.clientX-r.left)/r.width*480,y:(e.clientY-r.top)/r.height*540};
   };
   el.addEventListener('pointerdown',e=>{

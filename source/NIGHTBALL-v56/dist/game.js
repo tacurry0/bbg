@@ -1243,7 +1243,7 @@ window.NightGame=class NightGame{
     returnTime=Math.max(0,returning.duration-returning.t);
     if(next!==returning.base)returnTime+=this.baseThrow(returning.receiver,next,.27,returning.to).duration;
    }else{
-    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?.88:.54);
+    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(f.maxTravel>=60?1.7:.88):.54);
     returnTime=pickupDelay+this.baseThrow(pickupIndex,next,next===4?.72:next===2?.62:.53,pickup).duration;
    }
    // The coach has less to lose on a clear drive into a gap than on a ball straight to an outfielder.
@@ -1297,7 +1297,7 @@ window.NightGame=class NightGame{
   const cover=this.secondBaseCover(index,f.ball);
   if(cover!==null)f.fielders[cover].target=BASES[2];
   const player=f.fielders[index],acrobatics=['dive','jump'].includes(player.action?.type);
-  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?.88:.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
+  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?(f.maxTravel>=60?1.7:.88):.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
   f.ball.vx=f.ball.vy=f.ball.vz=0;f.trail=[];this.playEvents.push({type:fly?'catch':'pickup',fielder:index,time:f.elapsed});
   if(fly){
    this.emit('sound','catch');this.manualOut(f.runners.find(r=>r.batter),'catch');
@@ -1471,7 +1471,7 @@ window.NightGame=class NightGame{
    r.target=walkoff||this.outs>=3?r.progress:r.scored?4:r.base;r.running=false;
   }
   for(const r of scorers)this.run(r.id,r.chargedPitcherId);
-  if(hit&&!this.runningDemo){this[this.side+'Hits']++;this.pitcherRecord().h=(this.pitcherRecord().h||0)+1;if(!this.defending)this.session.hits++;this.session.maxDistance=Math.max(this.session.maxDistance,distance);}
+  if(hit&&!this.runningDemo){this[this.side+'Hits']++;this.pitcherRecord().h=(this.pitcherRecord().h||0)+1;if(!this.defending){this.session.hits++;this.session.maxDistance=Math.max(this.session.maxDistance,distance);}}
   this.completePitch(kind);if(this.inMatch){this.endAtBat(kind,scorers.length);this.resetCount();this.checkEnd();}
   f.resolved=true;f.outcome=kind;this.hit.kind=kind;this.hit.contactType=this.contactType(kind);
   const label=outs>=2?['DOUBLE PLAY','ダブルプレー']:m.fly?[sacFly?'SACRIFICE FLY':'FLY OUT',scorers.length?'タッチアップで生還':'フライアウト']:hit?[kind.toUpperCase(),{single:'ヒット',double:'ツーベース',triple:'スリーベース'}[kind]]:['OUT',m.lastOut?.type==='tag'?'タッチアウト':m.lastOut?.type==='force'?'フォースアウト':'アウト'];
@@ -1614,7 +1614,7 @@ window.NightGame=class NightGame{
   this.pitch.callResult=true;
   this.emit('sound','catch');this.balls++;this.completePitch('ball');
   const before=this.battingScore;
-  if(this.balls>=4){this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','フォアボール','押し出しにも注意');this.checkEnd();}else this.message('BALL','ボール',`${this.balls}ボール · ${this.strikes}ストライク`);
+  if(this.balls>=4){const loaded=this.bases.every(Boolean);this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','フォアボール',loaded?'押し出しで1点':'走者が進塁');this.checkEnd();}else this.message('BALL','ボール',`${this.balls}ボール · ${this.strikes}ストライク`);
   this.emit('sound','ball');this.setPhase('result');
   if(this.battingScore>before)this.emit('scoring-walk');
   this.notify();
