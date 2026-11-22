@@ -297,7 +297,11 @@ function training(c){
   return `<div><span>${Career.skills[key]}${active?.skill===key?' ↑':''}</span><b>${n}${key==='velocity'?' km/h':''}</b>
   ${n!==player[key]?`<small>試合時 ${player[key]}</small>`:''}
   <progress value="${capped?cost:xp}" max="${cost}" aria-label="${Career.skills[key]}の経験"></progress><small>${capped?'上限':xp+'/'+cost}</small></div>`;
- }).join('')}</div></section>`;
+ }).join('')}</div>${growthHistoryHTML(c)}</section>`;
+}
+function growthHistoryHTML(c){
+ const h=c.growthHistory||[];if(!h.length)return '';
+ return `<h3>成長履歴</h3>`+h.slice(-12).reverse().map(s=>`<div class="career-list-row"><div><b>${s.season}年目 · 第${s.week}週</b><small>${(s.growth||[]).join(' ／ ')}</small><small>${Object.entries(s.skills||{}).map(([k,n])=>Career.skills[k]+' '+n).join(' · ')}</small></div></div>`).join('');
 }
 function scouts(c){
  return `<section class="career-panel"><h2>スカウト</h2>

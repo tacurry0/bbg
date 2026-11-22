@@ -72,7 +72,7 @@
    const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
    if(!leagueId)throw Error('Unknown club');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -89,7 +89,7 @@
    if(!s.schedule[s.round].some(f=>[f.home,f.away].includes(s.clubId)))return null;
    if(split&&!validSchedule(s.otherSchedule,clubsFor(otherLeague(leagueId)),count))return null;
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;

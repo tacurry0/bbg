@@ -178,6 +178,7 @@
     experience=NightCareer.skills[skill]+'の経験 +'+exp;
     result=grade+' · '+experience;
    }
+   if(growth.length){(c.growthHistory??=[]).push({season:(c.seasons?.length||0)+1,week:week+1,skills:{...c.skills},growth:growth.slice()});if(c.growthHistory.length>80)c.growthHistory.splice(0,c.growthHistory.length-80);}
    c.weeks[week]=key;
    c.planReport={week,text:result,growth,grade,experience};
    return true;
