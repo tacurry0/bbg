@@ -41,7 +41,7 @@ function moveBattedBall(b,dt,wind){
  const airborne=!b.bounces&&(b.z>.1||b.vz>0);
  // Compress and lower the first flight, keeping its horizontal carry. Ground
  // rolls, bounces and throws still run at their normal speed.
- const step=airborne?dt*(b.flightRate??1):dt,drag=Math.max(0,1-(airborne?.15:.85)*step);
+ const step=airborne?dt*(b.flightRate??1):dt,groundDrag=!airborne&&Math.hypot(b.x,b.y)>54?.32:.85,drag=Math.max(0,1-(airborne?.15:groundDrag)*step);
  b.vx*=drag;b.vy=(b.vy+wind*step)*drag;
  b.vz-=(airborne?11.25*(b.flightLift??1):9.81)*step;
  if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*step);
@@ -1289,7 +1289,7 @@ window.NightGame=class NightGame{
    const eta=dist(candidate,to)/candidate.speed;
    if(eta<coverTime){receiver=i;coverTime=eta;}
   }
-  const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?1.15:1));
+  const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?1.02:1));
   // Give the covering player time to arrive by holding the release briefly.
   // The actual arrival still requires the ball to meet the receiving glove.
   const extraHold=base==null?.8:outfieldPickup(holder,from)?.48:1.2;
@@ -1430,10 +1430,13 @@ window.NightGame=class NightGame{
   for(const r of [...f.runners].sort((a,b)=>b.start-a.start)){
    if(r.out||r.scored||this.canControlRunner(r.id))continue;
    if(r.needsTag){r.command=r.start;continue;}
-   if(r.command>r.base)continue;
+   const enRoute=r.command>r.base;
    const forced=this.manualForceBase(r);
-   if(forced&&(r.batter||down||!f.catchable||this.outs===2)){r.command=forced;continue;}
-   const next=r.base+1;
+   if(forced&&(r.batter||down||!f.catchable||this.outs===2)){
+    if(!enRoute||forced>r.command){r.command=forced;continue;}
+    if(forced<r.command)continue;
+   }
+   const next=enRoute?r.command+1:r.base+1;
    if(next>4||r.batter&&next===4)continue;
    if(f.runners.some(other=>other.start>r.start&&!other.out&&!other.scored&&other.progress<=next&&(other.command??other.base)<=next))continue;
    if(m.fly){
@@ -1455,6 +1458,12 @@ window.NightGame=class NightGame{
    }else{
     const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(Math.hypot(f.landing.x,f.landing.y)>=57&&f.trajectory!=='ground'?2.45:.88):.54);
     returnTime=pickupDelay+this.baseThrow(pickupIndex,next,next===4?.72:next===2?.62:.53,pickup).duration;
+    const beaten=Math.abs(pickup.x-pickup.y*.025)>pickup.y*.23||f.wallHit;
+    if(depth>=57&&(beaten||depth>=68)){
+     const relayPt={x:pickup.x*.39,y:clamp(pickup.y*.60,36,47)};
+     const relay=this.coverThrow(pickupIndex,relayPt,[3,4,0].filter(i=>i!==pickupIndex),.38,pickup);
+     if(relay.receiver!=null)returnTime=pickupDelay+relay.duration+.34+this.baseThrow(relay.receiver,next,.27,relayPt).duration;
+    }
    }
    // The coach has less to lose on a clear drive into a gap than on a ball straight to an outfielder.
    const onTheRun=Math.abs(pickup.x-pickup.y*.025)>pickup.y*.23||f.wallHit;
@@ -1607,11 +1616,11 @@ window.NightGame=class NightGame{
      this.safeOnThrow(runner,th.base);
      b.vx=0;b.vy=0;b.vz=0;b.z=.04;b.bounces=Math.max(1,b.bounces);return;
     }
-    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.34:.22;m.outfield=false;
+    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.55:.22;m.outfield=false;
     if(runner&&!runner.out&&!runner.scored){
      const onBag=dist(receiver,BASES[th.base])<=BAG_REACH;
      if(onBag&&th.appeal&&runner.needsTag&&runner.progress>runner.start+.04)this.manualOut(runner,'appeal',th.base);
-     else if(onBag&&this.manualForceBase(runner)===th.base)this.manualOut(runner,runner.batter?'batter':'force',th.base);
+     else if(onBag&&this.manualForceBase(runner)===th.base&&runner.progress<th.base+.25)this.manualOut(runner,runner.batter?'batter':'force',th.base);
      else if(Math.abs(runner.progress-Math.round(runner.progress))>.001&&dist(receiver,runner)<1.35)this.manualOut(runner,'tag',th.base);
     }
     this.safeOnThrow(runner,th.base);
@@ -1644,7 +1653,7 @@ window.NightGame=class NightGame{
    const forceRunner=f.runners.find(r=>{
     if(r.out||r.scored)return false;
     const base=this.manualForceBase(r);
-    return base&&dist(holder,BASES[base])<Math.min(4.6,runTime(r,base)*holder.speed*.9);
+    return base&&r.progress<base&&dist(holder,BASES[base])<Math.min(4.6,runTime(r,base)*holder.speed*.9);
    });
    if(forceRunner){
     const base=this.manualForceBase(forceRunner);

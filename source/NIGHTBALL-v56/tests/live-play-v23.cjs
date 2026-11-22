@@ -11,11 +11,13 @@ const setup=(mask=0,manual=true)=>{const g=new NightGame('match','standard',()=>
  const crowded=setup(1),br=crowded.field.runners[0],lead=crowded.field.runners[1];Object.assign(br,{base:1,furthest:1,progress:1,command:1});Object.assign(lead,{base:2,furthest:2,progress:2,command:1});for(let i=0;i<300;i++)crowded.updateRunners(.02);assert.equal(br.progress,1);assert(lead.progress>=1.099);assert(lead.progress>br.progress);assert(lead.blocked);
  // Removing a trailing runner removes the force on the runners ahead.
  const chain=setup(7);chain.field.ball.bounces=1;const first=chain.field.runners.find(r=>r.start===1),second=chain.field.runners.find(r=>r.start===2);assert.equal(chain.manualForceBase(second),3);chain.manualOut(first,'force');assert.equal(chain.manualForceBase(second),0);
- // With the quicker outfield return, a drive in the gap is held to a single;
- // a hard ball to center stays a hit even with a runner forced from first.
+ // A drive in the gap is a double again: on deep balls the coach judges the
+ // advance against the relay return, runners are evaluated while still en
+ // route, and a runner who already passed a base cannot be forced out at it.
+ // A hard ball to center stays a hit even with a runner forced from first.
  // Routine infield outs still work.
  for(const [shot,mask,kind,outs,base] of [
-  [[35,20,.4],0,'single',0,1],[[41,15,0],1,'single',0,1],[[25,0,0],0,'groundout',1,0]
+  [[35,20,.4],0,'double',0,2],[[41,15,0],1,'single',0,1],[[25,0,0],0,'groundout',1,0]
  ]){
   const p=setup(mask,false);p.startField(...shot,false);
   for(let i=0;i<1800&&!p.field.resolved;i++)p.update(20);
@@ -57,8 +59,8 @@ const setup=(mask=0,manual=true)=>{const g=new NightGame('match','standard',()=>
  assert(drill.field.runners[0].running,'floating-point frame remainder must not overwrite motion');
  assert(runnerMapState(drill)[0].moving);
  for(let i=0;i<90&&!drill.field.resolved;i++)drill.update(240);
- assert.equal(drill.field.outcome,'single');
- assert.equal(drill.field.runners[0].base,1);
+ assert.equal(drill.field.outcome,'double');
+ assert.equal(drill.field.runners[0].base,2);
  assert(drill.playEvents.some(event=>event.type==='throw-arrival'&&event.base===null),'outfield sends through a real cutoff');
  assert.equal(drill.session.hits,0,'the supplied demo is not a batting record');
  // An early throw reaches the bag before its covering fielder: no catch, no force.
