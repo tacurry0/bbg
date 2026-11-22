@@ -122,3 +122,18 @@
 .form-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
 .league-injuries{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;padding:8px 10px;border:1px solid #e8a13a55;border-radius:10px;background:#2a1e0d;color:#f5d9a8;font-size:12px}
 .league-injuries span{border-left:1px solid #e8a13a44;padding-left:6px}
+.hr-celebration{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:6;overflow:hidden}
+.hr-celebration[hidden]{display:none}
+.hr-celebration strong{font-size:clamp(38px,11vw,64px);font-weight:950;font-style:italic;color:#ffda73;text-shadow:0 0 18px #ff9d00,0 3px 0 #7a4a00,0 6px 22px #000a;letter-spacing:2px}
+.hr-celebration.play strong{animation:hr-pop 2.8s cubic-bezier(.16,1,.3,1) forwards}
+.hr-celebration span{margin-top:6px;font-size:clamp(17px,5vw,26px);font-weight:900;color:#fff;text-shadow:0 2px 10px #000}
+.hr-celebration.play span{animation:hr-pop 2.8s .15s cubic-bezier(.16,1,.3,1) forwards}
+.hr-fw{position:absolute;width:14px;height:14px;border-radius:50%;opacity:0}
+.hr-fw.f1{left:16%;top:20%;background:#ffdf59;box-shadow:0 0 24px 10px #ffdf5988}
+.hr-fw.f2{right:15%;top:15%;background:#6ce8ff;box-shadow:0 0 24px 10px #6ce8ff88}
+.hr-fw.f3{left:46%;top:8%;background:#ff66a3;box-shadow:0 0 24px 10px #ff66a388}
+.hr-celebration.play .hr-fw{animation:hr-burst 1.6s ease-out forwards}
+.hr-celebration.play .hr-fw.f2{animation-delay:.25s}
+.hr-celebration.play .hr-fw.f3{animation-delay:.5s}
+@keyframes hr-pop{0%{opacity:0;transform:scale(.6) rotate(-3deg)}12%{opacity:1;transform:scale(1.12) rotate(1deg)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.02)}}
+@keyframes hr-burst{0%{opacity:0;transform:scale(.2)}25%{opacity:1}100%{opacity:0;transform:scale(9)}}
