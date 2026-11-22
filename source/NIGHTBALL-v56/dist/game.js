@@ -1292,7 +1292,7 @@ window.NightGame=class NightGame{
   const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?1.15:1));
   // Give the covering player time to arrive by holding the release briefly.
   // The actual arrival still requires the ball to meet the receiving glove.
-  const extraHold=base==null?1.65:outfieldPickup(holder,from)?.48:2.5;
+  const extraHold=base==null?.8:outfieldPickup(holder,from)?.48:1.2;
   const windup=release+clamp(coverTime+.05-release-flight,0,extraHold);
   return {to:{...to},base,receiver,duration:Math.max(.05,windup+flight),release:windup,fromIndex:holder};
  }
