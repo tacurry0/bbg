@@ -416,7 +416,7 @@ window.NightGame=class NightGame{
   else if(this.phase==='abs-call'&&this.absCall?.cpu&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
    this.setPhase('abs-review');this.notify();
   }
-  else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call)this.resolveAbsCall(false);
+  else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call+(this.onlineGame?800:0))this.resolveAbsCall(false);
   else if(this.phase==='abs-review'&&this.phaseTime>=NightGame.ABS_TIMING.reviewEnd)this.resolveAbsCall(true);
   else if(this.phase==='aim'&&this.autoDefense&&this.defending&&this.phaseTime>480)this.autoPitch();
   else if(this.phase==='windup'&&this.phaseTime>(derby?270:700)){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
@@ -933,7 +933,7 @@ window.NightGame=class NightGame{
   const cur=this._fieldCurr;
   if(!cur){this.field=null;this._mirrorFseq=-1;return;}
   const cf=cur.f,prev=this._fieldPrev,span=prev?Math.max(16,cur.t-prev.t):0;
-  const a=prev?Math.max(0,Math.min(1,(now-span-prev.t)/span)):1,lerp=(p,c)=>p+(c-p)*a;
+  const a=prev?Math.max(0,Math.min(1+35/Math.max(16,span),(now-span-prev.t)/span)):1,lerp=(p,c)=>p+(c-p)*a;
   if(this._mirrorFseq!==cur.fsq||!this.field){
    // New play: fresh field objects exactly once. The 3D camera resets and
    // re-aims whenever the field object identity changes, so identity must
