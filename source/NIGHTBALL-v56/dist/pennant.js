@@ -269,7 +269,7 @@
    const rand=random(hash(this.id+'/'+f.id)),orders={home:0,away:0},scores={home:0,away:0};let innings=0;
    const regulation=f.innings||1,full=regulation===9,limit=f.maxInnings??Infinity;
    const wrand=random(hash(this.id+'/weather/'+f.id)),weather=wrand()<.15?'rain':wrand()<.4?'cloudy':'clear';
-   const cold=weather==='rain'&&regulation>=5&&wrand()<.3,effRegulation=cold?5:regulation;
+   const cold=weather==='rain'&&regulation>=5&&!f.playoff&&wrand()<.3,effRegulation=cold?5:regulation;
    const stats={};const srand=random(hash(this.id+'/stats/'+f.id));const sRow=(clubId,p)=>stats[clubId+'/'+p.id]||={name:p.name,clubId,pa:0,ab:0,h:0,hr:0,rbi:0,bb:0,doubles:0,triples:0,outs:0,k:0,runs:0,pitches:0};
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
