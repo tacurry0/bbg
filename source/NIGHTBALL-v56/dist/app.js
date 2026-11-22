@@ -603,7 +603,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function careerPregame(format='quick'){
   playCareer(format,!career?.currentGame);
  }
- const careerBatLabels={single:'安打',double:'二塁打',triple:'三塁打',hr:'本塁打',walk:'四球',strikeout:'三振',
+ const careerBatLabels={single:'安打',double:'二塁打',triple:'三塁打',hr:'本塁打',walk:'四球',hbp:'死球',strikeout:'三振',
   groundout:'ゴロ',flyout:'フライ',lineout:'ライナー',forceout:'フォースアウト',doubleplay:'併殺打',sacrifice:'犠打',
   error:'失策で出塁',out:'アウト'};
  function careerAppearance(g){
@@ -1495,14 +1495,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    $('wind-speed').textContent=Math.abs(wind).toLocaleString('ja-JP',{maximumFractionDigits:1});
    windHUD.dataset.direction=wind<0?'in':wind?'out':'calm';
    windHUD.setAttribute('aria-label',wind?(wind<0?'向かい風 ':'追い風 ')+Math.abs(wind)+' m':'無風');
-   $('batter-label').innerHTML=`${g.park.name}${wind?' · '+(wind>0?'追い風':'向かい風'):''}　${def?g.pitcher.name+' <span class="stamina"><i style="width:'+g.stamina+'%"></i></span> '+g.session.thrown+'球':(g.isFixture?g.pitcher.name+' '+(g.pitchingStats?.[g.pitcher.id]?.pitches||0)+'球':'')}`;
+   $('batter-label').innerHTML=`${g.park.name}${wind?' · '+(wind>0?'追い風':'向かい風'):''}${g.inMatch?' · '+(g.umpireLabel||'ゾーン標準'):''}　${def?g.pitcher.name+' <span class="stamina"><i style="width:'+g.stamina+'%"></i></span> '+g.session.thrown+'球':(g.isFixture?g.pitcher.name+' '+(g.pitchingStats?.[g.pitcher.id]?.pitches||0)+'球':'')}`;
    $('difficulty-label').textContent=g.difficulty.toUpperCase();
    $('control-hint').textContent=def?'画面で狙い、離して投げる':'押したまま狙い、離して打つ';
    $('swing').disabled=g.paused||(def?g.phase!=='aim':g.phase!=='pitch');
    $('action-label').textContent=def?'PITCH':'SWING';$('action-hint').textContent=def?'離して投球':'離してスイング';$('swing-icon').innerHTML=svg(def?'ball':'bat');
    $('pitch-status').textContent=field?(g.field.throw?'ボールが送球されました':'野手が打球を追っています'):g.phase==='aim'?'球種を選び、コースを指定':g.phase==='pitch'?(def?'投球中 · 打者との勝負':'カーソルをボールのコースへ！'):g.phase==='windup'?'投球モーション…':'次の1球へ';
    g.battingAssist=settings.battingAssist&&g.career?.difficulty!=='expert';$('game').classList.toggle('batting-touch',!def);$('game').classList.toggle('pitching-touch',def);$('game').classList.toggle('in-play',field);$('thumb-hint').hidden=field;$('release-label').textContent=def?'離して投げる':'離して打つ';$('game-canvas').setAttribute('aria-label',def?'球場を押したままコースを狙い、指を離して投球':'球場を押したまま狙い、指を離してスイング');
-   if(def)renderPitchDirections(g);$('pitch-deck').hidden=!def||field||g.phase!=='aim'||g.autoDefense;$('pitch-types').hidden=false;$('pitch-types').style.setProperty('--pitch-count',g.pitcher.pitches.length);$('pitch-deck-status').textContent=g.phase==='aim'?'コースを狙って離す':g.phase==='windup'?'投球モーション中':g.phase==='pitch'?'投球中':'次の1球へ';$('pitch-types').classList.toggle('four',g.pitcher.pitches.length===4);$('bat-options').hidden=def;$('bat-options').dataset.batterHand=g.battingHand;document.querySelector('.controls').classList.toggle('defending',def);
+   if(def)renderPitchDirections(g);$('pitch-deck').hidden=!def||field||g.phase!=='aim'||g.autoDefense;$('pitch-types').hidden=false;$('pitch-types').style.setProperty('--pitch-count',g.pitcher.pitches.length);$('pitch-deck-status').textContent=g.phase==='aim'?'コースを狙って離す':g.phase==='windup'?'投球モーション中':g.phase==='pitch'?'投球中':'次の1球へ';$('pitch-types').classList.toggle('four',g.pitcher.pitches.length===4);$('bat-options').hidden=def;$('ibb').hidden=!def||!g.inMatch||g.phase!=='aim'||g.autoDefense||g.spectate||g.fastForward;$('bat-options').dataset.batterHand=g.battingHand;document.querySelector('.controls').classList.toggle('defending',def);
    document.querySelectorAll('[data-pitch]').forEach(b=>{b.classList.toggle('active',b.dataset.pitch===g.pitchType);b.setAttribute('aria-pressed',String(b.dataset.pitch===g.pitchType));b.querySelector('small').textContent=Math.round(NightGame.pitchSpec(g.pitcher,b.dataset.pitch).speed)+'km/h';b.disabled=g.phase!=='aim'||!g.pitcher.pitches.includes(b.dataset.pitch);b.hidden=def&&!g.pitcher.pitches.includes(b.dataset.pitch);});
    const power=!!g.power,bunt=!!g.bunt;$('bunt').hidden=g.mode==='derby';const stealable=!def&&g.inMatch&&(g.bases[0]&&!g.bases[1]||g.bases[1]&&!g.bases[2]);$('steal').hidden=!stealable;$('steal').classList.toggle('selected',!!g.steal);$('steal').setAttribute('aria-pressed',String(!!g.steal));$('bunt').classList.toggle('selected',bunt);$('bunt').setAttribute('aria-pressed',String(bunt));$('contact').classList.toggle('selected',!power&&!bunt);$('power').classList.toggle('selected',power);$('power').classList.toggle('power-mode',power);$('contact').setAttribute('aria-pressed',String(!power&&!bunt));$('power').setAttribute('aria-pressed',String(power));$('swing').classList.toggle('power-active',power&&!def);updatePad();
    updateRunningUI(g);
@@ -1593,6 +1593,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('bench-button').onclick=requestBench;
  $('bunt').onclick=()=>{if(game&&game.mode!=='derby'){game.bunt=true;game.power=false;updateStyle();sound('tap');}};
  $('steal').onclick=()=>{if(game&&game.inMatch){game.steal=!game.steal;updateStyle();sound('tap');}};
+ $('ibb').onclick=()=>{if(game&&game.intentionalWalk()){sound('tap');updateUI();}};
  $('contact').onclick=()=>{if(game){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('howto').onclick=howto;$('records').onclick=recordModal;
