@@ -56,7 +56,7 @@
    this.health={fatigue:0,injury:0,slump:0,adapt:0};this.perks=[];this.form='基本';this.experience=0;
    this.life={savings:0,housing:'寮',relationship:0,married:false,friends:0,spend:0,currency:c.currency,budget:{}};
    this.standings=L.tables();this.past=[];this.post=null;this.daysPlayed=0;this.seasonDays=0;this.postStarted=false;
-   this.timeline=[];this.history=[];this.titles=[];this.national=[];this.asia=[];this.moves=[];this.rivalry={};
+   this.timeline=[];this.history=[];this.titles=[];this.national=[];this.asia=[];this.moves=[];this.rivalry={};this.archRivalId=null;
    this.playerYear=blank();this.farmStats=blank();this.recentFarm=[];this.selection=null;this.playerPost=blank();this.currentGame=null;this.last=null;
    this.queue=null;this.offers=[];this.salaryDemand=null;this.acquired=null;this.lastWin=null;this.marketChoice=null;
    this.ensureSchoolClub('school-player',this.school,this.schoolTier,this.region);
@@ -125,6 +125,13 @@
   get costs(){return {jp:[5,22,380],tw:[1,6,130],kr:[25,95,1300]}[this.playingCountry];}
   get regularNext(){return this.cache('_days',()=>L.schedules(this.year,this.short));}
   money(amount,country=this.playingCountry){return new Intl.NumberFormat('ja-JP',{style:'currency',currency:countries[country].currency,maximumFractionDigits:0}).format(amount*countries[country].unit);}
+  archRivalPerson(){
+   if(this.archRivalId){const p=this.person(this.archRivalId);if(p)return p;}
+   const cands=this.people.filter(p=>p.school&&p.club!==this.player.club&&p.pos===this.player.pos&&p.id!==this.player.id);
+   if(!cands.length)return null;
+   const best=cands.sort((a,b)=>this.ability(b)-this.ability(a))[0];
+   this.archRivalId=best.id;return best;
+  }
   ability(p){
    return p.pos==='P'?((p.velocity-115)*1.65+p.control+p.movement+p.stamina*.65)/3.65:
     p.contact*.32+p.power*.24+p.run*.11+p.field*.22+p.arm*.11;
@@ -435,6 +442,8 @@
     if(result[0]>result[1])head.wins++;
     if(p.relationship>24)p.relationship-=.3;
    }
+   const arch=this.archRivalPerson();
+   if(arch&&people.some(p=>p.id===arch.id))this.note('ライバル対決 · '+arch.name+'（'+this.clubName(rival)+'）と対戦');
    if(s.g){
     Z.afterGame(this,f,s);
     const quality=this.pitching?clamp((4.5-M.era(s))*.7,-5,6):clamp((M.ops(s)-.65)*3,-3,6);

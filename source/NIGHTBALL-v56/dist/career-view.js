@@ -364,6 +364,8 @@ function timeline(c){
  const r=c.duel;
  return `<section class="career-panel"><h2>キャリア年表</h2>
  <div class="career-list-row"><div><b>ライバル　${r.name}</b><small>${r.clubId?clubName(r.clubId):r.school} · ${r.games}試合</small></div><strong>${r.pa}打席 ${r.h}${c.pitching?'被安打':'安打'} ${r.k}三振</strong></div>
+ ${r.season?`<div class="career-list-row"><div><b>今季の成績くらべ</b><small>${r.seasonKey&&r.seasonKey.startsWith('school')?'高校'+c.schoolYear+'年':'プロ'+c.proYear+'年目'} · ライバル ${r.name}</small></div><strong>${c.pitching?`防御率 ${Career.era(r.season)} · ${r.season.k}奪三振`:`打率 ${Career.avg(r.season)} · ${r.season.hr}本塁打`}</strong></div>
+ <div class="career-list-row"><div><b>あなた</b><small>今季</small></div><strong>${c.pitching?`防御率 ${Career.era(c.season)} · ${c.season.k}奪三振`:`打率 ${Career.avg(c.season)} · ${c.season.hr}本塁打`}</strong></div>`:''}
  ${c.milestones.slice().reverse().map(e=>`<div class="career-list-row"><div><small>${e.period}</small><b>${e.text}</b></div></div>`).join('')}
  ${c.abroadHistory.map(e=>`<div class="career-list-row"><b>${e.name} · ${e.label}</b><strong>${e.stat.games}試合</strong></div>`).join('')}
  </section>`;

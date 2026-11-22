@@ -91,12 +91,13 @@
   }
   static addExperience(c,s,manual){
    const pending=c.drills[c.plan],gains={};
-   const exp=c.pitching?{
+   const pitchExp={
     velocity:s.k*4,movement:s.k*7,control:Math.max(0,s.outs*3-s.walks*5),stamina:s.outs*4
-   }:{
+   },batExp={
     contact:s.h*8+s.bb*4,power:Math.max(0,s.tb-s.h)*8+s.hr*4,
     run:s.h*3+s.bb*3,field:s.fieldOuts*10,arm:s.fieldOuts*7
    };
+   const exp=c.twoWay?{...pitchExp,...batExp}:c.pitching?pitchExp:batExp;
    for(const key of Object.keys(exp)){
     const practice=pending?.skill===key?24:pending?.support===key?10:0;
     const amount=Math.round((5+exp[key]+practice)*(manual?1:.65)*(c.fatigue>=75?.75:1));

@@ -218,11 +218,14 @@
     section('次の6試合',`<ol class="cw-list">${matches.map(f=>`<li><time>${f.day}</time> ${club(w,f.away)} VS ${club(w,f.home)}</li>`).join('')}</ol>`));
  }
  function squad(w){
+  const arch=w.archRivalPerson(),archHTML=arch?section('同期ライバル',`<p><strong>${esc(arch.name)}</strong> · ${esc(arch.school||'')} · ${esc(arch.stage==='retired'?'引退':arch.club?w.clubName(arch.club):'アマチュア')} · ${NightCareer.positionNames[arch.pos]||arch.pos}</p>
+   <p>${arch.pos==='P'?(arch.stats.outs?'防御率 '+fmt(M.era(arch.stats),2)+' · '+arch.stats.k+'奪三振':'まだ登板なし'):(arch.stats.ab?'打率 '+fmt(M.rate(arch.stats.h,arch.stats.ab))+' · '+arch.stats.hr+'本塁打':'まだ安打なし')}${w.rivalry[arch.id]?' · 対戦 '+w.rivalry[arch.id].games+'試合 あなたのチーム '+w.rivalry[arch.id].wins+'勝':''}</p>
+   <p>あなた · ${w.player.pos==='P'?(w.player.stats.outs?'防御率 '+fmt(M.era(w.player.stats),2)+' · '+w.player.stats.k+'奪三振':'まだ登板なし'):(w.player.stats.ab?'打率 '+fmt(M.rate(w.player.stats.h,w.player.stats.ab))+' · '+w.player.stats.hr+'本塁打':'まだ安打なし')}</p>`):'';
   const id=w.player.club,l=M.lineup(w,id,w.playingCountry,w.day);
   const pos=w.player.pos;
   const peers=w.members(id).filter(p=>p.positions.includes(pos)).sort((a,b)=>M.positionScore(w,b,pos,w.playingCountry)-M.positionScore(w,a,pos,w.playingCountry));
   const cohort=w.people.filter(p=>p.school&&p.club!==id).sort((a,b)=>(w.rivalry[b.id]?.games||0)-(w.rivalry[a.id]?.games||0)).slice(0,12);
-  return section('ポジション争い · '+NightCareer.positionNames[pos],`<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
+  return archHTML+section('ポジション争い · '+NightCareer.positionNames[pos],`<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
    ${p.injury?' · 故障':''}${p.id===w.player.id?' · あなた':''} ${p.pos==='P'?(p.stats.outs?' · 防御率 '+fmt(M.era(p.stats),2):''):(p.stats.ab?' · 打率 '+fmt(M.rate(p.stats.h,p.stats.ab)):'')}</li>`).join('')}</ol>`)+
    section('今日の想定オーダー',`<ol class="cw-list">${Object.entries(l.assign).map(([p,id])=>`<li>${p} · ${esc(w.person(id)?.name)}</li>`).join('')}<li>先発 · ${esc(l.starter?.name)}</li></ol>`)+
    section('高校時代の選手',cohort.length?cohort.map(p=>`<details><summary>${esc(p.name)} · ${esc(p.stage==='retired'?'引退':p.club?w.clubName(p.club):p.amateur||'アマチュア')}</summary>

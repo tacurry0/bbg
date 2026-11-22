@@ -103,7 +103,7 @@
     rosterNews:null,levelGames:0,farmScorecard:[],careerId:c.seed,mentor:null};
    for(const [key,value] of Object.entries(defaults))c[key]??=value;
    c.duel??={id:'career-rival',name:c.pitching?'江 宇翔':'林 承岳',school:'明徳学園',clubId:null,
-    games:0,pa:0,h:0,hr:0,k:0};
+    games:0,pa:0,h:0,hr:0,k:0,season:null,seasonKey:null,skills:null};
    return c;
   }
   static rng(c,key){return L.random(c.seed+'/'+key);}
@@ -219,6 +219,25 @@
      key==='velocity'?111:15,key==='velocity'?162:99);
    }
    return stats;
+  }
+  static rivalSeason(c,f,myRating){
+   const Dev=window.NightCareerDevelopment,d=c.duel;
+   if(!d||!(f.school||f.type==='pro'||f.type==='playoffs'))return [];
+   const key=f.school?'school-'+c.schoolYear:'pro-'+c.proYear;
+   if(d.seasonKey!==key){d.seasonKey=key;d.season=Dev.blank();}
+   if(!d.skills){const rng=this.rng(c,'rival-skills');d.skills={};for(const [k,v] of Object.entries(c.skills))d.skills[k]=Math.max(20,Math.round(v+(rng()*10-5)));}
+   const player={...d.skills,id:d.id,name:d.name,pos:c.pitching?'P':c.position,hand:'R'};
+   const sim=Dev.simulate({seed:c.seed+'/duel',pitching:c.pitching,player:()=>player},{id:'duel-'+f.id,opportunities:c.pitching?2:4});
+   for(const k of Object.keys(sim))if(typeof sim[k]==='number')d.season[k]=(d.season[k]||0)+sim[k];
+   const events=[];
+   const duelGame=(f.school&&f.opponentName===d.school)||((f.type==='pro'||f.type==='playoffs')&&d.clubId&&d.clubId===f.opponent);
+   if(duelGame){
+    const rr=Dev.evaluate(sim,c.pitching).rating;
+    events.push('ライバル対決 · '+d.name+'は'+(c.pitching?Math.floor((sim.outs||0)/3)+'回 被安打'+(sim.h||0)+' '+sim.k+'奪三振':(sim.h||0)+'安打'+(sim.hr?' '+sim.hr+'本塁打':'')+' '+sim.k+'三振')+'。この試合の評価は'+(myRating>=rr?'あなたが上':'相手が上'));
+   }else if(c.pitching?(sim.k>=5||(sim.outs>=6&&sim.allowed===0)):(sim.hr>=1||sim.h>=3)){
+    events.push('ライバル '+d.name+'が好調 · '+(c.pitching?sim.k+'奪三振':'今季'+d.season.hr+'本塁打'));
+   }
+   return events;
   }
   static postGame(c,f,s,manual,info){
    const notes=[];

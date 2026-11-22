@@ -8,7 +8,8 @@
   speed:{label:'俊足型',pos:'SS',trait:'韋駄天',skills:{contact:39,power:28,run:53,field:42,arm:40}},
   velocity:{label:'速球派',pos:'P',trait:'速球派',skills:{velocity:132,control:38,movement:37,stamina:44},pitches:['fast','slider','fork']},
   control:{label:'制球派',pos:'P',trait:'精密制球',skills:{velocity:122,control:51,movement:40,stamina:45},pitches:['fast','cutter','change']},
-  breaking:{label:'変化球派',pos:'P',trait:'変化球派',skills:{velocity:125,control:42,movement:52,stamina:39},pitches:['fast','curve','split']}
+  breaking:{label:'変化球派',pos:'P',trait:'変化球派',skills:{velocity:125,control:42,movement:52,stamina:39},pitches:['fast','curve','split']},
+  twoway:{label:'二刀流',pos:'P',trait:'二刀流',skills:{velocity:128,control:43,movement:41,stamina:47,contact:43,power:39,run:43,field:36,arm:41},pitches:['fast','slider','change']}
  };
  const SKILLS={contact:'ミート',power:'パワー',run:'走力',field:'守備',arm:'肩',velocity:'球速',control:'制球',movement:'変化球',stamina:'持久力'};
  const SCHOOL_PROFILES={
@@ -87,6 +88,7 @@
    this.position=natural==='P'||!POSITIONS.includes(position)?natural:position;
    this.positions=[this.position];
    this.leftTraining=0;
+   this.batPos=style==='twoway'?'DH':null;
    this.goal=null;
    this.specialProgress={};
    this.cup=0;
@@ -190,6 +192,7 @@
   suggestedActivity(){return this.fatigue>=55||this.injury||this.condition<0?'rest':this.weakness>=2?'video':'safe';}
   get profile(){return STYLES[this.style];}
   get pitching(){return this.profile.pos==='P';}
+  get twoWay(){return this.style==='twoway';}
   get evaluation(){
    const ratings=this.stage==='school'||this.stage==='draft'?this.recent:this.recent.slice(-4);
    return ratings.length?Math.round(ratings.reduce((sum,n)=>sum+n,0)/ratings.length):null;
@@ -202,7 +205,7 @@
    return LEVELS[this.level];
   }
   get numberOfGames(){return this.league?.totalGames??10;}
-  get drills(){return D.drills(this.pitching);}
+  get drills(){return this.twoWay?{...D.drills(true),...D.drills(false)}:D.drills(this.pitching);}
   get role(){
    if(['school','apbc','academy'].includes(this.stage))return this.pitching?'rotation':'starter';
    return baseRoles[this.level]||(this.level==='regular'?(this.pitching?this.preferredRole:'starter'):
@@ -330,7 +333,7 @@
     velocity:clamp(q.velocity-16+schoolGloves*3+scale,119,153),
     control:clamp(q.control-15+schoolGloves*6+scale,31,89),movement:clamp(q.movement-18+schoolGloves*6+scale,29,89)})):home.pitchers;
    const newHome={...home,name:customHome||home.name,short:customHome||home.short,scoreMark:home.scoreMark||customHome?.slice(0,2)||null,
-    batters:this.pitching?homeBatters:[p,...homeBatters],pitchers:this.pitching?[p,...homePitchers]:homePitchers};
+    batters:this.pitching?(this.twoWay?[{...p,pos:this.batPos||'DH'},...homeBatters]:homeBatters):[p,...homeBatters],pitchers:this.pitching?[p,...homePitchers]:homePitchers};
    const pinching=['pinch','defense'].includes(f.role),slot=this.battingSlot(f);
    if(!this.pitching){
     const starts=legacy||!pinching&&f.role!=='inactive';
@@ -339,6 +342,12 @@
     if(starts)order.splice(slot,0,p.id);
     newHome.startingOrder=order;
     newHome.startingFielding=starts?{...home.startingFielding,[p.pos]:p.id}:home.startingFielding;
+   }
+   if(this.twoWay){
+    const order=newHome.startingOrder.filter(id=>id!==p.id).slice(0,8);
+    order.splice(Math.min(slot,order.length),0,p.id);
+    newHome.startingOrder=order;
+    if(this.batPos&&this.batPos!=='DH')newHome.startingFielding={...newHome.startingFielding,[this.batPos]:p.id};
    }
    const duel=(f.school&&f.opponentName===this.duel.school)||(f.type==='pro'||f.type==='playoffs')&&this.duel.clubId===f.opponent;
    const teammate=(f.type==='pro'||f.type==='playoffs')&&this.duel.clubId===this.clubId;
@@ -406,6 +415,7 @@
    return true;
   }
   setPosition(pos){
+   if(this.twoWay&&POSITIONS.includes(pos)){this.batPos=pos;if(!this.positions.includes(pos)&&this.positions.length<3)this.positions.push(pos);return true;}
    if(this.currentGame||!this.fixture||!this.positions.includes(pos))return false;
    this.position=pos;
    return true;
@@ -511,7 +521,8 @@
    const highlight=positive?`${positive.inning}回${positive.half==='top'?'表':'裏'}に${positive.moment}`:
     this.pitching&&stat.outs&&stat.allowed===0?(info.metrics?.withRunners?'走者を背負って奪三振・無失点':stat.k?`${stat.k}奪三振・無失点`:'無失点で登板を終えた'):null;
    if(!partial?.completedGame)D.simulateFielding(this,f,stat);
-   const {rating,reasons}=D.evaluate(stat,this.pitching),score=L.teamScore(this,f,stat,partial);
+   let {rating,reasons}=D.evaluate(stat,this.pitching);const score=L.teamScore(this,f,stat,partial);
+   if(this.twoWay&&stat.pa){const batEval=D.evaluate(stat,false);rating=Math.round((rating+batEval.rating)/2);reasons=[...reasons,...batEval.reasons];}
    if(!score.won)stat.saves=0;
    const gains=stat.games?D.addExperience(this,stat,manual):{};
    if(stat.games)this.fatigue=clamp(this.fatigue+(this.pitching?5+f.opportunities*2:3)+(!this.preparation?2:0),0,100);
@@ -523,6 +534,7 @@
     competition:f.type==='pro'?f.firstTeam?'一軍':'二軍・育成':null};
    this.last.events=info.absence?['監督：紅白戦の結果で次戦の起用を判断します']:Life.postGame(this,f,stat,manual,info);
    this.last.events.push(...(window.NightCareerExtras?.onGame(this,f,stat,rating)||[]),...(window.NightCareerExtras?.trainingReport(this,f,info.metrics)||[]));
+   this.last.events.push(...Life.rivalSeason(this,f,rating));
    if(f.type==='academy'){
     add(this.academy.stat,stat);
     if(stat.games)this.academy.ratings.push(rating);
