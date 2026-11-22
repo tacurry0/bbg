@@ -111,7 +111,7 @@ window.NightGame=class NightGame{
   this.maxInnings=this.npbPostseason?options.maxInnings??null:this.worldFixture?options.worldMaxInnings??null:null;
   this.drawClinches=this.npbPostseason&&options.drawClinches===true||!!this.worldFixture&&options.worldDrawClinches===true;
   this.totalInnings=(mode==='pennant'&&!this.npbPostseason)||(this.apbcFixtureId&&options.innings===1)?1:options.innings===9?9:options.innings===3?3:5;this.userHome=options.userHome!==false;this.teams=options.clubs||{home:this.fixtureClub(options.homeTeamId||'owls'),away:this.fixtureClub(options.awayTeamId||'foxes')};this.pitchingStaff={home:this.teams.home.pitchers,away:this.teams.away.pitchers};this.home=Array(this.totalInnings).fill(null);this.away=Array(this.totalInnings).fill(null);this.homeScore=0;this.awayScore=0;this.homeHits=0;this.awayHits=0;this.homeErrors=0;this.awayErrors=0;
-  this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
+  this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.lastPitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
   this.halfBreak=null;this.autoDefense=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
   const order=(options.order||[]).map(id=>this.teams[this.userSide].batters.find(p=>p.id===id)).filter(Boolean);
   this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=options.opponentPitcher??0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;
@@ -836,8 +836,12 @@ window.NightGame=class NightGame{
   }
   let best=null;
   f.fielders.forEach((p,i)=>{
-   const point=samples.find(q=>q.t>p.reaction&&catchType(p,q,Math.max(0,dist(p,q)-p.speed*(q.t-p.reaction)),!f.foul));
-   p.intercept=point?{x:point.x,y:point.y,time:point.t}:{...f.landing,time:f.landingTime+Math.max(0,dist(p,f.landing)-p.reach)/p.speed};
+   // Infielders turn and run back toward the outfield much slower than they
+   // charge in, so a hard liner over their head drops instead of being run
+   // down at full sprint speed.
+   const backSpeed=q=>i<6&&q.y>p.startY+2?.6:1;
+   const point=samples.find(q=>q.t>p.reaction&&catchType(p,q,Math.max(0,dist(p,q)-p.speed*backSpeed(q)*(q.t-p.reaction)),!f.foul));
+   p.intercept=point?{x:point.x,y:point.y,time:point.t}:{...f.landing,time:f.landingTime+Math.max(0,dist(p,f.landing)-p.reach)/(p.speed*backSpeed(f.landing))};
    if(!best||p.intercept.time<best.t)best={i,t:p.intercept.time,air:!!point};
   });
   f.chaser=best?.i??f.chaser;
@@ -1022,7 +1026,7 @@ window.NightGame=class NightGame{
     else if(i===second)dest=BASES[2];
     else if(i===3||i===4)dest={x:target.x*.35,y:Math.min(48,target.y*.5)};
     else if(i>=6)dest={x:p.startX+(target.x-p.startX)*.18,y:p.startY+(target.y-p.startY)*.18};
-    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,p.speed);else p.running=false;
+    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,p.speed*(i<6&&dest.y>p.startY+2?.6:1));else p.running=false;
    });
    for(let i=0;i<f.fielders.length;i++){
     const p=f.fielders[i];if(f.elapsed<Math.max(p.reaction,p.recoverAt??0))continue;
@@ -1243,7 +1247,7 @@ window.NightGame=class NightGame{
     returnTime=Math.max(0,returning.duration-returning.t);
     if(next!==returning.base)returnTime+=this.baseThrow(returning.receiver,next,.27,returning.to).duration;
    }else{
-    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(f.maxTravel>=60?1.7:.88):.54);
+    const pickupDelay=m.secured?Math.max(0,m.recovery):Math.max(0,read.at-f.elapsed)+(next===2?(Math.hypot(f.landing.x,f.landing.y)>=57?2.45:.88):.54);
     returnTime=pickupDelay+this.baseThrow(pickupIndex,next,next===4?.72:next===2?.62:.53,pickup).duration;
    }
    // The coach has less to lose on a clear drive into a gap than on a ball straight to an outfielder.
@@ -1297,7 +1301,7 @@ window.NightGame=class NightGame{
   const cover=this.secondBaseCover(index,f.ball);
   if(cover!==null)f.fielders[cover].target=BASES[2];
   const player=f.fielders[index],acrobatics=['dive','jump'].includes(player.action?.type);
-  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?(f.maxTravel>=60?1.7:.88):.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
+  m.recovery=(fly?(m.outfield?.95:.28):m.outfield?(Math.hypot(f.landing.x,f.landing.y)>=57?2.45:.88):.24)+(70-(player.fieldRating??70))*.004+(acrobatics?.32:0);m.fly=fly||m.fly;m.pickupAt=f.elapsed;
   f.ball.vx=f.ball.vy=f.ball.vz=0;f.trail=[];this.playEvents.push({type:fly?'catch':'pickup',fielder:index,time:f.elapsed});
   if(fly){
    this.emit('sound','catch');this.manualOut(f.runners.find(r=>r.batter),'catch');
@@ -1479,6 +1483,7 @@ window.NightGame=class NightGame{
   this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
  completePitch(kind){
+  if(this.pitch)this.lastPitch={name:this.pitch.name,speed:this.pitch.speed};
   if(this.pitch&&!this.pitch.logged){
    this.pitch.logged=true;
    const goal=this.career?.trainingGoal;

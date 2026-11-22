@@ -3,13 +3,18 @@ import * as T from './vendor/three.module.min.js';
 // The three first-party Blender exports use static meshes with packed accessors.
 // Keeping this subset local avoids adding a second copy of Three.js or runtime fetches to a CDN.
 const models=new Map();
+async function fetchModel(url){
+ let cache=null;
+ try{cache=await caches.open('nightball-models-v1');const hit=await cache.match(url);if(hit)return hit.arrayBuffer();}catch{}
+ const response=await fetch(url);
+ if(!response.ok)throw new Error('Model unavailable');
+ if(cache)cache.put(url,response.clone()).catch(()=>{});
+ return response.arrayBuffer();
+}
 export function loadMatchModel(name){
  if(!models.has(name)){
   const url=new URL('./assets/3d/'+name+'.glb',import.meta.url);
-  const promise=fetch(url).then(response=>{
-   if(!response.ok)throw new Error('Model unavailable: '+name);
-   return response.arrayBuffer();
-  }).then(decodeMatchModel).catch(()=>{models.delete(name);return null;});
+  const promise=fetchModel(url).then(decodeMatchModel).catch(()=>{models.delete(name);return null;});
   models.set(name,promise);
  }
  return models.get(name);
