@@ -115,3 +115,5 @@
  .stage-call-head { min-height:28px; padding-block:3px; }
  .stage-call-detail { padding-block:4px; }
 }
+.rain-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.55;background-image:repeating-linear-gradient(103deg,transparent 0 10px,rgba(185,220,255,.4) 10px 11px,transparent 11px 22px);background-size:140px 140px;animation:nightball-rainfall .5s linear infinite}
+@keyframes nightball-rainfall{from{background-position:0 -140px}to{background-position:-32px 0}}

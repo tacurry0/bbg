@@ -206,6 +206,8 @@
   simulate(f){
    const rand=random(hash(this.id+'/'+f.id)),orders={home:0,away:0},scores={home:0,away:0};let innings=0;
    const regulation=f.innings||1,full=regulation===9,limit=f.maxInnings??Infinity;
+   const wrand=random(hash(this.id+'/weather/'+f.id)),weather=wrand()<.15?'rain':wrand()<.4?'cloudy':'clear';
+   const cold=weather==='rain'&&regulation>=5&&wrand()<.3,effRegulation=cold?5:regulation;
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
     const runsToEnd=scores.away+(f.drawClinches&&innings===limit?0:1);
@@ -221,10 +223,10 @@
    do{
     innings++;
     half('away');
-    if(innings<regulation||scores.home<scores.away||
+    if(innings<effRegulation||scores.home<scores.away||
      scores.home===scores.away&&!(f.drawClinches&&innings===limit))half('home');
-   }while(innings<regulation||scores.home===scores.away&&innings<limit);
-   return {homeScore:scores.home,awayScore:scores.away,innings};
+   }while(innings<effRegulation||scores.home===scores.away&&innings<limit);
+   return {homeScore:scores.home,awayScore:scores.away,innings,weather,cold};
   }
   standings(leagueId=this.leagueId){
    const order=clubsFor(leagueId).map(c=>c.id),results=leagueId===this.leagueId?this.results:this.otherResults;
