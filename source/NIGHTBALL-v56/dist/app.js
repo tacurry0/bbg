@@ -248,7 +248,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(screen==='game'&&game?.career&&game.career.fixtureId===career?.fixture?.id&&!['ended','career-pregame'].includes(game.phase)){
    career.currentGame=game.snapshot();saveCareer();
   }
-  if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
+  if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
  function activateGame(){
   if(game.career||game.worldFixture||game.mode==='match'&&!game.competition&&!game.apbcFixtureId){
@@ -1455,6 +1455,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(data.ja+(data.sub?'。'+data.sub:''));u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
  }
  function onEvent(type,data){
+   if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
    if(type==='message'){
      speakPlay(data);
      if(data.en==='HOME RUN'){const hr=$('hr-celebration');if(hr){$('hr-distance').textContent=data.sub||'';hr.hidden=false;hr.classList.remove('play');void hr.offsetWidth;hr.classList.add('play');clearTimeout(hr._hideTimer);hr._hideTimer=setTimeout(()=>{hr.hidden=true;},3000);}}
@@ -1642,6 +1643,198 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(m){m.hs=g.homeScore;m.as=g.awayScore;m.drawn=g.homeScore===g.awayScore;m.winner=g.homeScore>g.awayScore?m.home:g.awayScore>g.homeScore?m.away:m.home;ctAdvance();saveCustomTourney();}
    home();customTourneyModal();
  }
+ // ---------- Online play: host runs the game, guest sends decisions (PeerJS/WebRTC) ----------
+ let online=null;
+ function onlineCleanup(){if(online?.session)online.session.destroy();online=null;}
+ function onlineClubs(){return[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])];}
+ function onlineLobbyRefresh(){if(modalKind==='online')onlineModal();}
+ function onlineModal(){
+   const o=online;let inner='';
+   if(!o){
+     inner=`<p class="career-status-line">離れた相手と1対1で対戦できます。ホストが部屋を作って合言葉（6文字）を相手に伝え、ゲストがその合言葉で入ります。接続の仲介にはPeerJSの無料サービスを使います（サーバー代・アカウント不要、要インターネット接続）。</p>
+     <button class="primary-button" data-action="online-host">部屋を作る（ホスト）</button>
+     <div class="online-join-row"><input id="online-code-input" class="online-code-input" type="text" maxlength="8" placeholder="合言葉を入力" autocomplete="off"><button class="secondary-button" data-action="online-join">部屋に入る（ゲスト）</button></div>
+     <button class="secondary-button" data-action="close">閉じる</button>`;
+   }else if(o.role==='host'){
+     inner=`<p class="career-status-line">あなたはホスト（後攻・ホーム）です。合言葉を相手に伝えてください。</p>
+     <div class="online-code">${o.code}</div>
+     <p class="online-status-line">${o.status||''}</p>
+     <h3 class="arcade-section-title">自分の球団</h3>
+     <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
+     <h3 class="arcade-section-title">イニング</h3>
+     <div class="online-club-list">${[3,5,9].map(n=>`<button class="online-club${o.innings===n?' selected':''}" data-online-innings="${n}">${n}回</button>`).join('')}</div>
+     ${o.guestClub?`<button class="primary-button" data-action="online-start">対戦開始（相手: ${NightTeams.get(o.guestClub)?.name||o.guestClub}）</button>`:`<button class="primary-button" disabled>相手の球団選択を待っています</button>`}
+     <button class="secondary-button" data-action="online-cancel">部屋を閉じる</button>`;
+   }else{
+     inner=`<p class="career-status-line">あなたはゲスト（先攻・アウェイ）です。自分の球団を選んでください。</p>
+     <p class="online-status-line">${o.status||''}</p>
+     <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
+     <button class="secondary-button" data-action="online-cancel">退出する</button>`;
+   }
+   modal(`${modalTitle('','オンライン対戦')}${inner}`,'online');
+ }
+ async function onlineCreateRoom(){
+   onlineCleanup();
+   const code=NightOnline.makeCode();
+   online={role:'host',code,session:null,myClub:settings.matchTeam,guestClub:null,innings:5,started:false,endSent:false,status:'接続を準備中…',lastPitch:null,lastPhase:'',lastSnap:''};
+   onlineModal();
+   try{
+     online.session=await NightOnline.host(code,{
+       onReady:()=>{if(online?.code===code){online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
+       onOpen:()=>{if(online?.code===code){online.status='ゲストが接続しました。相手の球団選択を待っています…';onlineLobbyRefresh();}},
+       onData:m=>onlineHostData(m),
+       onClose:()=>onlinePeerGone(),
+       onError:kind=>{if(online?.code===code&&!online.started){online.status=kind==='taken'?'合言葉が重複しました。部屋を作り直してください。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
+     });
+   }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
+ }
+ async function onlineJoinRoom(){
+   const code=($('online-code-input')?.value||'').trim().toUpperCase();
+   if(code.length<4){toast('合言葉を入力してください');return;}
+   onlineCleanup();
+   online={role:'guest',code,session:null,myClub:null,started:false,status:'接続中…',snap:null,flight:null,swung:true,power:false,bunt:false,steal:false,shift:false,pitchType:null,pitchAim:{x:0,y:0},aim:{x:0,y:.2},aiming:false,feed:[],ended:null,lastChipsFor:''};
+   onlineModal();
+   try{
+     online.session=await NightOnline.join(code,{
+       onOpen:()=>{if(online?.code===code){online.status='接続しました。自分の球団を選んでください。';if(online.myClub)online.session?.send({t:'club',club:online.myClub});onlineLobbyRefresh();}},
+       onData:m=>onlineGuestData(m),
+       onClose:()=>onlinePeerGone(),
+       onError:kind=>{if(online?.code===code&&!online.started){online.status=kind==='notfound'?'その合言葉の部屋が見つかりません。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
+     });
+     setTimeout(()=>{if(online?.code===code&&online.role==='guest'&&!online.session?.open&&!online.started){online.status='接続できませんでした。合言葉と、相手が待機中かを確認してください。';onlineLobbyRefresh();}},15000);
+   }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
+ }
+ function onlinePeerGone(){
+   if(!online)return;
+   if(online.role==='guest'){
+     if(online.started&&!online.ended){online.ended={disconnected:true};updateOnlineGuest();}
+     else{online.status='相手との接続が切れました。';onlineLobbyRefresh();}
+     return;
+   }
+   if(online.started&&game&&game.phase!=='ended'){game.paused=true;modal(`${modalTitle('','接続が切れました')}<p class="career-status-line">相手との接続が切断されました。試合は一時停止しています。</p><button class="primary-button" data-action="online-exit">ホームへ戻る</button>`,'online-gone');}
+   else if(!online.started){online.guestClub=null;online.status='ゲストが退出しました。接続を待っています…';onlineLobbyRefresh();}
+ }
+ function onlineHostData(m){
+   const o=online;if(!o||o.role!=='host')return;
+   if(m.t==='club'){o.guestClub=m.club;o.status=`ゲストの球団: ${NightTeams.get(m.club)?.name||m.club}。開始できます。`;onlineLobbyRefresh();return;}
+   const g=game;if(!g||!o.started)return;
+   if(m.t==='pitch-decision'&&g.phase==='aim'&&g.remotePitching){
+     if(m.ibb){g.intentionalWalk(false);return;}
+     g.pitchType=m.pitchType;g.setCursor(m.aim?.x||0,m.aim?.y||0);g.shift=m.shift?'pull':'none';g.remoteThrowPitch();
+   }else if(m.t==='swing'&&g.phase==='pitch'&&g.remoteBatter&&g.pitch&&!g.pitch.swung){
+     if(m.bunt){g.bunt=true;g.buntBall();}
+     else g.attempt({x:m.aim?.x||0,y:m.aim?.y||0},!!m.power,Math.max(-1.2,Math.min(1.2,Number(m.delta)||0)),false);
+   }else if(m.t==='steal'&&g.remoteBatter){g.steal=!!m.on;}
+ }
+ function startOnlineMatch(){
+   const o=online;if(!o||o.role!=='host'||!o.guestClub)return;
+   const home=NightTeams.get(o.myClub),away=NightTeams.get(o.guestClub);
+   if(!home||!away)return;
+   o.session?.send({t:'start',home:o.myClub,away:o.guestClub,innings:o.innings});
+   closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
+   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:o.myClub,awayTeamId:o.guestClub,userHome:true,innings:o.innings,park:home.park,pitcher:0,opponentPitcher:0,order:home.startingOrder,fielding:home.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:'away'});
+   game.onlineGame=true;o.started=true;o.lastPitch=null;o.lastPhase='';o.lastSnap='';o.endSent=false;
+   activateGame();updateStyle();updateUI();
+ }
+ function onlineSnapshot(g){return{inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,bases:g.bases.map(b=>b?1:0),hs:g.homeScore,as:g.awayScore,phase:g.phase,side:g.side,batter:g.batter?.name||'',pitcher:g.pitcher?.name||'',pitches:g.pitcher?.pitches||[],hn:g.teams.home.short,an:g.teams.away.short};}
+ function onlineTick(g){
+   const o=online;if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame)return;
+   if(g.pitch&&g.pitch!==o.lastPitch&&g.phase==='windup'){o.lastPitch=g.pitch;const p=g.pitch;o.session.send({t:'pitch',p:{bx:p.bx,by:p.by,targetX:p.targetX,targetY:p.targetY,releaseX:p.releaseX,speed:p.speed,duration:p.duration,knuckle:p.id==='knuckle',hand:p.throwHand}});}
+   if(g.phase==='pitch'&&o.lastPhase!=='pitch')o.session.send({t:'release'});
+   o.lastPhase=g.phase;
+   const s=onlineSnapshot(g),key=[s.inning,s.half,s.outs,s.balls,s.strikes,s.bases.join(''),s.hs,s.as,s.phase,s.batter,s.pitcher].join('|');
+   if(key!==o.lastSnap){o.lastSnap=key;o.session.send({t:'snap',s});}
+ }
+ // ----- guest side -----
+ function onlineGuestData(m){
+   const o=online;if(!o||o.role!=='guest')return;
+   if(m.t==='start'){o.started=true;o.homeClub=m.home;o.awayClub=m.away;o.innings=m.innings;closeModal(false);showOnlineGuest();return;}
+   if(m.t==='host-left'){if(!o.ended){o.ended={disconnected:true};updateOnlineGuest();}return;}
+   if(!o.started)return;
+   if(m.t==='snap'){o.snap=m.s;if(!['pitch','windup'].includes(m.s.phase))o.flight=null;updateOnlineGuest();}
+   else if(m.t==='msg'){o.feed.unshift(m.d);if(o.feed.length>30)o.feed.pop();updateOnlineGuestFeed();}
+   else if(m.t==='pitch'){o.flight={p:m.p,start:0};o.swung=false;}
+   else if(m.t==='release'){if(o.flight&&!o.flight.start)o.flight.start=performance.now();}
+   else if(m.t==='end'){o.ended={hs:m.hs,as:m.as,hn:m.hn,an:m.an};updateOnlineGuest();}
+ }
+ function showOnlineGuest(){
+   $('home').hidden=true;$('online-view').hidden=false;
+   const o=online;if(!o)return;
+   $('og-away-name').textContent=NightTeams.get(o.awayClub)?.short||'AWAY';
+   $('og-home-name').textContent=NightTeams.get(o.homeClub)?.short||'HOME';
+   $('og-feed').innerHTML='';$('og-message-main').textContent='試合開始';$('og-message-sub').textContent='';
+   wireOnlineGuest();updateOnlineGuest();requestAnimationFrame(guestFrame);
+ }
+ function hideOnlineGuest(){const v=$('online-view');if(v)v.hidden=true;}
+ function guestRole(){const o=online;if(!o||!o.snap)return 'pitch';return o.snap.side==='away'?'bat':'pitch';}
+ function updateOnlineGuest(){
+   const o=online;if(!o||o.role!=='guest')return;const s=o.snap;
+   if(o.ended){
+     $('og-status').textContent=o.ended.disconnected?'接続が切れました。対戦を終了します。':`試合終了: ${o.ended.an} ${o.ended.as} - ${o.ended.hs} ${o.ended.hn}`;
+     $('og-controls-pitch').hidden=true;$('og-controls-bat').hidden=true;return;
+   }
+   if(!s){$('og-status').textContent='試合開始を待っています…';return;}
+   $('og-score').textContent=`${s.as} - ${s.hs}`;
+   $('og-inning').textContent=`${s.inning}回${s.half==='top'?'表':'裏'}`;
+   $('og-count').textContent=`B${s.balls} S${s.strikes} O${s.outs}`;
+   $('og-b1').classList.toggle('on',!!s.bases[0]);$('og-b2').classList.toggle('on',!!s.bases[1]);$('og-b3').classList.toggle('on',!!s.bases[2]);
+   $('og-versus').textContent=`投手 ${s.pitcher} vs 打者 ${s.batter}`;
+   const role=guestRole();
+   $('og-controls-pitch').hidden=role!=='pitch';
+   $('og-controls-bat').hidden=role!=='bat';
+   if(role==='pitch'){
+     const key=s.pitches.join(',');
+     if(o.lastChipsFor!==key){o.lastChipsFor=key;if(!s.pitches.includes(o.pitchType))o.pitchType=s.pitches[0];$('og-chips').innerHTML=s.pitches.map(id=>`<button class="og-chip${o.pitchType===id?' selected':''}" data-pitch="${id}">${NightGame.TYPES.find(t=>t.id===id)?.short||id}</button>`).join('');}
+     $('og-status').textContent=s.phase==='aim'?'球種とコースを決めて、離すと投球':'相手の攻撃中…';
+   }else{
+     $('og-status').textContent=o.flight?.start?'ボールが来る…離してスイング！':'投球を待っています';
+   }
+   $('og-shift').classList.toggle('selected',!!o.shift);$('og-shift').textContent=o.shift?'シフト ON':'シフト OFF';
+   $('og-style').textContent=o.power?'パワースイング':'コンタクト';
+   $('og-style').classList.toggle('selected',!!o.power);
+   $('og-bunt').classList.toggle('selected',!!o.bunt);
+   $('og-steal').classList.toggle('selected',!!o.steal);
+ }
+ function updateOnlineGuestFeed(){
+   const o=online;if(!o)return;const top=o.feed[0];
+   if(top){$('og-message-main').textContent=top.ja||top.en||'';$('og-message-sub').textContent=top.sub||'';}
+   $('og-feed').innerHTML=o.feed.slice(1,9).map(d=>`<div>${d.ja||d.en||''}${d.sub?` <small>${d.sub}</small>`:''}</div>`).join('');
+ }
+ function wireOnlineGuest(){
+   const pad=$('og-pad');if(!pad||pad._wired)return;pad._wired=true;
+   const pos=e=>{const r=pad.getBoundingClientRect(),unit=r.width/2/1.9;return{x:Math.max(-1.55,Math.min(1.55,(e.clientX-r.left-r.width/2)/unit)),y:Math.max(-1.55,Math.min(1.55,(e.clientY-r.top-r.height/2)/unit))};};
+   pad.addEventListener('pointerdown',e=>{const o=online;if(!o||o.role!=='guest'||o.ended)return;try{pad.setPointerCapture(e.pointerId);}catch{}o.aiming=true;const p=pos(e);if(guestRole()==='pitch')o.pitchAim=p;else o.aim=p;});
+   pad.addEventListener('pointermove',e=>{const o=online;if(!o||!o.aiming)return;const p=pos(e);if(guestRole()==='pitch')o.pitchAim=p;else o.aim=p;});
+   pad.addEventListener('pointerup',()=>{
+     const o=online;if(!o||o.role!=='guest')return;o.aiming=false;if(o.ended)return;
+     if(guestRole()==='pitch'){if(o.snap?.phase==='aim'&&o.pitchType)o.session?.send({t:'pitch-decision',pitchType:o.pitchType,aim:o.pitchAim,shift:o.shift});}
+     else if(o.flight?.start&&!o.swung){const progress=(performance.now()-o.flight.start)/o.flight.p.duration;if(progress<1.35){o.swung=true;o.session?.send({t:'swing',aim:o.aim,power:o.power,delta:progress-1,bunt:o.bunt});}}
+   });
+   $('og-chips').addEventListener('click',e=>{const b=e.target.closest('[data-pitch]');if(!b||!online)return;online.pitchType=b.dataset.pitch;document.querySelectorAll('#og-chips .og-chip').forEach(ch=>ch.classList.toggle('selected',ch.dataset.pitch===online.pitchType));});
+   $('og-shift').onclick=()=>{if(online){online.shift=!online.shift;updateOnlineGuest();}};
+   $('og-ibb').onclick=()=>{if(online?.snap?.phase==='aim')online.session?.send({t:'pitch-decision',ibb:true});};
+   $('og-style').onclick=()=>{if(online){online.power=!online.power;if(online.power)online.bunt=false;updateOnlineGuest();}};
+   $('og-bunt').onclick=()=>{if(online){online.bunt=!online.bunt;if(online.bunt)online.power=false;updateOnlineGuest();}};
+   $('og-steal').onclick=()=>{if(online){online.steal=!online.steal;online.session?.send({t:'steal',on:online.steal});updateOnlineGuest();}};
+   $('og-exit').onclick=()=>{onlineCleanup();hideOnlineGuest();home();};
+ }
+ function guestFrame(){
+   if(!online||online.role!=='guest'||$('online-view').hidden)return;
+   drawGuestPad();
+   requestAnimationFrame(guestFrame);
+ }
+ function pitchAtGuest(p,u){const c=Math.max(0,Math.min(1.3,u)),k=Math.pow(c,1.65),late=Math.pow(c,4.4),flutter=p.knuckle?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX||0)*(1-Math.min(1,c))+p.targetX*k+p.bx*(late-k)+flutter,y:p.targetY*k+p.by*(late-k)+flutter*.6};}
+ function drawGuestPad(){
+   const o=online,pad=$('og-pad');if(!o||!pad)return;const ctx=pad.getContext('2d');if(!ctx)return;
+   const W=pad.width,H=pad.height,cx=W/2,cy=H/2,unit=W/2/1.9;
+   const grad=ctx.createLinearGradient(0,0,0,H);grad.addColorStop(0,'#0d1b2e');grad.addColorStop(1,'#14301f');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+   ctx.strokeStyle='rgba(120,180,90,.5)';ctx.lineWidth=2;ctx.strokeRect(cx-1.7*unit,cy-1.7*unit,3.4*unit,3.4*unit);
+   ctx.strokeStyle='#e8f4ff';ctx.lineWidth=3;ctx.strokeRect(cx-1.06*unit,cy-1.06*unit,2.12*unit,2.12*unit);
+   ctx.fillStyle='#e8f4ff';ctx.beginPath();ctx.moveTo(cx-14,cy+1.06*unit+8);ctx.lineTo(cx+14,cy+1.06*unit+8);ctx.lineTo(cx+9,cy+1.06*unit+20);ctx.lineTo(cx,cy+1.06*unit+27);ctx.lineTo(cx-9,cy+1.06*unit+20);ctx.closePath();ctx.fill();
+   const role=guestRole(),aim=role==='pitch'?o.pitchAim:o.aim;
+   if(aim&&(role==='pitch'||o.flight)){ctx.strokeStyle='#ffd34d';ctx.lineWidth=2;const ax=cx+aim.x*unit,ay=cy+aim.y*unit;ctx.beginPath();ctx.arc(ax,ay,13,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(ax-19,ay);ctx.lineTo(ax+19,ay);ctx.moveTo(ax,ay-19);ctx.lineTo(ax,ay+19);ctx.stroke();}
+   if(role==='bat'&&o.flight?.start){const u=(performance.now()-o.flight.start)/o.flight.p.duration;if(u<=1.35){const bp=pitchAtGuest(o.flight.p,u),r=4+10*Math.min(1,u),bx2=cx+bp.x*unit,by2=cy+bp.y*unit;ctx.fillStyle='rgba(255,255,255,.25)';ctx.beginPath();ctx.arc(bx2,by2,r+5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(bx2,by2,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#c33';ctx.lineWidth=1.5;ctx.beginPath();ctx.arc(bx2,by2,r*.55,0,Math.PI*2);ctx.stroke();}}
+ }
  function finish(g){
    if(g.mode==='match'||g.mode==='pennant'||g.apbcFixtureId)foldCareerTotals(g);
    if(g.ctFixture){finishCustomTourney(g);return;}
@@ -1658,7 +1851,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    modal(`${modalTitle('',title,false)}${match?`<div class="result-hero"><div class="league-versus final-versus"><div>${clubBadge(g.teams.away.id)}<b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div>${clubBadge(g.teams.home.id)}<b>${g.teams.home.name}</b></div></div></div>${resultReportHTML(buildMatchReport(g))}`:`<div class="result-stats">${stats.map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>`}
    ${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}<button class="primary-button" data-action="restart">もう一度プレイ</button>${match?'<button class="secondary-button" data-action="box-score">選手別の成績を見る</button>':''}<button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
  }
- function home(){try{speechSynthesis.cancel();}catch{}stopReplay();review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;onEvent('clear');screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
+ function home(){try{speechSynthesis.cancel();}catch{}stopReplay();if(online?.started){if(!online.endSent)online.session?.send({t:'host-left'});onlineCleanup();hideOnlineGuest();}review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;onEvent('clear');screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
  function swing(){if(!game)return;const done=game.defending?game.throwPitch():game.swing();if(done)$('swing').disabled=true;}
  const types=NightGame.TYPES;
  function renderPitchDirections(g){
@@ -1702,7 +1895,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('contact').onclick=()=>{if(game){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('howto').onclick=howto;$('records').onclick=recordModal;
- document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():setupTraining(b.dataset.mode));
+ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():setupTraining(b.dataset.mode));
  $('clubhouse').onclick=()=>lineupModal('edit');$('resume-game').onclick=resumeGame;$('players-tool').onclick=()=>rosterModal(game?.defending?game.pitcher.id:game?.batter.id,game?.userSide||'home');$('player-card').onclick=()=>{if(game)rosterModal(game.batter.id,game.side);};$('pitcher-card').onclick=()=>{if(game)rosterModal(game.pitcher.id,game.side==='home'?'away':'home');};$('tactics-tool').onclick=tacticsModal;$('history-tool').onclick=historyModal;$('practice-tool').onclick=practiceModal;
  $('auto-defense').onclick=()=>{if(game?.setAutoDefense(!game.autoDefense)){unlockAudio();updateUI();}};
  $('field-speed').onclick=()=>{if(game?.autoDefense&&game.defending){settings.defenseSpeed=game.defenseSpeed===1?2:1;game.defenseSpeed=settings.defenseSpeed;}else{settings.fieldSpeed=settings.fieldSpeed===1?2:1;if(game)game.fieldSpeed=settings.fieldSpeed;}save();updateUI();};
@@ -1751,6 +1944,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(b.dataset.derbyBatter){settings.derbyBatter=b.dataset.derbyBatter;const scroll=$('modal-content').scrollTop;setupDerby();$('modal-content').scrollTop=scroll;return;}
    if(b.dataset.toggle){const k=b.dataset.toggle;settings[k]=!settings[k];b.classList.toggle('on',settings[k]);b.setAttribute('aria-checked',String(settings[k]));save();if(game)updateUI();if(k==='leftHanded'&&$('thumb-preview-wrap'))$('thumb-preview-wrap').innerHTML=thumbPreview();return;}
    if(b.dataset.ctClub){const id=b.dataset.ctClub,i=ctPicks.indexOf(id);if(i>=0)ctPicks.splice(i,1);else if(ctPicks.length<8)ctPicks.push(id);ctSetupModal();return;}
+   if(b.dataset.onlineClub){const id=b.dataset.onlineClub;if(online?.role==='host'){online.myClub=id;onlineModal();}else if(online?.role==='guest'){online.myClub=id;online.session?.send({t:'club',club:id});online.status='球団を送信しました。ホストの開始を待っています…';onlineModal();}return;}
+   if(b.dataset.onlineInnings){if(online?.role==='host'){online.innings=Number(b.dataset.onlineInnings);onlineModal();}return;}
    if(b.dataset.draftPick){if(league?.draftUserPick(b.dataset.draftPick)){saveLeague();draftModal();}return;}
    if(b.dataset.difficulty){settings.difficulty=b.dataset.difficulty;save();$('modal-content').querySelectorAll('[data-difficulty]').forEach(el=>el.classList.toggle('active',el.dataset.difficulty===settings.difficulty));return;}
    if(b.dataset.injuryRate){settings.injuries=b.dataset.injuryRate;save();NightPennant.injuryRate=settings.injuries;$('modal-content').querySelectorAll('[data-injury-rate]').forEach(el=>el.classList.toggle('active',el.dataset.injuryRate===settings.injuries));return;}
@@ -1771,6 +1966,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'ct-start':customTourney={clubs:ctPicks.slice(),rounds:[[[0,7],[3,4],[2,5],[1,6]].map(([a,b])=>({home:ctPicks[a],away:ctPicks[b],winner:null,hs:null,as:null}))],champion:null};saveCustomTourney();customTourneyModal();break;
    case'ct-play':playCustomTourney();break;
    case'ct-reset':customTourney=null;saveCustomTourney();closeModal(false);toast('トーナメントを破棄しました');break;
+   case'online-host':onlineCreateRoom();break;
+   case'online-join':onlineJoinRoom();break;
+   case'online-start':startOnlineMatch();break;
+   case'online-cancel':onlineCleanup();closeModal();break;
+   case'online-exit':onlineCleanup();hideOnlineGuest();home();break;
    case'draft-finish':if(league?.startNextSeason()){saveLeague();closeModal(false);leagueDashboard();toast((league.season)+'年目のシーズンが始まりました');}break;
    case'backup-export':{const data={};for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k&&k.startsWith('nightball.'))data[k]=localStorage.getItem(k);}const blob=new Blob([JSON.stringify({app:'nightball',version:1,exportedAt:new Date().toISOString(),data})],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nightball-backup.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast('セーブデータを書き出しました');break;}
      case'backup-import':{const input=document.createElement('input');input.type='file';input.accept='application/json';input.onchange=()=>{const file=input.files[0];if(!file)return;file.text().then(text=>{try{const parsed=JSON.parse(text);if(parsed?.app!=='nightball'||!parsed.data||typeof parsed.data!=='object')throw new Error('bad file');let n=0;for(const [k,v] of Object.entries(parsed.data))if(k.startsWith('nightball.')){localStorage.setItem(k,String(v));n++;}if(!n)throw new Error('empty');toast('データを読み込みました。再読み込みします');setTimeout(()=>location.reload(),700);}catch{toast('読み込めないファイルです');}});};input.click();break;}
@@ -1923,7 +2123,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     const current=game;
     current.update(activeDt,hold||playFeedback.pendingReplay);
     if(screen!=='game'||game!==current)return;
-    updateScoringChip(game);
+    onlineTick(game);updateScoringChip(game);
     if((game.fastForward||game.spectate)&&game.phase==='change'&&$('modal').hidden)continueHalf();
     if(game.phase==='field'&&(game.isFixture||game.career||game.challenge))updateScoreCube($('scoreboard'),game);
     if(playFeedback.pendingReplay&&!game.fastForward&&!game.spectate&&!game.paused&&game.phase==='result'&&
