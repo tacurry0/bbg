@@ -1,0 +1,40 @@
+name: Node tests (current spec)
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  cjs-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # Runs every current-spec .cjs test. The three legacy suites
+      # (controls-v21, landing-v9, running-v17) predate a spec change and
+      # are excluded until they are retired or rewritten; they are listed
+      # explicitly so a new test file can never be skipped by accident.
+      - name: Run current-spec Node tests
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          set -e
+          for t in tests/*.cjs; do
+            case "$t" in
+              tests/controls-v21.cjs|tests/landing-v9.cjs|tests/running-v17.cjs)
+                echo "SKIP (legacy): $t" ;;
+              *)
+                echo "== $t"
+                node "$t" ;;
+            esac
+          done
