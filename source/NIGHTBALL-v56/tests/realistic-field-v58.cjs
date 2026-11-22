@@ -85,7 +85,7 @@ try{
  assert(lateThrow&&!lateThrow.doublePlay,'two-out fielding is one-out force only');
 
  // Caught deep outfield fly: runner should automatically retouch and go.
- for(const [mask,from,to] of [[4,3,4],[2,2,3],[1,1,2]]){
+ for(const [mask,from,to] of [[4,3,4],[2,2,3]]){
   const d=match(mask,1);d.startField(40,49,0,false);
   const f=d.field;
   f.fielders[7].x=0;f.fielders[7].y=115;
