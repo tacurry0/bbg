@@ -72,7 +72,7 @@
    const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
    if(!leagueId)throw Error('Unknown club');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -89,7 +89,7 @@
    if(!s.schedule[s.round].some(f=>[f.home,f.away].includes(s.clubId)))return null;
    if(split&&!validSchedule(s.otherSchedule,clubsFor(otherLeague(leagueId)),count))return null;
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -106,18 +106,80 @@
   next(){if(!this.roundDone||this.completed)return false;this.round++;this.currentGame=null;this.advanceByes();return true;}
   starterIndexFor(clubId){
    const club=NightTeams.get(clubId);if(!club)return 0;
-   const pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP');
+   const out=new Set(this.injuredIds(clubId));
+   let pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP'&&!out.has(club.pitchers[i].id));
+   if(!pool.length)pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP');
    const list=pool.length?pool:club.pitchers.map((_,i)=>i).slice(0,4);
    return list[(this.rotation[clubId]||0)%list.length];
   }
+  injuredIds(clubId){
+   if(!this.injuries)return [];
+   return Object.entries(this.injuries).filter(([,i])=>i.clubId===clubId&&i.returnRound>this.round&&this.round>i.fromRound).map(([id])=>id);
+  }
+  foldSimStats(stats){
+   if(!stats)return;
+   const mine=this.playerStats||(this.playerStats={});
+   for(const [key,s] of Object.entries(stats)){
+    const r=mine[key]||(mine[key]={name:s.name,clubId:s.clubId,pa:0,ab:0,h:0,hr:0,rbi:0,outs:0,k:0,runs:0,pitches:0,bb:0,doubles:0,triples:0});
+    for(const f of ['pa','ab','h','hr','rbi','bb','doubles','triples','outs','k','runs','pitches'])r[f]=(r[f]||0)+(s[f]||0);
+   }
+  }
+  settleRound(){
+   if(!this.managed||this.settledRound===this.round)return;
+   this.settledRound=this.round;
+   const entry={round:this.round,ranks:{},user:{avg:null,era:null}};
+   for(const r of this.standings())entry.ranks[r.id]=r.rank;
+   const mine=Object.values(this.playerStats||{}).filter(r=>r.clubId===this.clubId);
+   const ab=mine.reduce((s,r)=>s+(r.ab||0),0),h=mine.reduce((s,r)=>s+(r.h||0),0),outs=mine.reduce((s,r)=>s+(r.outs||0),0),runs=mine.reduce((s,r)=>s+(r.runs||0),0);
+   entry.user={avg:ab?h/ab:null,era:outs?runs*27/outs:null};
+   (this.history||(this.history=[])).push(entry);
+   this.rollInjuries();
+  }
+  rollInjuries(){
+   const rate=NightPennant.injuryRate||'normal';if(rate==='off')return;
+   this.injuries=this.injuries||{};
+   for(const [id,inj] of Object.entries(this.injuries))if(inj.returnRound<=this.round)delete this.injuries[id];
+   const chance=rate==='low'?.012:.025;
+   for(const club of this.clubs){
+    const out=Object.values(this.injuries).filter(i=>i.clubId===club.id).length;
+    if(out>=2||Math.random()>=chance)continue;
+    const pool=[...club.batters.slice(0,12),...club.pitchers.slice(0,6)].filter(p=>!this.injuries[p.id]);
+    if(!pool.length)continue;
+    const p=pool[Math.floor(Math.random()*pool.length)],span=2+Math.floor(Math.random()*4);
+    this.injuries[p.id]={clubId:club.id,name:p.name,fromRound:this.round,returnRound:this.round+span};
+   }
+  }
+  seasonAwards(){
+   const rows=Object.entries(this.playerStats||{}).map(([key,r])=>({...r,pid:key.split('/').slice(1).join('/')}));
+   const findP=r=>{const club=NightTeams.get(r.clubId);return [...(club?.batters||[]),...(club?.pitchers||[])].find(p=>p.id===r.pid);};
+   const posOf=r=>findP(r)?.pos||'DH';
+   const avg=r=>r.ab?r.h/r.ab:0,slg=r=>r.ab?(r.h+(r.doubles||0)+2*(r.triples||0)+3*r.hr)/r.ab:0;
+   const batScore=r=>avg(r)*300+slg(r)*200+r.hr*6+r.rbi*1.5+(r.bb||0)*.5;
+   const era=r=>r.outs?r.runs*27/r.outs:99,pitScore=r=>(27-era(r))*4+(r.k||0)*1.2+r.outs*.4;
+   const bat=rows.filter(r=>r.pa>=5),pit=rows.filter(r=>r.outs>=9);
+   const mvp=bat.length?[...bat].sort((a,b)=>batScore(b)-batScore(a))[0]:null;
+   const bestPitcher=pit.length?[...pit].sort((a,b)=>pitScore(b)-pitScore(a))[0]:null;
+   const bestNine=[];
+   for(const pos of ['C','1B','2B','3B','SS','LF','CF','RF','DH']){
+    const cand=rows.filter(r=>r.pa>=1&&posOf(r)===pos).sort((a,b)=>batScore(b)-batScore(a))[0];
+    if(cand)bestNine.push({pos,player:cand});
+   }
+   if(bestPitcher)bestNine.unshift({pos:'P',player:bestPitcher});
+   const eligible=r=>{const p=findP(r);return (p?.stats?.pa??999)<150||(p?.stats?.games??99)<=25;};
+   const rookieBat=bat.filter(eligible).sort((a,b)=>batScore(b)-batScore(a))[0]||null;
+   const rookiePit=pit.filter(eligible).sort((a,b)=>pitScore(b)-pitScore(a))[0]||null;
+   const rookie=rookieBat&&rookiePit?(batScore(rookieBat)>=pitScore(rookiePit)?rookieBat:rookiePit):rookieBat||rookiePit;
+   return {mvp,bestPitcher,bestNine,rookie,batScore,pitScore,avg,slg,era};
+  }
   advanceRotation(f){if(!f)return;for(const id of [f.home,f.away])if(id)this.rotation[id]=(this.rotation[id]||0)+1;}
   simulateRound(fixtures,results){
-   for(const f of fixtures)if(!results[f.id]){results[f.id]={...f,...this.simulate(f)};this.advanceRotation(f);}
+   for(const f of fixtures)if(!results[f.id]){const s=this.simulate(f);this.foldSimStats(s.stats);results[f.id]={...f,homeScore:s.homeScore,awayScore:s.awayScore,innings:s.innings,weather:s.weather,cold:s.cold};this.advanceRotation(f);}
   }
   advanceByes(){
    while(!this.fixture){
     this.simulateRound(this.schedule[this.round],this.results);
     this.simulateRound(this.otherSchedule[this.round],this.otherResults);
+    this.settleRound();
     this.round++;
    }
   }
@@ -127,7 +189,7 @@
    this.results[f.id]={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||1,home: f.home,away:f.away};this.advanceRotation(f);this.pitcher=this.starterIndexFor(this.clubId);
    this.simulateRound(this.schedule[this.round],this.results);
    if(this.isNPB)this.simulateRound(this.otherSchedule[this.round],this.otherResults);
-   this.currentGame=null;return true;
+   this.currentGame=null;this.settleRound();return true;
   }
   // Regular season records remain separate from postseason games.
   get regularCompleted(){return this.completed;}
@@ -208,15 +270,21 @@
    const regulation=f.innings||1,full=regulation===9,limit=f.maxInnings??Infinity;
    const wrand=random(hash(this.id+'/weather/'+f.id)),weather=wrand()<.15?'rain':wrand()<.4?'cloudy':'clear';
    const cold=weather==='rain'&&regulation>=5&&wrand()<.3,effRegulation=cold?5:regulation;
+   const stats={};const srand=random(hash(this.id+'/stats/'+f.id));const sRow=(clubId,p)=>stats[clubId+'/'+p.id]||={name:p.name,clubId,pa:0,ab:0,h:0,hr:0,rbi:0,bb:0,doubles:0,triples:0,outs:0,k:0,runs:0,pitches:0};
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
     const runsToEnd=scores.away+(f.drawClinches&&innings===limit?0:1);
-    const hitters=NightTeams.get(f[side]).batters.slice(0,9),defClub=NightTeams.get(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    const allBatters=NightTeams.get(f[side]).batters,outSet=new Set(this.injuredIds(f[side])),avail=allBatters.filter(p=>!outSet.has(p.id)),hitters=(avail.length>=9?avail:allBatters).slice(0,9),defClub=NightTeams.get(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    const prow=sRow(defClub.id,pitcher),kProb=Math.min(.34,Math.max(.06,.16+(pitcher.velocity-140)*.004+(70-pitcher.control)*.001));
     let outs=full?0:2,bases=Array(3).fill(!full);
     while(outs<3){const b=hitters[orders[side]++%9],v=rand(),walk=.07+(80-pitcher.control)*.0006,hit=.24+(b.contact-75)*.002+(145-pitcher.velocity)*.001,hr=.017+Math.max(0,b.power-65)*.001;
+     const brow=sRow(f[side],b),scoreBefore=scores[side],outsBefore=outs;let n=0;
      if(v<walk){if(bases.every(Boolean))scores[side]++;if(bases[0]&&bases[1])bases[2]=true;if(bases[0])bases[1]=true;bases[0]=true;}
-     else if(v<walk+hit){const n=v<walk+hr?4:rand()<.20?2:rand()<.025?3:1;for(let i=2;i>=0;i--)if(bases[i]){bases[i]=false;if(i+n>=3)scores[side]++;else bases[i+n]=true;}if(n===4)scores[side]++;else bases[n-1]=true;if(walkOff&&n!==4&&scores.home>=runsToEnd)scores.home=runsToEnd;}
+     else if(v<walk+hit){n=v<walk+hr?4:rand()<.20?2:rand()<.025?3:1;for(let i=2;i>=0;i--)if(bases[i]){bases[i]=false;if(i+n>=3)scores[side]++;else bases[i+n]=true;}if(n===4)scores[side]++;else bases[n-1]=true;if(walkOff&&n!==4&&scores.home>=runsToEnd)scores.home=runsToEnd;}
      else outs++;
+     brow.pa++;brow.rbi+=scores[side]-scoreBefore;prow.runs+=scores[side]-scoreBefore;prow.outs+=outs-outsBefore;
+     if(v<walk)brow.bb++;else{brow.ab++;if(n){brow.h++;if(n===2)brow.doubles++;else if(n===3)brow.triples++;else if(n===4)brow.hr++;}}
+     for(let o=outsBefore;o<outs;o++)if(srand()<kProb)prow.k++;
      if(walkOff&&scores.home>=runsToEnd)break;
     }
    };
@@ -226,7 +294,7 @@
     if(innings<effRegulation||scores.home<scores.away||
      scores.home===scores.away&&!(f.drawClinches&&innings===limit))half('home');
    }while(innings<effRegulation||scores.home===scores.away&&innings<limit);
-   return {homeScore:scores.home,awayScore:scores.away,innings,weather,cold};
+   return {homeScore:scores.home,awayScore:scores.away,innings,weather,cold,stats};
   }
   standings(leagueId=this.leagueId){
    const order=clubsFor(leagueId).map(c=>c.id),results=leagueId===this.leagueId?this.results:this.otherResults;

@@ -68,7 +68,7 @@
  function simulateSeries(league,series){
   while(!series.winner){
    const f=fixture(series);
-   append(series,{...f,...league.simulate(f)});
+   const s=league.simulate(f);append(series,{...f,homeScore:s.homeScore,awayScore:s.awayScore,innings:s.innings,weather:s.weather,cold:s.cold});
   }
  }
  function next(league){

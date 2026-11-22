@@ -117,3 +117,8 @@
 }
 .rain-overlay{position:absolute;inset:0;z-index:4;pointer-events:none;opacity:.55;background-image:repeating-linear-gradient(103deg,transparent 0 10px,rgba(185,220,255,.4) 10px 11px,transparent 11px 22px);background-size:140px 140px;animation:nightball-rainfall .5s linear infinite}
 @keyframes nightball-rainfall{from{background-position:0 -140px}to{background-position:-32px 0}}
+.form-graph{width:100%;height:auto;background:#0d1f26;border:1px solid #cce7d233;border-radius:10px}
+.form-legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin:8px 2px;font-size:11px;color:#c8dccb}
+.form-legend i{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.league-injuries{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0;padding:8px 10px;border:1px solid #e8a13a55;border-radius:10px;background:#2a1e0d;color:#f5d9a8;font-size:12px}
+.league-injuries span{border-left:1px solid #e8a13a44;padding-left:6px}
