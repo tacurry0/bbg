@@ -23,7 +23,7 @@ const COVER=[[],[2,0,3],[3,4,0],[5,4,0],[1,0,2]];
 const BAG_REACH=.48;
 const BASE_PATH=27.44;
 const FIELD_READ_DELAY=.20;
-const legSpeed=(runner,target)=>runner.speed*(runner.batter&&target===2?1.075:1);
+const legSpeed=(runner,target)=>runner.speed*(runner.batter&&target===2?1.10:1);
 const runTime=(runner,base,progress=runner.progress)=>Math.abs(base-progress)*BASE_PATH/legSpeed(runner,base);
 const catchReach=player=>player.catchReach??Math.min(1.15,player.reach);
 const gloveHeight=player=>1.85+catchReach(player)*.22;
@@ -1289,7 +1289,7 @@ window.NightGame=class NightGame{
    const eta=dist(candidate,to)/candidate.speed;
    if(eta<coverTime){receiver=i;coverTime=eta;}
   }
-  const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?1.02:1));
+  const flight=dist(from,to)/(f.fielders[holder].arm*(outfieldPickup(holder,from)?(base==null?.95:1.02):1));
   // Give the covering player time to arrive by holding the release briefly.
   // The actual arrival still requires the ball to meet the receiving glove.
   const extraHold=base==null?.8:outfieldPickup(holder,from)?.48:1.2;
@@ -1495,6 +1495,8 @@ window.NightGame=class NightGame{
    const force=this.manualForceBase(r),holder=m.secured?f.fielders[m.holder]:null;
    if(holder&&!f.throw&&m.bag===target&&force===target&&dist(holder,BASES[target])<=BAG_REACH&&delta>0&&next>=target-.005){r.progress=Math.min(next,target-.005);this.projectRunner(r);this.manualOut(r,r.batter?'batter':'force');continue;}
    r.progress=clamp(next,0,4);r.running=Math.abs(r.progress-previous)>.000001;r.blocked=!r.readingFly&&Math.abs(delta)>.001&&!r.running;
+   if(r.progress>previous)r.furthest=Math.max(r.furthest,Math.min(3,Math.floor(r.progress)));
+   
    const reached=Math.abs(r.progress-target)<.00001&&Math.abs(delta)>.00001;
    if(reached){
     const touched=target;r.base=touched;r.furthest=Math.max(r.furthest,touched);r.touchedAt ||= {};r.touchedAt[touched]=f.elapsed-dt+runTime(r,touched,previous);
@@ -1569,6 +1571,7 @@ window.NightGame=class NightGame{
    const plan=this.baseThrow(m.holder,base,release),{receiver,duration}=plan;
    if(receiver==null||m.bag===base&&dist(holder,BASES[base])<=BAG_REACH)continue;
    if(m.outfield&&!appeal&&base!==2&&dist(holder,BASES[base])>(force?57:37))continue;
+   if(m.outfield&&base===2&&dist(holder,BASES[2])>40)continue;
    const runnerETA=runTime(r,base);
    const safeMargin=m.outfield?.27:.035;
    if(!((appeal&&duration<runnerETA)||
@@ -1616,12 +1619,12 @@ window.NightGame=class NightGame{
      this.safeOnThrow(runner,th.base);
      b.vx=0;b.vy=0;b.vz=0;b.z=.04;b.bounces=Math.max(1,b.bounces);return;
     }
-    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.55:.22;m.outfield=false;
+    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.85:.22;m.outfield=false;
     if(runner&&!runner.out&&!runner.scored){
      const onBag=dist(receiver,BASES[th.base])<=BAG_REACH;
      if(onBag&&th.appeal&&runner.needsTag&&runner.progress>runner.start+.04)this.manualOut(runner,'appeal',th.base);
      else if(onBag&&this.manualForceBase(runner)===th.base&&runner.progress<th.base+.25)this.manualOut(runner,runner.batter?'batter':'force',th.base);
-     else if(Math.abs(runner.progress-Math.round(runner.progress))>.001&&dist(receiver,runner)<1.35)this.manualOut(runner,'tag',th.base);
+     else if(runner.progress<th.base-.03&&Math.abs(runner.progress-Math.round(runner.progress))>.001&&dist(receiver,runner)<1.35)this.manualOut(runner,'tag',th.base);
     }
     this.safeOnThrow(runner,th.base);
     this.notify();
