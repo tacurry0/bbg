@@ -52,6 +52,7 @@
           <button class="menu-mini menu-pitch" data-mode="pitching" aria-label="投球練習"><span class="menu-mini-art"><i class="mode-icon" id="pitching-icon" aria-hidden="true"></i></span><strong>投球練習</strong></button>
           <button class="menu-mini menu-tournament" data-mode="tournament" aria-label="勝ち抜きトーナメント"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">♜</i></span><strong>トーナメント</strong></button>
           <button class="menu-mini menu-online" data-mode="online" aria-label="オンライン対戦"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">⇄</i></span><strong>オンライン対戦</strong></button>
+          <button class="menu-mini menu-umpire" data-mode="umpire" aria-label="審判モード"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">⚖</i></span><strong>審判</strong></button>
         </div>
       </nav>
       <nav class="menu-utilities" aria-label="選手・記録・遊び方">
@@ -99,6 +100,11 @@
       <div id="umpire-call" class="umpire-call" role="status" hidden></div>
       <button id="abs-actor" type="button" hidden></button>
       <button id="play-challenge" class="play-challenge" type="button" hidden>チャレンジ</button>
+      <div id="umpire-panel" class="umpire-panel" hidden>
+        <div class="umpire-status"><span>審判スコア <b id="umpire-score">0</b></span><span>正解率 <b id="umpire-accuracy">—</b></span><span id="umpire-feedback" class="umpire-feedback"></span></div>
+        <div id="umpire-pitch-buttons" class="umpire-buttons" hidden><span class="umpire-prompt">判定は？</span><button id="umpire-ball" type="button">ボール</button><button id="umpire-strike" type="button">ストライク</button></div>
+        <div id="umpire-play-buttons" class="umpire-buttons" hidden><span class="umpire-prompt" id="umpire-play-prompt">接戦プレー、判定は？</span><button id="umpire-safe" type="button">セーフ</button><button id="umpire-out" type="button">アウト</button></div>
+      </div>
       <section id="abs-review" class="abs-review" role="region" aria-label="ABSチャレンジ" hidden>
         <canvas id="abs-canvas" aria-hidden="true"></canvas>
         <div class="abs-ident"><strong>NIGHTBALL</strong><span>ABS 挑戰系統</span><small id="abs-challenger" hidden></small></div>
