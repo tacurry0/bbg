@@ -82,6 +82,7 @@
    this.level=null;
    this.pay=0;
    this.xp={};
+   this.mastery={};
    this.plan=STYLES[style].pos==='P'?'control':'contact';
    this.pitches=STYLES[style].pitches?.slice()||[];
    const natural=STYLES[style].pos;
@@ -381,7 +382,7 @@
      scenarios:Array.from({length:f.opportunities},(_,i)=>D.situation(f,i,this.seed)),completed:0},
     clubs:userHome?{home:newHome,away:newAway}:{home:newAway,away:newHome},
     userHome,homeTeamId:userHome?home.id:away.id,awayTeamId:userHome?away.id:home.id,park:f.park||(base.type==='apbc'?'tokyo-dome':f.ownHome===false?away.park:home.park),
-    manualRunning:this.manualRunning&&!this.pitching,
+    manualRunning:this.manualRunning&&!this.pitching,mastery:this.mastery||(this.mastery={}),
     innings:9,order:newHome.startingOrder,practiceBatter:ID,pitcher:this.pitching&&!legacy?1:0,fielding:newHome.startingFielding,opponentPitcher:starter
    };
   }
@@ -482,6 +483,7 @@
   complete(game,manual=true,absence=null){
    const base=this.fixture;
    if(!base||game.phase!=='ended'||game.career?.fixtureId!==base.id)return false;
+   if(game.pitchUsage)NightGame.applyMastery(this.mastery||(this.mastery={}),game.pitchUsage);
    const f=this.configureFixture(base,game.career.format);
    if(!game.career.simulationFinal&&game.career.completed!==f.opportunities)return false;
    const stat=D.blank(),bat=game.box[ID]||{},pitch=game.pitchingStats[ID]||{};

@@ -241,3 +241,5 @@
 .uniform-preview small{opacity:.85}
 .uniform-swatches{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .uniform-swatches button{width:30px;height:30px;border-radius:50%;border:2px solid rgba(255,255,255,.35);padding:0}
+.mastery-bar{display:inline-block;width:110px;height:8px;border-radius:99px;background:rgba(127,148,127,.25);overflow:hidden;vertical-align:middle}
+.mastery-bar i{display:block;height:100%;background:#d5f36a;border-radius:99px}
