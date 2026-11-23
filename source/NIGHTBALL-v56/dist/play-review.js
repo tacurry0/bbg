@@ -35,6 +35,14 @@ export class PlayReview {
   this.clip={game,...recording,teams:game.teams,lineups:game.lineups,bases:game.bases.slice(),
    half:game.half,inning:game.inning,outs:game.outs,homeScore:game.homeScore,awayScore:game.awayScore};
  }
+ // Persist the in-progress play's frames as a reviewable clip even when it did
+ // not score (used by base-call challenges, which review non-scoring plays).
+ saveCurrentPlay(game){
+  const rec=this.record;
+  if(!rec||rec.field!==game.field||rec.frames.length<2)return false;
+  this.save(game,{frames:rec.frames.slice(),hit:game.hit?{...game.hit}:undefined});
+  return true;
+ }
  captureWalk(game){
   this.save(game,{pitch:{...game.pitch}});
  }
