@@ -16,7 +16,42 @@
  const leagues={cpbl:'CPBL', 'npb-central':'セ・リーグ','npb-pacific':'パ・リーグ',kbo:'KBO'};
  const isSplit=id=>id==='npb-central'||id==='npb-pacific';
  const otherLeague=id=>id==='npb-central'?'npb-pacific':'npb-central';
+ // ---- Custom leagues (v107, league-editor.js): user-built pennant leagues
+ // whose clubs are drawn from the CPBL/NPB/KBO pool. Definitions live in a
+ // registry here so clubsFor/standings/playoffs resolve them exactly like a
+ // built-in league; league-editor.js owns persistence (localStorage) and
+ // registers every stored definition. Built-in league ids never start with
+ // 'custom-', so existing resolution is untouched.
+ const customLeagues=new Map();
+ const CUSTOM_MIN_CLUBS=4;
+ const poolClubs=()=>{const seen=new Map();for(const c of [...clubs,...(NightTeams.npb||[]),...(NightTeams.kbo||[])])if(!seen.has(c.id))seen.set(c.id,c);return [...seen.values()];};
+ function validateCustomLeague(def){
+  const errors=[];
+  if(!def||typeof def!=='object')return {ok:false,errors:['リーグ定義がありません'],def:null};
+  const id=String(def.id||'');
+  if(!/^custom-[a-z0-9-]+$/.test(id))errors.push('リーグIDが不正です');
+  const name=String(def.name??'').replace(/[<>&"']/g,'').trim().slice(0,24);
+  if(!name)errors.push('リーグ名を入力してください');
+  const pool=new Map(poolClubs().map(c=>[c.id,c]));
+  const clubIds=Array.isArray(def.clubIds)?def.clubIds.map(String):[];
+  if(new Set(clubIds).size!==clubIds.length)errors.push('同じ球団が重複しています');
+  if(clubIds.some(c=>!pool.has(c)))errors.push('球団プールにない球団が含まれています');
+  if(clubIds.length<CUSTOM_MIN_CLUBS)errors.push(`球団数は${CUSTOM_MIN_CLUBS}球団以上にしてください`);
+  else if(clubIds.length%2)errors.push('球団数は偶数にしてください（奇数だと毎節1球団が試合のない節になってしまうため）');
+  if(clubIds.length>pool.size)errors.push('球団プールの球団数を超えています');
+  const games=def.gamesPerOpponent;
+  if(!Number.isInteger(games)||games<1||games>10)errors.push('対戦数は1〜10試合で指定してください');
+  if(errors.length)return {ok:false,errors,def:null};
+  return {ok:true,errors,def:{id,name,clubIds,gamesPerOpponent:games,dh:def.dh!==false,playoffs:def.playoffs!==false}};
+ }
+ function registerCustomLeague(def){
+  const v=validateCustomLeague(def);
+  if(!v.ok)return null;
+  customLeagues.set(v.def.id,v.def);
+  return v.def;
+ }
  const clubsFor=id=>{
+  if(customLeagues.has(id))return customLeagues.get(id).clubIds.map(cid=>NightTeams.get(cid));
   if(id==='cpbl')return clubs;
   if(isSplit(id)){
    const division=id.slice(4),farm=division==='central'?'npb-a':'npb-v';
@@ -68,11 +103,21 @@
  class NightPennant{
   static leagues=leagues;
   static clubsFor=clubsFor;
-  constructor(clubId,gamesPerOpponent=4){
-   const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
+  static validSchedule=validSchedule;
+  static validateCustomLeague=validateCustomLeague;
+  static registerCustomLeague=registerCustomLeague;
+  static unregisterCustomLeague=id=>customLeagues.delete(id);
+  static customLeague=id=>customLeagues.get(id)||null;
+  static clubPool=poolClubs;
+  static CUSTOM_MIN_CLUBS=CUSTOM_MIN_CLUBS;
+  constructor(clubId,gamesPerOpponent=4,options={}){
+   const customDef=options?.customLeague?registerCustomLeague(options.customLeague):null;
+   if(options?.customLeague&&!customDef)throw Error('Invalid custom league: '+validateCustomLeague(options.customLeague).errors.join(' / '));
+   const leagueId=customDef?customDef.id:Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
    if(!leagueId)throw Error('Unknown club');
+   if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -82,6 +127,10 @@
   }
   static restore(s){
    if(![1,2,3,4].includes(s?.schema))return null;
+   // A custom-league save embeds its definition, so a season restores (and
+   // re-registers its league) even if the definition was removed from the
+   // league-editor list in the meantime.
+   if(s?.customLeague)registerCustomLeague(s.customLeague);
    const leagueId=s.schema<3?'cpbl':s.leagueId,count=s.schema===1?4:s.gamesPerOpponent;
    const members=clubsFor(leagueId),split=isSplit(leagueId);
    if(split!==(s.schema===4)||!members.some(c=>c.id===s.clubId)||!Number.isInteger(count)||count<1||count>10||
@@ -89,6 +138,8 @@
    if(!s.schedule[s.round].some(f=>[f.home,f.away].includes(s.clubId)))return null;
    if(split&&!validSchedule(s.otherSchedule,clubsFor(otherLeague(leagueId)),count))return null;
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
+   if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
+   else{p.customLeague=null;p.dh=true;p.playoffs=true;}
    p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
@@ -478,6 +529,7 @@
    return rows.slice(0,3).map((r,i)=>({clubId:r.id,seed:i+1}));
   }
   startPlayoffs(){
+   if(this.playoffs===false)return false;
    if(!this.regularCompleted||this.postseason)return false;
    if(this.isNPB)return NightNPBPostseason.start(this);
    const seeds=this.playoffSeeds(),make=(id,higher,lower,target)=>({id,higher,lower,target,wins:{[higher]:0,[lower]:0},games:[],winner:null});
@@ -533,7 +585,12 @@
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
     const runsToEnd=scores.away+(f.drawClinches&&innings===limit?0:1);
-    const allBatters=this.clubRoster(f[side]).batters,outSet=new Set(this.injuredIds(f[side])),avail=allBatters.filter(p=>!outSet.has(p.id)&&!(this.farmMoves||{})[p.id]),hitters=(avail.length>=9?avail:allBatters).slice(0,9),defClub=this.clubRoster(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    const allBatters=this.clubRoster(f[side]).batters,outSet=new Set(this.injuredIds(f[side])),avail=allBatters.filter(p=>!outSet.has(p.id)&&!(this.farmMoves||{})[p.id]);let hitters=(avail.length>=9?avail:allBatters).slice(0,9);const defClub=this.clubRoster(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    // No-DH leagues (custom leagues may opt out; every built-in league keeps
+    // the DH): the batting club's starting pitcher takes the ninth spot with
+    // generic weak batting ratings, since pitcher records carry no batting
+    // stats of their own.
+    if(this.dh===false&&hitters.length>=9){const mine=this.clubRoster(f[side]),sp=mine.pitchers[this.starterIndexFor(f[side])];if(sp)hitters=[...hitters.slice(0,8),{...sp,contact:sp.contact??32,power:sp.power??28,run:sp.run??40}];}
     const prow=sRow(defClub.id,pitcher),kProb=Math.min(.34,Math.max(.06,.16+(pitcher.velocity-140)*.004+(70-pitcher.control)*.001));
     let outs=full?0:2,bases=Array(3).fill(!full);
     while(outs<3){const b=hitters[orders[side]++%9],v=rand(),walk=.07+(80-pitcher.control)*.0006,hit=.24+(b.contact-75)*.002+(145-pitcher.velocity)*.001,hr=.017+Math.max(0,b.power-65)*.001;
