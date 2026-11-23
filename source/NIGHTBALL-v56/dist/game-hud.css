@@ -194,3 +194,18 @@
  body:has(.game-screen:not([hidden])) .app{min-height:100dvh}
  .app .game-screen:not([hidden]){height:calc(100dvh - var(--broadcast-bar) - 2px)}
 }
+
+/* ---- UI fixes (v107 UI pass) ---- */
+/* Umpire panel: sit fully below the scoreboard cube so the status pill
+   (score + accuracy) is never covered by the cube's lower edge. */
+.game-stage .umpire-panel{top:calc(18px + 114 * var(--hud-u));max-width:min(94vw,370px)}
+/* Umpire call buttons: prompt on its own row, the two call buttons share
+   the row below at full width, labels never wrap mid-word. */
+.game-stage .umpire-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:min(88vw,330px)}
+.game-stage .umpire-buttons[hidden]{display:none}
+.game-stage .umpire-prompt{grid-column:1/-1;justify-self:start;white-space:nowrap}
+.game-stage .umpire-buttons button{min-width:0;padding:12px 6px;white-space:nowrap}
+/* Pitch chip: type on line 1, speed big on line 2, break/spin small on
+   line 3 (app.js writes break/spin into #pitch-detail, not into the speed). */
+.game-stage .pitch-info .pitch-detail{font-size:calc(10.5 * var(--hud-u));font-weight:700;color:#cfe6ff;white-space:nowrap}
+.game-stage .pitch-info .pitch-detail:empty{display:none}
