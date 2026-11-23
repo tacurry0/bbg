@@ -139,8 +139,9 @@
 @keyframes hr-burst{0%{opacity:0;transform:scale(.2)}25%{opacity:1}100%{opacity:0;transform:scale(9)}}
 .online-code{font-size:34px;font-weight:950;letter-spacing:8px;text-align:center;padding:14px 6px;margin:10px 0 4px;background:var(--hatch-widget-surface-muted,#eef2f7);border-radius:12px;color:#123}
 .online-status-line{min-height:1.4em;font-weight:700}
-.online-join-row{display:flex;gap:8px;margin:10px 0}
-.online-code-input{flex:1;min-width:0;padding:12px;border-radius:10px;border:1px solid #b9c4d0;font-size:17px;text-transform:uppercase}
+.online-join-label{display:block;font-size:11px;font-weight:700;margin:18px 0 8px}
+.online-code-input{display:block;width:100%;box-sizing:border-box;padding:13px 12px;border-radius:10px;border:1px solid var(--line,#5f745d66);background:#101b14;color:#eef4ea;font-size:17px;letter-spacing:4px;text-align:center;text-transform:uppercase}
+.online-code-input::placeholder{letter-spacing:0;text-transform:none;color:#819780}
 .online-club-list{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow:auto;margin:6px 0 12px}
 .online-club{padding:8px 10px;border-radius:999px;border:1px solid #b9c4d0;background:#fff;font-weight:700;font-size:13px}
 .online-club.selected{background:#1256a0;color:#fff;border-color:#1256a0}

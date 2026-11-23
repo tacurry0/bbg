@@ -22,7 +22,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>'
  };
  function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.ball}</svg>`;}
- const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:false,difficulty:'standard',sound:true,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
+ const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
  const recordDefaults={games:0,wins:0,draws:0,hr:0,hits:0,maxDistance:0,bestTimedDerby:0,bestTimedDerbyDistance:0,perfect:0,grandSlam:false,ks:0,thrown:0,practicePitches:0,practiceHits:0,practiceHr:0,practiceMaxDistance:0,practiceThrown:0,practiceKs:0,achievements:{},winStreak:0,bestStreak:0};
  let settings,records;
  try{settings={...defaults,...JSON.parse(localStorage.getItem('nightball.settings')||'{}')};records={...recordDefaults,...JSON.parse(localStorage.getItem('nightball.records')||'{}')};}catch{settings={...defaults};records={...recordDefaults};}
@@ -43,6 +43,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  settings.music=musicSettings(settings.music);
  for(const name of ['hudScale','controlsScale'])settings[name]=Math.max(75,Math.min(120,Number(settings[name])||100));
  settings.gameLighting=gameLightingMode(settings.gameLighting);
+ // v109: manual baserunning becomes the default. Settings saved by older
+ // versions always contain manualRunning (the whole object is persisted),
+ // so a stored false cannot be told apart from the old default; choices
+ // made through the running controls record runningModeChosen instead.
+ // Without that marker, treat the stored value as the old default and
+ // migrate to manual once. The marker is set here so the migration runs
+ // only once, and any later explicit choice (including auto) is kept.
+ if(!settings.runningModeChosen){settings.manualRunning=true;settings.runningModeChosen=true;}
  window.nightSettings=settings;
  const stadiumAudio=new NightAudio(),songVault=new SongVault(),ballparkMusic=new BallparkMusic(stadiumAudio,songVault);
  const review=new PlayReview();
@@ -1822,8 +1830,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    game.manualRunning=manual;
   }
   if(career&&!worldActive&&(game?.career||screen==='career')){career.manualRunning=manual;saveCareer();}
-  else settings.manualRunning=manual;
-  save();if(game)updateUI();
+  else{settings.manualRunning=manual;settings.runningModeChosen=true;}
+  save();if(game?.mirror)game.mirrorSend?.({t:'running-mode',manual});
+  if(game)updateUI();
  }
  $('running-mode').onclick=()=>{if(game)chooseRunningMode(!game.manualRunning);};
  bindRunnerMap($('runner-map'),()=>game,()=>sound('tap'));
@@ -1931,15 +1940,20 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function onlineModal(){
    const o=online;let inner='';
    if(!o){
-     inner=`<p class="career-status-line">離れた相手と1対1で対戦できます。ホストが部屋を作って合言葉（6文字）を相手に伝え、ゲストがその合言葉で入ります。接続の仲介にはPeerJSの無料サービスを使います（サーバー代・アカウント不要、要インターネット接続）。</p>
+     inner=`<p class="career-status-line">離れた相手と1対1で対戦できます。ホストが部屋を作って合言葉（6文字）を相手に伝え、ゲストがその合言葉で入ります。招待リンクを送れば、開くだけで合言葉が入力された状態になります。接続の仲介にはPeerJSの無料サービスを使います（サーバー代・アカウント不要、要インターネット接続）。</p>
      ${onlineHistoryHTML()}
      <button class="primary-button" data-action="online-host">部屋を作る（ホスト）</button>
-     <div class="online-join-row"><input id="online-code-input" class="online-code-input" type="text" maxlength="8" placeholder="合言葉を入力" autocomplete="off"><button class="secondary-button" data-action="online-join">部屋に入る（ゲスト）</button></div>
+     <label class="online-join-label" for="online-code-input">合言葉で参加</label>
+     <input id="online-code-input" class="online-code-input" type="text" maxlength="8" placeholder="合言葉を入力" autocomplete="off">
+     <button class="primary-button" data-action="online-join">部屋に入る（ゲスト）</button>
      <button class="secondary-button" data-action="close">閉じる</button>`;
    }else if(o.role==='host'){
      const effPark=o.park||NightTeams.get(o.hostHome?o.myClub:o.guestClub||o.myClub)?.park;
      inner=`<p class="career-status-line">あなたはホストです。合言葉を相手に伝えてください。先攻・後攻とスタジアムはホストが決めます。</p>
      <div class="online-code">${o.code}</div>
+     <button class="secondary-button" data-action="online-copy-code">合言葉をコピー</button>
+     <button class="secondary-button" data-action="online-copy-link">招待リンクをコピー</button>
+     ${typeof navigator!=='undefined'&&typeof navigator.share==='function'?'<button class="secondary-button" data-action="online-share-link">招待リンクを共有</button>':''}
      <p class="online-status-line">${o.status||''}${o.latency?.samples?` 相手との片道遅延 約${o.latency.oneWayMs()}ms（ホストの入力をこの分だけ遅らせ、両者の入力遅延を均等化します）`:''}</p>
      <h3 class="arcade-section-title">自分の球団</h3>
      <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
@@ -1958,6 +1972,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      <button class="secondary-button" data-action="online-cancel">退出する</button>`;
    }
    modal(`${modalTitle('','オンライン対戦')}${inner}`,'online');
+   if(!o&&pendingInviteCode){const input=$('online-code-input');if(input&&!input.value)input.value=pendingInviteCode;}
+ }
+ let pendingInviteCode='';
+ function onlineInviteUrl(code){return location.origin+location.pathname+'?room='+encodeURIComponent(code);}
+ async function copyText(text){
+   try{await navigator.clipboard.writeText(text);return true;}catch{}
+   try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;}catch{return false;}
  }
  async function onlineCreateRoom(){
    onlineCleanup();
@@ -1977,6 +1998,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  async function onlineJoinRoom(){
    const code=($('online-code-input')?.value||'').trim().toUpperCase();
    if(code.length<4){toast('合言葉を入力してください');return;}
+   pendingInviteCode='';
    onlineCleanup();
    online={role:'guest',code,session:null,myClub:null,started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0};
    onlineModal();
@@ -2029,6 +2051,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      if(m.bunt){g.bunt=true;g.buntBall();}
      else g.attempt({x:m.aim?.x||0,y:m.aim?.y||0},!!m.power,Math.max(-1.2,Math.min(1.2,Number(m.delta)||0)),false);
    }else if(m.t==='steal'&&g.remoteBatter){g.steal=!!m.on;}
+   else if(m.t==='running-mode'){g.remoteRunning=!!m.manual;}
+   else if(m.t==='runner-command'&&g.remoteBatter){g.remoteCommandRunner(m.id,m.base);}
    else if(m.t==='abs-challenge'&&g.remoteBatter&&g.absCanChallenge){g.requestAbsChallenge();}
    else if(m.t==='play-challenge'&&g.phase==='play-call'&&g.baseCall?.cpu){g.requestPlayChallenge(true);}
    else if(m.t==='sub')applyRemoteSub(g,m);
@@ -2061,7 +2085,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function onlineState(g,o){
    const fieldPhase=['field','result'].includes(g.phase)&&g.field;
    let field=null;
-   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,userControlled:false}:g.field.manual};}
+   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual}:g.field.manual};}
    let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
      phase:g.phase,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
@@ -2128,6 +2152,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
    game=new NightGame('match',m.difficulty||settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:m.home,awayTeamId:m.away,userHome:guestHome,innings:m.innings,park:m.park||home.park,pitcher:0,opponentPitcher:0,order:mine.startingOrder,fielding:mine.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:guestHome?'away':'home'});
    game.onlineGame=true;game.mirror=true;game.mirrorSend=msg=>{if(online?.session?.open)online.session.send({...msg,ct:Math.round(performance.now())});};
+   // Tell the host this player's baserunning choice so the host engine
+   // hands over (or keeps) control of this side's runners accordingly.
+   game.mirrorSend({t:'running-mode',manual:!!settings.manualRunning});
    activateGame();updateStyle();updateUI();
  }
  function hideOnlineGuest(){const v=$('online-view');if(v)v.hidden=true;}
@@ -2283,6 +2310,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'ct-reset':customTourney=null;saveCustomTourney();closeModal(false);toast('トーナメントを破棄しました');break;
    case'online-host':onlineCreateRoom();break;
    case'online-join':onlineJoinRoom();break;
+   case'online-copy-code':if(online?.code)copyText(online.code).then(ok=>toast(ok?'合言葉をコピーしました':'コピーできませんでした'));break;
+   case'online-copy-link':if(online?.code)copyText(onlineInviteUrl(online.code)).then(ok=>toast(ok?'招待リンクをコピーしました':'コピーできませんでした'));break;
+   case'online-share-link':if(online?.code&&typeof navigator.share==='function')navigator.share({title:'NIGHTBALL オンライン対戦',text:'オンライン対戦の招待です。合言葉: '+online.code,url:onlineInviteUrl(online.code)}).catch(()=>{});break;
    case'online-start':startOnlineMatch();break;
    case'online-cancel':onlineCleanup();closeModal();break;
    case'online-exit':onlineCleanup();hideOnlineGuest();home();break;
@@ -2475,5 +2505,15 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
  }
  requestAnimationFrame(frame);
+ // Invite link (?room=CODE): open the online modal with the code prefilled.
+ // Joining still takes the guest's own tap and club pick; nothing connects
+ // automatically.
+ try{
+   const room=new URLSearchParams(location.search).get('room');
+   if(room){
+     const code=room.trim().toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
+     if(code.length>=4){pendingInviteCode=code;onlineModal();}
+   }
+ }catch{}
  // PWA registration and safe update prompts are handled by pwa-update.js.
 })();
