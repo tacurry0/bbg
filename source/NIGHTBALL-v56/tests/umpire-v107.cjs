@@ -191,4 +191,104 @@ for(const verdictSafe of [true,false]){
  assert.equal(restored.umpireMode,false,'restored normal game stays non-umpire');
 }
 
+
+// ---------- (d) v107 fix: manual play inputs are inert in umpire mode ----------
+// Regression for the real-device report that the batting buttons stayed
+// usable: at the engine level every manual intervention method must refuse
+// in umpire mode, while the CPU paths (autoPitch / cpuBat) keep working
+// even if the autoBatting/autoDefense/spectate flags are cleared.
+{
+ const g=umpireGame(76001);
+ // Manual pitch throw (no explicit target) is refused; the CPU auto-pitch
+ // path (explicit target via autoPitch) still works.
+ assert.equal(g.defending,true,'fixture starts with the user side pitching');
+ g.setPhase('aim');
+ assert.equal(g.throwPitch(),false,'manual throwPitch is inert in umpire mode');
+ assert.equal(g.phase,'aim','manual throw did not start a pitch');
+ assert.equal(g.autoPitch(),true,'CPU auto-pitch still throws in umpire mode');
+ assert.equal(g.phase,'windup','auto-pitch moved the game on');
+ // Cursor aim cannot be moved by the player umpire.
+ const before={...g.cursor};g.setCursor(1.2,-1.2);
+ assert.deepEqual(g.cursor,before,'setCursor is inert in umpire mode');
+ // Auto-defense cannot be toggled back to manual.
+ assert.equal(g.setAutoDefense(false),false,'setAutoDefense is inert in umpire mode');
+ assert.equal(g.autoDefense,true);
+ // Substitutions / pitcher changes / tactics-grade interventions refuse.
+ g.setPhase('aim');
+ assert.equal(g.changePitcher(1),false,'changePitcher is inert in umpire mode');
+ assert.equal(g.swapFieldPosition(g.lineups[g.userSide][0].id,'SS'),false,'swapFieldPosition is inert in umpire mode');
+ assert.equal(g.requestAbsChallenge(),false,'ABS challenge is inert in umpire mode');
+ assert.equal(g.requestPlayChallenge(),false,'play challenge is inert in umpire mode');
+ assert.equal(g.intentionalWalk(false),false,'manual intentional walk is inert in umpire mode');
+}
+{ // Batting side: a manual swing never touches the pitch; CPU decides takes/swings.
+ const g=umpireGame(76002);
+ g.half='bottom'; // user side batting
+ assert.equal(g.defending,false);
+ g.createPitch(NightGame.TYPES[0],{x:0,y:0});
+ g.pitch.cpuSwing=false;g.pitch.cpuBunt=false;
+ g.setPhase('pitch');g.phaseTime=100;
+ assert.equal(g.swing(),false,'manual swing is inert in umpire mode');
+ assert.equal(g.pitch.swung,false,'manual swing did not mark the pitch as swung');
+ assert.equal(g.session.swings,0,'no manual swing was recorded');
+ const subbed=g.substitute(g.bench()[0]?.id,{type:'hit'});
+ assert.equal(subbed,false,'pinch hitting is inert in umpire mode');
+}
+{ // The same calls DO work in a normal game, proving the guards are umpire-only.
+ const restore=seeded(76003);
+ const g=new NightGame('match','standard',()=>{},{innings:3});
+ restore();
+ assert.equal(g.defending,true);
+ g.setPhase('aim');
+ assert.equal(g.throwPitch(),true,'manual throwPitch still works in a normal game');
+ const g2=new NightGame('match','standard',()=>{},{innings:3});
+ g2.half='bottom';g2.createPitch(NightGame.TYPES[0],{x:0,y:0});g2.setPhase('pitch');
+ assert.equal(g2.swing(),true,'manual swing still works in a normal game');
+}
+{ // Full game completes on umpire calls alone even with every auto flag cleared:
+ // the CPU batter/pitcher decisions key off umpireMode itself.
+ const restore=seeded(76004);
+ const g=umpireGame(76004);
+ g.autoBatting=false;g.autoDefense=false;g.spectate=false;g.fastForward=false;
+ let guard=0;
+ while(g.phase!=='ended'&&guard++<60000){
+  if(g.phase==='change'){g.acknowledgeHalf();continue;}
+  // Attempted manual interventions throughout must all be inert.
+  g.swing();g.setAutoDefense(true);
+  if(g.phase==='umpire-call')assert(g.umpireCall(g.umpirePending.strike));
+  else if(g.phase==='play-call')assert(g.umpirePlayCall(true));
+  g.update(50);
+  invariant(g);
+ }
+ restore();
+ assert.equal(g.phase,'ended','umpire game completes with auto flags cleared, phase='+g.phase+' after '+guard+' steps');
+ assert(g.umpireStats.calls>=20,'umpire still judged a full game: '+g.umpireStats.calls);
+ assert.equal(g.umpireStats.correct,g.umpireStats.calls,'truth calls were all correct');
+}
+
+// ---------- (e) v107 fix: UI/source guards for the two reported bugs ----------
+// Node cannot render the page, so the display conditions are pinned at the
+// source level (the live behaviour is additionally code-reviewed):
+{
+ const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
+ const css=fs.readFileSync(__dirname+'/../dist/style.css','utf8');
+ const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
+ const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
+ // Batting / pitching controls hide in umpire mode.
+ assert(app.includes("$('bat-options').hidden=def||!!g.umpireMode"),'bat options hide in umpire mode');
+ assert(app.includes("$('pitch-deck').hidden=!def||field||g.phase!=='aim'||g.autoDefense||!!g.umpireMode"),'pitch deck hides in umpire mode');
+ assert(app.includes("function swing(){if(!game||game.umpireMode||game.spectate)return;"),'app swing entry is gated in umpire mode');
+ // The umpire panel no longer sits over home plate / the strike zone, and
+ // the feedback is its own small element outside the status pill.
+ const panelRule=css.match(/\.umpire-panel\{[^}]*\}/)[0];
+ assert(!panelRule.includes('bottom:132px'),'umpire panel is off the old bottom:132px spot');
+ assert(panelRule.includes('top:84px')&&panelRule.includes('left:12px'),'umpire panel sits at the upper left, below the scoreboard');
+ assert(html.includes('<div id="umpire-feedback" class="umpire-feedback" role="status" hidden>'),'feedback is a separate small pill element');
+ assert(app.includes("['intro','aim','windup','pitch'].includes(g.phase)"),'feedback is hidden while a pitch is in flight');
+ assert(app.includes('umpireShownAt<1200'),'feedback fades out after ~1.2s');
+ // Same-version fix: ?v= pins stay at 107, only the SW cache name moves.
+ assert(html.includes('./game.js?v=107')&&html.includes('./app.js?v=107'),'version pins stay at 107');
+ assert(sw.includes("nightball-v107-umpire-fix"),'SW cache renamed so existing users receive the fix');
+}
+
 console.log('umpire-v107: all assertions passed');

@@ -336,6 +336,7 @@ window.NightGame=class NightGame{
  canPinchHit(){return this.substitutionWindow&&!this.defending;}
  canPinchRun(base){return this.canPinchHit()&&Number.isInteger(base)&&base>=0&&base<3&&this.bases[base]&&this.lineups[this.userSide].some(p=>p.id===this.baseIds[base]);}
  substitute(id,{type='hit',base=null}={}){
+  if(this.umpireMode)return false;
   if(this.mirror)return false;
   if(type==='run'?!this.canPinchRun(base):type!=='hit'||!this.canPinchHit())return false;
   const side=this.userSide,player=this.bench(side).find(p=>p.id===id);if(!player)return false;
@@ -354,6 +355,7 @@ window.NightGame=class NightGame{
   this.substitutions.push({type,inning:this.inning,half:this.half,side,slot,base,outId:old.id,inId:player.id,outName:old.name,inName:player.name});
  }
  swapFieldPosition(id,pos){
+  if(this.umpireMode)return false;
   if(this.mirror)return false;
   if(!this.substitutionWindow)return false;const lineup=this.lineups[this.userSide],a=lineup.find(p=>p.id===id),b=lineup.find(p=>p.fieldPos===pos);if(!a||!b||a===b)return false;
   [a.fieldPos,b.fieldPos]=[b.fieldPos,a.fieldPos];this.notify();return true;
@@ -367,6 +369,7 @@ window.NightGame=class NightGame{
  pitcherRecord(p=this.pitcher){return this.pitchingStats[p.id] ||= {pitches:0,batters:0,outs:0,runs:0,k:0,bb:0,h:0};}
  canChangePitcher(){return this.substitutionWindow&&this.defending&&this.phase!=='windup';}
  changePitcher(index){
+  if(this.umpireMode)return false;
   if(this.mirror)return false;
   if(!this.canChangePitcher()||!Number.isInteger(index)||this.usedPitchers.includes(index)||!this.pitchingStaff[this.userSide][index])return false;
   const old=this.pitcher;this.homePitcherIndex=index;this.usedPitchers.push(index);this.stamina=100;this.pitchHistory=[];this.pitchType='fast';this.pitch=null;
@@ -403,7 +406,7 @@ window.NightGame=class NightGame{
   this.phaseTime=Math.max(this.phaseTime,this.runningDemo?3301:621);
   return true;
  }
- setCursor(x,y){if(this.paused)return;this.cursor={x:clamp(x,-1.55,1.55),y:clamp(y,-1.55,1.55)};}
+ setCursor(x,y){if(this.paused||this.umpireMode)return;this.cursor={x:clamp(x,-1.55,1.55),y:clamp(y,-1.55,1.55)};}
  update(dt,holdResult=false){
   if(dt<=0||this.paused||['ended','change','derby-break','career-pregame','career-ready'].includes(this.phase))return;
   const derby=this.derby;
@@ -425,11 +428,11 @@ window.NightGame=class NightGame{
    else if(this.phaseTime>=2600)this.resolvePlayCall(false);
   }
   else if(this.phase==='play-review'&&this.phaseTime>=1400)this.resolvePlayCall(true);
-  else if(this.phase==='aim'&&this.autoDefense&&this.defending&&this.phaseTime>480)this.autoPitch();
+  else if(this.phase==='aim'&&(this.autoDefense||this.umpireMode)&&this.defending&&this.phaseTime>480)this.autoPitch();
   else if(this.phase==='windup'&&this.phaseTime>(derby?270:700)){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
   else if(this.phase==='pitch'){
    this.pitch.progress=this.phaseTime/this.pitch.duration;
-   if((this.defending||this.autoBatting)&&!this.pitch.cpuActed&&this.pitch.progress>=this.pitch.cpuTime){this.pitch.cpuActed=true;this.cpuBat();}
+   if((this.defending||this.autoBatting||this.umpireMode)&&!this.pitch.cpuActed&&this.pitch.progress>=this.pitch.cpuTime){this.pitch.cpuActed=true;this.cpuBat();}
    if(this.phase==='pitch'&&this.pitch.progress>1.24&&!(this.remoteBatter&&!this.pitch.swung&&this.pitch.progress<1.8))this.take();
   }else if(this.phase==='miss'&&this.phaseTime>330)this.strike(true);
   else if(this.phase==='field'){let remaining=dt/1000;while(remaining>1e-6&&this.phase==='field'){const untilCatch=this.field?.throw?Math.max(.000001,this.field.throw.duration-this.field.throw.t):Infinity;const step=Math.min(remaining,1/120,untilCatch);this.updateField(step);remaining-=step;}}
@@ -765,7 +768,7 @@ window.NightGame=class NightGame{
    this.pitch.bx*=1+pitcherPerks.closer*.12;
    this.pitch.by*=1+pitcherPerks.closer*.12;
   }
-  if((this.defending||this.autoBatting)&&!this.remoteBatter){
+  if((this.defending||this.autoBatting||this.umpireMode)&&!this.remoteBatter){
    const repeated=this.career?.opponentPlan?.repeat===type.id;
    const recent=this.pitchHistory.slice(-3),repeat=recent.filter(p=>p.id===type.id).length,locationRepeat=recent.filter(p=>Math.hypot(p.x-target.x,p.y-target.y)<.4).length;
    // Read more pitches early, protect with two strikes, and punish repetition.
@@ -799,6 +802,7 @@ window.NightGame=class NightGame{
   return ((late&&close)||(this.bases[2]&&this.outs===1))&&Math.random()<.55;
  }
  intentionalWalk(internal=false){
+  if(this.umpireMode&&!internal)return false;
   if(this.mirror){if(!internal&&this.defending&&this.phase==='aim'){this.mirrorSend?.({t:'pitch-decision',ibb:true});return true;}return false;}
   if(!this.inMatch||this.batFinished)return false;
   if(!internal&&!['aim','windup'].includes(this.phase))return false;
@@ -855,15 +859,17 @@ window.NightGame=class NightGame{
   this.notify();
  }
  setAutoDefense(active){
+  if(this.umpireMode)return false;
   if(!this.isFixture||!this.defending||this.phase==='ended'||this.paused)return false;
   this.autoDefense=!!active;this.touch=null;this.notify();return true;
  }
  autoPitch(){
-  if(!this.autoDefense||!this.defending||this.phase!=='aim')return false;
+  if(!(this.autoDefense||this.umpireMode)||!this.defending||this.phase!=='aim')return false;
   const plan=this.cpuPitchPlan();this.pitchType=plan.type.id;this.cursor=plan.target;return this.throwPitch(plan.target);
  }
 
  throwPitch(autoTarget=null){
+  if(this.umpireMode&&!autoTarget)return false;
   if(this.mirror){if(this.paused||!this.defending||this.phase!=='aim'||this._mirrorThrew)return false;this._mirrorThrew=true;this.mirrorSend?.({t:'pitch-decision',pitchType:this.pitchType,aim:{x:this.cursor.x,y:this.cursor.y},shift:this.shift==='pull'});return true;}
   if(this.paused||!this.defending||this.phase!=='aim')return false;
   if(!this.pitcher.pitches.includes(this.pitchType))this.pitchType=this.pitcher.pitches[0];
@@ -977,7 +983,7 @@ window.NightGame=class NightGame{
   const p=this.pitch,k=Math.pow(clamp(u,0,1.3),1.65),late=Math.pow(clamp(u,0,1.3),4.4);
   const flutter=p.id==='knuckle'?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX??((p.throwHand||this.pitcher.hand)==='L'?1:-1)*.76/.68)*(1-Math.min(1,Math.max(0,u)))+p.targetX*k+p.bx*(late-k)+flutter,y:p.targetY*k+p.by*(late-k)+flutter*.6};
  }
- swing(){if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung)return false;this._mirrorSwung=true;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
+ swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung)return false;this._mirrorSwung=true;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
  buntBall(){
   this.pitch.swung=true;this.swingAge=0;this.session.swings++;this.session.contacts++;
   // One roll per bunt: 90% sacrifice, 5% failed advance, 5% bunt hit.
@@ -1371,7 +1377,7 @@ window.NightGame=class NightGame{
   return !!this.field?.manual?.userControlled&&(this.mode!=='career-bat'||id===this.career?.playerId&&this.field.runners.some(r=>r.id===id&&r.batter));
  }
  get manualPlay(){
-  return !!(this.field?.manual?.userControlled&&!this.field.resolved&&this.phase==='field'&&!this.defending&&
+  return !!(this.field?.manual?.userControlled&&!this.umpireMode&&!this.field.resolved&&this.phase==='field'&&!this.defending&&
    (this.mode!=='career-bat'||this.field.runners.some(r=>!r.out&&!r.scored&&this.canControlRunner(r.id))));
  }
  setRunningMode(manual){
@@ -1848,6 +1854,7 @@ window.NightGame=class NightGame{
  }
  get playCanChallenge(){return this.phase==='play-call'&&!!this.baseCall&&!this.baseCall.cpu&&this.playChallenges>0&&!this.paused;}
  requestPlayChallenge(remote=false){
+  if(this.umpireMode)return false;
   if(this.mirror){if(this.phase!=='play-call'||!this.baseCall||this.baseCall.cpu||this.paused)return false;this.mirrorSend?.({t:'play-challenge'});return true;}
   if(this.paused||this.phase!=='play-call'||!this.baseCall)return false;
   if(remote?!this.baseCall.cpu:this.baseCall.cpu)return false;
@@ -1878,6 +1885,7 @@ window.NightGame=class NightGame{
  }
 
  requestAbsChallenge(){
+  if(this.umpireMode)return false;
   if(this.mirror){if(!this.absCanChallenge||this.paused)return false;this.mirrorSend?.({t:'abs-challenge'});return true;}
   if(!this.absCanChallenge||this.paused)return false;
   this.setPhase('abs-review');this.notify();
