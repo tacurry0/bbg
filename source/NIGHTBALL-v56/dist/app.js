@@ -1557,7 +1557,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   absBtn.hidden=!interactive||!!g.umpireMode;
   if(!absBtn.hidden){
    $('abs-challenge-label').textContent='ABSチャレンジ（残り'+g.absRemaining+'）';
-   const windowMs=NightGame.ABS_TIMING.call+(g.onlineGame?800:0);
+   const windowMs=NightGame.ABS_TIMING.call+(g.onlineGame?800:0)+(call?.remote?700:0);
    $('abs-challenge-fill').style.width=Math.max(0,Math.min(100,(1-g.phaseTime/windowMs)*100))+'%';
   }
   const opening=panel.hidden;
@@ -2063,7 +2063,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    }else if(m.t==='steal'&&g.remoteBatter){g.steal=!!m.on;}
    else if(m.t==='running-mode'){g.remoteRunning=!!m.manual;}
    else if(m.t==='runner-command'&&g.remoteBatter){g.remoteCommandRunner(m.id,m.base);}
-   else if(m.t==='abs-challenge'&&g.remoteBatter&&g.absCanChallenge){g.requestAbsChallenge();}
+   else if(m.t==='abs-challenge'){g.requestAbsChallenge(true);}
    else if(m.t==='play-challenge'&&g.phase==='play-call'&&g.baseCall?.cpu){g.requestPlayChallenge(true);}
    else if(m.t==='sub')applyRemoteSub(g,m);
  }

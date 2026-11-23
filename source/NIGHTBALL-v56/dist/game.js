@@ -443,10 +443,10 @@ window.NightGame=class NightGame{
   if((this.fastForward||this.spectate)&&this.defending&&!this.autoDefense)this.autoDefense=true;
    dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&this.phase!=='abs-call'&&this.phase!=='abs-review')dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
   if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
-  else if(this.phase==='abs-call'&&this.absCall?.cpu&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
+  else if(this.phase==='abs-call'&&this.absCall?.cpu&&!this.absCall.remote&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
    this.setPhase('abs-review');this.notify();
   }
-  else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call+(this.onlineGame?800:0))this.resolveAbsCall(false);
+  else if(this.phase==='abs-call'&&this.phaseTime>=NightGame.ABS_TIMING.call+(this.onlineGame?800:0)+(this.absCall?.remote?700:0))this.resolveAbsCall(false);
   else if(this.phase==='abs-review'&&this.phaseTime>=NightGame.ABS_TIMING.reviewEnd)this.resolveAbsCall(true);
   else if(this.phase==='play-call'){
    if(this.umpireMode){/* Umpire mode: the window waits for the player's own safe/out call. */}
@@ -963,7 +963,14 @@ window.NightGame=class NightGame{
   else if(s.pitch&&this.pitch){const prog=this.pitch.progress;Object.assign(this.pitch,s.pitch);this.pitch.progress=prog;}
   else this.pitch=s.pitch;
   if(this.phase==='aim')this._mirrorThrew=false;
-  if(s.absCall){const a=this.absCall;if(!a||a.gap!==s.absCall.gap||a.strike!==s.absCall.strike||a.umpireStrike!==s.absCall.umpireStrike||a.cpu!==s.absCall.cpu)this.absCall=s.absCall;}
+  if(s.absCall){
+   // The streamed cpu flag is from the host's perspective ("not the host").
+   // Recompute it from this mirror's own perspective with the same formula
+   // take() uses (cpu = the challenger is not the local user), so
+   // absCanChallenge arms exactly when the guest is the disadvantaged side.
+   const ac={...s.absCall,cpu:s.absCall.umpireStrike===this.defending};
+   const a=this.absCall;if(!a||a.gap!==ac.gap||a.strike!==ac.strike||a.umpireStrike!==ac.umpireStrike||a.cpu!==ac.cpu)this.absCall=ac;
+  }
   else if(this.absCall)delete this.absCall;
   const mp=this.pitcher;if(mp)this.session.thrown=this.pitchingStats[mp.id]?.pitches||0;
   if(s.field){this._fieldPrev=this._fieldCurr&&this._fieldCurr.fsq===s.fsq?this._fieldCurr:null;this._fieldCurr={t:now,f:s.field,fs:s.fs||1,fsq:s.fsq};}
@@ -1976,9 +1983,15 @@ window.NightGame=class NightGame{
   return this.phase==='abs-call'&&!!this.absCall&&!this.absCall.cpu&&this.absRemaining>0&&!(this.autoDefense&&this.defending);
  }
 
- requestAbsChallenge(){
+ requestAbsChallenge(remote=false){
   if(this.umpireMode)return false;
   if(this.mirror){if(!this.absCanChallenge||this.paused)return false;this.mirrorSend?.({t:'abs-challenge'});return true;}
+  if(remote){
+   // Host accepting the online guest's challenge: valid only while the
+   // open call is flagged as the guest's to challenge (see take()).
+   if(this.paused||this.phase!=='abs-call'||!this.absCall?.remote||!(this.absCpuRemaining>0))return false;
+   this.setPhase('abs-review');this.notify();return true;
+  }
   if(!this.absCanChallenge||this.paused)return false;
   this.setPhase('abs-review');this.notify();
   return true;
@@ -2010,12 +2023,18 @@ window.NightGame=class NightGame{
   if(this.absRemaining===undefined){let call=this.pitch.isStrike;if(this.umpireBias&&Math.abs(location.gap)<=.0254&&(this.umpireBias>0)!==call&&Math.random()<.5)call=!call;this.commitCalledPitch(call);return;}
   const umpireStrike=NightGame.absUmpireStrike(location.gap-(this.umpireBias||0),Math.random());
   const cpu=umpireStrike===this.defending;
-  const challenge=cpu?this.shouldCpuChallenge(location.gap):this.absRemaining>0&&!(this.autoDefense&&this.defending)&&!this.autoBatting;
+  // Online: the "other side" is the human guest, not the CPU. Their
+  // challenge must not be decided by the CPU's random challenge model:
+  // the window opens whenever they have challenges left, and the call is
+  // flagged remote so update() waits for their input (with round-trip
+  // grace) instead of auto-reviewing it as a CPU challenge.
+  const remote=cpu&&!!this.remoteSide;
+  const challenge=remote?this.absCpuRemaining>0:cpu?this.shouldCpuChallenge(location.gap):this.absRemaining>0&&!(this.autoDefense&&this.defending)&&!this.autoBatting;
   if(!challenge){
    this.commitCalledPitch(umpireStrike);
    return;
   }
-  this.absCall={...location,strike:this.pitch.isStrike,umpireStrike,cpu};
+  this.absCall={...location,strike:this.pitch.isStrike,umpireStrike,cpu,remote};
   this.setPhase('abs-call');this.notify();
  }
  // Strike-zone reveal for umpire mode: the zone frame and the pitch's true
