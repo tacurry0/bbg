@@ -919,6 +919,8 @@ window.NightGame=class NightGame{
   this.usedPitchers=s.usedC.slice();this.usedCpuPitchers=s.usedU.slice();
   this.pitchingStats=s.ps||{};this.box=s.box||{};
   this.absRemaining=s.absCpu;this.absCpuRemaining=s.absU;
+  this.playChallenges=s.playCpu;this.playCpuChallenges=s.playU;
+  if(s.baseCall)this.baseCall={...s.baseCall,cpu:s.baseCall.batSide!==this.userSide};else if(this.baseCall)this.baseCall=null;
   this.weather=s.weather;this.weatherLabel=s.weatherLabel;this.wind=s.wind;this.next=s.next;
   if(s.umpireLabel!==undefined)this.umpireLabel=s.umpireLabel;
   this.halfBreak=s.halfBreak||null;this.hit=s.hit||null;

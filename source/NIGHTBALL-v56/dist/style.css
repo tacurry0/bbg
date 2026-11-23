@@ -176,3 +176,6 @@
 .react-pop{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:15%;font-size:88px;pointer-events:none;z-index:6;opacity:0}
 .react-pop.show{animation:react-pop 1.9s ease forwards}
 @keyframes react-pop{0%{opacity:0;transform:scale(.3) translateY(24px)}14%{opacity:1;transform:scale(1.12) translateY(0)}24%{transform:scale(1)}78%{opacity:1}100%{opacity:0;transform:scale(1.02) translateY(-30px)}}
+
+.play-challenge{position:absolute;left:50%;bottom:132px;transform:translateX(-50%);z-index:7;padding:10px 22px;border-radius:999px;border:2px solid #ffd34d;background:#14263e;color:#ffd34d;font-weight:900;font-size:15px;box-shadow:0 4px 18px #000a;cursor:pointer}
+.play-challenge[hidden]{display:none}
