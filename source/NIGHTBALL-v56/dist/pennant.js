@@ -72,7 +72,7 @@
    const leagueId=Object.keys(leagues).find(id=>clubsFor(id).some(c=>c.id===clubId));
    if(!leagueId)throw Error('Unknown club');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -89,7 +89,7 @@
    if(!s.schedule[s.round].some(f=>[f.home,f.away].includes(s.clubId)))return null;
    if(split&&!validSchedule(s.otherSchedule,clubsFor(otherLeague(leagueId)),count))return null;
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -107,7 +107,7 @@
   starterIndexFor(clubId){
    const club=this.clubRoster(clubId);if(!club)return 0;
    const out=new Set(this.injuredIds(clubId));
-   let pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP'&&!out.has(club.pitchers[i].id));
+   let pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP'&&!out.has(club.pitchers[i].id)&&!(this.farmMoves||{})[club.pitchers[i].id]);
    if(!pool.length)pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP');
    const list=pool.length?pool:club.pitchers.map((_,i)=>i).slice(0,4);
    return list[(this.rotation[clubId]||0)%list.length];
@@ -221,15 +221,153 @@
   }
   startNextSeason(){
    if(!this.offseason||!this.draftDone)return false;
+   if(!this.faDone){this.ensureFaMarket();this.runFaCpu();this.faDone=true;}
    this.applyDevelopment();
    (this.titles||(this.titles=[])).push({season:this.season||1,champion:this.postseason?.champion||this.playoffSeeds()[0]?.clubId||null});
    this.season=(this.season||1)+1;
    this.schedule=roundRobin(this.clubs.map(c=>c.id),this.gamesPerOpponent,this.clubId);
    if(this.isNPB){this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),this.gamesPerOpponent,null,'other-r');this.otherResults={};}
-   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.pitcher=this.starterIndexFor(this.clubId);
+   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.pitcher=this.starterIndexFor(this.clubId);
    if(this.isNPB)this.advanceByes();
    return true;
   }
+  // ---- Farm (二軍): assignment layer over clubRoster. Farm players sit out
+  // first-team games and sims, gain small periodic rating growth, and injured
+  // players on rehab assignment come back sooner.
+  farmIds(clubId){return Object.entries(this.farmMoves||{}).filter(([,c])=>c===clubId).map(([id])=>id);}
+  farmRoster(clubId){const ids=new Set(this.farmIds(clubId));const roster=this.clubRoster(clubId);return [...roster.batters,...roster.pitchers].filter(p=>ids.has(p.id));}
+  setFarm(playerId,on){
+   const roster=this.clubRoster(this.clubId);
+   if(![...roster.batters,...roster.pitchers].some(p=>p.id===playerId))return false;
+   this.farmMoves=this.farmMoves||{};
+   if(on)this.farmMoves[playerId]=this.clubId;else delete this.farmMoves[playerId];
+   return true;
+  }
+  farmDevelop(){
+   this.farmMoves=this.farmMoves||{};this.farmProgress=this.farmProgress||{};this.ratingMods=this.ratingMods||{};
+   for(const club of this.clubs){
+    if(club.id===this.clubId)continue;
+    const roster=this.clubRoster(club.id),age=p=>this.ages[p.id]??25,farm=this.farmRoster(club.id);
+    const fb=farm.filter(p=>p.pos!=='P'&&!p.velocity).length,fp=farm.length-fb;
+    const fill=(list,have,want)=>{if(have>=want)return;[...list].filter(p=>!this.farmMoves[p.id]).sort((a,b)=>age(a)-age(b)).slice(0,want-have).forEach(p=>{this.farmMoves[p.id]=club.id;});};
+    fill(roster.batters.slice(9),fb,3);fill(roster.pitchers.slice(4),fp,2);
+   }
+   for(const [id,clubId] of Object.entries(this.farmMoves)){
+    const inj=this.injuries?.[id];
+    if(inj&&inj.returnRound>this.round+1)inj.returnRound--;
+    const prog=this.farmProgress[id]||(this.farmProgress[id]={rounds:0,bonus:0});
+    prog.rounds++;
+    if(prog.rounds%4===0&&prog.bonus<6){
+     const roster=this.clubRoster(clubId),p=[...roster.batters,...roster.pitchers].find(x=>x.id===id);if(!p)continue;
+     const m={...(this.ratingMods[id]||{})};
+     if(p.pos==='P'||p.velocity){const k=prog.bonus%2?'velocity':'control';m[k]=(m[k]||0)+1;}
+     else{const k=prog.bonus%2?'power':'contact';m[k]=(m[k]||0)+1;}
+     this.ratingMods[id]=m;prog.bonus++;
+    }
+   }
+  }
+  // ---- Free-agent market: runs after the draft in the offseason. Signing
+  // uses points (100 per club per offseason), not money; cost scales with
+  // playerValue. Released CPU bench players join generated veterans in the
+  // pool, and CPU clubs sign from the same pool.
+  makeVeteran(season,idx){
+   const rand=random(hash(this.id+'/fa/'+season+'/'+idx));
+   const sur=['佐藤','鈴木','高橋','田中','渡辺','伊藤','山本','中村','小林','加藤','吉田','山田','佐々木','山口','松本','井上','木村','林','斎藤','清水','陳','王','張','李','劉','黄','呉','蔡','楊','徐'];
+   const giv=['翔太','蓮','陽翔','悠真','健太','大輝','拓海','颯太','悠斗','陸','冠宇','子豪','柏融','坤宇','浩宇','承翰','宇翔','家輝','俊逸','哲源'];
+   const name=sur[Math.floor(rand()*sur.length)]+giv[Math.floor(rand()*giv.length)],tier=rand();
+   const base=tier<.15?76:tier<.5?69:62,v=()=>Math.round(base+(rand()*14-5)),id='fa-'+season+'-'+idx;
+   if(idx%3===2){const vel=140+Math.round(rand()*13);return {id,name,no:70+idx,pos:'P',hand:rand()<.25?'L':'R',velocity:vel,control:v(),stamina:v(),movement:v(),pitches:['fast','slider','change'],pitchDetails:{fast:{speed:vel}},stats:{games:0,pa:0}};}
+   const poss=['C','1B','2B','3B','SS','LF','CF','RF'];
+   return {id,name,no:70+idx,pos:poss[idx%8],hand:rand()<.3?'L':'R',contact:v(),power:v(),run:v(),field:v(),arm:v(),trait:'FA',stats:{games:0,pa:0,ab:0,h:0,hr:0,rbi:0,avg:0,slg:0}};
+  }
+  faCost(p){return Math.max(12,Math.min(60,Math.round(this.playerValue(p)/6)));}
+  ensureFaMarket(){
+   const d=this.offseason;if(!d||!this.draftDone||this.faDone)return false;
+   if(d.fa)return true;
+   const pool=[],points={},season=this.season||1;
+   for(const c of this.clubs)points[c.id]=100;
+   for(let i=0;i<this.clubs.length+3;i++){const p=this.makeVeteran(season,i);pool.push(p);this.ages[p.id]=26+Math.floor(random(hash(this.id+'/faage/'+season+'/'+i))()*9);}
+   for(const c of this.clubs){
+    if(c.id===this.clubId)continue;
+    const roster=this.clubRoster(c.id),bench=[...roster.batters.slice(10),...roster.pitchers.slice(5)];
+    const rand=random(hash(this.id+'/farel/'+season+'/'+c.id)),n=bench.length?(rand()<.7?1:2):0;
+    for(let k=0;k<n&&bench.length;k++){
+     const p=bench.splice(Math.floor(rand()*bench.length),1)[0];
+     if(!p||(this.departed||[]).includes(p.id)||pool.some(x=>x.id===p.id))continue;
+     if(this.customPlayers?.[p.id])this.customPlayers[p.id]={...this.customPlayers[p.id],clubId:'fa'};
+     else{this.rosterMoves=this.rosterMoves||{};this.rosterMoves[p.id]='fa';}
+     pool.push(p);
+    }
+   }
+   d.fa={pool,points,signed:[]};
+   return true;
+  }
+  get faActive(){const d=this.offseason;return !!d&&this.draftDone&&!this.faDone&&!!d.fa;}
+  faSign(playerId,clubId=this.clubId){
+   if(!this.faActive)return false;
+   const fa=this.offseason.fa,i=fa.pool.findIndex(p=>p.id===playerId);if(i<0)return false;
+   const p=fa.pool[i],cost=this.faCost(p);if((fa.points[clubId]??0)<cost)return false;
+   fa.points[clubId]-=cost;fa.pool.splice(i,1);fa.signed.push({clubId,playerId:p.id,name:p.name,pos:p.pos,cost});
+   if(p.id.startsWith('fa-')){this.customPlayers=this.customPlayers||{};this.customPlayers[p.id]={...p,clubId};}
+   else if(this.customPlayers?.[p.id])this.customPlayers[p.id]={...this.customPlayers[p.id],clubId};
+   else{this.rosterMoves=this.rosterMoves||{};this.rosterMoves[p.id]=clubId;}
+   if(clubId===this.clubId)this.pushNews(`FAで${p.name}を獲得（${cost}pt）`);
+   return true;
+  }
+  faCpuSign(){
+   if(!this.faActive)return false;
+   const fa=this.offseason.fa;if(!fa.pool.length)return false;
+   const buyers=this.clubs.filter(c=>c.id!==this.clubId&&(fa.points[c.id]??0)>=12);
+   if(!buyers.length)return false;
+   const club=buyers[Math.floor(Math.random()*buyers.length)];
+   const p=[...fa.pool].sort((a,b)=>this.playerValue(b)-this.playerValue(a)).find(x=>this.faCost(x)<=(fa.points[club.id]??0));
+   if(!p)return false;
+   return this.faSign(p.id,club.id);
+  }
+  runFaCpu(){let n=0;while(this.faCpuSign())n++;return n;}
+  faFinish(){if(!this.faActive)return false;this.runFaCpu();this.faDone=true;return true;}
+  // ---- All-Star exhibition at the schedule midpoint.
+  get allstarDue(){return !this.allstarPlayed&&!this.postseason&&this.round>=Math.floor(this.schedule.length/2);}
+  allstarClubs(){
+   const awards=this.seasonAwards();
+   const statsOf=(clubId,pid)=>this.playerStats?.[clubId+'/'+pid];
+   const batters=[],pitchers=[];
+   for(const club of this.clubs){
+    const roster=this.clubRoster(club.id);
+    for(const p of roster.batters){const s=statsOf(club.id,p.id);batters.push({p,score:Math.max(s?awards.batScore(s):0,this.playerValue(p)*.4)});}
+    for(const p of roster.pitchers){const s=statsOf(club.id,p.id);pitchers.push({p,score:Math.max(s?awards.pitScore(s):0,this.playerValue(p)*.4)});}
+   }
+   const A={batters:[],pitchers:[]},B={batters:[],pitchers:[]};
+   let flip=false;
+   for(const pos of ['C','1B','2B','3B','SS','LF','CF','RF','DH']){
+    batters.filter(x=>x.p.pos===pos).sort((a,b)=>b.score-a.score).slice(0,2)
+     .forEach((x,i)=>{(i===0?(flip?A:B):(flip?B:A)).batters.push(x.p);});
+    flip=!flip;
+   }
+   const used=new Set([...A.batters,...B.batters].map(p=>p.id));
+   for(const x of [...batters].sort((a,b)=>b.score-a.score)){
+    if(A.batters.length>=13&&B.batters.length>=13)break;
+    if(used.has(x.p.id))continue;
+    (A.batters.length<=B.batters.length?A:B).batters.push(x.p);used.add(x.p.id);
+   }
+   [...pitchers].sort((a,b)=>b.score-a.score).slice(0,12).forEach((x,i)=>(i%2?A:B).pitchers.push(x.p));
+   const mk=(side,s)=>{
+    const club={id:'allstar-'+side,name:side==='a'?'オールスター A':'オールスター B',short:'AS-'+side.toUpperCase(),mark:'★',color:side==='a'?'#c40020':'#004b8d',accent:'#ffffff',logo:'',park:this.club.park,batters:s.batters,pitchers:s.pitchers};
+    club.startingOrder=s.batters.slice(0,9).map(p=>p.id);
+    club.startingFielding=Object.fromEntries(s.batters.slice(0,9).map(p=>[p.pos,p.id]));
+    return club;
+   };
+   return {away:mk('a',A),home:mk('b',B)};
+  }
+  simAllstar(){
+   const {home,away}=this.allstarClubs();
+   const strength=c=>c.batters.slice(0,9).reduce((s,p)=>s+this.playerValue(p),0)+c.pitchers.slice(0,3).reduce((s,p)=>s+this.playerValue(p),0);
+   const rand=random(hash(this.id+'/allstar/'+(this.season||1)));
+   let hs=Math.max(0,Math.round(strength(home)/Math.max(1,strength(away))*4+rand()*5-1)),as=Math.max(0,Math.round(4+rand()*5-1));
+   if(hs===as)hs++;
+   return {homeScore:hs,awayScore:as};
+  }
+  completeAllstar(){if(this.allstarPlayed)return false;this.allstarPlayed=true;this.pushNews('オールスターゲームが開催された');return true;}
   injuredIds(clubId){
    if(!this.injuries)return [];
    return Object.entries(this.injuries).filter(([,i])=>i.clubId===clubId&&i.returnRound>this.round&&this.round>i.fromRound).map(([id])=>id);
@@ -252,7 +390,7 @@
    const ab=mine.reduce((s,r)=>s+(r.ab||0),0),h=mine.reduce((s,r)=>s+(r.h||0),0),outs=mine.reduce((s,r)=>s+(r.outs||0),0),runs=mine.reduce((s,r)=>s+(r.runs||0),0);
    entry.user={avg:ab?h/ab:null,era:outs?runs*27/outs:null};
    (this.history||(this.history=[])).push(entry);
-   this.rollInjuries();
+   this.rollInjuries();this.farmDevelop();
    if(this.tradeOffer&&this.round>this.tradeOffer.expiresRound){this.pushNews('トレード提案は期限切れになった');this.tradeOffer=null;}
    this.maybeTradeOffer();this.cpuTrade();
   }
@@ -395,7 +533,7 @@
    const half=(side)=>{
     const walkOff=side==='home'&&innings>=regulation;
     const runsToEnd=scores.away+(f.drawClinches&&innings===limit?0:1);
-    const allBatters=this.clubRoster(f[side]).batters,outSet=new Set(this.injuredIds(f[side])),avail=allBatters.filter(p=>!outSet.has(p.id)),hitters=(avail.length>=9?avail:allBatters).slice(0,9),defClub=this.clubRoster(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
+    const allBatters=this.clubRoster(f[side]).batters,outSet=new Set(this.injuredIds(f[side])),avail=allBatters.filter(p=>!outSet.has(p.id)&&!(this.farmMoves||{})[p.id]),hitters=(avail.length>=9?avail:allBatters).slice(0,9),defClub=this.clubRoster(f[side==='home'?'away':'home']),pitcher=innings<=3?defClub.pitchers[this.starterIndexFor(defClub.id)]:defClub.pitchers[Math.min(2,Math.floor((innings-1)/3))];
     const prow=sRow(defClub.id,pitcher),kProb=Math.min(.34,Math.max(.06,.16+(pitcher.velocity-140)*.004+(70-pitcher.control)*.001));
     let outs=full?0:2,bases=Array(3).fill(!full);
     while(outs<3){const b=hitters[orders[side]++%9],v=rand(),walk=.07+(80-pitcher.control)*.0006,hit=.24+(b.contact-75)*.002+(145-pitcher.velocity)*.001,hr=.017+Math.max(0,b.power-65)*.001;
