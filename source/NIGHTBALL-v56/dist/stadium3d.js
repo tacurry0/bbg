@@ -194,12 +194,15 @@ export class StadiumRenderer {
  }
  setPark(park,selection='auto'){
   const mode=gameLightingMode(selection);
-  if(this.parkKey===park.id){
+  // A custom park keeps its id when edited, so the fence signature must
+  // join the cache key or an edited park would keep its old 3D wall.
+  const parkSig=[park.left,park.leftCenter,park.center,park.rightCenter,park.right,park.wallHeight].join('/');
+  if(this.parkKey===park.id&&this.parkSig===parkSig){
    if(this.lightingMode!==mode)applyParkLighting(this,park,mode);
    return;
   }
   leaveTokyoDome(this);
-  this.parkKey=park.id;
+  this.parkKey=park.id;this.parkSig=parkSig;
   if(this.grassUniforms){
    const left=park.left??park.corner,right=park.right??park.corner;
    this.grassUniforms.uFenceAnchors.value.set(left,park.leftCenter??(left+park.center)/2,park.center,park.rightCenter??(right+park.center)/2);

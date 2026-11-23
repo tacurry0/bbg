@@ -116,7 +116,7 @@ window.NightRenderer=class NightRenderer{
     c.restore();
     for(let j=6;j>=0;j--){c.beginPath();arc.forEach(([x,y],i)=>i?c.lineTo(x,y-j*5-5):c.moveTo(x,y-j*5-5));c.strokeStyle=j%2?'#536951':'#284536';c.lineWidth=4;c.stroke();}
     c.beginPath();arc.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.strokeStyle='#ae9168';c.lineWidth=10;c.stroke();c.strokeStyle='#78915d';c.lineWidth=3;c.stroke();
-    c.font='bold 7px Arial';c.textAlign='center';c.fillStyle='#d8dfb1';c.fillText(g.park.center+' m',240,500-g.park.center*2.8-10);c.fillText(g.park.corner+' m',45,277);c.fillText(g.park.corner+' m',435,277);
+    c.font='bold 7px Arial';c.textAlign='center';c.fillStyle='#d8dfb1';c.fillText(g.park.center+' m',240,500-g.park.center*2.8-10);c.fillText((g.park.left??g.park.corner)+' m',45,277);c.fillText((g.park.right??g.park.corner)+' m',435,277);
     const dp=NightGame.BASES.slice(0,4).map(v=>{const p=project(v.x,v.y);return[p.x,p.y];});this.path(c,dp,'#a58a5b');
     this.path(c,[[240,484],[274,445],[240,407],[206,445]],'#376442');
     const mound=project(0,18.4);this.ellipse(c,mound.x,mound.y,12,6,'#b79c6b');

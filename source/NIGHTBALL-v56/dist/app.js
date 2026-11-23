@@ -964,13 +964,22 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    ['台湾',p=>!p.school&&!p.league&&!['toyama','tokyo-dome'].includes(p.id)],
    ['日本',p=>p.league==='npb'||['tokyo-dome','toyama'].includes(p.id)],
    ['韓国',p=>p.league==='kbo'],
-   ['高校野球・小型球場',p=>p.school]
+   ['高校野球・小型球場',p=>p.school],
+   ['カスタム球場',p=>p.custom]
   ];
   return groups.map(([label,filter])=>`<optgroup label="${label}">${NightPlayers.parks.filter(filter).map(option).join('')}</optgroup>`).join('');
  }
  function parkDimensions(park){
   const dimensions=[['左翼',park.left],['左中間',park.leftCenter],['中堅',park.center],['右中間',park.rightCenter],['右翼',park.right]];
   return `<dl class="park-dimensions">${dimensions.map(([label,d],i)=>`<div><dt>${label}</dt><dd>${!park.alleysVerified&&i%2?'約':''}${Number(d.toFixed(1))}<small>m</small></dd></div>`).join('')}</dl>`;
+ }
+ function stadiumEditorModal(editId=null){
+  const editing=NightPlayers.parks.find(p=>p.custom&&p.id===editId)||null;
+  const v=editing||{name:'',left:100,leftCenter:110,center:120,rightCenter:110,right:100,wallHeight:2.8};
+  const L=NightStadium.LIMITS;
+  const field=(id,label,val)=>`<div class="setup-section"><label for="stadium-${id}">${label}（${L[id][0]}〜${L[id][1]} m）</label><input id="stadium-${id}" class="field-select" type="number" step="0.5" min="${L[id][0]}" max="${L[id][1]}" value="${val}"></div>`;
+  const customs=NightPlayers.parks.filter(p=>p.custom);
+  modal(`${modalTitle('','球場エディタ')}<p class="modal-note">フェンス距離と高さを決めて、自分の球場を作れます。保存した球場は試合設定の球場リスト（カスタム球場）から選べます。範囲外の値は自動で範囲内に収めます。</p><div class="setup-section"><label for="stadium-name">球場名</label><input id="stadium-name" class="field-select" type="text" maxlength="24" value="${v.name}" placeholder="マイスタジアム"></div>${field('left','左翼',v.left)}${field('leftCenter','左中間',v.leftCenter)}${field('center','中堅',v.center)}${field('rightCenter','右中間',v.rightCenter)}${field('right','右翼',v.right)}${field('wallHeight','フェンスの高さ',v.wallHeight)}<button class="primary-button" data-action="stadium-save" data-park-id="${editing?editing.id:''}">${editing?'変更を保存':'球場を保存'}</button>${customs.length?`<h3 class="arcade-section-title">保存済みのカスタム球場</h3>${customs.map(p=>`<div class="career-list-row"><div><b>${p.name}</b><small>両翼 ${p.left} / ${p.right} m · 中堅 ${p.center} m · 高さ ${p.wallHeight} m</small></div><span><button data-action="stadium-edit" data-park-id="${p.id}">編集</button> <button data-action="stadium-delete" data-park-id="${p.id}">削除</button></span></div>`).join('')}`:''}<button class="secondary-button" data-action="stadium-back">試合設定に戻る</button>`,'stadium-editor');
  }
  const arcadeClubs=NightTeams.playable.map(c=>c.id.startsWith('apbc-')?Tournament.club(c.id):c);
  function alumniClub(){
@@ -1035,7 +1044,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function setupMatch(){
   const pending=!$('resume-game').hidden,{club,config}=lineupConfig('match');
-  modal(`${modalTitle('','試合設定')}${matchTeamsHTML()}<button class="league-inline-button" data-action="match-teams">チームを変更</button><div class="setup-section"><label>先攻・後攻</label><div class="segmented">${[[false,'先攻','打撃から'],[true,'後攻','守備から']].map(([home,label,sub])=>`<button data-match-home="${home}" class="${settings.matchUserHome===home?'active':''}" aria-pressed="${settings.matchUserHome===home}">${label}<small>${sub}</small></button>`).join('')}</div></div><div class="setup-section"><label>試合の長さ</label><div class="segmented">${[3,5,9].map(n=>`<button data-innings="${n}" class="${settings.innings===n?'active':''}">${n}イニング<small>${n===9?'フル':n===5?'通常':'短め'}</small></button>`).join('')}</div></div><div class="setup-section"><label for="park-select">球場</label><select id="park-select" class="field-select">${parkOptions(settings.park)}</select><div id="match-park-dimensions">${parkDimensions(NightPlayers.parks.find(p=>p.id===settings.park)||NightPlayers.parks[0])}</div></div>${lightingField()}<div class="setup-section"><label for="starter-select">先発投手</label><select id="starter-select" class="field-select">${club.pitchers.map((p,i)=>`<option value="${i}" ${config.pitcher===i?'selected':''}>${p.name} · ${p.velocity}km/h · ${p.trait}</option>`).join('')}</select></div><p class="modal-note">${settings.matchUserHome?'後攻':'先攻'} / 同点は引き分け。走塁は設定で切替。${pending?'<br>開始すると、中断中の試合を置き換えます。':''}</p><button class="primary-button" data-action="match-lineup">オーダー編成へ</button><button class="secondary-button" data-action="spectate-start">観戦モードで開始（両チーム自動）</button><button class="secondary-button" data-action="roster">選手の能力を見る</button>`,'setup');
+  modal(`${modalTitle('','試合設定')}${matchTeamsHTML()}<button class="league-inline-button" data-action="match-teams">チームを変更</button><div class="setup-section"><label>先攻・後攻</label><div class="segmented">${[[false,'先攻','打撃から'],[true,'後攻','守備から']].map(([home,label,sub])=>`<button data-match-home="${home}" class="${settings.matchUserHome===home?'active':''}" aria-pressed="${settings.matchUserHome===home}">${label}<small>${sub}</small></button>`).join('')}</div></div><div class="setup-section"><label>試合の長さ</label><div class="segmented">${[3,5,9].map(n=>`<button data-innings="${n}" class="${settings.innings===n?'active':''}">${n}イニング<small>${n===9?'フル':n===5?'通常':'短め'}</small></button>`).join('')}</div></div><div class="setup-section"><label for="park-select">球場</label><select id="park-select" class="field-select">${parkOptions(settings.park)}</select><div id="match-park-dimensions">${parkDimensions(NightPlayers.parks.find(p=>p.id===settings.park)||NightPlayers.parks[0])}</div><button class="league-inline-button" data-action="stadium-editor">球場エディタ（カスタム球場を作成）</button></div>${lightingField()}<div class="setup-section"><label for="starter-select">先発投手</label><select id="starter-select" class="field-select">${club.pitchers.map((p,i)=>`<option value="${i}" ${config.pitcher===i?'selected':''}>${p.name} · ${p.velocity}km/h · ${p.trait}</option>`).join('')}</select></div><p class="modal-note">${settings.matchUserHome?'後攻':'先攻'} / 同点は引き分け。走塁は設定で切替。${pending?'<br>開始すると、中断中の試合を置き換えます。':''}</p><button class="primary-button" data-action="match-lineup">オーダー編成へ</button><button class="secondary-button" data-action="spectate-start">観戦モードで開始（両チーム自動）</button><button class="secondary-button" data-action="roster">選手の能力を見る</button>`,'setup');
  }
  const descriptions={韋駄天:'一塁への到達が速く、外野も広く守る俊足型。',巧打:'大きいミートカーソルでヒットを重ねる巧打型。',勝負強い:'二・三塁に走者がいるとミート範囲と打球の強さが上昇。',長距離砲:'高いパワーに加え、強振時に打ち出し角が上がる長打型。',強肩:'外野からの送球が速く、進塁を防ぐ。',強打:'強い打球を打つ中軸タイプ。',俊足巧打:'ミートと走力を両立し、打線をつなぐ。',守備職人:'広い捕球範囲と素早い打球反応でアウトを取る。',チャンスメーカー:'高いミートと走力で上位打線を支える。',本格派:'速球と変化球を組み合わせ、長いイニングを投げる。',精密制球:'四球の少なさが制球力に反映され、狙いを定めやすい。',速球派:'計測された速球の平均球速が高く、直球で押せる。',技巧派:'制球と変化球で打者の芯を外す。',変化球派:'変化球と緩急を組み合わせて打者を抑える。',奪三振型:'奪三振率と長打の抑制が球威に反映される。',緩急派:'速球と大きな速差の変化球でタイミングを外す。',先発型:'登板数と投球回に応じた持久力で試合を作る。',バランス:'各能力を本人の実成績から換算した選手。'};
  const rankTile=(label,n)=>`<span class="rank-tile grade-${NightPlayers.grade(n)}"><small>${label}</small><b>${NightPlayers.grade(n)}</b><em>${n}</em></span>`;
@@ -2169,6 +2178,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(b.dataset.defense){if(game&&!game.umpireMode){game.defense=b.dataset.defense;checkpoint();tacticsModal();}return;}
    if(b.dataset.shift){if(game&&!game.umpireMode){game.shift=b.dataset.shift;checkpoint();tacticsModal();}return;}
    switch(b.dataset.action){
+     case'stadium-editor':stadiumEditorModal();break;
+     case'stadium-edit':stadiumEditorModal(b.dataset.parkId);break;
+     case'stadium-delete':{NightStadium.remove(b.dataset.parkId);if(settings.park===b.dataset.parkId){settings.park='night';save();}stadiumEditorModal();toast('カスタム球場を削除しました');break;}
+     case'stadium-save':{const park=NightStadium.upsert({id:b.dataset.parkId||undefined,name:$('stadium-name').value,left:$('stadium-left').value,leftCenter:$('stadium-leftCenter').value,center:$('stadium-center').value,rightCenter:$('stadium-rightCenter').value,right:$('stadium-right').value,wallHeight:$('stadium-wallHeight').value});settings.park=park.id;save();setupMatch();toast(`球場「${park.name}」を保存しました`);break;}
+     case'stadium-back':setupMatch();break;
      case'close':closeModal();break;
      case'totals':totalsModal();break;
    case'ct-start':customTourney={clubs:ctPicks.slice(),rounds:[[[0,7],[3,4],[2,5],[1,6]].map(([a,b])=>({home:ctPicks[a],away:ctPicks[b],winner:null,hs:null,as:null}))],champion:null};saveCustomTourney();customTourneyModal();break;
