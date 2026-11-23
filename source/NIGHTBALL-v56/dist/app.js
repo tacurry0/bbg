@@ -1826,7 +1826,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    $('atbat-chart-seq').textContent=pitches.map(p=>ATBAT_PITCH_SHORT[p.id]||'?').join('・');
  }
  function updateUI(){
-   if(!game)return;const g=game;updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
+   if(!game)return;const g=game;stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
    if(g.isFixture||g.career||g.challenge){
      updateScoreCube($('scoreboard'),g);
    }else if(g.derby){

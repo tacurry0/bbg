@@ -5,7 +5,7 @@
  const FILES=['bat-1','bat-2','mitt-1','mitt-2','crowd-bed','crowd-cheer','swish'];
  class NightAudio{
   constructor(){
-   this.context=null;this.buffers={};this.voices=new Set();this.lastVariant={};this.scene={enabled:true,active:false,volume:78,crowd:50,park:'night'};this.sceneKey='';this.bed=null;this.lastCheer=-100;this.disposed=false;
+   this.context=null;this.buffers={};this.voices=new Set();this.lastVariant={};this.scene={enabled:true,active:false,volume:78,crowd:50,park:'night'};this.sceneKey='';this.bed=null;this.lastCheer=-100;this.disposed=false;this.excitement=0;this.bedGain=.26;
    // Fetch early; decode once a user gesture creates the context. Works offline via the service worker.
    this.files=Promise.all(FILES.map(async id=>{try{const r=await fetch(`./assets/audio/${id}.mp3`);if(!r.ok)throw Error(r.status);return [id,await r.arrayBuffer()];}catch{return [id,null];}}));
   }
@@ -58,15 +58,24 @@
   }
   stopVoice(v){if(!v)return;try{v.source.stop();}catch{}this.voices.delete(v);v.nodes.forEach(n=>{try{n.disconnect();}catch{}});}
   stopEffects(){for(const v of [...this.voices])if(v!==this.bed)this.stopVoice(v);}
-  updateBed(){if(this.scene.active&&this.scene.enabled&&this.scene.crowd>0&&!this.bed)this.bed=this.sample('crowd-bed',{gain:this.park?.startsWith('school-')?.13:.26,crowd:true,loop:true});if(this.scene.crowd===0)this.stopBed();}
+  updateBed(){if(this.scene.active&&this.scene.enabled&&this.scene.crowd>0&&!this.bed){this.bedGain=this.park?.startsWith('school-')?.13:.26;this.bed=this.sample('crowd-bed',{gain:this.bedGain*(0.7+this.excitement*.8),crowd:true,loop:true});}if(this.scene.crowd===0)this.stopBed();}
+  // Game-situation excitement (0..1) from NightGame.crowdExcitement: the
+  // bed swells and every cheer gets louder as the game tightens.
+  setExcitement(v){
+   const x=Math.max(0,Math.min(1,Number(v)||0));
+   if(Math.abs(x-this.excitement)<.04)return;
+   this.excitement=x;
+   if(this.bed&&this.context)this.bed.amp.gain.setTargetAtTime(this.bedGain*(0.7+x*.8),this.context.currentTime,.4);
+  }
   stopBed(){if(!this.bed)return;const v=this.bed;this.bed=null;this.stopVoice(v);}
   cheer(level=1,seconds=3){
    const c=this.context;if(!c||!this.scene.enabled||!this.scene.crowd)return;
+   const scaled=Math.min(1.3,level*(0.72+this.excitement*.55));
    // Replace a small reaction with a big one; never stack several crowd recordings.
-   if(c.currentTime-this.lastCheer<.45&&level<=this.cheerLevel)return;
+   if(c.currentTime-this.lastCheer<.45&&scaled<=this.cheerLevel)return;
    if(this.cheerVoice)this.stopVoice(this.cheerVoice);
-   this.lastCheer=c.currentTime;this.cheerLevel=level;
-   this.cheerVoice=this.sample('crowd-cheer',{gain:level*.54,crowd:true,duration:seconds,offset:Math.random()*.5,fade:Math.min(1.4,seconds*.55)});
+   this.lastCheer=c.currentTime;this.cheerLevel=scaled;
+   this.cheerVoice=this.sample('crowd-cheer',{gain:scaled*.54,crowd:true,duration:seconds,offset:Math.random()*.5,fade:Math.min(1.4,seconds*.55)});
   }
   noise(kind,gain=.2){
    const c=this.context;if(!c||!this.scene.enabled)return;

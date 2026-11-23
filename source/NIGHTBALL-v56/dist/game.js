@@ -846,6 +846,19 @@ window.NightGame=class NightGame{
   const late=this.inning>=Math.max(5,this.totalInnings-2),close=Math.abs(this.homeScore-this.awayScore)<=2;
   return ((late&&close)||(this.bases[2]&&this.outs===1))&&Math.random()<.55;
  }
+ // Crowd excitement 0..1 from the game situation: later innings, a close
+ // score, runners in scoring position and a final-inning comeback chance
+ // all raise it. app.js feeds it to the stadium audio bed and cheers.
+ crowdExcitement(){
+  if(this.derby)return .3;
+  const total=Math.max(1,this.totalInnings);
+  const late=clamp((this.inning-1)/Math.max(1,total-1),0,1);
+  const diff=Math.abs(this.homeScore-this.awayScore);
+  const close=diff===0?1:diff===1?.82:diff===2?.55:diff<=4?.28:.08;
+  const runners=(this.bases[1]||this.bases[2])?.5:this.bases[0]?.22:0;
+  const finalChance=this.half==='bottom'&&this.inning>=total&&this.homeScore<=this.awayScore&&diff<=3?.3:0;
+  return clamp(late*.3+close*.35+runners*.25+finalChance,0,1);
+ }
  intentionalWalk(internal=false){
   if(this.umpireMode&&!internal)return false;
   if(this.mirror){if(!internal&&this.defending&&this.phase==='aim'){this.mirrorSend?.({t:'pitch-decision',ibb:true});return true;}return false;}
