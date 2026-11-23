@@ -284,6 +284,29 @@
    if(this.isNPB)this.advanceByes();
    return true;
   }
+  // Pre-game scouting data for one club: the rotation starter, the last
+  // five results (chronological), this season's category leaders from
+  // playerStats, and the current standing line.
+  scoutingReport(clubId){
+   const known=[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])].some(c=>c.id===clubId);
+   if(!known)return null;
+   const club=this.clubRoster(clubId);if(!club)return null;
+   const starter=club.pitchers[this.starterIndexFor(clubId)]||club.pitchers[0]||null;
+   const form=[];
+   for(const r of Object.values(this.results||{}).filter(r=>[r.home,r.away].includes(clubId)).slice(-5)){
+    const home=r.home===clubId,forRuns=home?r.homeScore:r.awayScore,against=home?r.awayScore:r.homeScore;
+    form.push({opponent:home?r.away:r.home,win:forRuns>against,for:forRuns,against});
+   }
+   const rows=Object.values(this.playerStats||{}).filter(r=>r.clubId===clubId);
+   const top=(list,fn)=>list.length?list.reduce((a,b)=>fn(b)>fn(a)?b:a):null;
+   const leaders={
+    hr:top(rows.filter(r=>(r.hr||0)>0),r=>r.hr),
+    avg:top(rows.filter(r=>(r.ab||0)>=3),r=>r.h/Math.max(1,r.ab)),
+    era:top(rows.filter(r=>(r.outs||0)>=9),r=>-(r.runs*27/Math.max(1,r.outs))),
+   };
+   const standing=this.standings().find(r=>r.id===clubId)||null;
+   return {clubId,starter,form,leaders,standing};
+  }
   // Per-season lines for one player: archived finished seasons (oldest
   // first) plus the current season's live playerStats, flagged current.
   playerSeasonHistory(playerId){

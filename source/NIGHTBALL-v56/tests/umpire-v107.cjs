@@ -370,8 +370,8 @@ for(const verdictSafe of [true,false]){
  assert(flat.includes('g.umpireCallReveal?.()'),'2D renderer draws the zone only via the reveal window');
  assert(flat.includes('x+umpireReveal.x*75'),'2D reveal marker plots the true crossing point');
  // v110 bump: ?v= pins move to 110 and the SW cache name moves with them.
- assert(html.includes('./game.js?v=116')&&html.includes('./app.js?v=116'),'version pins move to 116');
- assert(sw.includes("nightball-v116-season-graph"),'SW cache renamed so existing users receive the fix');
+ assert(html.includes('./game.js?v=117')&&html.includes('./app.js?v=117'),'version pins move to 117');
+ assert(sw.includes("nightball-v117-scouting"),'SW cache renamed so existing users receive the fix');
 }
 
 console.log('umpire-v107: all assertions passed');
