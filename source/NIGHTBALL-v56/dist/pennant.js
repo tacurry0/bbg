@@ -117,7 +117,7 @@
    if(!leagueId)throw Error('Unknown club');
    if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -140,7 +140,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -275,12 +275,24 @@
    if(!this.faDone){this.ensureFaMarket();this.runFaCpu();this.faDone=true;}
    this.applyDevelopment();
    (this.titles||(this.titles=[])).push({season:this.season||1,champion:this.postseason?.champion||this.playoffSeeds()[0]?.clubId||null});
+   (this.seasonArchive||(this.seasonArchive=[])).push({season:this.season||1,stats:Object.fromEntries(Object.entries(this.playerStats||{}).map(([k,r])=>[k,{name:r.name,clubId:r.clubId,pos:r.pos,pa:r.pa||0,ab:r.ab||0,h:r.h||0,hr:r.hr||0,rbi:r.rbi||0,bb:r.bb||0,doubles:r.doubles||0,triples:r.triples||0,outs:r.outs||0,k:r.k||0,runs:r.runs||0}]))});
+   if(this.seasonArchive.length>10)this.seasonArchive.splice(0,this.seasonArchive.length-10);
    this.season=(this.season||1)+1;
    this.schedule=roundRobin(this.clubs.map(c=>c.id),this.gamesPerOpponent,this.clubId);
    if(this.isNPB){this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),this.gamesPerOpponent,null,'other-r');this.otherResults={};}
    this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.pitcher=this.starterIndexFor(this.clubId);
    if(this.isNPB)this.advanceByes();
    return true;
+  }
+  // Per-season lines for one player: archived finished seasons (oldest
+  // first) plus the current season's live playerStats, flagged current.
+  playerSeasonHistory(playerId){
+   const find=stats=>{if(!stats)return null;for(const [k,r] of Object.entries(stats))if(k.split('/').slice(1).join('/')===playerId)return r;return null;};
+   const out=[];
+   for(const a of this.seasonArchive||[]){const r=find(a.stats);if(r)out.push({season:a.season,current:false,...r});}
+   const cur=find(this.playerStats);
+   if(cur)out.push({season:this.season||1,current:true,...cur});
+   return out;
   }
   // ---- Farm (二軍): assignment layer over clubRoster. Farm players sit out
   // first-team games and sims, gain small periodic rating growth, and injured
