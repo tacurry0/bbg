@@ -402,7 +402,7 @@ renderer.hud=oldHud;renderer.ctx=oldContext;
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v109-manual-running'));
+assert(swCode.includes('nightball-v110-abs-button'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 

@@ -128,7 +128,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const c=NightCareerLife.foreignClub(id)||matchClub(id);
   return `<span class="club-badge ${small?'small':''}" style="--club:${c.color};--accent:${c.accent}" aria-hidden="true">${c.logo?`<img src="${c.logo}" alt="">`:`<b class="career-foreign-mark">${c.scoreMark}</b>`}</span>`;
  };
- function showLeagueScreen(){$('career').hidden=true;$('apbc-cup').hidden=true;closeModal(false);screen='pennant';$('home').hidden=true;$('game').hidden=true;$('pennant').hidden=false;$('pause').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'pennant'},'',location.href);window.scrollTo(0,0);}
+ function showLeagueScreen(){$('career').hidden=true;$('apbc-cup').hidden=true;closeModal(false);screen='pennant';$('home').hidden=true;$('game').hidden=true;$('pennant').hidden=false;$('pause').hidden=true;$('sub').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'pennant'},'',location.href);window.scrollTo(0,0);}
  function leaguePicker(){
   showLeagueScreen();
   if(selectedLeague==='npb'){
@@ -889,7 +889,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function apbcDashboard(){
   if(!tournament){apbcHub();return;}
-  closeModal(false);screen='apbc-cup';matchContext='apbc';$('home').hidden=true;$('game').hidden=true;$('pennant').hidden=true;$('apbc-cup').hidden=false;$('pause').hidden=true;
+  closeModal(false);screen='apbc-cup';matchContext='apbc';$('home').hidden=true;$('game').hidden=true;$('pennant').hidden=true;$('apbc-cup').hidden=false;$('pause').hidden=true;$('sub').hidden=true;
   history.replaceState({nightball:'apbc-cup'},'',location.href);window.scrollTo(0,0);
   const t=tournament,club=NightTeams.get(t.team),active=t.active,dayLabel=active?.day===3?(active.slot===1?'決勝':'3位決定戦'):`予選 第${t.day+1}戦`;
   const lastDay=t.results.filter(r=>r.day===t.day-1),last=lastDay.find(r=>r.report),result=last&&((last.home===t.team)===(last.homeScore>last.awayScore)?'勝利':'敗戦');
@@ -1509,7 +1509,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
-  for(const id of ['abs-actor','abs-count','abs-review'])$(id).hidden=true;
+  for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
   playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
@@ -1551,6 +1551,15 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    actor.style.top=canvas.top-stage.top+bounds.y+'px';
    actor.style.width=bounds.w+'px';actor.style.height=bounds.h+'px';
   }
+  // Explicit ABS challenge button: same entry point as the double-tap on
+  // the actor overlay, shown only while a challenge is actually available.
+  const absBtn=$('abs-challenge');
+  absBtn.hidden=!interactive||!!g.umpireMode;
+  if(!absBtn.hidden){
+   $('abs-challenge-label').textContent='ABSチャレンジ（残り'+g.absRemaining+'）';
+   const windowMs=NightGame.ABS_TIMING.call+(g.onlineGame?800:0);
+   $('abs-challenge-fill').style.width=Math.max(0,Math.min(100,(1-g.phaseTime/windowMs)*100))+'%';
+  }
   const opening=panel.hidden;
   panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
   if(panel.hidden)return;
@@ -1576,6 +1585,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(draw)absReview.draw(call,g.phaseTime,reduceAbsMotion.matches);
  }
  $('play-challenge').addEventListener('click',()=>{if(game?.requestPlayChallenge())sound('tap');});
+ $('abs-challenge').addEventListener('click',()=>{if(game?.requestAbsChallenge())sound('tap');});
  const absActor=$('abs-actor');
  absActor.addEventListener('pointerdown',e=>{
   if(e.button!==0||!game?.absCanChallenge)return;
@@ -1766,7 +1776,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('half-break').addEventListener('pointercancel',()=>{halfTap=null;});
  $('half-continue').addEventListener('click',e=>{if(e.detail===0)continueHalf();});
  function updateUI(){
-   if(!game)return;const g=game;updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);
+   if(!game)return;const g=game;updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
    if(g.isFixture||g.career||g.challenge){
      updateScoreCube($('scoreboard'),g);
    }else if(g.derby){
@@ -1954,7 +1964,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      <button class="secondary-button" data-action="online-copy-code">合言葉をコピー</button>
      <button class="secondary-button" data-action="online-copy-link">招待リンクをコピー</button>
      ${typeof navigator!=='undefined'&&typeof navigator.share==='function'?'<button class="secondary-button" data-action="online-share-link">招待リンクを共有</button>':''}
-     <p class="online-status-line">${o.status||''}${o.latency?.samples?` 相手との片道遅延 約${o.latency.oneWayMs()}ms（ホストの入力をこの分だけ遅らせ、両者の入力遅延を均等化します）`:''}</p>
+     <p class="online-status-line">${o.status||''}</p>
      <h3 class="arcade-section-title">自分の球団</h3>
      <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
      <h3 class="arcade-section-title">イニング</h3>
@@ -1967,7 +1977,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      <button class="secondary-button" data-action="online-cancel">部屋を閉じる</button>`;
    }else{
      inner=`<p class="career-status-line">あなたはゲストです。自分の球団を選んでください。先攻・後攻とスタジアムはホストが決めます。</p>
-     <p class="online-status-line">${o.status||''}${o.lastLat?` 相手との片道遅延 約${o.lastLat}ms（ホストの入力をこの分だけ遅らせ、両者の入力遅延を均等化します）`:o.session?.open?' 遅延を測定中…':''}</p>
+     <p class="online-status-line">${o.status||''}</p>
      <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
      <button class="secondary-button" data-action="online-cancel">退出する</button>`;
    }
@@ -2022,7 +2032,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(online.started&&game&&game.phase!=='ended'){game.paused=true;modal(`${modalTitle('','接続が切れました')}<p class="career-status-line">相手との接続が切断されました。試合は一時停止しています。</p><button class="primary-button" data-action="online-exit">ホームへ戻る</button>`,'online-gone');}
    else if(!online.started){online.guestClub=null;online.status='ゲストが退出しました。接続を待っています…';onlineLobbyRefresh();}
  }
- const REACTIONS=['👏','🔥','😂','👍','😱','😤'];
+ const REACTIONS=['👏','🔥','😂','👍','😱','😤','❤️','🎉','😢','😡','👎','💪'];
  let reactionTimer=0;
  function showReaction(e){
    if(!REACTIONS.includes(e))return;
@@ -2176,7 +2186,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    modal(`${modalTitle('',title,false)}${match?`<div class="result-hero"><div class="league-versus final-versus"><div>${clubBadge(g.teams.away.id)}<b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div>${clubBadge(g.teams.home.id)}<b>${g.teams.home.name}</b></div></div></div>${resultReportHTML(buildMatchReport(g))}`:`<div class="result-stats">${stats.map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>`}
    ${g.umpireMode?umpireResultHTML(g):''}${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}${g.umpireMode?'<button class="primary-button" data-action="umpire-restart">もう一度審判する</button>':'<button class="primary-button" data-action="restart">もう一度プレイ</button>'}${g.onlineGame&&online?.role==='host'?onlineRematchButtons():''}${match?'<button class="secondary-button" data-action="box-score">選手別の成績を見る</button>':''}<button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
  }
- function home(){try{speechSynthesis.cancel();}catch{}stopReplay();if(online?.started){if(!online.endSent)online.session?.send({t:online.role==='guest'?'guest-left':'host-left'});onlineCleanup();hideOnlineGuest();}review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;onEvent('clear');screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('react').hidden=true;$('react-panel').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
+ function home(){try{speechSynthesis.cancel();}catch{}stopReplay();if(online?.started){if(!online.endSent)online.session?.send({t:online.role==='guest'?'guest-left':'host-left'});onlineCleanup();hideOnlineGuest();}review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;$('apbc-cup').hidden=true;queuedBench=false;stadiumAudio.stopEffects();if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}closeModal(false);game=null;onEvent('clear');screen='home';matchContext='match';$('pennant').hidden=true;$('home').hidden=false;$('game').hidden=true;$('pause').hidden=true;$('sub').hidden=true;$('react').hidden=true;$('react-panel').hidden=true;$('settings').hidden=false;history.replaceState({nightball:'home'},'',location.href);window.scrollTo(0,0);renderMenuClubs();}
  function swing(){if(!game||game.umpireMode||game.spectate)return;
    const g=game;
    // Host latency equalization: capture the decision as made (pitch type /
@@ -2220,7 +2230,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(screen==='game'&&e.key==='Escape')pause();
    if(screen==='game'&&game&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();game.setCursor(game.cursor.x+(e.key==='ArrowLeft'?-.1:e.key==='ArrowRight'?.1:0),game.cursor.y+(e.key==='ArrowUp'?-.1:e.key==='ArrowDown'?.1:0));updatePad();}
  });
- $('bench-button').onclick=requestBench;
+ $('bench-button').onclick=requestBench;$('sub').onclick=requestBench;
  $('bunt').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate&&game.mode!=='derby'){game.bunt=true;game.power=false;updateStyle();sound('tap');}};
  $('steal').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate&&game.inMatch){const g=game,target=!g.steal;const apply=()=>{g.steal=target;updateStyle();};if(hostDelayMs()>=5&&['aim','intro','windup'].includes(g.phase))hostDelay(apply);else apply();sound('tap');}};
  $('ibb').onclick=()=>{if(game&&!game.umpireMode){const g=game;hostDelay(()=>{if(g.intentionalWalk()){sound('tap');updateUI();}});}};
@@ -2480,7 +2490,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     if(current.mirror)current.mirrorTick(activeDt);
     else current.update(activeDt,hold||playFeedback.pendingReplay);
     if(screen!=='game'||game!==current)return;
-    const rb=$('react');if(rb)rb.hidden=!game?.onlineGame;const le=$('online-latency');if(le){const lv=game?.onlineGame?(online?.role==='host'?hostDelayMs():online?.lastLat||0):0;le.hidden=!lv;if(lv){le.textContent='入力遅延を均等化中：約'+lv+'ms';le.title='相手との片道遅延の推定値です。ホストの入力はこの分だけ遅れて反映され、両者の入力遅延が揃います。';le.setAttribute('aria-label',le.title);}}onlineTick(game);updateScoringChip(game);
+    const rb=$('react');if(rb)rb.hidden=!game?.onlineGame;onlineTick(game);updateScoringChip(game);
     try{updatePlayCallUI(game);}catch{}
     try{updateUmpireUI(game);}catch{}
     if(game.phase==='field'&&!review.playback)updatePlayTools();

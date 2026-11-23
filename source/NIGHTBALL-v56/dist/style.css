@@ -171,8 +171,9 @@
 .online-feed small{color:#889}
 
 .react-button{font-size:19px;line-height:1}
-.online-latency{font-size:11px;line-height:1;color:#cfe3ff;align-self:center;white-space:nowrap}
-.react-panel{position:absolute;top:calc(70px + env(safe-area-inset-top));right:12px;z-index:40;display:flex;gap:4px;background:#18241f;border:1px solid #5f745d66;border-radius:10px;padding:8px;box-shadow:0 12px 40px #0009}
+.sub-button{width:auto;padding:0 9px;font-size:12px;font-weight:800;color:#d9eabf}
+.sub-button.pending{background:#d9ef96;color:#14251c;border-radius:9px}
+.react-panel{position:absolute;top:calc(70px + env(safe-area-inset-top));right:12px;z-index:40;display:grid;grid-template-columns:repeat(6,46px);gap:4px;background:#18241f;border:1px solid #5f745d66;border-radius:10px;padding:8px;box-shadow:0 12px 40px #0009}
 .react-panel button{width:46px;height:46px;font-size:27px;background:#ffffff08;border-radius:8px;display:grid;place-items:center;padding:0}
 .react-panel button:active{transform:scale(1.15)}
 .react-pop{position:absolute;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:15%;font-size:88px;pointer-events:none;z-index:6;opacity:0}
@@ -230,5 +231,4 @@
 .allstar-own{background:#d5f36a14;border-radius:6px;box-shadow:inset 3px 0 0 var(--lime)}
 .allstar-own-mark{display:inline-block;padding:1px 7px;border-radius:999px;background:var(--lime);color:#182719;font-size:9px;font-weight:900;vertical-align:middle}
 .allstar-own-summary{display:inline-block;padding:6px 12px;border-radius:999px;background:#d5f36a1f;border:1px solid #d5f36a66;color:#e6f5b8;font-size:11px;font-weight:800}
-/* Online latency chip: keep the longer wording inside the top bar */
-.online-latency{font-size:10px;max-width:38vw;overflow:hidden;text-overflow:ellipsis}
+

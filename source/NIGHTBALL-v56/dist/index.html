@@ -11,21 +11,21 @@
   <link rel="apple-touch-icon" href="./icon-192.png">
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="preload" as="image" href="./assets/menu/clubhouse-v18.webp">
-  <link rel="stylesheet" href="./style.css?v=61">
+  <link rel="stylesheet" href="./style.css?v=62">
 <link rel="stylesheet" href="./arcade.css?v=77">
   <link rel="stylesheet" href="./career.css?v=56">
   <link rel="stylesheet" href="./career-world.css?v=90">
   <link rel="stylesheet" href="./game-hud.css?v=74">
   <link rel="stylesheet" href="./menu-polish.css?v=58">
   <link rel="stylesheet" href="./pwa-update.css?v=1">
-  <link rel="stylesheet" href="./abs.css?v=3">
+  <link rel="stylesheet" href="./abs.css?v=4">
   <title>NIGHTBALL — ポケット野球</title>
 </head>
 <body>
 <div class="app" id="app">
   <header class="topbar">
     <button class="wordmark" id="brand" aria-label="ホーム">NIGHTBALL<span class="brand-dot"></span><svg class="broadcast-brand-ball" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.7" fill="#eff9ff" stroke="#8fc4f4"/><path fill="none" stroke="#da4650" stroke-width="1.5" d="M5.8 4.6a10.5 10.5 0 0 1 0 16.8M20.2 4.6a10.5 10.5 0 0 0 0 16.8"/></svg></button>
-    <div class="top-actions"><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><span id="online-latency" class="online-latency" hidden></span><button class="icon-button" id="settings" aria-label="設定"></button></div>
+    <div class="top-actions"><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
   </header>
   <div class="react-panel" id="react-panel" hidden></div>
 
@@ -100,6 +100,7 @@
       <div id="umpire-call" class="umpire-call" role="status" hidden></div>
       <button id="abs-actor" type="button" hidden></button>
       <button id="play-challenge" class="play-challenge" type="button" hidden>チャレンジ</button>
+      <button id="abs-challenge" class="abs-challenge" type="button" hidden><span id="abs-challenge-label">ABSチャレンジ</span><span class="abs-challenge-timer" aria-hidden="true"><i id="abs-challenge-fill"></i></span></button>
       <div id="umpire-panel" class="umpire-panel" hidden>
         <div class="umpire-status"><span>審判スコア <b id="umpire-score">0</b></span><span>投球正解率 <b id="umpire-accuracy">—</b></span><span id="umpire-play-wrap" hidden>塁上 <b id="umpire-play-accuracy">—</b></span></div>
         <div id="umpire-feedback" class="umpire-feedback" role="status" hidden></div>
@@ -152,7 +153,7 @@
 <script defer src="./matchup-data.js?v=56"></script>
 <script defer src="./audio.js?v=56"></script>
 <script defer src="./derby.js?v=56"></script>
-<script defer src="./game.js?v=109"></script>
+<script defer src="./game.js?v=110"></script>
 <script defer src="./career-leagues.js?v=56"></script>
 <script defer src="./career-development.js?v=56"></script>
 <script defer src="./career-life.js?v=56"></script>
@@ -173,6 +174,6 @@
 <script defer src="./squad.js?v=56"></script>
 <script defer src="./pwa-update.js?v=2"></script>
 <script defer src="./online.js?v=1"></script>
-<script type="module" src="./app.js?v=109"></script>
+<script type="module" src="./app.js?v=110"></script>
 </body>
 </html>
