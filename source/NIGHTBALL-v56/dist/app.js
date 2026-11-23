@@ -256,7 +256,6 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function draftModal(){
   if(!league?.offseason)return;
-  league.runCpuPicks();saveLeague();
   let faHTML='';
   if(league.draftDone&&!league.faDone&&league.ensureFaMarket()){
    const fa=league.offseason.fa,pts=fa.points[league.clubId]??0;
@@ -268,7 +267,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const taken=new Set(d.picks.map(k=>k.playerId)),pool=d.pool.filter(p=>!taken.has(p.id)).sort((a,b)=>league.playerValue(b)-league.playerValue(a));
   const poolHTML=pool.map(p=>`<div class="career-list-row"><div><b>${p.name}</b><small>${p.pos==='P'?`投手 球速${p.velocity} 制球${p.control} スタミナ${p.stamina}`:`${p.pos} ミート${p.contact} パワー${p.power} 走${p.run} 守${p.field}`}</small></div>${myTurn?`<button class="league-inline-button" data-draft-pick="${p.id}">指名</button>`:`<strong>${league.playerValue(p).toFixed(0)}</strong>`}</div>`).join('');
   const picksHTML=d.picks.map((k,i)=>`<div class="career-list-row"><div><b>${i+1}. ${k.name}</b><small>${NightTeams.get(k.clubId)?.short||''} · ${k.pos}</small></div></div>`).join('');
-  modal(`${modalTitle('',(league.season||1)+'年目 ドラフト会議')}<p class="modal-note">${done?'全指名が終了しました。':myTurn?'あなたの指名ターンです。候補から1名選んでください。':`${NightTeams.get(currentClub)?.short||''}の指名ターン`}</p>${picksHTML?`<h3 class="arcade-section-title">指名済み</h3>${picksHTML}`:''}<h3 class="arcade-section-title">候補選手</h3>${poolHTML}${faHTML}${done?(league.faDone?'<button class="primary-button" data-action="draft-finish">来シーズンを開始</button>':'<button class="primary-button" data-action="fa-finish">FAを終えて来シーズンへ</button>'):'<button class="primary-button" data-action="close">閉じる</button>'}`,'draft');
+  const lastPick=d.picks.at(-1),lastRound=lastPick?Math.floor((d.picks.length-1)/d.order.length)+1:0;
+  const announceHTML=lastPick?`<div class="draft-announce"><span>第${lastRound}巡目</span><strong>${NightTeams.get(lastPick.clubId)?.short||''} が ${lastPick.name}（${lastPick.pos}）を指名！</strong></div>`:'';
+  const stepHTML=done?'':myTurn?'<p class="modal-note">あなたの指名ターンです。候補から1名選んでください。</p>':`<button class="primary-button" data-action="draft-step">次の指名へ進む（${NightTeams.get(currentClub)?.short||''}）</button><button class="secondary-button" data-action="draft-skip">自分のターンまで進める</button>`;
+  modal(`${modalTitle('',(league.season||1)+'年目 ドラフト会議')}${announceHTML}<p class="modal-note">${done?'全指名が終了しました。':myTurn?'':`残り ${d.order.length*d.rounds-d.pickIndex} 指名`}</p>${stepHTML}${picksHTML?`<h3 class="arcade-section-title">指名済み</h3>${picksHTML}`:''}<h3 class="arcade-section-title">候補選手</h3>${poolHTML}${faHTML}${done?(league.faDone?'<button class="primary-button" data-action="draft-finish">来シーズンを開始</button>':'<button class="primary-button" data-action="fa-finish">FAを終えて来シーズンへ</button>'):'<button class="primary-button" data-action="close">閉じる</button>'}`,'draft');
  }
  function awardsModal(){
   if(!league)return;const a=league.seasonAwards(),club=r=>NightTeams.get(r.clubId)?.short||'';
@@ -2441,6 +2443,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'online-start':startOnlineMatch();break;
    case'online-cancel':onlineCleanup();closeModal();break;
    case'online-exit':onlineCleanup();hideOnlineGuest();home();break;
+   case'draft-step':if(league?.draftCpuPick()){saveLeague();draftModal();}break;
+   case'draft-skip':if(league){league.runCpuPicks();saveLeague();draftModal();}break;
    case'draft-finish':if(league?.startNextSeason()){saveLeague();closeModal(false);leagueDashboard();toast((league.season)+'年目のシーズンが始まりました');}break;
    case'fa-finish':if(league){league.ensureFaMarket();league.faFinish();saveLeague();if(league.startNextSeason()){saveLeague();closeModal(false);leagueDashboard();toast((league.season)+'年目のシーズンが始まりました');}else draftModal();}break;
    case'allstar-play':playAllstar();break;
