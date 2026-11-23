@@ -956,7 +956,7 @@
     reservePitcher:1,shortIntro:true,prospect:true,keyOnly:format==='key',firstAppearance:f.development===true,important:!!f.important||f.kind==='post'||f.kind==='asia',completed:0};
    return {worldFixture:f.id,career:format==='full'?null:activity,homeTeamId:f.home,awayTeamId:f.away,
     worldMusic:{teamSeed:this.seed,playerId:pId},
-    clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:this.pitching?userStarter:rotIndex(ownTeam,f.id+'/own'),opponentPitcher:rotIndex(plans.away.team,f.id+'/opp'),
+    clubs:{home:plans.home.team,away:plans.away.team},innings:9,park,userHome,pitcher:this.pitching?userStarter:rotIndex(ownTeam,f.id+'/own'),opponentPitcher:rotIndex(rival.team,f.id+'/opp'),
     order:ownTeam.startingOrder,fielding:ownTeam.startingFielding,practiceBatter:pId,
     worldMaxInnings:L.inningLimit(f),worldDrawClinches:f.drawClinches,
     worldRival:rival.team.id};
