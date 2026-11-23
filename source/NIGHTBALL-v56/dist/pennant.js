@@ -117,7 +117,7 @@
    if(!leagueId)throw Error('Unknown club');
    if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -140,7 +140,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -349,14 +349,51 @@
     if(inj&&inj.returnRound>this.round+1)inj.returnRound--;
     const prog=this.farmProgress[id]||(this.farmProgress[id]={rounds:0,bonus:0});
     prog.rounds++;
-    if(prog.rounds%4===0&&prog.bonus<6){
-     const roster=this.clubRoster(clubId),p=[...roster.batters,...roster.pitchers].find(x=>x.id===id);if(!p)continue;
-     const m={...(this.ratingMods[id]||{})};
-     if(p.pos==='P'||p.velocity){const k=prog.bonus%2?'velocity':'control';m[k]=(m[k]||0)+1;}
-     else{const k=prog.bonus%2?'power':'contact';m[k]=(m[k]||0)+1;}
-     this.ratingMods[id]=m;prog.bonus++;
-    }
+    if(prog.rounds%4===0&&prog.bonus<6)this._farmBonus(id,prog,clubId);
    }
+  }
+  _farmBonus(id,prog,clubId){
+   const roster=this.clubRoster(clubId);if(!roster)return;
+   const p=[...roster.batters,...roster.pitchers].find(x=>x.id===id);if(!p)return;
+   const m={...(this.ratingMods[id]||{})};
+   if(p.pos==='P'||p.velocity){const k=prog.bonus%2?'velocity':'control';m[k]=(m[k]||0)+1;}
+   else{const k=prog.bonus%2?'power':'contact';m[k]=(m[k]||0)+1;}
+   this.ratingMods[id]=m;prog.bonus++;
+  }
+  // ---- Playable farm games: one per round, against the farm side of the
+  // club the first team faces that round (or the first other club on a
+  // bye). Lineups lead with the assigned farm players and fill out with
+  // the youngest bench players so a side always fields nine.
+  farmGameOpponent(){
+   const f=this.activeFixture;
+   if(f&&(f.home===this.clubId||f.away===this.clubId))return f.home===this.clubId?f.away:f.home;
+   return (this.clubs.find(c=>c.id!==this.clubId)||{}).id||null;
+  }
+  canPlayFarmGame(){return !this.completed&&!this.currentGame&&this.farmGameRound!==this.round&&!!this.farmGameOpponent();}
+  farmClub(clubId){
+   const base=this.clubRoster(clubId);if(!base)return null;
+   const farm=new Set(this.farmIds(clubId)),young=(a,b)=>(this.ages[a.id]??25)-(this.ages[b.id]??25);
+   const batters=[...base.batters.filter(p=>farm.has(p.id)),...base.batters.filter(p=>!farm.has(p.id)).sort(young)].slice(0,10);
+   const pitchers=[...base.pitchers.filter(p=>farm.has(p.id)),...base.pitchers.filter(p=>!farm.has(p.id)).sort(young)].slice(0,5);
+   return {...base,name:base.name+' 二軍',batters,pitchers,startingOrder:batters.slice(0,9).map(p=>p.id),startingFielding:{}};
+  }
+  // A played farm game credits each appearing farm player with two rounds
+  // of development (stepped one round at a time so the every-4-rounds
+  // bonus cadence matches farmDevelop exactly). One credit per round.
+  farmGameCredit(game){
+   if(!game||this.farmGameRound===this.round)return [];
+   this.farmGameRound=this.round;
+   const mine=new Set(this.farmIds(this.clubId));
+   const appeared=new Set([...Object.keys(game.box||{}),...Object.keys(game.pitchingStats||{})]);
+   const credited=[];
+   this.farmProgress=this.farmProgress||{};this.ratingMods=this.ratingMods||{};
+   for(const id of mine){
+    if(!appeared.has(id))continue;
+    const prog=this.farmProgress[id]||(this.farmProgress[id]={rounds:0,bonus:0});
+    for(let s=0;s<2;s++){prog.rounds++;if(prog.rounds%4===0&&prog.bonus<6)this._farmBonus(id,prog,this.clubId);}
+    credited.push(id);
+   }
+   return credited;
   }
   // ---- Free-agent market: runs after the draft in the offseason. Signing
   // uses points (100 per club per offseason), not money; cost scales with

@@ -292,7 +292,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(!league)return;
   const roster=league.clubRoster(league.clubId),farm=new Set(league.farmIds(league.clubId)),inj=new Set(league.injuredIds(league.clubId));
   const row=p=>`<div class="career-list-row"><div><b>${p.name}</b><small>${p.pos==='P'||p.velocity?`投手 球速${p.velocity} 制球${p.control} スタミナ${p.stamina}`:`${p.pos} ミート${p.contact} パワー${p.power} 走${p.run} 守${p.field}`}${inj.has(p.id)?' · 負傷中（二軍で調整すると復帰が早まる）':''} · 育成ボーナス +${league.farmProgress[p.id]?.bonus||0}/6</small></div><button class="league-inline-button" data-farm-player="${p.id}">${farm.has(p.id)?'一軍へ昇格':'二軍へ降格'}</button></div>`;
-  modal(`${modalTitle('','二軍（ファーム）')}<p class="modal-note">二軍の選手は一軍の試合（プレイ・シミュレーションとも）に出場しません。節ごとに少しずつ成長し（最大+6）、負傷中の選手は復帰が早まります。入れ替えは次の試合から反映されます。</p><h3 class="arcade-section-title">野手</h3>${roster.batters.map(row).join('')}<h3 class="arcade-section-title">投手</h3>${roster.pitchers.map(row).join('')}<button class="primary-button" data-action="close">閉じる</button>`,'farm');
+  modal(`${modalTitle('','二軍（ファーム）')}<p class="modal-note">二軍の選手は一軍の試合（プレイ・シミュレーションとも）に出場しません。節ごとに少しずつ成長し（最大+6）、負傷中の選手は復帰が早まります。入れ替えは次の試合から反映されます。</p>${league.canPlayFarmGame()?`<button class="primary-button" data-league-action="farm-game">二軍戦をプレイ（vs ${NightTeams.get(league.farmGameOpponent())?.short||''} 二軍 · 3回制）</button><p class="modal-note">1節に1試合だけプレイできます。出場した二軍選手には通常の2節分の育成クレジットが入ります。</p>`:league.completed?'':`<p class="modal-note">今節の二軍戦はプレイ済みです（1節に1試合）。</p>`}<h3 class="arcade-section-title">野手</h3>${roster.batters.map(row).join('')}<h3 class="arcade-section-title">投手</h3>${roster.pitchers.map(row).join('')}<button class="primary-button" data-action="close">閉じる</button>`,'farm');
  }
  function allstarModal(){
   if(!league?.allstarDue)return;
@@ -308,6 +308,15 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   closeModal(false);unlockAudio();lastMode='match';saved=false;
   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:home.id,awayTeamId:away.id,userHome:true,innings:5,park:home.park,pitcher:0,opponentPitcher:0,order:home.startingOrder,fielding:home.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist});
   game.allstarEvent=true;
+  activateGame();updateStyle();updateUI();
+ }
+ function startFarmGame(){
+  if(!league?.canPlayFarmGame())return;
+  const oppId=league.farmGameOpponent(),home=league.farmClub(league.clubId),away=league.farmClub(oppId);
+  if(!home||!away)return;
+  closeModal(false);unlockAudio();lastMode='match';saved=false;
+  game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:home.id,awayTeamId:away.id,userHome:true,innings:3,park:home.park,pitcher:0,opponentPitcher:0,order:home.startingOrder,fielding:home.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,mastery:league.mastery});
+  game.farmGame=true;
   activateGame();updateStyle();updateUI();
  }
  function finishLeague(g){
@@ -352,6 +361,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'box':boxModal();break;
    case'roster':rosterModal(null,game?.mode==='pennant'?game.userSide:'home');break;
    case'farm':farmModal();break;
+   case'farm-game':startFarmGame();break;
    case'allstar':allstarModal();break;
    case'leaders':leadersModal();break;
    case'awards':awardsModal();break;
@@ -2288,6 +2298,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(g.apbcFixtureId){finishTournament(g);return;}
    if(g.mode==='pennant'){finishLeague(g);return;}
    if(g.derby&&g.derbyTransition){derbyTurnResult(g);return;}
+   if(g.farmGame){const credited=league?league.farmGameCredit(g):[];if(league)saveLeague();commit(g);checkAchievements(g);$('swing').disabled=true;modal(`${modalTitle('','二軍戦 結果',false)}<div class="result-hero"><div class="league-versus final-versus"><div><b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div><b>${g.teams.home.name}</b></div></div></div><p class="modal-note">${credited.length?`出場した二軍選手 ${credited.length} 名に育成クレジット（通常の2節分）が入りました。`:'出場した二軍選手はいませんでした。'}</p><button class="primary-button" data-action="farm-back">ペナントへ戻る</button>`,'result');return;}
    if(g.allstarEvent){if(league){league.completeAllstar();saveLeague();}commit(g);checkAchievements(g);$('swing').disabled=true;modal(`${modalTitle('','オールスター結果',false)}<div class="result-hero"><div class="league-versus final-versus"><div><b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div><b>${g.teams.home.name}</b></div></div></div><button class="primary-button" data-action="allstar-back">ペナントへ戻る</button>`,'result');return;}
    if(g.onlineGame&&online?.role==='host'&&online.started&&!online.resultRecorded){online.resultRecorded=true;recordOnlineResult(online.guestClub,g.userScore>g.opponentScore,g.homeScore===g.awayScore,g.homeScore,g.awayScore);}
    const newDistance=g.session.maxDistance>records.maxDistance;commit(g);checkAchievements(g);$('swing').disabled=true;
@@ -2450,6 +2461,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'allstar-play':playAllstar();break;
    case'allstar-sim':if(league?.allstarDue){const s=league.simAllstar();league.completeAllstar();saveLeague();closeModal(false);leagueDashboard();toast('オールスター: '+s.awayScore+' - '+s.homeScore);}break;
    case'allstar-back':closeModal(false);game=null;leagueDashboard();break;
+   case'farm-back':closeModal(false);game=null;leagueDashboard();break;
    case'rematch-same':case'rematch-swap':if(online?.role==='host'&&online.session?.open){online.rematchSwap=b.dataset.action==='rematch-swap';online.rematchState='offered';online.session.send({t:'rematch',swap:online.rematchSwap});if(game)finish(game);}break;
    case'rematch-accept':if(online?.role==='guest'&&online.rematchOffer){online.session?.send({t:'rematch-yes'});online.rematchOffer=null;closeModal(false);toast('再戦を開始します…');}break;
    case'rematch-decline':if(online?.role==='guest'){online.session?.send({t:'rematch-no'});online.rematchOffer=null;guestResultModal();}break;
