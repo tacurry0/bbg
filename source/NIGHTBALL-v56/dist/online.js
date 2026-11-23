@@ -15,6 +15,71 @@
   });
   return loadPromise;
  }
+ /* ---- online input-delay equalization (v107 latency) ----
+    The guest's inputs reach the host one network one-way trip late, while
+    the host's own inputs apply instantly: a structural host advantage.
+    The host measures the round-trip time with ping/pong, estimates the
+    one-way delay, and holds its OWN timing inputs (swing, pitch release,
+    steal, intentional walk) in a delay queue for that long, so both sides'
+    decisions take effect after roughly the same latency.
+    Cap rationale (150ms): consumer broadband / 4G one-way delay is almost
+    always below ~75ms; 150ms covers poor links while keeping the host's
+    controls responsive — beyond that the added sluggishness costs more
+    fairness (reactions to a moving pitch) than it buys. */
+ const LATENCY_MAX_MS=150;
+ const PING_INTERVAL_MS=2000;
+ function clampDelay(ms){
+  const n=Number(ms);
+  if(!Number.isFinite(n)||n<=0)return 0;
+  return Math.min(LATENCY_MAX_MS,Math.round(n));
+ }
+ class LatencyEstimator{
+  constructor(){this.reset();}
+  reset(){this.samples=0;this.ewma=null;this.best=Infinity;this.offset=null;}
+  /* Feed one ping/pong round trip. guestClock/hostSendTs are optional and
+     let the estimator align the guest's unsynchronized clock: the guest
+     stamped the pong at guestClock, which corresponds to the host-clock
+     midpoint of the round trip. */
+  add(rtt,guestClock,hostSendTs){
+   const n=Number(rtt);
+   if(!Number.isFinite(n)||n<0||n>10000)return this.oneWayMs();
+   this.samples++;
+   this.best=Math.min(this.best,n);
+   // EWMA (alpha .25) smooths jitter; the best-sample anchor below keeps a
+   // run of queued spikes from inflating the estimate for long.
+   this.ewma=this.ewma===null?n:this.ewma+.25*(n-this.ewma);
+   if(Number.isFinite(guestClock)&&Number.isFinite(hostSendTs)){
+    const off=guestClock-(hostSendTs+n/2);
+    this.offset=this.offset===null?off:this.offset+.25*(off-this.offset);
+   }
+   return this.oneWayMs();
+  }
+  oneWayMs(){
+   if(this.ewma===null)return 0;
+   const smoothed=Math.min(this.ewma,this.best*1.6);
+   return clampDelay(smoothed/2);
+  }
+  /* Age (ms, host clock) of a guest input stamped ct on the guest clock,
+     or null before any clock-aligned sample exists. */
+  ageMs(ct,hostNow){
+   if(this.offset===null||!Number.isFinite(ct)||!Number.isFinite(hostNow))return null;
+   return Math.max(0,Math.round(hostNow-(ct-this.offset)));
+  }
+ }
+ class InputDelayQueue{
+  constructor(schedule){this.schedule=schedule||((fn,ms)=>setTimeout(fn,ms));this.pending=new Set();}
+  /* Run fn after delayMs (clamped). A non-positive delay runs fn now. */
+  push(delayMs,fn){
+   const d=clampDelay(delayMs);
+   if(d<=0){fn();return 0;}
+   const token={};
+   this.pending.add(token);
+   this.schedule(()=>{if(this.pending.delete(token))fn();},d);
+   return d;
+  }
+  get size(){return this.pending.size;}
+  clear(){this.pending.clear();}
+ }
  const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
  function makeCode(){
   let code='';
@@ -76,5 +141,5 @@
   });
   return session;
  }
- window.NightOnline={loadPeer,makeCode,host,join,PREFIX};
+ window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS};
 })();
