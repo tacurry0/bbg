@@ -86,6 +86,31 @@
   for(let i=0;i<6;i++)code+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)];
   return code;
  }
+ /* ---- recent rooms (v112) ----
+    Rooms this player created or joined, kept in localStorage so playing
+    the same few people again is one tap instead of re-typing the code.
+    Only the minimum needed to reconnect: code, own role, own club,
+    opponent club when known, last-used time. Pruned by age and count. */
+ const ROOMS_KEY='nightball.rooms';
+ const ROOMS_MAX=8;
+ const ROOMS_TTL_MS=14*24*3600*1000;
+ function loadRooms(now=Date.now()){
+  let list=[];
+  try{const raw=JSON.parse(localStorage.getItem(ROOMS_KEY)||'[]');if(Array.isArray(raw))list=raw;}catch{}
+  return list.filter(r=>r&&typeof r.code==='string'&&(r.role==='host'||r.role==='guest')&&Number.isFinite(r.at)&&(now-r.at)<ROOMS_TTL_MS).slice(0,ROOMS_MAX);
+ }
+ function saveRooms(list){try{localStorage.setItem(ROOMS_KEY,JSON.stringify(list.slice(0,ROOMS_MAX)));}catch{}}
+ function rememberRoom(entry,now=Date.now()){
+  if(!entry||typeof entry.code!=='string'||!(entry.role==='host'||entry.role==='guest'))return loadRooms(now);
+  const code=entry.code.toUpperCase();
+  const list=loadRooms(now).filter(r=>!(r.code===code&&r.role===entry.role));
+  list.unshift({code,role:entry.role,club:entry.club||null,opp:entry.opp||null,at:now});
+  saveRooms(list);return list;
+ }
+ function forgetRoom(code,role,now=Date.now()){
+  const list=loadRooms(now).filter(r=>!(r.code===String(code).toUpperCase()&&r.role===role));
+  saveRooms(list);return list;
+ }
  // Optional self-hosted PeerServer override (used by automated tests):
  // localStorage 'nightball.peerConfig' = {"host":"...","port":9000,"path":"/","secure":false}
  function peerOptions(){
@@ -96,15 +121,20 @@
   send(data){if(this.open&&this.conn){try{this.conn.send(data);}catch{}}}
   wireConn(conn){
    this.conn=conn;
-   conn.on('open',()=>{this.open=true;this.handlers.onOpen?.();});
+   let opened=false;
+   conn.on('open',()=>{opened=true;this.open=true;this._cancelWait?.();this.handlers.onOpen?.();});
    conn.on('data',data=>{if(data&&typeof data==='object')this.handlers.onData?.(data);});
-   const gone=()=>{if(this.dead)return;this.dead=true;this.open=false;this.handlers.onClose?.();};
+   // While a guest session is waiting for the host to appear (v112), a
+   // failed attempt's connection may report error/close before it ever
+   // opened: that is the retry loop's business, not a disconnect.
+   const gone=()=>{if(this.dead)return;if(this.waitMode&&!opened)return;this.dead=true;this.open=false;this.handlers.onClose?.();};
    conn.on('close',gone);
    conn.on('error',gone);
    conn.on('iceStateChanged',state=>{if(state==='disconnected'||state==='closed')gone();});
   }
   destroy(){
    this.dead=true;this.open=false;
+   this._cancelWait?.();
    try{this.conn?.close();}catch{}
    try{this.peer?.destroy();}catch{}
    this.conn=null;this.peer=null;
@@ -126,20 +156,50 @@
   peer.on('open',()=>handlers.onReady?.());
   return session;
  }
- async function join(code,handlers){
+ async function join(code,handlers,options={}){
   await loadPeer();
   const session=new Session(handlers);
-  const peer=new Peer(peerOptions());
-  session.peer=peer;
-  peer.on('open',()=>{
-   const conn=peer.connect(PREFIX+code,{reliable:true});
-   session.wireConn(conn);
-  });
-  peer.on('error',err=>{
-   if(err?.type==='peer-unavailable')handlers.onError?.('notfound');
-   else if(!session.open)handlers.onError?.(err?.type||'error');
-  });
+  /* Guest waiting (v112): when the host has not opened the room yet, the
+     broker answers 'peer-unavailable'. With wait enabled, retry on an
+     interval until the host appears, the wait budget runs out (then the
+     usual 'notfound' error fires), or the session is destroyed, which is
+     how the guest cancels. Cadence and budget stay gentle: the broker is
+     a free shared service. Each attempt registers a fresh peer; the
+     failed one is destroyed. */
+  const wait=!!options.wait;
+  const retryMs=Math.max(250,Number(options.retryMs)||3000);
+  const maxWaitMs=Number.isFinite(options.maxWaitMs)?options.maxWaitMs:120000;
+  let timer=null,waitStartedAt=0,attempts=0;
+  session.waitMode=wait;
+  session._cancelWait=()=>{if(timer){clearTimeout(timer);timer=null;}};
+  const attempt=()=>{
+   if(session.dead)return;
+   const peer=new Peer(peerOptions());
+   session.peer=peer;
+   peer.on('open',()=>{
+    if(session.dead){try{peer.destroy();}catch{}return;}
+    const conn=peer.connect(PREFIX+code,{reliable:true});
+    session.wireConn(conn);
+   });
+   peer.on('error',err=>{
+    if(session.dead||session.open)return;
+    if(err?.type==='peer-unavailable'){
+     if(!wait){handlers.onError?.('notfound');return;}
+     if(!waitStartedAt)waitStartedAt=Date.now();
+     if(Date.now()-waitStartedAt<maxWaitMs){
+      attempts++;
+      try{peer.destroy();}catch{}
+      if(session.peer===peer)session.peer=null;
+      handlers.onWaiting?.(attempts);
+      timer=setTimeout(attempt,retryMs);
+     }else handlers.onError?.('notfound');
+     return;
+    }
+    handlers.onError?.(err?.type||'error');
+   });
+  };
+  attempt();
   return session;
  }
- window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS};
+ window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS};
 })();

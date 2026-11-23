@@ -1931,6 +1931,18 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const r=loadOnlineRecord();if(!r.history.length)return '';
   return `<h3 class="arcade-section-title">オンライン対戦の履歴</h3>${r.history.slice(0,10).map(h=>`<div class="career-list-row"><div><b>${NightTeams.get(h.opp)?.name||h.opp}</b><small>${new Date(h.at).toLocaleDateString('ja-JP')} · 通算は相手球団ごとに保存</small></div><strong>${h.result==='win'?'勝':h.result==='loss'?'敗':'分'} ${h.as} - ${h.hs}</strong></div>`).join('')}`;
  }
+ // Recent rooms (v112): one tap reconnects as the same role. Host entries
+ // reopen the room under the same code; guest entries join that code
+ // (and now wait for the host if it is not open yet).
+ function recentRoomsHTML(){
+  const rooms=NightOnline.loadRooms();if(!rooms.length)return '';
+  const name=id=>id?(NightTeams.get(id)?.name||id):'';
+  const rows=rooms.map(r=>{
+   const clubs=[name(r.club),name(r.opp)].filter(Boolean).join(' vs ');
+   return `<div class="career-list-row"><div><b>${r.code}</b><small>${r.role==='host'?'ホスト':'ゲスト'}${clubs?' · '+clubs:''} · ${new Date(r.at).toLocaleDateString('ja-JP')}</small></div><span><button class="secondary-button" data-room-join="${r.code}" data-room-role="${r.role}">再接続</button> <button class="secondary-button" data-room-delete="${r.code}" data-room-role="${r.role}">削除</button></span></div>`;
+  }).join('');
+  return `<h3 class="arcade-section-title">最近の部屋</h3>${rows}`;
+ }
  function onlineRematchButtons(){
   const o=online;if(!o||o.role!=='host')return '';
   const rec=loadOnlineRecord().byOpponent[o.guestClub];
@@ -1952,6 +1964,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(!o){
      inner=`<p class="career-status-line">離れた相手と1対1で対戦できます。ホストが部屋を作って合言葉（6文字）を相手に伝え、ゲストがその合言葉で入ります。招待リンクを送れば、開くだけで合言葉が入力された状態になります。接続の仲介にはPeerJSの無料サービスを使います（サーバー代・アカウント不要、要インターネット接続）。</p>
      ${onlineHistoryHTML()}
+     ${recentRoomsHTML()}
      <button class="primary-button" data-action="online-host">部屋を作る（ホスト）</button>
      <label class="online-join-label" for="online-code-input">合言葉で参加</label>
      <input id="online-code-input" class="online-code-input" type="text" maxlength="8" placeholder="合言葉を入力" autocomplete="off">
@@ -1978,6 +1991,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    }else{
      inner=`<p class="career-status-line">あなたはゲストです。自分の球団を選んでください。先攻・後攻とスタジアムはホストが決めます。</p>
      <p class="online-status-line">${o.status||''}</p>
+     ${o.waitFailed?'<button class="primary-button" data-action="online-rejoin">もう一度接続する</button>':''}
      <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
      <button class="secondary-button" data-action="online-cancel">退出する</button>`;
    }
@@ -1990,14 +2004,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    try{await navigator.clipboard.writeText(text);return true;}catch{}
    try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;}catch{return false;}
  }
- async function onlineCreateRoom(){
+ async function onlineCreateRoom(codeOverride){
    onlineCleanup();
-   const code=NightOnline.makeCode();
+   const code=codeOverride||NightOnline.makeCode();
    online={role:'host',code,session:null,myClub:settings.matchTeam,guestClub:null,innings:5,hostHome:true,park:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null};
    onlineModal();
    try{
      online.session=await NightOnline.host(code,{
-       onReady:()=>{if(online?.code===code){online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
+       onReady:()=>{if(online?.code===code){NightOnline.rememberRoom({code,role:'host',club:online.myClub});online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
        onOpen:()=>{if(online?.code===code){online.status='ゲストが接続しました。相手の球団選択を待っています…';onlineLobbyRefresh();startHostPing();}},
        onData:m=>onlineHostData(m),
        onClose:()=>onlinePeerGone(),
@@ -2005,21 +2019,24 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      });
    }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
  }
- async function onlineJoinRoom(){
-   const code=($('online-code-input')?.value||'').trim().toUpperCase();
+ async function onlineJoinRoom(codeOverride){
+   const code=(codeOverride||($('online-code-input')?.value||'')).trim().toUpperCase();
    if(code.length<4){toast('合言葉を入力してください');return;}
    pendingInviteCode='';
    onlineCleanup();
-   online={role:'guest',code,session:null,myClub:null,started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0};
+   online={role:'guest',code,session:null,myClub:null,started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0,waiting:false,waitAttempts:0,waitFailed:false};
    onlineModal();
    try{
+     // Guests wait for the host (v112): if the room is not open yet, the
+     // join retries in the background instead of failing, and connects
+     // on its own once the host opens the room. 退出する cancels the wait.
      online.session=await NightOnline.join(code,{
-       onOpen:()=>{if(online?.code===code){online.status='接続しました。自分の球団を選んでください。';if(online.myClub)online.session?.send({t:'club',club:online.myClub});onlineLobbyRefresh();}},
+       onOpen:()=>{if(online?.code===code){online.waiting=false;online.status='接続しました。自分の球団を選んでください。';if(online.myClub)online.session?.send({t:'club',club:online.myClub});onlineLobbyRefresh();}},
        onData:m=>onlineGuestData(m),
        onClose:()=>onlinePeerGone(),
-       onError:kind=>{if(online?.code===code&&!online.started){online.status=kind==='notfound'?'その合言葉の部屋が見つかりません。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
-     });
-     setTimeout(()=>{if(online?.code===code&&online.role==='guest'&&!online.session?.open&&!online.started){online.status='接続できませんでした。合言葉と、相手が待機中かを確認してください。';onlineLobbyRefresh();}},15000);
+       onWaiting:n=>{if(online?.code===code&&!online.started){online.waiting=true;online.waitAttempts=n;online.status='ホストを待っています…（自動で再接続を試みています · '+n+'回目）';onlineLobbyRefresh();}},
+       onError:kind=>{if(online?.code===code&&!online.started){online.waiting=false;if(kind==='notfound'){online.waitFailed=true;online.status='ホストが見つかりませんでした。ホストが部屋を開いてから、もう一度接続してください。';}else online.status='接続エラーが発生しました。';onlineLobbyRefresh();}}
+     },{wait:true,retryMs:3000,maxWaitMs:120000});
    }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
  }
  function onlinePeerGone(){
@@ -2086,6 +2103,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(!home||!away||!mine)return;
    const park=o.park||home.park;
    o.session?.send({t:'start',home:homeId,away:awayId,innings:o.innings,difficulty:settings.difficulty,park});
+   NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
    game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:o.innings,park,pitcher:0,opponentPitcher:0,order:mine.startingOrder,fielding:mine.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home'});
    game.onlineGame=true;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;
@@ -2159,6 +2177,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(!home||!away)return;
    const guestHome=m.home===o.myClub,mine=guestHome?home:away;
    o.started=true;o.ended=false;o.lastUiKey='';o.homeClub=m.home;o.awayClub=m.away;o.innings=m.innings;o.mySide=guestHome?'home':'away';o.rematchOffer=null;o.lastEnd=null;
+   NightOnline.rememberRoom({code:o.code,role:'guest',club:o.myClub,opp:guestHome?m.away:m.home});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
    game=new NightGame('match',m.difficulty||settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:m.home,awayTeamId:m.away,userHome:guestHome,innings:m.innings,park:m.park||home.park,pitcher:0,opponentPitcher:0,order:mine.startingOrder,fielding:mine.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:guestHome?'away':'home'});
    game.onlineGame=true;game.mirror=true;game.mirrorSend=msg=>{if(online?.session?.open)online.session.send({...msg,ct:Math.round(performance.now())});};
@@ -2286,6 +2305,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(b.dataset.derbyBatter){settings.derbyBatter=b.dataset.derbyBatter;const scroll=$('modal-content').scrollTop;setupDerby();$('modal-content').scrollTop=scroll;return;}
    if(b.dataset.toggle){const k=b.dataset.toggle;settings[k]=!settings[k];b.classList.toggle('on',settings[k]);b.setAttribute('aria-checked',String(settings[k]));save();if(game)updateUI();if(k==='leftHanded'&&$('thumb-preview-wrap'))$('thumb-preview-wrap').innerHTML=thumbPreview();return;}
    if(b.dataset.ctClub){const id=b.dataset.ctClub,i=ctPicks.indexOf(id);if(i>=0)ctPicks.splice(i,1);else if(ctPicks.length<8)ctPicks.push(id);ctSetupModal();return;}
+   if(b.dataset.roomJoin){if(b.dataset.roomRole==='host')onlineCreateRoom(b.dataset.roomJoin);else onlineJoinRoom(b.dataset.roomJoin);return;}
+   if(b.dataset.roomDelete){NightOnline.forgetRoom(b.dataset.roomDelete,b.dataset.roomRole);onlineModal();return;}
    if(b.dataset.onlineClub){const id=b.dataset.onlineClub;if(online?.role==='host'){online.myClub=id;onlineModal();}else if(online?.role==='guest'){online.myClub=id;online.session?.send({t:'club',club:id});online.status='球団を送信しました。ホストの開始を待っています…';onlineModal();}return;}
    if(b.dataset.onlineInnings){if(online?.role==='host'){online.innings=Number(b.dataset.onlineInnings);onlineModal();}return;}
    if(b.dataset.onlineSide){if(online?.role==='host'){online.hostHome=b.dataset.onlineSide==='home';onlineModal();}return;}
@@ -2320,6 +2341,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'ct-reset':customTourney=null;saveCustomTourney();closeModal(false);toast('トーナメントを破棄しました');break;
    case'online-host':onlineCreateRoom();break;
    case'online-join':onlineJoinRoom();break;
+   case'online-rejoin':if(online?.role==='guest')onlineJoinRoom(online.code);break;
    case'online-copy-code':if(online?.code)copyText(online.code).then(ok=>toast(ok?'合言葉をコピーしました':'コピーできませんでした'));break;
    case'online-copy-link':if(online?.code)copyText(onlineInviteUrl(online.code)).then(ok=>toast(ok?'招待リンクをコピーしました':'コピーできませんでした'));break;
    case'online-share-link':if(online?.code&&typeof navigator.share==='function')navigator.share({title:'NIGHTBALL オンライン対戦',text:'オンライン対戦の招待です。合言葉: '+online.code,url:onlineInviteUrl(online.code)}).catch(()=>{});break;
