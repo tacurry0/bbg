@@ -160,15 +160,20 @@ window.NightRenderer=class NightRenderer{
     this.pitcher(c,g);this.batter(c,g,t);
     if(this.hero){const u=(t%5500)/5500;if(u>.6){const p=(u-.6)/.4;this.drawBall(c,244+110*p,405-330*p+120*p*p,5*(1-p)+1,t,true);}c.restore();return;}
     if(g){
-      const aiming=!g.replayView&&['aim','windup','pitch','miss'].includes(g.phase);
+      // Umpire mode: same rule as the 3D HUD — no zone frame while a pitch
+      // is live; the zone appears only in the post-call reveal window.
+      const umpireReveal=g.umpireMode?g.umpireCallReveal?.():null;
+      const aiming=!g.replayView&&((['aim','windup','pitch','miss'].includes(g.phase)&&!g.umpireMode)||!!umpireReveal);
       if(aiming){
         const x=265,y=400,w=150,h=128;
         c.fillStyle='#10271924';c.fillRect(x-w/2,y-h/2,w,h);c.lineWidth=.9;c.strokeStyle='#d9efba32';
         c.beginPath();for(let i=1;i<3;i++){c.moveTo(x-w/2+i*w/3,y-h/2);c.lineTo(x-w/2+i*w/3,y+h/2);c.moveTo(x-w/2,y-h/2+i*h/3);c.lineTo(x+w/2,y-h/2+i*h/3);}c.stroke();
         c.strokeStyle='#e8f6d888';c.lineWidth=1.5;c.beginPath();
         for(const [sx,sy]of [[-1,-1],[1,-1],[1,1],[-1,1]]){const px=x+sx*w/2,py=y+sy*h/2;c.moveTo(px-sx*13,py);c.lineTo(px,py);c.lineTo(px,py-sy*13);}c.stroke();
+        if(umpireReveal){this.ellipse(c,x+umpireReveal.x*75,y+umpireReveal.y*64,6,6,umpireReveal.strike?'#7dff8a':'#ff9a7d','#14252d');}
         const last=g.pitchTrace.filter(p=>p.half===g.half&&p.inning===g.inning).at(-1);
         if(window.nightSettings?.showTrace&&last&&['aim','windup'].includes(g.phase)){const px=x+last.x*75,py=y+last.y*64;this.ellipse(c,px,py,5,5,'#ffffff0b','#d0e0b65c');c.fillStyle='#b4c79a';c.font='5px Arial';c.textAlign='center';c.fillText('前球',px,py-9);}
+        if(!umpireReveal){
         const cx=x+g.cursor.x*75,cy=y+g.cursor.y*64;
         if(g.touch){c.strokeStyle='#eaf4d454';c.lineWidth=1;c.setLineDash([2,4]);c.beginPath();c.moveTo(g.touch.x,g.touch.y-3);c.lineTo(cx,cy+10);c.stroke();c.setLineDash([]);this.ellipse(c,g.touch.x,g.touch.y,3,3,'#e6f3cb40');}
         if(!g.defending){
@@ -178,6 +183,7 @@ window.NightRenderer=class NightRenderer{
           this.ellipse(c,cx,cy,2,2,'#f4ffe2');c.strokeStyle='#f4ffe2';c.lineWidth=1;c.beginPath();c.moveTo(cx-5,cy);c.lineTo(cx+5,cy);c.moveTo(cx,cy-5);c.lineTo(cx,cy+5);c.stroke();
         }else{c.shadowColor='#ffce8b';c.shadowBlur=5;c.lineWidth=1.5;this.ellipse(c,cx,cy,10,10,'#ffce8b1c','#ffce8b');c.shadowBlur=0;c.strokeStyle='#ffe5bb';c.lineWidth=1;c.beginPath();c.moveTo(cx-16,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+16,cy);c.moveTo(cx,cy-16);c.lineTo(cx,cy-6);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);c.stroke();}
         if(window.nightSettings?.assist&&g.pitch&&!g.defending){const tx=x+g.pitch.targetX*75,ty=y+g.pitch.targetY*64;this.ellipse(c,tx,ty,5,5,null,'#eef6bd65');}
+        }
       }
       if(g.phase==='pitch'||g.phase==='miss'){
         const p=g.pitch,u=Math.min(1.24,p.progress+(g.phase==='miss'?g.phaseTime/p.duration:0));

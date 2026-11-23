@@ -913,7 +913,11 @@ export class StadiumRenderer {
    return;
   }
 
-  const aiming=!g.replayView&&['aim','windup','pitch','miss','intro'].includes(g.phase);if(!aiming)return;
+  // Umpire mode: the strike-zone frame must not give the pitch away, so the
+  // whole aiming overlay is suppressed while a pitch is live; the zone is
+  // drawn only for the post-call reveal window (umpireCallReveal).
+  const umpireReveal=g.umpireMode?g.umpireCallReveal?.():null;
+  const aiming=!g.replayView&&((['aim','windup','pitch','miss','intro'].includes(g.phase)&&!g.umpireMode)||!!umpireReveal);if(!aiming)return;
   const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>this.aimPoint(x,y));
   const left=Math.min(...corners.map(p=>p.x)),right=Math.max(...corners.map(p=>p.x));
   const top=Math.min(...corners.map(p=>p.y)),bottom=Math.max(...corners.map(p=>p.y));
@@ -937,6 +941,15 @@ export class StadiumRenderer {
   }
   c.stroke();
   c.restore();
+  if(umpireReveal){
+   // Answer check: plot the pitch's true crossing point (the reveal's
+   // stored target coordinates, unshifted) inside the now-visible zone.
+   const p=this.aimPoint(umpireReveal.x,umpireReveal.y),marker=umpireReveal.strike?'#7dff8a':'#ff9a7d';
+   c.save();c.beginPath();c.arc(p.x,p.y,9,0,Math.PI*2);c.strokeStyle='#14252d';c.lineWidth=3;c.stroke();
+   c.beginPath();c.arc(p.x,p.y,7,0,Math.PI*2);c.fillStyle=marker;c.fill();
+   c.beginPath();c.arc(p.x,p.y,2.2,0,Math.PI*2);c.fillStyle='#14252d';c.fill();c.restore();
+   return;
+  }
 
   const center=this.aimPoint(g.cursor.x,g.cursor.y),size=g.batSize,px=this.aimPoint(g.cursor.x+size.rx,g.cursor.y),py=this.aimPoint(g.cursor.x,g.cursor.y+size.ry);
   let rx=Math.max(9,Math.abs(px.x-center.x)),ry=Math.max(8,Math.abs(py.y-center.y));

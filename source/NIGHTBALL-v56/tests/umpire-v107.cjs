@@ -6,6 +6,9 @@
 //  - close base plays open an umpire window whose verdict replaces the call
 //    on the field and is scored against the play's recorded truth.
 //  - a normal (non-umpire) game never enters umpire state.
+//  - spec change: the strike-zone frame stays hidden while a pitch is live
+//    and appears, with the pitch's true crossing point, only in the
+//    post-call reveal window (cleared before the next pitch).
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const vm=require('node:vm');
@@ -266,6 +269,72 @@ for(const verdictSafe of [true,false]){
  assert.equal(g.umpireStats.correct,g.umpireStats.calls,'truth calls were all correct');
 }
 
+// ---------- (f) v107 spec change: zone hidden until the call, reveal after ----------
+// Real-device feedback: with the zone frame visible from the moment of the
+// pitch, the umpire only had to watch whether the ball entered the frame.
+// Now the frame (and the true crossing point) may appear only AFTER the
+// player calls, inside the post-call result window, and must be gone
+// before the next pitch starts. Verified at the state level through
+// NightGame.umpireCallReveal(), which both renderers consult.
+{
+ const g=umpireGame(77001);
+ assert.equal(g.umpireReveal,null,'no reveal before any pitch');
+ assert.equal(g.umpireCallReveal(),null);
+ const pending=takenPitch(g,{x:1.06,y:0});
+ // Pre-call (umpire-call window, and every live pitch phase): hidden.
+ assert.equal(g.phase,'umpire-call');
+ assert.equal(g.umpireReveal,null,'no reveal is recorded before the call');
+ assert.equal(g.umpireCallReveal(),null,'zone stays hidden until the player calls');
+ for(const phase of ['aim','windup','pitch']){
+  const live=umpireGame(77002);
+  live.setPhase(phase);
+  assert.equal(live.umpireCallReveal(),null,'no reveal during the '+phase+' phase');
+ }
+ // After the call: reveal is up, in the result phase only, carrying the
+ // pitch's true crossing coordinates exactly as recorded (no offset).
+ assert.equal(g.umpireCall(true),true);
+ assert.equal(g.phase,'result');
+ const reveal=g.umpireCallReveal();
+ assert(reveal,'reveal is visible right after the call');
+ assert.equal(reveal.x,pending.x,'reveal x is the true target x');
+ assert.equal(reveal.y,pending.y,'reveal y is the true target y');
+ assert.equal(reveal.strike,pending.strike,'reveal truth matches isStrike');
+ assert.equal(reveal.called,true);assert.equal(reveal.correct,true);
+ // The window closes on its own: once the result phase ends and the next
+ // pitch is being prepared, the reveal is gone.
+ let steps=0;while(g.phase==='result'&&steps++<200)g.update(50);
+ assert.notEqual(g.phase,'result','result window ended');
+ assert.equal(g.umpireReveal,null,'reveal cleared before the next pitch');
+ assert.equal(g.umpireCallReveal(),null);
+}
+{ // A wrong call still reveals the truth (that is the answer check).
+ const g=umpireGame(77003);
+ const pending=takenPitch(g,{x:2.4,y:0}); // an obvious ball
+ assert.equal(g.umpireCall(true),true); // umpire wrongly calls strike
+ const reveal=g.umpireCallReveal();
+ assert(reveal,'reveal shows even after a wrong call');
+ assert.equal(reveal.strike,false,'reveal shows the true ball, not the call');
+ assert.equal(reveal.called,true);assert.equal(reveal.correct,false);
+ assert.equal(reveal.x,pending.x);assert.equal(reveal.y,pending.y);
+}
+{ // Swung-at pitches are not call targets: no reveal is ever recorded.
+ const g=umpireGame(77004);
+ g.createPitch(NightGame.TYPES[0],{x:0,y:0});
+ g.pitch.cpuSwing=true;g.pitch.cpuBunt=false;
+ g.pitch.delivered=true;g.setPhase('pitch');g.phaseTime=0;
+ for(let i=0;i<200&&g.phase==='pitch';i++)g.update(16);
+ assert.notEqual(g.phase,'umpire-call','swung pitch never waits for a call');
+ assert.equal(g.umpireReveal,null,'swung pitch records no reveal');
+ assert.equal(g.umpireCallReveal(),null);
+}
+{ // Normal games never record a reveal either.
+ const restore=seeded(77005);
+ const g=new NightGame('match','standard',()=>{},{innings:3});
+ restore();
+ assert.equal(g.umpireReveal,null);
+ assert.equal(g.umpireCallReveal(),null,'reveal helper is inert in a normal game');
+}
+
 // ---------- (e) v107 fix: UI/source guards for the two reported bugs ----------
 // Node cannot render the page, so the display conditions are pinned at the
 // source level (the live behaviour is additionally code-reviewed):
@@ -274,6 +343,9 @@ for(const verdictSafe of [true,false]){
  const css=fs.readFileSync(__dirname+'/../dist/style.css','utf8');
  const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
  const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
+ const stadium=fs.readFileSync(__dirname+'/../dist/stadium3d.js','utf8');
+ const flat=fs.readFileSync(__dirname+'/../dist/renderer.js','utf8');
+ const engine=fs.readFileSync(__dirname+'/../dist/game.js','utf8');
  // Batting / pitching controls hide in umpire mode.
  assert(app.includes("$('bat-options').hidden=def||!!g.umpireMode"),'bat options hide in umpire mode');
  assert(app.includes("$('pitch-deck').hidden=!def||field||g.phase!=='aim'||g.autoDefense||!!g.umpireMode"),'pitch deck hides in umpire mode');
@@ -286,9 +358,20 @@ for(const verdictSafe of [true,false]){
  assert(html.includes('<div id="umpire-feedback" class="umpire-feedback" role="status" hidden>'),'feedback is a separate small pill element');
  assert(app.includes("['intro','aim','windup','pitch'].includes(g.phase)"),'feedback is hidden while a pitch is in flight');
  assert(app.includes('umpireShownAt<1200'),'feedback fades out after ~1.2s');
+ // Spec change (zone hidden until the call): both renderers must suppress
+ // the aiming/zone overlay in umpire mode during live pitch phases and
+ // draw it only through the post-call reveal helper.
+ assert(engine.includes('umpireCallReveal(){'),'engine exposes the reveal window state');
+ assert(engine.includes("if(p!=='result')this.umpireReveal=null"),'reveal is cleared on any non-result phase');
+ assert(stadium.includes("['aim','windup','pitch','miss','intro'].includes(g.phase)&&!g.umpireMode"),'3D HUD hides the zone while an umpire pitch is live');
+ assert(stadium.includes('g.umpireCallReveal?.()'),'3D HUD draws the zone only via the reveal window');
+ assert(stadium.includes('this.aimPoint(umpireReveal.x,umpireReveal.y)'),'3D reveal marker plots the true crossing point');
+ assert(flat.includes("['aim','windup','pitch','miss'].includes(g.phase)&&!g.umpireMode"),'2D renderer hides the zone while an umpire pitch is live');
+ assert(flat.includes('g.umpireCallReveal?.()'),'2D renderer draws the zone only via the reveal window');
+ assert(flat.includes('x+umpireReveal.x*75'),'2D reveal marker plots the true crossing point');
  // Same-version fix: ?v= pins stay at 107, only the SW cache name moves.
  assert(html.includes('./game.js?v=107')&&html.includes('./app.js?v=107'),'version pins stay at 107');
- assert(sw.includes("nightball-v107-latency"),'SW cache renamed so existing users receive the fix');
+ assert(sw.includes("nightball-v107-umpire-hard"),'SW cache renamed so existing users receive the fix');
 }
 
 console.log('umpire-v107: all assertions passed');
