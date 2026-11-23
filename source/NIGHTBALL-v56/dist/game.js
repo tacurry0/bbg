@@ -43,7 +43,14 @@ function catchType(player,ball,distance,special=true){
 // engine's flight is already compressed/stylised (flightRate/flightLift),
 // and paired-seed measurement showed the fence-distance population is very
 // sensitive to carry, so spin is scaled to a visible-but-modest effect.
-const MAGNUS_LIFT=.00003,MAGNUS_SIDE=.0006;
+// v108 rebalance: at the v107 lift (.00003) the well-hit fly band gained
+// +0.45 m of carry, +2.3 pt of extra-base rate and +0.3 pt of home-run rate
+// versus the pre-physics engine (paired fixed-seed flight probe, N=2000,
+// dt=1/120). The lift coefficient is cut to .000004 so the band rates return
+// to the pre-physics baseline (same probe: HR 4.10% vs 4.15%, XBH 49.05% vs
+// 48.85%, carry +0.06 m). The spin derivation and the rpm readouts are
+// unchanged; only the lift's effect size is rebalanced.
+const MAGNUS_LIFT=.000004,MAGNUS_SIDE=.0006;
 function moveBattedBall(b,dt,wind){
  const airborne=!b.bounces&&(b.z>.1||b.vz>0);
  // Compress and lower the first flight, keeping its horizontal carry. Ground
@@ -1040,8 +1047,13 @@ window.NightGame=class NightGame{
   // horizontal miss. Grounders stay near-neutral.
   const quality=contact?clamp(contact.quality,0,1):(perfect?.88:.5);
   const flyF=clamp((launch-4)/34,0,1),undercut=clamp((launch-40)/25,0,1)*(1-quality);
-  const spinBack=Math.round(clamp(flyF*(750+2050*quality)+undercut*1300,0,3600));
-  const spinSide=Math.round((contact?clamp(contact.side,-1,1):0)*1500*clamp((launch+12)/42,.3,1));
+  // Derby balls carry no spin effect (v108): a derby is a pure carry contest
+  // judged against fixed fences, so the flight must not depend on contact
+  // spin. spinBack/spinSide are zeroed, which also drops the rpm readout for
+  // derby hits (hit.spinBack below), keeping the display consistent with
+  // the actual flight instead of showing spin that did nothing.
+  const spinBack=this.derby?0:Math.round(clamp(flyF*(750+2050*quality)+undercut*1300,0,3600));
+  const spinSide=this.derby?0:Math.round((contact?clamp(contact.side,-1,1):0)*1500*clamp((launch+12)/42,.3,1));
   const ball={x:0,y:0,z:1,vx:Math.sin(spray)*flat,vy:Math.cos(spray)*flat,
    vz:Math.sin(a)*speed*flightLift,bounces:0,flightRate:1+.53*fly,flightLift,spinBack,spinSide,irregular:false};
   const landing=this.predictLanding(ball);const foul=Math.abs(spray)>Math.PI/4;
