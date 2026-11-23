@@ -107,5 +107,5 @@ export function hitReadout(hit){
  const {exitKmh,launchAngle,sprayAngle}=hit;
  const direction=Math.abs(sprayAngle)>45?(sprayAngle<0?'左ファウル':'右ファウル'):
   sprayAngle<=-32?'左翼':sprayAngle<=-13?'左中間':sprayAngle>=32?'右翼':sprayAngle>=13?'右中間':'中堅';
- return exitKmh+' km/h · '+launchAngle+'° · '+direction;
+ return exitKmh+' km/h · '+launchAngle+'° · '+direction+(Number.isFinite(hit.spinBack)&&hit.spinBack>0?' · '+Math.round(hit.spinBack).toLocaleString('ja-JP')+'rpm':'');
 }

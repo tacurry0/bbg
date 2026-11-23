@@ -4,18 +4,18 @@ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const rnd=(a,b)=>a+Math.random()*(b-a);
 const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 const TYPES=[
- {id:'fast',name:'ストレート',short:'直球',speed:148,bx:0,by:-.10,cost:1.2},
- {id:'slider',name:'スライダー',short:'スライダー',speed:129,gap:13,bx:.85,by:.13,cost:1.8},
- {id:'curve',name:'カーブ',short:'カーブ',speed:108,gap:26,bx:-.50,by:.95,cost:1.7},
- {id:'fork',name:'フォーク',short:'フォーク',speed:129,gap:14,bx:.04,by:1.15,cost:2.2},
- {id:'sinker',name:'シンカー',short:'シンカー',speed:126,gap:12,bx:-.72,by:.64,cost:1.8},
- {id:'change',name:'チェンジアップ',short:'チェンジ',speed:108,gap:24,bx:.20,by:.46,cost:1.4},
- {id:'cutter',name:'カットボール',short:'カット',speed:141,gap:7,bx:.42,by:.08,cost:1.6},
- {id:'shoot',name:'シュート',short:'シュート',speed:139,gap:8,bx:-.56,by:.16,cost:1.7},
- {id:'split',name:'スプリット',short:'スプリット',speed:135,gap:10,bx:.02,by:.85,cost:2},
- {id:'vslider',name:'縦スライダー',short:'縦スラ',speed:125,gap:15,bx:.22,by:1.08,cost:2},
- {id:'slowcurve',name:'スローカーブ',short:'スローカーブ',speed:93,gap:34,bx:-.72,by:1.32,cost:1.5},
- {id:'knuckle',name:'ナックル',short:'ナックル',speed:100,gap:30,bx:.32,by:.38,cost:1.6}
+ {id:'fast',name:'ストレート',short:'直球',speed:148,bx:0,by:-.10,cost:1.2,spin:2250},
+ {id:'slider',name:'スライダー',short:'スライダー',speed:129,gap:13,bx:.85,by:.13,cost:1.8,spin:2450},
+ {id:'curve',name:'カーブ',short:'カーブ',speed:108,gap:26,bx:-.50,by:.95,cost:1.7,spin:2350},
+ {id:'fork',name:'フォーク',short:'フォーク',speed:129,gap:14,bx:.04,by:1.15,cost:2.2,spin:1050},
+ {id:'sinker',name:'シンカー',short:'シンカー',speed:126,gap:12,bx:-.72,by:.64,cost:1.8,spin:1850},
+ {id:'change',name:'チェンジアップ',short:'チェンジ',speed:108,gap:24,bx:.20,by:.46,cost:1.4,spin:1550},
+ {id:'cutter',name:'カットボール',short:'カット',speed:141,gap:7,bx:.42,by:.08,cost:1.6,spin:2150},
+ {id:'shoot',name:'シュート',short:'シュート',speed:139,gap:8,bx:-.56,by:.16,cost:1.7,spin:2000},
+ {id:'split',name:'スプリット',short:'スプリット',speed:135,gap:10,bx:.02,by:.85,cost:2,spin:1200},
+ {id:'vslider',name:'縦スライダー',short:'縦スラ',speed:125,gap:15,bx:.22,by:1.08,cost:2,spin:2400},
+ {id:'slowcurve',name:'スローカーブ',short:'スローカーブ',speed:93,gap:34,bx:-.72,by:1.32,cost:1.5,spin:2050},
+ {id:'knuckle',name:'ナックル',short:'ナックル',speed:100,gap:30,bx:.32,by:.38,cost:1.6,spin:300}
 ];
 const POS=[['P',0,18.4],['C',0,-2],['1B',23,24],['2B',12,36],['SS',-13,36],['3B',-23,24],['LF',-45,74],['CF',0,88],['RF',45,74]];
 const BASES=[{x:0,y:0},{x:19.4,y:19.4},{x:0,y:38.8},{x:-19.4,y:19.4},{x:0,y:0}];
@@ -37,6 +37,13 @@ function catchType(player,ball,distance,special=true){
  if(ball.z<=1.38&&distance<=catchReach(player)+.95*skill)return 'dive';
  return null;
 }
+// Magnus effect of batted-ball spin (v107 physics): backspin (rpm) lifts the
+// ball against gravity; side spin (rpm, signed) curves it sideways in flight.
+// The coefficients are far below real-world Magnus values on purpose: this
+// engine's flight is already compressed/stylised (flightRate/flightLift),
+// and paired-seed measurement showed the fence-distance population is very
+// sensitive to carry, so spin is scaled to a visible-but-modest effect.
+const MAGNUS_LIFT=.00003,MAGNUS_SIDE=.0006;
 function moveBattedBall(b,dt,wind){
  const airborne=!b.bounces&&(b.z>.1||b.vz>0);
  // Compress and lower the first flight, keeping its horizontal carry. Ground
@@ -45,6 +52,11 @@ function moveBattedBall(b,dt,wind){
  b.vx*=drag;b.vy=(b.vy+wind*step)*drag;
  b.vz-=(airborne?11.25*(b.flightLift??1):9.81)*step;
  if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*step);
+ if(airborne){
+  // Spin acts only in flight; the contact-time spray model is untouched.
+  if(b.spinBack)b.vz+=b.spinBack*MAGNUS_LIFT*step;
+  if(b.spinSide){const sp=Math.hypot(b.vx,b.vy);if(sp>1){const acc=b.spinSide*MAGNUS_SIDE*step/sp,ax=-b.vy*acc,ay=b.vx*acc;b.vx+=ax;b.vy+=ay;}}
+ }
  b.x+=b.vx*step;b.y+=b.vy*step;b.z+=b.vz*step;
  if(b.z>=0)return false;
  const impact=b.vz<-1.8;
@@ -86,7 +98,14 @@ window.NightGame=class NightGame{
   const rawSpeed=detail.speed||pitcher.velocity*type.speed/148;
   const fastSpeed=pitcher.pitchDetails?.fast?.speed||pitcher.velocity;
   const speed=type.gap?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed;
-  return {...type,name:detail.label||type.name,short:detail.label||type.short,speed,bx:type.bx*scale,by:type.by*scale};
+  // Spin rate (rpm): the pitch type's baseline spin, scaled by the pitcher's
+  // movement quality. The existing bx/by break is read as the Magnus break
+  // that spin produces, with a small spin-driven correction on top (a few
+  // percent at most) so type-to-type break character is preserved. The
+  // knuckleball barely spins, so its flutter break is not Magnus-driven.
+  const spinRpm=Math.round((type.spin||0)*(.78+.22*(pitcher.movement/82))*(detail.spinScale||1));
+  const mag=type.id==='knuckle'?1:clamp(.9+.1*(type.spin?spinRpm/type.spin:1),.9,1.1);
+  return {...type,name:detail.label||type.name,short:detail.label||type.short,speed,bx:type.bx*scale*mag,by:type.by*scale*mag,spinRpm};
  }
 
  static arrangeLineup(club,ids=[],fielding={}){
@@ -762,7 +781,7 @@ window.NightGame=class NightGame{
 
  createPitch(type,target){
   const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0,ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax||spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj),velocity=Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
-  this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/velocity,progress:0,swung:false,cpuActed:false};
+  this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/velocity,progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){
    this.pitch.bx*=1+pitcherPerks.closer*.12;
@@ -1007,13 +1026,24 @@ window.NightGame=class NightGame{
   const spray=clamp(delta*(cpu?3.0:4.6)*(this.battingHand==='L'?-1:1)+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
   const launch=clamp(13+(this.batter.trait==='長距離砲'&&power?3:0)+(aim.y-p.targetY)*77+(power?12:0)+rnd(-4,4),-8,65);
   const exitSpeed=22+quality*19+(this.matchup().power-60)*.12+(power?6:0)+(this.batter.trait==='勝負強い'&&(this.bases[1]||this.bases[2])?1.5:0);
-  this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,core>.82);
+  // Horizontal miss distance signs the side spin: dragging across the ball
+  // slices/hooks it in flight (initial spray above stays as modelled).
+  const sideMiss=clamp((aim.x-p.targetX)/(rx+.07),-1,1);
+  this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,core>.82,{quality,side:sideMiss});
  }
- startField(speed,launch,spray,cpu,perfect=false){
+ startField(speed,launch,spray,cpu,perfect=false,contact=null){
   this.playEvents=[];const a=launch*Math.PI/180,flat=speed*Math.cos(a);
   const fly=clamp((launch-12)/30,0,1),flightLift=1-.28*fly;
+  // Batted-ball spin (v107 physics). Backspin grows with fly-ball shape and
+  // contact quality: a squared-up fly carries, while an undercut ball with
+  // poor contact balloons on excess backspin. Side spin comes from the
+  // horizontal miss. Grounders stay near-neutral.
+  const quality=contact?clamp(contact.quality,0,1):(perfect?.88:.5);
+  const flyF=clamp((launch-4)/34,0,1),undercut=clamp((launch-40)/25,0,1)*(1-quality);
+  const spinBack=Math.round(clamp(flyF*(750+2050*quality)+undercut*1300,0,3600));
+  const spinSide=Math.round((contact?clamp(contact.side,-1,1):0)*1500*clamp((launch+12)/42,.3,1));
   const ball={x:0,y:0,z:1,vx:Math.sin(spray)*flat,vy:Math.cos(spray)*flat,
-   vz:Math.sin(a)*speed*flightLift,bounces:0,flightRate:1+.53*fly,flightLift};
+   vz:Math.sin(a)*speed*flightLift,bounces:0,flightRate:1+.53*fly,flightLift,spinBack,spinSide,irregular:false};
   const landing=this.predictLanding(ball);const foul=Math.abs(spray)>Math.PI/4;
   const fielders=this.derby?[]:NightGame.positions(this.park).map(([name,x,y],i)=>{const profile=this.fielder(name);
    if((this.defending||this.challenge)&&this.defense==='in')y-=i>=6?9:i>1?5:0;if(this.defending&&this.defense==='deep')y+=i>=6?10:0;
@@ -1039,7 +1069,7 @@ window.NightGame=class NightGame{
   if((this.inMatch||this.mode==='practice')&&!foul){this.field.manual={userControlled:(this.isFixture||!!this.challenge||this.mode==='career-bat')&&this.manualRunning&&!this.defending,selection:this.mode==='career-bat'?this.career.playerId:null,secured:false,holder:null,bag:null,initialBases:this.bases.slice(),initialIds:this.baseIds.slice(),outs:[],lastOut:null,fly:false,recovery:0};for(const r of runners)Object.assign(r,{base:r.start,furthest:r.start,autoTarget:r.batter?1:r.start,command:r.batter?1:r.start,waiting:!r.batter,out:false,scored:false,needsTag:false,chargedPitcherId:r.batter?this.pitcher.id:this.basePitcherIds[r.start-1]||this.pitcher.id,touchedAt:{[r.start]:0}});}
   this.field.trajectory=launch<8?'ground':launch<=22?'liner':launch>=36&&Math.hypot(landing.x,landing.y)<75?'blooper':'fly';this.field.wallHit=false;this.planIntercepts();
   if(this.field.manual)this.startForcedRunners();
-  this.hit={distance:0,kind:'live',perfect,exitKmh:Math.round(speed*3.6),launchAngle:Math.round(launch),sprayAngle:Math.round(spray*180/Math.PI)};this.setPhase('field');this.emit('clear');this.emit('sound',perfect?'perfect':'hit');this.emit('field',this.field);this.notify();
+  this.hit={distance:0,kind:'live',perfect,exitKmh:Math.round(speed*3.6),launchAngle:Math.round(launch),sprayAngle:Math.round(spray*180/Math.PI),spinBack};this.setPhase('field');this.emit('clear');this.emit('sound',perfect?'perfect':'hit');this.emit('field',this.field);this.notify();
  }
  planIntercepts(){
   const f=this.field,b={...f.ball},samples=[];
@@ -1211,6 +1241,12 @@ window.NightGame=class NightGame{
    return;
   }
   if(moveBattedBall(b,dt,this.windNow())&&b.bounces<=2){
+   // Irregular hop (v107 physics): ~3% of infield grounders kick sideways
+   // or hop on their first bounce. Small enough that the fielder's cached
+   // read goes stale and he sometimes reacts late — never a sure error.
+   if(b.bounces===1&&!b.irregular&&!f.foul&&!f.buntResult&&!this.derby&&f.trajectory==='ground'&&Math.hypot(b.x,b.y)<42&&Math.random()<.03){
+    b.irregular=true;b.vx+=rnd(-1.5,1.5);b.vz=Math.max(b.vz,rnd(1.1,2.5));f.groundRead=null;
+   }
    f.impact={type:'bounce',x:b.x,y:b.y,time:f.elapsed};
    this.emit('sound','bounce');
   }
@@ -1733,7 +1769,7 @@ window.NightGame=class NightGame{
   this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
  completePitch(kind){
-  if(this.pitch)this.lastPitch={name:this.pitch.name,speed:this.pitch.speed,id:this.pitch.id,breakCm:Math.round(Math.hypot(this.pitch.bx||0,this.pitch.by||0)*20.4)};
+  if(this.pitch)this.lastPitch={name:this.pitch.name,speed:this.pitch.speed,id:this.pitch.id,breakCm:Math.round(Math.hypot(this.pitch.bx||0,this.pitch.by||0)*20.4),spinRpm:this.pitch.spinRpm??null};
   if(this.inMatch&&this.pitch){const book=this.pitchMemory||(this.pitchMemory={});const mem=book[this.batter.id]||(book[this.batter.id]={recent:[]});mem.recent.push(this.pitch.id);if(mem.recent.length>6)mem.recent.shift();}
   if(this.pitch&&!this.pitch.logged){
    this.pitch.logged=true;

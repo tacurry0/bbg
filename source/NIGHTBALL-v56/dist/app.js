@@ -1696,7 +1696,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const pitchVisible=!!chipPitch&&['pitch','miss','field','result','abs-call'].includes(g.phase);
    $('pitch-label').textContent=pitchVisible?chipPitch.name:'';
    $('pitch-speed').textContent=pitchVisible?chipPitch.speed:'';
-   if(pitchVisible&&chipPitch){const brk=chipPitch.breakCm??(chipPitch.bx!=null?Math.round(Math.hypot(chipPitch.bx,chipPitch.by||0)*20.4):null);if(brk!=null)$('pitch-speed').textContent=chipPitch.speed+' · 変化'+brk+'cm';}
+   if(pitchVisible&&chipPitch){const brk=chipPitch.breakCm??(chipPitch.bx!=null?Math.round(Math.hypot(chipPitch.bx,chipPitch.by||0)*20.4):null);if(brk!=null)$('pitch-speed').textContent=chipPitch.speed+' · 変化'+brk+'cm'+(chipPitch.spinRpm?' · '+chipPitch.spinRpm.toLocaleString('ja-JP')+'rpm':'');}
    $('pitch-label').parentElement.hidden=!pitchVisible;
    const absCount=$('abs-count');
    absCount.hidden=g.absRemaining===undefined;
@@ -1979,7 +1979,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      lu:{home:g.lineups.home.map(p=>[p.id,p.fieldPos||p.pos]),away:g.lineups.away.map(p=>[p.id,p.fieldPos||p.pos])},
      pi:{u:g.homePitcherIndex,c:g.awayPitcherIndex},usedU:g.usedPitchers.slice(),usedC:g.usedCpuPitchers.slice(),
      ps:g.pitchingStats,box:g.box,pitch:g.pitch||null,pitchSeq:o.pitchSeq,
-     lastPitch:g.lastPitch?{name:g.lastPitch.name,speed:g.lastPitch.speed,id:g.lastPitch.id,breakCm:g.lastPitch.breakCm}:null,
+     lastPitch:g.lastPitch?{name:g.lastPitch.name,speed:g.lastPitch.speed,id:g.lastPitch.id,breakCm:g.lastPitch.breakCm,spinRpm:g.lastPitch.spinRpm??null}:null,
      field,fs:g.fieldSpeed,fsq,hit:g.hit?{kind:g.hit.kind,distance:g.hit.distance}:null,swingAge:g.swingAge,
      absCall:g.absCall||null,absU:g.absRemaining,absCpu:g.absCpuRemaining,halfBreak:g.halfBreak||null,
      baseCall:g.baseCall?{base:g.baseCall.base,type:g.baseCall.type,batSide:g.baseCall.batSide}:null,playU:g.playChallenges,playCpu:g.playCpuChallenges,
