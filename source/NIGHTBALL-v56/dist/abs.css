@@ -35,29 +35,30 @@
   bottom: 132px;
   transform: translateX(-50%);
   z-index: 18;
-  min-width: 196px;
-  padding: 11px 22px 15px;
+  padding: 7px 16px 11px;
   border-radius: 999px;
   border: 2px solid #58db55;
-  background: #0d2b1a;
+  background: #0d2b1ae6;
   color: #d9ffd2;
-  font-weight: 900;
-  font-size: 16px;
+  font-weight: 800;
+  font-size: 13px;
   letter-spacing: .02em;
-  box-shadow: 0 4px 18px #000a;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px #000a;
   cursor: pointer;
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
   overflow: hidden;
 }
+.abs-challenge span { white-space: nowrap; }
 .abs-challenge[hidden] { display: none; }
 .abs-challenge:focus-visible { outline: 2px solid #d5f36a; outline-offset: 2px; }
 .abs-challenge-timer {
   position: absolute;
-  left: 14px;
-  right: 14px;
-  bottom: 6px;
-  height: 4px;
+  left: 12px;
+  right: 12px;
+  bottom: 4px;
+  height: 3px;
   border-radius: 999px;
   background: #ffffff2e;
   overflow: hidden;

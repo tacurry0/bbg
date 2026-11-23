@@ -209,13 +209,12 @@
    line 3 (app.js writes break/spin into #pitch-detail, not into the speed). */
 .game-stage .pitch-info .pitch-detail{font-size:calc(10.5 * var(--hud-u));font-weight:700;color:#cfe6ff;white-space:nowrap}
 .game-stage .atbat-chart{
- position:absolute;z-index:7;left:var(--hud-edge);top:calc(16px + 118 * var(--hud-u));
- width:calc(96 * var(--hud-u));padding:calc(5 * var(--hud-u)) calc(6 * var(--hud-u));
- border:1px solid #8ac8f680;border-radius:calc(8 * var(--hud-u));
- background:linear-gradient(#202a35e6,#0b1421e6);color:#dfeadb;pointer-events:none;
+ position:absolute;z-index:4;left:var(--hud-edge);top:calc(14px + 114 * var(--hud-u));
+ width:calc(74 * var(--hud-u));padding:calc(4 * var(--hud-u)) calc(5 * var(--hud-u));
+ border:1px solid #8ac8f659;border-radius:calc(7 * var(--hud-u));
+ background:linear-gradient(#202a35c4,#0b1421c4);color:#dfeadb;pointer-events:none;
 }
 .game-stage .atbat-chart[hidden]{display:none}
-.atbat-chart-head{font-size:calc(9 * var(--hud-u));font-weight:800;letter-spacing:.08em;color:#bde9ff;text-align:center}
 .atbat-chart svg{display:block;width:100%;height:auto}
-.atbat-chart-seq{font-size:calc(9 * var(--hud-u));text-align:center;color:#cfe6c8;white-space:nowrap;overflow:hidden}
+.atbat-chart-seq{font-size:calc(8.5 * var(--hud-u));text-align:center;color:#cfe6c8;white-space:nowrap;overflow:hidden}
 .game-stage .pitch-info .pitch-detail:empty{display:none}
