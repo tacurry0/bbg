@@ -201,5 +201,15 @@
   attempt();
   return session;
  }
- window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS};
+ /* ---- quick chat (v114): preset phrases only, sent by index ----
+    Free text is deliberately not supported: the phrases are fixed, so the
+    receiver validates the index against this list and renders its own
+    copy of the text. */
+ const QUICK_CHATS=['よろしく！','ナイスプレイ！','すごい！','惜しい！','ありがとう','ごめん！','もう一球！','いける！','あぶない！','おつかれさま！'];
+ function quickChatText(index){
+  if(typeof index!=='number'&&typeof index!=='string')return null;
+  const n=Number(index);
+  return Number.isInteger(n)&&n>=0&&n<QUICK_CHATS.length?QUICK_CHATS[n]:null;
+ }
+ window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
 })();
