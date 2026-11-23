@@ -288,7 +288,7 @@ for(const verdictSafe of [true,false]){
  assert(app.includes('umpireShownAt<1200'),'feedback fades out after ~1.2s');
  // Same-version fix: ?v= pins stay at 107, only the SW cache name moves.
  assert(html.includes('./game.js?v=107')&&html.includes('./app.js?v=107'),'version pins stay at 107');
- assert(sw.includes("nightball-v107-stadium"),'SW cache renamed so existing users receive the fix');
+ assert(sw.includes("nightball-v107-league"),'SW cache renamed so existing users receive the fix');
 }
 
 console.log('umpire-v107: all assertions passed');
