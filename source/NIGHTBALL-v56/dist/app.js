@@ -1775,6 +1775,17 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('half-break').addEventListener('pointerup',e=>{const t=halfTap;halfTap=null;if(t&&t.id===e.pointerId&&Math.hypot(e.clientX-t.x,e.clientY-t.y)<12)continueHalf();});
  $('half-break').addEventListener('pointercancel',()=>{halfTap=null;});
  $('half-continue').addEventListener('click',e=>{if(e.detail===0)continueHalf();});
+ const ATBAT_PITCH_SHORT={fast:'直',slider:'ス',curve:'カ',fork:'フ',sinker:'シ',change:'チ',cutter:'カッ'};
+ const ATBAT_RESULT_FILL={ball:'#6ab0ff',miss:'#ffd34d',foul:'#aebba4'};
+ function updateAtBatChart(g,field){
+   const box=$('atbat-chart');if(!box)return;
+   const pitches=g&&g.inMatch&&!g.umpireMode&&!field?(g.atBatPitches||[]):[];
+   box.hidden=!pitches.length;
+   if(!pitches.length)return;
+   const clamp=(v,min,max)=>Math.max(min,Math.min(max,v));
+   $('atbat-chart-svg').innerHTML=`<rect x="24" y="8" width="36" height="48" rx="2" fill="#304a2b" stroke="#b8cc9a66"/><path d="M36 8v48m12-48v48M24 24h36M24 40h36" stroke="#b8cc9a22"/>${pitches.map((p,i)=>{const cx=clamp(42+p.x*18,7,77),cy=clamp(32+p.y*24,7,57),fill=ATBAT_RESULT_FILL[p.result]||'#d5f36a',last=i===pitches.length-1;return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.2" fill="${fill}"${last?' stroke="#fff" stroke-width="1.5"':''}/><text x="${cx.toFixed(1)}" y="${(cy+2.4).toFixed(1)}" fill="#182b15" text-anchor="middle" font-size="7" font-weight="bold">${i+1}</text>`;}).join('')}`;
+   $('atbat-chart-seq').textContent=pitches.map(p=>ATBAT_PITCH_SHORT[p.id]||'?').join('・');
+ }
  function updateUI(){
    if(!game)return;const g=game;updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
    if(g.isFixture||g.career||g.challenge){
@@ -1797,6 +1808,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    $('pitch-speed').textContent=pitchVisible?chipPitch.speed:'';
    const pitchDetail=$('pitch-detail');if(pitchDetail){if(pitchVisible&&chipPitch){const brk=chipPitch.breakCm??(chipPitch.bx!=null?Math.round(Math.hypot(chipPitch.bx,chipPitch.by||0)*20.4):null);pitchDetail.textContent=brk!=null?'変化'+brk+'cm'+(chipPitch.spinRpm?' · '+chipPitch.spinRpm.toLocaleString('ja-JP')+'rpm':''):'';}else pitchDetail.textContent='';}
    $('pitch-label').parentElement.hidden=!pitchVisible;
+   updateAtBatChart(g,field);
    const absCount=$('abs-count');
    absCount.hidden=g.absRemaining===undefined;
    if(!absCount.hidden){
@@ -2123,6 +2135,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      pi:{u:g.homePitcherIndex,c:g.awayPitcherIndex},usedU:g.usedPitchers.slice(),usedC:g.usedCpuPitchers.slice(),
      ps:g.pitchingStats,box:g.box,pitch:g.pitch||null,pitchSeq:o.pitchSeq,
      lastPitch:g.lastPitch?{name:g.lastPitch.name,speed:g.lastPitch.speed,id:g.lastPitch.id,breakCm:g.lastPitch.breakCm,spinRpm:g.lastPitch.spinRpm??null}:null,
+    abp:(g.atBatPitches||[]).map(p=>({i:p.id,n:p.name,x:p.x,y:p.y,r:p.result})),
      field,fs:g.fieldSpeed,fsq,hit:g.hit?{kind:g.hit.kind,distance:g.hit.distance}:null,swingAge:g.swingAge,
      absCall:g.absCall||null,absU:g.absRemaining,absCpu:g.absCpuRemaining,halfBreak:g.halfBreak||null,
      baseCall:g.baseCall?{base:g.baseCall.base,type:g.baseCall.type,batSide:g.baseCall.batSide}:null,playU:g.playChallenges,playCpu:g.playCpuChallenges,
