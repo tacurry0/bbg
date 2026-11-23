@@ -113,7 +113,7 @@
    this.preferredRole='rotation';
    this.fatigue=0;
    this.morale=50;
-   this.manualRunning=false;
+   this.manualRunning=true;
    this.skills={...STYLES[style].skills};
    this.recent=[];
    this.history=[];
@@ -136,7 +136,9 @@
     !['skills','season','schoolStats','proStats'].every(k=>data[k]&&typeof data[k]==='object'))return null;
    const c=Object.assign(new this(data.name,data.school,data.style,data.hand),data,{version:3});
    c.morale=clamp(Number.isFinite(c.morale)?c.morale:50,0,100);
-   c.manualRunning=c.manualRunning===true;
+   // Read the stored value itself, not the (new) constructor default:
+   // saves written before v109 keep exactly the mode they recorded.
+   c.manualRunning=data.manualRunning===true;
    for(const key of ['schoolStats','proStats','season','firstTeam','postseason','international']){
     const stats=c[key];
     c[key]={...D.blank(),...stats,tb:stats.tb??(stats.h||0)+(stats.hr||0)*3,earned:stats.earned??stats.allowed??0};

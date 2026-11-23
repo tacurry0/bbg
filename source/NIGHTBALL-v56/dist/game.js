@@ -140,7 +140,7 @@ window.NightGame=class NightGame{
   this.cursor={x:0,y:0};this.power=mode==='derby';this.bunt=false;this.steal=false;this.pitchType='fast';this.stamina=100;this.pitchHistory=[];this.pitch=null;this.lastPitch=null;this.hit=null;this.field=null;this.swingAge=9999;this.next='pitch';
   this.wind=Number.isFinite(options.wind)?options.wind:null;this.tiebreak=!!options.tiebreak;this.halfBreak=null;this.autoDefense=false;this.autoBatting=false;this.fastForward=false;this.spectate=false;this.defenseSpeed=options.defenseSpeed===2?2:1;this.manualRunning=options.manualRunning===true;this.fieldSpeed=options.fieldSpeed===2?2:1;this.battingAssist=options.battingAssist!==false;this.park=NightPlayers.parks.find(p=>p.id===options.park)||NightPlayers.parks[0];
   const order=(options.order||[]).map(id=>this.teams[this.userSide].batters.find(p=>p.id===id)).filter(Boolean);
-  this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=options.opponentPitcher??0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;const umpRoll=Math.random();this.umpireBias=umpRoll<.25?-.0127:umpRoll<.75?0:.0127;this.umpireLabel=this.umpireBias<0?'ゾーン狭め':this.umpireBias>0?'ゾーン広め':'ゾーン標準';this.pitchMemory={};const dome=this.park?.theme==='dome';const wRoll=Math.random();this.weather=dome?'clear':wRoll<.55?'clear':wRoll<.85?'cloudy':'rain';this.weatherLabel=this.weather==='rain'?'雨':this.weather==='cloudy'?'曇り':'晴れ';this.shift='none';this.cpuShiftNow=false;this.remoteSide=options.remoteSide||null;this.remotePitching=false;this.remoteBatter=false;this.mirror=false;this.mirrorSend=null;this._mirrorPitchSeq=-1;this._mirrorSwung=false;this._mirrorThrew=false;this._sentSteal=false;this._ptAt=null;this._ptBase=0;this._fieldPrev=null;this._fieldCurr=null;this._mirrorFseq=-1;this._mirrorRunners=new Map();this.customDifficulty=options.customDifficulty||globalThis.NightGameCustomDifficulty||null;this.walkoffWin=false;this.baseCall=null;this.umpireMode=options.umpire===true;this.umpirePending=null;this.umpireReveal=null;this.umpireStats={calls:0,correct:0,score:0,playCalls:0,playCorrect:0,lastCall:null,lastPlay:null,last:null};
+  this.lineups={home:NightGame.arrangeLineup(this.teams.home),away:NightGame.arrangeLineup(this.teams.away)};this.lineups[this.userSide]=NightGame.arrangeLineup(this.teams[this.userSide],order.map(p=>p.id),options.fielding);this.battingIndex={home:0,away:0};this.practiceBatter=options.practiceBatter||'o1';this.homePitcherIndex=Number.isInteger(options.pitcher)&&this.pitchingStaff[this.userSide][options.pitcher]?options.pitcher:0;this.awayPitcherIndex=Number.isInteger(options.opponentPitcher)&&this.pitchingStaff[this.userSide==='home'?'away':'home'][options.opponentPitcher]?options.opponentPitcher:0;this.usedPitchers=[this.homePitcherIndex];this.usedCpuPitchers=[this.awayPitcherIndex];this.removedPlayers={home:[],away:[]};this.participants={home:this.lineups.home.map(p=>p.id),away:this.lineups.away.map(p=>p.id)};this.substitutions=[];this.pitchingStats={};this.baseIds=[null,null,null];this.box={};this.basePitcherIds=[null,null,null];this.leadDecision=null;this.playEvents=[];this.log=[];this.pitchTrace=[];this.defense='normal';this.batFinished=false;this.practicePitch=options.practicePitch||'random';this.touch=null;const umpRoll=Math.random();this.umpireBias=umpRoll<.25?-.0127:umpRoll<.75?0:.0127;this.umpireLabel=this.umpireBias<0?'ゾーン狭め':this.umpireBias>0?'ゾーン広め':'ゾーン標準';this.pitchMemory={};const dome=this.park?.theme==='dome';const wRoll=Math.random();this.weather=dome?'clear':wRoll<.55?'clear':wRoll<.85?'cloudy':'rain';this.weatherLabel=this.weather==='rain'?'雨':this.weather==='cloudy'?'曇り':'晴れ';this.shift='none';this.cpuShiftNow=false;this.remoteSide=options.remoteSide||null;this.remoteRunning=options.remoteRunning===true;this.remotePitching=false;this.remoteBatter=false;this.mirror=false;this.mirrorSend=null;this._mirrorPitchSeq=-1;this._mirrorSwung=false;this._mirrorThrew=false;this._sentSteal=false;this._ptAt=null;this._ptBase=0;this._fieldPrev=null;this._fieldCurr=null;this._mirrorFseq=-1;this._mirrorRunners=new Map();this.customDifficulty=options.customDifficulty||globalThis.NightGameCustomDifficulty||null;this.walkoffWin=false;this.baseCall=null;this.umpireMode=options.umpire===true;this.umpirePending=null;this.umpireReveal=null;this.umpireStats={calls:0,correct:0,score:0,playCalls:0,playCorrect:0,lastCall:null,lastPlay:null,last:null};
   if(options.injured){for(const side of ['home','away']){const out=new Set(options.injured[side]||[]);if(!out.size)continue;const club=this.teams[side],lineup=this.lineups[side],used=new Set(lineup.map(p=>p.id)),bench=club.batters.filter(p=>!used.has(p.id)&&!out.has(p.id)).sort((a,b)=>(b.contact+b.power)-(a.contact+a.power));for(let i=0;i<lineup.length;i++)if(out.has(lineup[i].id)&&bench.length){const sub=bench.shift();lineup[i]={...sub,fieldPos:lineup[i].fieldPos};}this.participants[side]=lineup.map(p=>p.id);}}
   this.session={hits:0,hr:0,maxDistance:0,perfect:0,swings:0,contacts:0,pitches:0,runs:0,history:[],thrown:0,ks:0,allowed:0,grandSlam:false};
   if(this.loadedStart)this.seedRunners(3,2);
@@ -403,7 +403,7 @@ window.NightGame=class NightGame{
   this.notify();return true;
  }
  cpuRelief(){
-  if(!this.isFixture&&!this.career?.continuous)return;const current=this.pitchingStaff[this.opponentSide][this.awayPitcherIndex],record=this.pitcherRecord(current),late=this.inning>=this.totalInnings&&this.totalInnings>1;
+  if(!this.isFixture&&!this.career?.continuous)return;const current=this.pitchingStaff[this.opponentSide][this.awayPitcherIndex];if(!current)return;const record=this.pitcherRecord(current),late=this.inning>=this.totalInnings&&this.totalInnings>1;
   const shelled=record.runs>=4&&record.pitches>=25;
   const lateHook=this.isFixture&&this.awayPitcherIndex===0&&this.inning>=Math.max(3,Math.ceil(this.totalInnings*.6))&&record.pitches>=30;
   if(record.pitches<(current.role==='SP'?(this.career?.continuous?76:45):this.career?.continuous?25:18)&&
@@ -990,8 +990,11 @@ window.NightGame=class NightGame{
    this.field={...cf,ball:{...cf.ball},fielders:cf.fielders.map(p=>({...p})),runners:cf.runners.map(r=>({...r})),trail:[]};
    this._mirrorRunners=new Map(this.field.runners.map(r=>[r.id,r]));
   }else{
-   const F=this.field,pf=prev?prev.f:null;
+   const F=this.field,pf=prev?prev.f:null,localSelection=F.manual?.selection;
    for(const k in cf){if(k!=='ball'&&k!=='fielders'&&k!=='runners'&&k!=='trail')F[k]=cf[k];}
+   // The streamed manual block carries the host's selection; the guest's
+   // own runner selection is local state and must survive snapshot merges.
+   if(localSelection&&F.manual)F.manual={...F.manual,selection:localSelection};
    const pb=pf?pf.ball:cf.ball;
    F.ball.x=lerp(pb.x,cf.ball.x);F.ball.y=lerp(pb.y,cf.ball.y);F.ball.z=lerp(pb.z||0,cf.ball.z||0);
    for(const k in cf.ball){if(k!=='x'&&k!=='y'&&k!=='z')F.ball[k]=cf.ball[k];}
@@ -1078,7 +1081,7 @@ window.NightGame=class NightGame{
   const candidate=fielders.map((f,i)=>({i,t:dist(f,landing)/(f.pickSpeed||f.speed)})).sort((a,b)=>a.t-b.t)[0]?.i??0;
   const runners=[{id:this.batter.id,start:0,progress:0,x:0,y:0,batter:true,speed:this.runnerSpeed}];this.bases.forEach((b,i)=>{if(b)runners.push({id:this.baseIds[i],start:i+1,progress:i+1,x:BASES[i+1].x,y:BASES[i+1].y,batter:false,speed:RUNNER_SPEED(this.runnerRating(this.lineups[this.side].find(p=>p.id===this.baseIds[i])))});});
   this.field={ball,landing,fielders,chaser:candidate,elapsed:0,foul,cpu,perfect,trail:[],runners:this.derby?[]:runners,outsAtContact:this.outs,throw:null,resolved:false,outcome:null,maxTravel:0,landingTime:landing.time||1, batterName:this.batter.name,runnerSpeed:this.runnerSpeed};
-  if((this.inMatch||this.mode==='practice')&&!foul){this.field.manual={userControlled:(this.isFixture||!!this.challenge||this.mode==='career-bat')&&this.manualRunning&&!this.defending,selection:this.mode==='career-bat'?this.career.playerId:null,secured:false,holder:null,bag:null,initialBases:this.bases.slice(),initialIds:this.baseIds.slice(),outs:[],lastOut:null,fly:false,recovery:0};for(const r of runners)Object.assign(r,{base:r.start,furthest:r.start,autoTarget:r.batter?1:r.start,command:r.batter?1:r.start,waiting:!r.batter,out:false,scored:false,needsTag:false,chargedPitcherId:r.batter?this.pitcher.id:this.basePitcherIds[r.start-1]||this.pitcher.id,touchedAt:{[r.start]:0}});}
+  if((this.inMatch||this.mode==='practice')&&!foul){this.field.manual={userControlled:(this.isFixture||!!this.challenge||this.mode==='career-bat')&&this.runnersCommanded(),selection:this.mode==='career-bat'?this.career.playerId:null,secured:false,holder:null,bag:null,initialBases:this.bases.slice(),initialIds:this.baseIds.slice(),outs:[],lastOut:null,fly:false,recovery:0};for(const r of runners)Object.assign(r,{base:r.start,furthest:r.start,autoTarget:r.batter?1:r.start,command:r.batter?1:r.start,waiting:!r.batter,out:false,scored:false,needsTag:false,chargedPitcherId:r.batter?this.pitcher.id:this.basePitcherIds[r.start-1]||this.pitcher.id,touchedAt:{[r.start]:0}});}
   this.field.trajectory=launch<8?'ground':launch<=22?'liner':launch>=36&&Math.hypot(landing.x,landing.y)<75?'blooper':'fly';this.field.wallHit=false;this.planIntercepts();
   if(this.field.manual)this.startForcedRunners();
   this.hit={distance:0,kind:'live',perfect,exitKmh:Math.round(speed*3.6),launchAngle:Math.round(launch),sprayAngle:Math.round(spray*180/Math.PI),spinBack};this.setPhase('field');this.emit('clear');this.emit('sound',perfect?'perfect':'hit');this.emit('field',this.field);this.notify();
@@ -1421,6 +1424,15 @@ window.NightGame=class NightGame{
   this.message(label[0],label[1],`${this.outs}アウト${runs?' · '+runs+'点':''}`,hit?'hit':'out');
   this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
+ // Runners are human-commanded when the batting side is a person using
+ // manual running. Offline that is the local user while batting. In an
+ // online game the batting side may be the remote player: the host then
+ // takes the remote player's own manual-running choice (remoteRunning,
+ // synced from the guest) instead of its local one.
+ runnersCommanded(){
+  if(this.remoteSide)return this.remoteBatter?!!this.remoteRunning:this.manualRunning&&!this.defending;
+  return this.manualRunning&&!this.defending;
+ }
  canControlRunner(id){
   return !!this.field?.manual?.userControlled&&(this.mode!=='career-bat'||id===this.career?.playerId&&this.field.runners.some(r=>r.id===id&&r.batter));
  }
@@ -1438,15 +1450,47 @@ window.NightGame=class NightGame{
   this.field.manual.selection=id;this.notify();return true;
  }
  commandRunner(id,base){
+  if(this.mirror){
+   // Guest: the host owns the simulation, so forward the command instead
+   // of applying it locally; the host re-validates it against the
+   // authoritative runner state (remoteCommandRunner).
+   if(!this.manualPlay||!this.canControlRunner(id)||this.paused||!Number.isInteger(base))return false;
+   const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
+   if(!this.runnerCommandValid(r,base))return false;
+   this.mirrorSend?.({t:'runner-command',id,base});return true;
+  }
   if(!this.manualPlay||!this.canControlRunner(id)||this.paused||!Number.isInteger(base))return false;
-  const f=this.field,r=f.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
-  const at=Math.abs(r.progress-Math.round(r.progress))<.000001,minimum=r.batter?1:1;
+  const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
+  return this.applyRunnerCommand(r,base);
+ }
+ runnerCommandValid(r,base){
+  const at=Math.abs(r.progress-Math.round(r.progress))<.000001;
   const forward=at?Math.round(r.progress)+1:Math.ceil(r.progress),backward=at?Math.round(r.progress)-1:Math.floor(r.progress);
-  if(base<minimum||base>4||base!==forward&&base!==backward||r.needsTag&&(base>=r.progress||base<r.start))return false;
-  r.command=base;r.target=base;r.waiting=false;r.running=Math.abs(base-r.progress)>.001;f.manual.selection=id;this.notify();return true;
+  return !(base<1||base>4||base!==forward&&base!==backward||r.needsTag&&(base>=r.progress||base<r.start));
+ }
+ applyRunnerCommand(r,base){
+  if(!this.runnerCommandValid(r,base))return false;
+  r.command=base;r.target=base;r.waiting=false;r.running=Math.abs(base-r.progress)>.001;this.field.manual.selection=r.id;this.notify();return true;
+ }
+ // Host side of online play: apply a baserunning command the guest sent
+ // for the guest's own runners. Mirrors commandRunner's validation, but
+ // the "user" at the controls is the remote batter, not the local player.
+ remoteCommandRunner(id,base){
+  if(this.paused||!this.remoteSide||!this.remoteBatter||this.umpireMode)return false;
+  if(this.phase!=='field'||!this.field||this.field.resolved||!this.field.manual?.userControlled)return false;
+  if(!Number.isInteger(base))return false;
+  const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
+  return this.applyRunnerCommand(r,base);
  }
  commandRunners(action){
-  if(this.mirror)return false;
+  if(this.mirror){
+   // Guest: resolve the selected runner's advance/return against the
+   // mirrored state and forward it as an explicit runner command.
+   if(!this.manualPlay||!['advance','return'].includes(action)||this.paused)return false;
+   const r=this.field.runners.find(x=>x.id===this.field.manual.selection);if(!r)return false;
+   const at=Math.abs(r.progress-Math.round(r.progress))<.000001;
+   return this.commandRunner(r.id,action==='advance'?(at?Math.round(r.progress)+1:Math.ceil(r.progress)):(at?Math.round(r.progress)-1:Math.floor(r.progress)));
+  }
   if(!this.manualPlay||!['advance','return'].includes(action))return false;
   const r=this.field.runners.find(x=>x.id===this.field.manual.selection);if(!r||this.paused)return false;
   if(this.mode==='career-bat'&&r.batter&&r.progress<1&&action==='advance'){
