@@ -1,7 +1,8 @@
 // v110: an explicit on-screen ABS challenge button joins the double-tap.
 //  - the button is shown exactly while game.absCanChallenge holds (the same
-//    condition that arms the tap overlay), labelled with the remaining count
-//    and a shrinking window bar;
+//    condition that arms the tap overlay), with the remaining count on a
+//    small badge (the original shrinking window bar was removed in v127
+//    by user request — no remaining-time visualisation);
 //  - clicking it runs the existing requestAbsChallenge() entry point, so a
 //    challenge is consumed exactly once even if the tap path fires too;
 //  - the guest mirror sends the same {t:'abs-challenge'} message as the tap;
@@ -99,16 +100,18 @@ function calledPitch({defending=false,x=1.08,roll=0,userRemaining=2,cpuRemaining
  const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
  const css=fs.readFileSync(__dirname+'/../dist/abs.css','utf8');
  assert(html.includes('id="abs-challenge"'),'button element exists in the stage');
- assert(html.includes('id="abs-challenge-label"')&&html.includes('id="abs-challenge-fill"'),'label and timer fill exist');
+ assert(html.includes('id="abs-challenge-label"')&&html.includes('id="abs-challenge-count"'),'label and remaining-count badge exist');
+ assert(!html.includes('abs-challenge-fill'),'timer bar removed from the button (v127 spec change)');
  assert(app.includes("$('abs-challenge').addEventListener('click'"),'button has a click handler');
  assert(app.includes("if(game?.requestAbsChallenge())sound('tap');"),'button and keyboard tap share requestAbsChallenge');
  assert(app.includes("absBtn.hidden=!interactive||!!g.umpireMode"),'visibility follows the challenge window and excludes umpire mode');
- assert(app.includes("'ABSチャレンジ（残り'+g.absRemaining+'）'"),'label shows the remaining challenge count');
- assert(app.includes("NightGame.ABS_TIMING.call+(g.onlineGame?800:0)"),'timer bar uses the real window (online extension included)');
+ assert(app.includes("$('abs-challenge-count').textContent='残り'+g.absRemaining"),'count badge shows the remaining challenges');
+ assert(!app.includes('abs-challenge-fill'),'no timer-bar fill is driven anymore (v127 spec change)');
  assert(app.includes("absActor.addEventListener('pointerup'"),'double-tap path on the actor overlay is unchanged');
  assert(app.includes('absLastTap'),'double-tap bookkeeping is unchanged');
  assert(css.includes('.abs-challenge'),'button styles live in abs.css');
- assert(css.includes('.abs-challenge-timer'),'timer bar is styled');
+ assert(css.includes('.abs-challenge-count'),'count badge is styled');
+ assert(!css.includes('.abs-challenge-timer'),'timer bar styles removed (v127 spec change)');
 }
 
 // ---------- v110 batch additions: top-bar sub button, latency display

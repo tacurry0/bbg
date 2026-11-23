@@ -174,7 +174,7 @@
 .game-stage .speed-chip{right:var(--hud-edge);top:calc(41px + 70 * var(--hud-u));min-height:calc(23 * var(--btn-u));padding:.26em .56em;font-size:calc(10 * var(--btn-u))}
 .game-screen:not(.in-play):not(.auto-defense) .speed-chip{display:none}
 .game-stage .auto-defense-chip{right:var(--hud-edge);top:calc(68px + 70 * var(--hud-u));font-size:calc(10 * var(--btn-u));min-height:calc(27 * var(--btn-u));padding:.36em .55em}
-.game-stage .pitch-deck{top:max(113px,calc(18px + 115 * var(--hud-u)))!important;transform:scale(var(--control-scale,1));transform-origin:left top;width:min(290px,80%)}
+.game-stage .pitch-deck{top:max(113px,calc(18px + 115 * var(--hud-u)))!important;transform:scale(var(--control-scale,1));transform-origin:left top;width:min(272px,80%)}
 .game-stage .run-actions>button{min-height:max(34px,calc(40 * var(--btn-u)));padding:.35em .7em;font-size:calc(12 * var(--btn-u))}
 .game-stage .run-actions{z-index:20}
 .in-play .hud-batter,.in-play .pitch-info{visibility:hidden}
@@ -209,11 +209,14 @@
    line 3 (app.js writes break/spin into #pitch-detail, not into the speed). */
 .game-stage .pitch-info .pitch-detail{font-size:calc(10.5 * var(--hud-u));font-weight:700;color:#cfe6ff;white-space:nowrap}
 .game-stage .atbat-chart{
- position:absolute;z-index:4;left:var(--hud-edge);top:calc(14px + 114 * var(--hud-u));
- width:calc(74 * var(--hud-u));padding:calc(4 * var(--hud-u)) calc(5 * var(--hud-u));
- border:1px solid #8ac8f659;border-radius:calc(7 * var(--hud-u));
+ position:absolute;z-index:4;left:var(--hud-edge);top:max(calc(262 * var(--hud-u)),41%);
+ width:calc(96 * var(--hud-u));padding:calc(5 * var(--hud-u)) calc(6 * var(--hud-u));
+ border:1px solid #8ac8f659;border-radius:calc(8 * var(--hud-u));
  background:linear-gradient(#202a35c4,#0b1421c4);color:#dfeadb;pointer-events:none;
 }
+/* While pitching, the pitch deck occupies the upper-left: drop the chart
+   fully below the deck instead of shrinking it. */
+.game-screen.pitching-touch .game-stage .atbat-chart{top:max(calc(372 * var(--hud-u)),46%)}
 .game-stage .atbat-chart[hidden]{display:none}
 .atbat-chart svg{display:block;width:100%;height:auto}
 .atbat-chart-seq{font-size:calc(8.5 * var(--hud-u));text-align:center;color:#cfe6c8;white-space:nowrap;overflow:hidden}

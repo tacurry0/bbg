@@ -1652,11 +1652,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   // the actor overlay, shown only while a challenge is actually available.
   const absBtn=$('abs-challenge');
   absBtn.hidden=!interactive||!!g.umpireMode;
-  if(!absBtn.hidden){
-   $('abs-challenge-label').textContent='ABSチャレンジ（残り'+g.absRemaining+'）';
-   const windowMs=NightGame.ABS_TIMING.call+(g.onlineGame?800:0)+(call?.remote?700:0);
-   $('abs-challenge-fill').style.width=Math.max(0,Math.min(100,(1-g.phaseTime/windowMs)*100))+'%';
-  }
+  if(!absBtn.hidden)$('abs-challenge-count').textContent='残り'+g.absRemaining;
   const opening=panel.hidden;
   panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
   if(panel.hidden)return;
