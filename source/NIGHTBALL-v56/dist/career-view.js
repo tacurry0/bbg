@@ -268,6 +268,9 @@ function training(c){
  <section class="career-panel"><h2>育成方針</h2>
  <label class="career-select">今の練習 <select id="career-plan" ${playable?'':'disabled'}>
  ${options.map(([id,name])=>`<option value="${id}" ${id===defaultChoice?'selected':''}>${name}</option>`).join('')}</select></label>
+ <label class="career-select">週間プラン <select id="career-training-plan" ${playable?'':'disabled'}>
+ ${Object.entries(statD.trainingPlans()).map(([id,p])=>`<option value="${id}" ${id===(c.trainingPlan||'balanced')?'selected':''}>${p.label}</option>`).join('')}</select></label>
+ <p class="career-note">${statD.trainingPlans()[c.trainingPlan||'balanced'].desc}。試合ごとに入る経験の配分が変わります。</p>
  ${c.goal?`<p>${c.goal.label} · 習得まで <progress value="${c.goal.progress}" max="3"></progress></p>`:''}
  <p class="career-note">試合で使った能力に経験が入り、選んだ練習で成長が加速します。球種と守備位置の習得度は、練習方針を変えても残ります。</p>
  ${c.pitching?`<p>持ち球 ${c.pitches.map(id=>NightGame.TYPES.find(t=>t.id===id).short).join(' / ')}</p>

@@ -20,6 +20,14 @@
   pitch:{label:'新球種を練習',special:true},
   relief:{label:'救援向けの準備',skill:'control',support:'movement'}
  };
+ // Weekly training plans: how each game's experience is distributed.
+ // focus = the selected drill's skill, support = its paired skill,
+ // others = every other skill, dual = special-drill progress rate.
+ const TRAINING_PLANS={
+  balanced:{label:'バランス型',focus:24,support:10,others:0,dual:1,desc:'重点能力を伸ばし、関連能力も少し底上げする'},
+  intense:{label:'集中特訓型',focus:42,support:0,others:0,dual:1.5,desc:'重点能力に全振りする。球種・守備位置の習得も速い'},
+  spread:{label:'底上げ型',focus:14,support:14,others:5,dual:.8,desc:'全体を少しずつ伸ばし、弱点を作らない'},
+ };
  const battingNeeds=['出塁力','長打力','守備力','走力','出塁力','長打力'];
  const pitchingNeeds=['先発候補','制球力','奪三振力','救援候補','制球力','先発候補'];
  const goals={
@@ -32,6 +40,7 @@
   static slugging(s){return s.tb/Math.max(1,s.ab);}
   static max(key){return key==='velocity'?162:99;}
   static drills(pitching){return pitching?PITCH_DRILLS:BAT_DRILLS;}
+  static trainingPlans(){return TRAINING_PLANS;}
   static grade(rating){
    return rating>=70?'好調':rating>=50?'まずまず':rating>=30?'あと一歩':'苦戦';
   }
@@ -98,8 +107,9 @@
     run:s.h*3+s.bb*3,field:s.fieldOuts*10,arm:s.fieldOuts*7
    };
    const exp=c.twoWay?{...pitchExp,...batExp}:c.pitching?pitchExp:batExp;
+   const plan=TRAINING_PLANS[c.trainingPlan]||TRAINING_PLANS.balanced;
    for(const key of Object.keys(exp)){
-    const practice=pending?.skill===key?24:pending?.support===key?10:0;
+    const practice=pending?.skill===key?plan.focus:pending?.support===key?plan.support:plan.others;
     const amount=Math.round((5+exp[key]+practice)*(manual?1:.65)*(c.fatigue>=75?.75:1));
     const max=this.max(key),cost=c.xpCost(key);
     const total=(c.xp[key]||0)+amount;
@@ -107,7 +117,7 @@
     if(c.skills[key]<max&&total>=cost){c.skills[key]++;gains[key]=1;c.xp[key]=total-cost;}
    }
    if(pending?.special&&c.goal){
-    c.goal.progress+=manual?1.2:.7;
+    c.goal.progress+=(manual?1.2:.7)*plan.dual;
     if(c.goal.progress>=3){
      const {target}=c.goal;
      if(c.plan==='pitch')c.pitches.push(target);

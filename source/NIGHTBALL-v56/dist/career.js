@@ -84,6 +84,7 @@
    this.xp={};
    this.mastery={};
    this.plan=STYLES[style].pos==='P'?'control':'contact';
+   this.trainingPlan='balanced';
    this.pitches=STYLES[style].pitches?.slice()||[];
    const natural=STYLES[style].pos;
    this.position=natural==='P'||!POSITIONS.includes(position)?natural:position;
@@ -410,6 +411,11 @@
     this.goal={target,label:choice[1],progress:this.specialProgress[key+'|'+target]||0};
    }else this.goal=null;
    this.plan=key;
+   return true;
+  }
+  setTrainingPlan(id){
+   if(this.currentGame||!D.trainingPlans()[id])return false;
+   this.trainingPlan=id;
    return true;
   }
   deployAs(role){
