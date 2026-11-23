@@ -525,6 +525,29 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  $('career').addEventListener('click',worldAction);
  $('modal-content').addEventListener('click',worldAction);
+ // v126: swap the loaded game for a career live match defensively. The
+ // previous game is dropped BEFORE the new one is built, and construction
+ // plus the first UI pass run under a guard: if anything throws, the user
+ // lands back on the career dashboard with a message instead of a game
+ // screen still showing the previous match behind the career HUD.
+ function beginCareerLive(create,fallback){
+  stopReplay();review.reset();resetPlayFeedback();game=null;onEvent('clear');
+  try{
+   const g=create();
+   game=g;activateGame();updateUI();
+   return g;
+  }catch(error){
+   console.error('Career match could not start',error);
+   game=null;onEvent('clear');fallback();
+   toast('試合を開始できませんでした。もう一度お試しください');
+   return null;
+  }
+ }
+ function restoreCareerGame(data,options){
+  if(!data)return null;
+  try{return NightGame.restore(data,onEvent,options);}
+  catch(error){console.error('Career match could not be restored',error);return null;}
+ }
  function playWorld(chosen){
   const data=world.currentGame;
   const format=data?.state?.career?.format||(data?.state?.mode==='match'?'full':chosen);
@@ -532,13 +555,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(!options)return;
   const mode=options.career?(options.career.pitching?'career-pitch':'career-bat'):'match';
   const difficulty={easy:'casual',normal:'standard',hard:'pro'}[world.difficulty];
-  const restored=NightGame.restore(data,onEvent,options);
+  const restored=restoreCareerGame(data,options);
   if(data&&!restored){toast('中断した試合を再開できませんでした');return;}
   closeModal(false);saved=false;lastMode=mode;onEvent('clear');
-  game=restored||new NightGame(mode,difficulty,onEvent,{...options,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,
-   battingAssist:settings.battingAssist,defenseSpeed:settings.defenseSpeed});
-  activateGame();updateUI();
-  if(game.phase==='career-ready')careerAppearance(game);
+  const g=beginCareerLive(()=>restored||new NightGame(mode,difficulty,onEvent,{...options,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,
+   battingAssist:settings.battingAssist,defenseSpeed:settings.defenseSpeed}),worldDashboard);
+  if(!g)return;
+  if(g.phase==='career-ready')careerAppearance(g);
  }
  function finishWorld(g){
   if(!saved){
@@ -844,15 +867,18 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   Object.assign(options.career,{presentation:true,shortIntro:career.shortIntro||matchMedia('(prefers-reduced-motion: reduce)').matches});
   const mode=options.career.pitching?'career-pitch':'career-bat';
   const difficulty={relaxed:'casual',challenging:'standard',expert:'pro'}[career.difficulty]||'standard';
-  const restored=NightGame.restore(data,onEvent,options);
+  const restored=restoreCareerGame(data,options);
   if(data&&!restored){toast('中断データを読み込めなかったため、この試合を最初から開始します');}
   closeModal(false);unlockAudio();saved=false;lastMode=mode;onEvent('clear');
-  game=restored||new NightGame(mode,difficulty,onEvent,{...options,fieldSpeed:settings.fieldSpeed,
-   battingAssist:settings.battingAssist&&career.difficulty!=='expert'});
-  if(game.field&&['field','result'].includes(game.phase)&&game.mode==='career-bat')game.career.queuedRunningMode=options.manualRunning;
-  else game.manualRunning=options.manualRunning;
-  if(pregame)game.setPhase('career-pregame');
-  activateGame();updateUI();
+  const started=beginCareerLive(()=>{
+   const created=restored||new NightGame(mode,difficulty,onEvent,{...options,fieldSpeed:settings.fieldSpeed,
+    battingAssist:settings.battingAssist&&career.difficulty!=='expert'});
+   if(created.field&&['field','result'].includes(created.phase)&&created.mode==='career-bat')created.career.queuedRunningMode=options.manualRunning;
+   else created.manualRunning=options.manualRunning;
+   if(pregame)created.setPhase('career-pregame');
+   return created;
+  },careerDashboard);
+  if(!started)return;
   if(pregame){
    const f=career.fixture,{home,away}=game.teams;
    const date=NightCareerLeagues.calendar(career,f)?.next;
@@ -2607,6 +2633,18 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(!g.defending&&g.phase==='pitch'&&u>=.92&&u<=1.09&&!p.timingCue){p.timingCue=true;if(settings.timingSound){sound('timing');vibrate(12);}}
  }
  let last=performance.now();
+ // v126: a throwing update() used to abort every frame before render,
+ // leaving the previous match frozen on the canvas with dead input.
+ // Route back to the owning dashboard instead, with the error visible.
+ function handleGameError(g,error){
+  console.error('Game update failed',error);
+  if(game!==g)return;
+  game=null;onEvent('clear');
+  if(g.worldFixture)worldDashboard();
+  else if(g.career)careerDashboard();
+  else home();
+  toast('試合の処理でエラーが発生しました');
+ }
  function frame(now){
   requestAnimationFrame(frame);
   syncAudio();
@@ -2622,8 +2660,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     if(!game.paused)tickPlayFeedback(activeDt);
     const hold=playFeedback.scoreTime>0||playFeedback.callTime>0;
     const current=game;
-    if(current.mirror)current.mirrorTick(activeDt);
-    else current.update(activeDt,hold||playFeedback.pendingReplay);
+    try{
+     if(current.mirror)current.mirrorTick(activeDt);
+     else current.update(activeDt,hold||playFeedback.pendingReplay);
+    }catch(error){handleGameError(current,error);return;}
     if(screen!=='game'||game!==current)return;
     const rb=$('react');if(rb)rb.hidden=!game?.onlineGame;onlineTick(game);updateScoringChip(game);
     try{updatePlayCallUI(game);}catch{}
