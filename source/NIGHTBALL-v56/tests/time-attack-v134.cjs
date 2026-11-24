@@ -179,8 +179,8 @@ assert(app.includes("timeAttack:pendingTimeAttack&&mode==='match'"),'app passes 
 assert(app.includes('NightTimeAttack.recordBest'),'the result screen records the best score');
 assert(app.includes('NightTimeAttack.loadBest'),'the setup screen shows the best scores');
 assert(app.includes('!game.timeAttack'),'time attack games are kept out of the match checkpoint');
-assert(index.includes('./game.js?v=163')&&index.includes('./app.js?v=163'),'index pins move to v134');
-assert(sw.includes('nightball-v163-scrimmage'),'SW cache renamed for v134');
-assert(sw.includes('./game.js?v=163')&&sw.includes('./app.js?v=163'),'SW precaches the v134 scripts');
+assert(index.includes('./game.js?v=164')&&index.includes('./app.js?v=164'),'index pins move to v134');
+assert(sw.includes('nightball-v164-new-pitch'),'SW cache renamed for v134');
+assert(sw.includes('./game.js?v=164')&&sw.includes('./app.js?v=164'),'SW precaches the v134 scripts');
 assert(sw.includes('./time-attack.js?v=1'),'SW precaches the time attack module');
 console.log('PASS: config + best-score module (persist / monotonic / corrupt-safe), engine gates, role-first halves, walk-forced run tally, banked outs without a side switch, prompt one-shot timer expiry, normal match untouched, app wiring + v134 pins.');

@@ -39,10 +39,10 @@ assert(/\.game-screen\.pitching-touch \.game-stage \.atbat-chart\{[^}]*top:\s*ma
   'pitching chart top is unchanged (168px, mirrored right)');
 
 // ---------- version pins (v158) ----------
-assert(index.includes('./game.js?v=163') && index.includes('./app.js?v=163'), 'index pins at v158');
+assert(index.includes('./game.js?v=164') && index.includes('./app.js?v=164'), 'index pins at v158');
 assert(index.includes('./game-hud.css?v=80'), 'game-hud.css pin moves with the chart rules');
-assert(sw.includes('nightball-v163-scrimmage'), 'SW cache renamed for v158');
-assert(sw.includes('./game.js?v=163') && sw.includes('./app.js?v=163') && sw.includes('./game-hud.css?v=80'),
+assert(sw.includes('nightball-v164-new-pitch'), 'SW cache renamed for v158');
+assert(sw.includes('./game.js?v=164') && sw.includes('./app.js?v=164') && sw.includes('./game-hud.css?v=80'),
   'SW precaches the v158 assets');
 
 console.log('chart-labels-v158: static assertions passed');

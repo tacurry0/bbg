@@ -117,7 +117,7 @@
    if(!leagueId)throw Error('Unknown club');
    if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.learnedPitches={};this.pitchLearning={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -225,7 +225,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.learnedPitches=(p.learnedPitches&&typeof p.learnedPitches==='object'&&!Array.isArray(p.learnedPitches))?Object.fromEntries(Object.entries(p.learnedPitches).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.filter(x=>typeof x==='string')] )):{};p.pitchLearning=(p.pitchLearning&&typeof p.pitchLearning==='object'&&!Array.isArray(p.pitchLearning))?p.pitchLearning:{};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -251,7 +251,7 @@
   clubRoster(clubId){
    const club=NightTeams.get(clubId);if(!club)return club;
    const moves=this.rosterMoves||{},custom=this.customPlayers||{},gone=new Set(this.departed||[]),mods=this.ratingMods||{};
-   if(!Object.keys(moves).length&&!Object.keys(custom).length&&!gone.size&&!Object.keys(mods).length)return club;
+   if(!Object.keys(moves).length&&!Object.keys(custom).length&&!gone.size&&!Object.keys(mods).length&&!Object.keys(this.learnedPitches||{}).length)return club;
    const sources=[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])];
    const batters=[],pitchers=[];
    for(const src of sources){
@@ -259,7 +259,7 @@
     for(const p of src.pitchers||[])if((moves[p.id]||src.id)===clubId&&!gone.has(p.id))pitchers.push(p);
    }
    for(const p of Object.values(custom))if(p.clubId===clubId&&!gone.has(p.id))(p.pos==='P'?pitchers:batters).push(p);
-   const adj=p=>{const m=mods[p.id];if(!m)return p;const o={...p};for(const k of Object.keys(m))o[k]=Math.max(20,Math.min(99,(o[k]||60)+m[k]));return o;};
+   const adj=p=>{const m=mods[p.id],learned=(this.learnedPitches||{})[p.id];if(!m&&!learned?.length)return p;const o={...p};if(m)for(const k of Object.keys(m))o[k]=Math.max(20,Math.min(99,(o[k]||60)+m[k]));if(learned?.length&&(p.pos==='P'||p.velocity))o.pitches=[...(p.pitches||['fast']),...learned.filter(id=>!(p.pitches||[]).includes(id))];return o;};
    const out={...club,batters:batters.map(adj),pitchers:pitchers.map(adj)};
    const avail=new Set(out.batters.map(p=>p.id));
    out.startingOrder=(club.startingOrder||[]).filter(id=>avail.has(id));
@@ -377,6 +377,55 @@
    if(!game||!game.pitchUsage)return 0;
    this.mastery=this.mastery||{};
    return NightGame.applyMastery(this.mastery,game.pitchUsage);
+  }
+  // ---- New-pitch learning (v164, checker item "new-pitch-learning"):
+  // unlike mastery (v121, existing pitches get better), this ADDS a pitch
+  // the pitcher does not throw yet. User-club pitchers only. Any of the
+  // game's pitch types may be targeted (no aptitude gating), but a
+  // pitcher holds at most LEARN_MAX_PITCHES pitches in total, may train
+  // only once per round, and each attempt succeeds probabilistically:
+  // chance scales with movement (and farm assignment helps, tying the
+  // system into the v124 farm layer); the 4th attempt on the same target
+  // always succeeds, so progress is never a dead end. The default roll is
+  // seeded from the league id + player + pitch + attempt count, so a
+  // save's outcomes are reproducible; tests may inject a roll instead.
+  // Learned pitches persist in learnedPitches ({playerId: [pitchId]})
+  // and clubRoster folds them into the pitcher's repertoire, so they
+  // appear in the in-game pitch deck and can actually be thrown.
+  static LEARN_MAX_PITCHES=5;
+  static LEARN_PITY_ATTEMPTS=3;
+  learnablePitches(playerId){
+   const roster=this.clubRoster(this.clubId);if(!roster)return [];
+   const p=roster.pitchers.find(x=>x.id===playerId);if(!p)return [];
+   const owned=p.pitches||[];
+   if(owned.length>=NightPennant.LEARN_MAX_PITCHES)return [];
+   return NightGame.TYPES.filter(t=>!owned.includes(t.id)).map(t=>t.id);
+  }
+  learnChance(playerId){
+   const roster=this.clubRoster(this.clubId);if(!roster)return 0;
+   const p=roster.pitchers.find(x=>x.id===playerId);if(!p)return 0;
+   const farm=(this.farmMoves||{})[playerId]===this.clubId?.1:0;
+   return Math.max(.2,Math.min(.6,.3+(p.movement-55)*.004+farm));
+  }
+  trainNewPitch(playerId,pitchId,roll){
+   this.learnedPitches=this.learnedPitches||{};this.pitchLearning=this.pitchLearning||{};
+   if(!NightGame.TYPES.some(t=>t.id===pitchId))return false;
+   if(!this.learnablePitches(playerId).includes(pitchId))return false;
+   const state=this.pitchLearning[playerId];
+   if(state&&state.round===this.round)return false;
+   const attempts=state&&state.pitch===pitchId?state.attempts||0:0;
+   const chance=attempts>=NightPennant.LEARN_PITY_ATTEMPTS?1:this.learnChance(playerId);
+   const r=roll===undefined?random(hash(this.id+'/learn/'+playerId+'/'+pitchId+'/'+attempts))():roll;
+   if(!(r>=0&&r<1))return false;
+   const roster=this.clubRoster(this.clubId),p=roster.pitchers.find(x=>x.id===playerId);
+   if(r<chance){
+    (this.learnedPitches[playerId]??=[]).push(pitchId);
+    this.pitchLearning[playerId]={pitch:pitchId,attempts:0,round:this.round,learned:true};
+    this.pushNews(`${p.name}が新球種「${NightGame.TYPES.find(t=>t.id===pitchId).name}」を習得した`);
+    return {learned:true,pitch:pitchId,chance,attempts:attempts+1};
+   }
+   this.pitchLearning[playerId]={pitch:pitchId,attempts:attempts+1,round:this.round};
+   return {learned:false,pitch:pitchId,chance,attempts:attempts+1};
   }
   scoutingReport(clubId){
    const known=[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])].some(c=>c.id===clubId);

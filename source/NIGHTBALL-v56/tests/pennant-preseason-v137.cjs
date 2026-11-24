@@ -195,10 +195,10 @@ const roundTrip=p=>NightPennant.restore(JSON.parse(JSON.stringify(p)));
  assert(app.includes("case'preseason-skip'")&&app.includes('league.skipPreseason()'),'skip action wired');
  assert(app.includes('league.completePreseasonGame(g,g)'),'live games finish through the preseason path');
  assert(app.includes('game.preseasonGame=true'),'live preseason games are flagged');
- assert(index.includes('./pennant.js?v=83'),'index pin for the changed pennant.js moves');
- assert(sw.includes('./pennant.js?v=83'),'SW precaches the new pennant.js');
- assert(index.includes('./game.js?v=163')&&index.includes('./app.js?v=163'),'index pins move to v137');
- assert(sw.includes('nightball-v163-scrimmage'),'SW cache renamed for v137');
- assert(sw.includes('./game.js?v=163')&&sw.includes('./app.js?v=163'),'SW precaches the v137 scripts');
+ assert(index.includes('./pennant.js?v=84'),'index pin for the changed pennant.js moves');
+ assert(sw.includes('./pennant.js?v=84'),'SW precaches the new pennant.js');
+ assert(index.includes('./game.js?v=164')&&index.includes('./app.js?v=164'),'index pins move to v137');
+ assert(sw.includes('nightball-v164-new-pitch'),'SW cache renamed for v137');
+ assert(sw.includes('./game.js?v=164')&&sw.includes('./app.js?v=164'),'SW precaches the v137 scripts');
 }
 console.log('pennant-preseason-v137: all assertions passed');
