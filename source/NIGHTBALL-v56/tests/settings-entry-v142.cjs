@@ -41,9 +41,9 @@ assert(
 );
 
 // ---------- v142 version pins ----------
-assert(index.includes('./game.js?v=153') && index.includes('./app.js?v=153'), 'index pins move to v142');
-assert(sw.includes('nightball-v153-preset-variant'), 'SW cache renamed for v142');
-assert(sw.includes('./game.js?v=153') && sw.includes('./app.js?v=153'), 'SW precaches the v142 scripts');
+assert(index.includes('./game.js?v=154') && index.includes('./app.js?v=154'), 'index pins move to v142');
+assert(sw.includes('nightball-v154-weather-forecast'), 'SW cache renamed for v142');
+assert(sw.includes('./game.js?v=154') && sw.includes('./app.js?v=154'), 'SW precaches the v142 scripts');
 assert(index.includes('./arcade.css?v=78'), 'index pin for the changed arcade.css moves');
 assert(sw.includes('./arcade.css?v=78'), 'SW precaches the new arcade.css');
 

@@ -282,3 +282,9 @@
 #modal-content :is(.segmented,.preset-buttons,.bench-tabs)>button{min-height:44px}
 #modal-content .audio-preview-buttons button{min-height:44px}
 #modal-content .league-inline-button{min-height:44px}
+.weather-forecast{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;border:1px solid #b8d69440;border-radius:7px;background:#c7e7a50d;padding:10px 12px;margin:12px 0;font-size:11px;color:#dbe8ce;max-width:100%;box-sizing:border-box}
+.weather-forecast-title{font-size:8px;letter-spacing:1.6px;color:var(--lime);font-weight:800}
+.weather-forecast b{font-size:13px;white-space:nowrap}
+.weather-forecast>span:not(.weather-forecast-title){white-space:nowrap}
+.weather-forecast small{flex-basis:100%;font-size:9px;color:#9eb3a5;line-height:1.6}
+.league-match-card .weather-forecast{margin:0 0 14px;text-align:left}
