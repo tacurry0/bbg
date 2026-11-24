@@ -18,7 +18,8 @@
 // gradient stop: head text 9.16:1, chevron 5.40:1 (both >= 4.5:1).
 // This test recomputes the WCAG contrast ratio from the actual CSS
 // (statically, always) and from real-browser computed styles (when
-// playwright is available), for all four heads in BOTH accordion states.
+// playwright is available), for all section heads in BOTH accordion states
+// (five heads since v149 added the エディット／カスタム section).
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
@@ -88,10 +89,10 @@ assert(/\.settings-section-head\{[^}]*min-height:44px/.test(css), 'head tap area
 assert(css.includes('.settings-section-body[hidden]{display:none}'), 'collapsed bodies still hide');
 
 // ---------- v148 version pins ----------
-assert(index.includes('./game.js?v=148') && index.includes('./app.js?v=148'), 'index pins move to v148');
+assert(index.includes('./game.js?v=149') && index.includes('./app.js?v=149'), 'index pins move to v148');
 assert(index.includes('./style.css?v=71'), 'style.css pin moves with the colour fix');
-assert(sw.includes('nightball-v148-settings-headings'), 'SW cache renamed for v148');
-assert(sw.includes('./game.js?v=148') && sw.includes('./app.js?v=148') && sw.includes('./style.css?v=71'),
+assert(sw.includes('nightball-v149-edit-hub'), 'SW cache renamed for v148');
+assert(sw.includes('./game.js?v=149') && sw.includes('./app.js?v=149') && sw.includes('./style.css?v=71'),
   'SW precaches the v148 assets');
 
 // ---------- browser behaviour (393px): computed styles, both states ----------
@@ -143,7 +144,7 @@ const { resolve, extname, sep } = require('node:path');
         width: r.width, height: r.height };
     }));
     const checkAll = (heads, phase) => {
-      assert.equal(heads.length, 4, phase + ': four section heads render');
+      assert.equal(heads.length, 5, phase + ': five section heads render');
       for (const h of heads) {
         const fg = rgbStr(h.color); assert(fg, phase + ': head colour parses: ' + h.color);
         assert(h.bgStops.length >= 2, phase + ': modal gradient stops found for ' + h.id);
@@ -166,8 +167,8 @@ const { resolve, extname, sep } = require('node:path');
     // exact state from the user's screenshot. Scroll each head into view
     // inside the modal and confirm it is rendered (non-empty box).
     let heads = checkAll(await measure(), 'initial');
-    assert.deepEqual(heads.map(h => h.expanded), ['true', 'false', 'false', 'false'], 'initial accordion state unchanged');
-    for (const id of ['controls', 'sound', 'match', 'data']) {
+    assert.deepEqual(heads.map(h => h.expanded), ['true', 'false', 'false', 'false', 'false'], 'initial accordion state unchanged (v149 adds the collapsed edit head)');
+    for (const id of ['controls', 'sound', 'match', 'edit', 'data']) {
       const box = await page.evaluate(i => {
         const e = document.querySelector(`[data-settings-section="${i}"]`);
         e.scrollIntoView({ block: 'center' });
@@ -179,14 +180,14 @@ const { resolve, extname, sep } = require('node:path');
 
     // Expand the three collapsed sections and re-measure: colours must not
     // depend on the open/closed state.
-    for (const id of ['sound', 'match', 'data']) await page.click(`[data-settings-section="${id}"]`);
+    for (const id of ['sound', 'match', 'edit', 'data']) await page.click(`[data-settings-section="${id}"]`);
     heads = checkAll(await measure(), 'expanded');
-    assert.deepEqual(heads.map(h => h.expanded), ['true', 'true', 'true', 'true'], 'all sections expand as before');
+    assert.deepEqual(heads.map(h => h.expanded), ['true', 'true', 'true', 'true', 'true'], 'all sections expand as before');
 
     // Collapse everything again (including 操作) and re-measure once more.
-    for (const id of ['controls', 'sound', 'match', 'data']) await page.click(`[data-settings-section="${id}"]`);
+    for (const id of ['controls', 'sound', 'match', 'edit', 'data']) await page.click(`[data-settings-section="${id}"]`);
     heads = checkAll(await measure(), 'collapsed');
-    assert.deepEqual(heads.map(h => h.expanded), ['false', 'false', 'false', 'false'], 'all sections collapse as before');
+    assert.deepEqual(heads.map(h => h.expanded), ['false', 'false', 'false', 'false', 'false'], 'all sections collapse as before');
 
     assert(!errors.length, 'no page errors: ' + errors.join(' | '));
     console.log('settings-headings-v148: all assertions passed');

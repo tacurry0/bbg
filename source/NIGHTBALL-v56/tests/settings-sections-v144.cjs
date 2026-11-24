@@ -9,6 +9,9 @@
 // 試合; ペナントの故障発生 moved to 試合 (it is a pennant match rule, not an
 // operation setting); ユニフォームカラー編集 moved out of the audio block to
 // 試合; 振動 sits with the other feedback settings in サウンド.
+// v149 update: a fifth section エディット／カスタム was added between 試合 and
+// データ, and the uniform entry moved there from 試合 (see
+// settings-edit-hub-v149.cjs). This file's expectations follow that spec.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 
@@ -24,9 +27,9 @@ assert(fnStart >= 0 && fnEnd > fnStart, 'settingsModal exists');
 const fn = app.slice(fnStart, fnEnd);
 
 const sectionCalls = ["settingsSection('controls','操作'", "settingsSection('sound','サウンド'",
-  "settingsSection('match','試合'", "settingsSection('data','データ'"];
+  "settingsSection('match','試合'", "settingsSection('edit','エディット／カスタム'", "settingsSection('data','データ'"];
 const pos = sectionCalls.map(s => { const i = fn.indexOf(s); assert(i >= 0, 'section call exists: ' + s); return i; });
-assert(pos[0] < pos[1] && pos[1] < pos[2] && pos[2] < pos[3], 'sections render in order 操作/サウンド/試合/データ');
+assert(pos[0] < pos[1] && pos[1] < pos[2] && pos[2] < pos[3] && pos[3] < pos[4], 'sections render in order 操作/サウンド/試合/エディット／カスタム/データ');
 const region = i => fn.slice(pos[i], i + 1 < pos.length ? pos[i + 1] : fn.length);
 
 // Every pre-v144 control must survive inside exactly one named section.
@@ -39,8 +42,11 @@ const placement = [
     'data-action="music-settings"', 'data-audio-test="perfect"', 'data-audio-test="catch"', 'data-audio-test="homer"',
     'class="audio-credits"']],
   [2, ['${lightingField()}', "['tiebreak','延長タイブレーク'", "'走塁モード'", 'data-running-mode=', 'data-field-speed=',
-    'data-difficulty=', 'data-custom-diff=', 'ペナントの故障発生', 'data-injury-rate=', 'data-action="uniform-editor"']],
-  [3, ['data-action="backup-export"', 'data-action="backup-import"', 'data-action="fullscreen"', 'data-action="install"']],
+    'data-difficulty=', 'data-custom-diff=', 'ペナントの故障発生', 'data-injury-rate=']],
+  // v149: the uniform entry moved from 試合 into the new エディット／カスタム
+  // section, alongside the stadium and custom-league editor entries.
+  [3, ['data-action="stadium-editor"', 'data-action="league-editor-open"', 'data-action="uniform-editor"']],
+  [4, ['data-action="backup-export"', 'data-action="backup-import"', 'data-action="fullscreen"', 'data-action="install"']],
 ];
 let placed = 0;
 for (const [i, markers] of placement) {
@@ -53,7 +59,7 @@ assert(fn.includes('<button class="primary-button" data-action="close">OK</butto
 assert(fn.includes('data-ui-scale="${id}"') && region(0).includes('${scaleOptions}'), 'HUD scale sliders render in 操作');
 
 // Accordion mechanics: session-only state, defaults, head wiring.
-assert(app.includes("const settingsSectionState={controls:true,sound:false,match:false,data:false};"),
+assert(app.includes("const settingsSectionState={controls:true,sound:false,match:false,edit:false,data:false};"),
   'only 操作 is open by default');
 assert(app.includes('function toggleSettingsSection(b)'), 'accordion toggle helper exists');
 assert(app.includes("if(b.dataset.settingsSection){toggleSettingsSection(b);return;}"),
@@ -71,10 +77,10 @@ assert(/\.settings-section-head\{[^}]*min-height:44px/.test(css), 'section head 
 assert(css.includes('.settings-section-body[hidden]{display:none}'), 'collapsed bodies are display:none');
 
 // ---------- v144 version pins ----------
-assert(index.includes('./game.js?v=148') && index.includes('./app.js?v=148'), 'index pins move to v144');
+assert(index.includes('./game.js?v=149') && index.includes('./app.js?v=149'), 'index pins move to v144');
 assert(index.includes('./style.css?v=71'), 'style.css pin moves with the new section styles');
-assert(sw.includes('nightball-v148-settings-headings'), 'SW cache renamed for v144');
-assert(sw.includes('./game.js?v=148') && sw.includes('./app.js?v=148') && sw.includes('./style.css?v=71'),
+assert(sw.includes('nightball-v149-edit-hub'), 'SW cache renamed for v144');
+assert(sw.includes('./game.js?v=149') && sw.includes('./app.js?v=149') && sw.includes('./style.css?v=71'),
   'SW precaches the v144 assets');
 
 // ---------- browser behaviour (393px) ----------
@@ -112,11 +118,11 @@ const { resolve, join, extname, sep } = require('node:path');
     await page.waitForSelector('[data-settings-section="controls"]', { timeout: 10000 });
 
     const heads = await page.$$eval('[data-settings-section]', els => els.map(e => e.textContent.trim()));
-    assert.equal(heads.length, 4, 'four section heads render');
-    for (const label of ['操作', 'サウンド', '試合', 'データ']) assert(heads.some(h => h.includes(label)), 'head present: ' + label);
+    assert.equal(heads.length, 5, 'five section heads render');
+    for (const label of ['操作', 'サウンド', '試合', 'エディット／カスタム', 'データ']) assert(heads.some(h => h.includes(label)), 'head present: ' + label);
 
     let vis = await page.evaluate(() => Object.fromEntries([...document.querySelectorAll('[data-settings-body]')].map(e => [e.dataset.settingsBody, !e.hidden])));
-    assert.deepEqual(vis, { controls: true, sound: false, match: false, data: false }, 'only 操作 is open on first display');
+    assert.deepEqual(vis, { controls: true, sound: false, match: false, edit: false, data: false }, 'only 操作 is open on first display');
 
     // Initial height: far below the pre-v144 flat list (3,048px scroll height).
     const initial = await page.evaluate(() => {
