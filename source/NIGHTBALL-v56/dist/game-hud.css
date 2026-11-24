@@ -209,14 +209,21 @@
    line 3 (app.js writes break/spin into #pitch-detail, not into the speed). */
 .game-stage .pitch-info .pitch-detail{font-size:calc(10.5 * var(--hud-u));font-weight:700;color:#cfe6ff;white-space:nowrap}
 .game-stage .atbat-chart{
- position:absolute;z-index:4;left:var(--hud-edge);top:max(calc(262 * var(--hud-u)),41%);
+ position:absolute;z-index:4;left:var(--hud-edge);top:max(126px,calc(128 * var(--hud-u)));
  width:calc(96 * var(--hud-u));padding:calc(5 * var(--hud-u)) calc(6 * var(--hud-u));
  border:1px solid #8ac8f659;border-radius:calc(8 * var(--hud-u));
  background:linear-gradient(#202a35c4,#0b1421c4);color:#dfeadb;pointer-events:none;
 }
-/* While pitching, the pitch deck occupies the upper-left: drop the chart
-   fully below the deck instead of shrinking it. */
-.game-screen.pitching-touch .game-stage .atbat-chart{top:max(calc(372 * var(--hud-u)),46%)}
+/* v150 (checker atbat-chart-move-top): the chart lives at the TOP of the
+   stage, directly under the score cube, at the same readable 96u size —
+   the old mid-stage left spot overlapped the left-handed batter's bat/body
+   on real devices. The v145-compacted pitch-call banner moved down in
+   abs.css (floor 266u) so it never covers the chart. While pitching, the
+   pitch deck occupies the upper-left and the auto-defense chip sits at the
+   upper-right (bottom edge ~163px at 393px wide): mirror the chart to the
+   right, below that chip, where its right edge also clears the deck's
+   right edge (284px) — again at full size, never shrunk. */
+.game-screen.pitching-touch .game-stage .atbat-chart{left:auto;right:var(--hud-edge);top:max(168px,calc(171 * var(--hud-u)))}
 .game-stage .atbat-chart[hidden]{display:none}
 .atbat-chart svg{display:block;width:100%;height:auto}
 .atbat-chart-seq{font-size:calc(8.5 * var(--hud-u));text-align:center;color:#cfe6c8;white-space:nowrap;overflow:hidden}

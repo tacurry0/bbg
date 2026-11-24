@@ -77,10 +77,10 @@ assert(/\.settings-section-head\{[^}]*min-height:44px/.test(css), 'section head 
 assert(css.includes('.settings-section-body[hidden]{display:none}'), 'collapsed bodies are display:none');
 
 // ---------- v144 version pins ----------
-assert(index.includes('./game.js?v=149') && index.includes('./app.js?v=149'), 'index pins move to v144');
+assert(index.includes('./game.js?v=150') && index.includes('./app.js?v=150'), 'index pins move to v144');
 assert(index.includes('./style.css?v=71'), 'style.css pin moves with the new section styles');
-assert(sw.includes('nightball-v149-edit-hub'), 'SW cache renamed for v144');
-assert(sw.includes('./game.js?v=149') && sw.includes('./app.js?v=149') && sw.includes('./style.css?v=71'),
+assert(sw.includes('nightball-v150-chart-top'), 'SW cache renamed for v144');
+assert(sw.includes('./game.js?v=150') && sw.includes('./app.js?v=150') && sw.includes('./style.css?v=71'),
   'SW precaches the v144 assets');
 
 // ---------- browser behaviour (393px) ----------

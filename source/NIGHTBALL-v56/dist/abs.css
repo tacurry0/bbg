@@ -1,8 +1,11 @@
 #stage-message.pitch-call {
   /* Keep the call banner fully below the top-right chip row (pitcher card,
-     ABS/wind chips, auto-defense chip bottom edge ~164px in stage space):
-     the fixed 178u floor wins over the 20% term until very tall stages. */
-  inset: max(20%, calc(178 * var(--hud-u))) 0 auto;
+     ABS/wind chips, auto-defense chip bottom edge ~164px in stage space)
+     AND below the at-bat pitch chart, which v150 moved to the top of the
+     stage (bottom edge ~253px in stage space while pitching, ~211px while
+     batting, at 393px wide): the fixed 266u floor wins over the 20% term
+     until very tall stages. */
+  inset: max(20%, calc(266 * var(--hud-u))) 0 auto;
   padding: 0 14px;
 }
 #stage-message.pitch-call--strike .stage-call {
