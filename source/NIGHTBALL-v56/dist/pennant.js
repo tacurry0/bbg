@@ -16,6 +16,30 @@
  const leagues={cpbl:'CPBL', 'npb-central':'セ・リーグ','npb-pacific':'パ・リーグ',kbo:'KBO'};
  const isSplit=id=>id==='npb-central'||id==='npb-pacific';
  const otherLeague=id=>id==='npb-central'?'npb-pacific':'npb-central';
+ // ---- Interleague play (v166, checker item "pennant-interleague"):
+ // a mid-season block where every club of a league faces every club of
+ // its partner league once. Built-in pairings mirror the real world
+ // (セ・パ交流戦) plus a CPBL⇄KBO pairing so every built-in league has a
+ // partner; custom leagues have no defined partner and get no block.
+ const interleaguePartners={cpbl:'kbo',kbo:'cpbl','npb-central':'npb-pacific','npb-pacific':'npb-central'};
+ // Complete bipartite schedule as a Latin-square rotation: with
+ // L=max(|A|,|B|) rounds, round r pairs A[i] with B[(i+r) mod L], which
+ // is a matching in every round and covers every A×B pair exactly once.
+ // The smaller side's clubs sit out some rounds (byes); the larger
+ // side's clubs play in every round. Home/away alternates by (r+i).
+ function interleagueRounds(aIds,bIds){
+  const L=Math.max(aIds.length,bIds.length),rounds=[];
+  for(let r=0;r<L;r++){
+   const pairs=[];
+   for(let i=0;i<L;i++){
+    const a=aIds[i],b=bIds[(i+r)%L];
+    if(a===undefined||b===undefined)continue;
+    pairs.push((r+i)%2?[b,a]:[a,b]);
+   }
+   rounds.push(pairs.map(([h,a],j)=>({id:`il${r+1}-${j+1}`,round:r,home:h,away:a,interleague:true})));
+  }
+  return rounds;
+ }
  // ---- Custom leagues (v107, league-editor.js): user-built pennant leagues
  // whose clubs are drawn from the CPBL/NPB/KBO pool. Definitions live in a
  // registry here so clubsFor/standings/playoffs resolve them exactly like a
@@ -110,6 +134,8 @@
   static customLeague=id=>customLeagues.get(id)||null;
   static clubPool=poolClubs;
   static CUSTOM_MIN_CLUBS=CUSTOM_MIN_CLUBS;
+  static interleaguePartners=interleaguePartners;
+  static interleagueRounds=interleagueRounds;
   constructor(clubId,gamesPerOpponent=4,options={}){
    const customDef=options?.customLeague?registerCustomLeague(options.customLeague):null;
    if(options?.customLeague&&!customDef)throw Error('Invalid custom league: '+validateCustomLeague(options.customLeague).errors.join(' / '));
@@ -124,6 +150,7 @@
     this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),gamesPerOpponent,null,'other-r');
     this.otherResults={};this.advanceByes();
    }
+   this.interleague=this.buildInterleague();
    this.preseason=this.buildPreseason();
   }
   // ---- Preseason (オープン戦, v137): a short exhibition slate played before
@@ -210,6 +237,126 @@
    this.pushNews('オープン戦をスキップして開幕した');
    return true;
   }
+  // ---- Interleague block (v166, checker item "pennant-interleague"):
+  // a self-contained phase layered on the regular season exactly like
+  // the postseason: it activates when the regular schedule reaches its
+  // midpoint round (startRound) and the regular round does not advance
+  // while it runs. Every club of this league plays every partner-league
+  // club once (INTERLEAGUE_GAMES per opponent), so the user's club adds
+  // partnerClubs.length games to its season. Results live in
+  // interleague.results (never this.results/otherResults, whose
+  // validators assume same-league fixtures) and are INTEGRATED: the
+  // wins/losses count in both leagues' standings and the simulated
+  // games' player stats fold into playerStats, so category races,
+  // awards, playoff seeds and the NPB Climax Series all see them. The
+  // DH rule is the league's own (this.dh), unchanged for cross games —
+  // every built-in league plays with the DH, as in the regular season.
+  // Clubs of the smaller league sit out some rounds; a round in which
+  // the user's club has no game is simulated whole and skipped over by
+  // advanceInterleagueByes(), which runs at every phase entry point
+  // (dashboard render, the interleague APIs, restore) — but never from
+  // next(), so seasons driven purely through the classic
+  // completeRound/next path are untouched by the block.
+  static INTERLEAGUE_GAMES=1;
+  buildInterleague(){
+   const partner=interleaguePartners[this.leagueId];
+   if(!partner)return null;
+   // Fail safe: if the partner league's club data is unavailable in
+   // this runtime (e.g. a career context that never loads the KBO/NPB
+   // roster files), there is nobody to play — no block at all, rather
+   // than a block of empty rounds that would trap the season.
+   const partnerClubs=clubsFor(partner);
+   if(!partnerClubs.length||!this.clubs.length)return null;
+   const rounds=interleagueRounds(this.clubs.map(c=>c.id),partnerClubs.map(c=>c.id));
+   return {partner,startRound:Math.floor(this.schedule.length/2),index:0,rounds,results:{},done:false,started:false};
+  }
+  static normalizeInterleague(raw,p){
+   // Pre-v166 saves carry no interleague field: their season is already
+   // under way, so no block is injected mid-season (null); the next
+   // season built by startNextSeason gets one. A malformed block in a
+   // newer save also fails safe to null rather than trapping the season.
+   if(!raw||typeof raw!=='object')return null;
+   const partner=interleaguePartners[p.leagueId];
+   if(!partner||raw.partner!==partner)return null;
+   if(raw.startRound!==Math.floor(p.schedule.length/2))return null;
+   const expected=interleagueRounds(p.clubs.map(c=>c.id),clubsFor(partner).map(c=>c.id));
+   if(!Array.isArray(raw.rounds)||raw.rounds.length!==expected.length)return null;
+   for(let r=0;r<expected.length;r++){
+    const round=raw.rounds[r],exp=expected[r];
+    if(!Array.isArray(round)||round.length!==exp.length)return null;
+    for(let j=0;j<exp.length;j++){const f=round[j];if(!f||f.id!==exp[j].id||f.home!==exp[j].home||f.away!==exp[j].away)return null;}
+   }
+   if(!raw.results||typeof raw.results!=='object'||Array.isArray(raw.results))return null;
+   const byId=new Map(expected.flat().map(f=>[f.id,f])),results={};
+   for(const [id,res] of Object.entries(raw.results)){
+    const f=byId.get(id);if(!f||!res||typeof res!=='object')return null;
+    if(![res.homeScore,res.awayScore].every(n=>Number.isInteger(n)&&n>=0)||res.homeScore===res.awayScore)return null;
+    results[id]={...f,homeScore:res.homeScore,awayScore:res.awayScore,innings:Number.isInteger(res.innings)?res.innings:1,...(res.weather?{weather:res.weather}:{}),...(res.cold?{cold:true}:{})};
+   }
+   const index=Number.isInteger(raw.index)?raw.index:-1;
+   if(index<0||index>expected.length)return null;
+   // Invariant of every reachable state: rounds before index are fully
+   // resulted, the current round is untouched or fully resulted (a live
+   // game in progress has no result yet; completing it sims the rest of
+   // the round at once), and later rounds are untouched.
+   for(let r=0;r<expected.length;r++){
+    const ids=expected[r].map(f=>f.id),n=ids.filter(id=>results[id]).length;
+    if(r<index&&n!==ids.length)return null;
+    if(r===index&&n!==0&&n!==ids.length)return null;
+    if(r>index&&n!==0)return null;
+   }
+   return {partner,startRound:raw.startRound,index,rounds:expected,results,done:raw.done===true||index>=expected.length,started:raw.started===true};
+  }
+  get interleagueActive(){
+   const il=this.interleague;
+   return !!il&&!il.done&&!this.postseason&&!this.completed&&this.round>=il.startRound;
+  }
+  get interleagueFixture(){
+   if(!this.interleagueActive)return null;
+   const fixtures=this.interleague.rounds[this.interleague.index]||[];
+   return fixtures.find(f=>[f.home,f.away].includes(this.clubId))||null;
+  }
+  get interleagueGames(){
+   const il=this.interleague;if(!il)return 0;
+   return il.rounds.flat().filter(f=>[f.home,f.away].includes(this.clubId)).length;
+  }
+  get totalGamesAll(){return this.totalGames+this.interleagueGames;}
+  advanceInterleagueByes(){
+   const il=this.interleague;if(!il||il.done)return;
+   if(this.interleagueActive&&!il.started){il.started=true;this.pushNews(`交流戦が開幕（${leagues[il.partner]||il.partner}との対戦）`);}
+   while(this.interleagueActive&&il.index<il.rounds.length&&!il.rounds[il.index].some(f=>[f.home,f.away].includes(this.clubId))){
+    this.simulateRound(il.rounds[il.index],il.results);il.index++;
+   }
+   if(il.index>=il.rounds.length&&!il.done){il.done=true;this.pushNews('交流戦が終了し、ペナントレースが再開した');}
+  }
+  completeInterleagueGame(score){
+   this.advanceInterleagueByes();
+   const il=this.interleague;if(!this.interleagueActive)return false;
+   const f=this.interleagueFixture;if(!f||il.results[f.id])return false;
+   if(![score.homeScore,score.awayScore].every(n=>Number.isInteger(n)&&n>=0)||score.homeScore===score.awayScore)throw Error('An interleague game needs a winner');
+   if(score.leagueFixtureId&&score.leagueFixtureId!==f.id)return false;
+   if(score.teams&&(score.teams.home.id!==f.home||score.teams.away.id!==f.away))return false;
+   il.results[f.id]={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||score.innings||1};
+   this.advanceRotation(f);this.pitcher=this.starterIndexFor(this.clubId);
+   this.simulateRound(il.rounds[il.index],il.results);
+   this.currentGame=null;return true;
+  }
+  simulateInterleagueGame(){
+   this.advanceInterleagueByes();
+   if(!this.interleagueActive||!this.interleagueFixture||this.interleague.results[this.interleagueFixture.id])return false;
+   const s=this.simulate(this.interleagueFixture);
+   return this.completeInterleagueGame({homeScore:s.homeScore,awayScore:s.awayScore,inning:s.innings});
+  }
+  nextInterleague(){
+   const il=this.interleague;if(!il||il.done||!this.interleagueActive)return false;
+   const fixtures=il.rounds[il.index]||[],f=fixtures.find(x=>[x.home,x.away].includes(this.clubId));
+   if(f&&!il.results[f.id])return false;
+   if(!f)this.simulateRound(fixtures,il.results);
+   il.index++;this.currentGame=null;
+   if(il.index>=il.rounds.length){il.done=true;this.pushNews('交流戦が終了し、ペナントレースが再開した');}
+   this.advanceInterleagueByes();
+   return true;
+  }
   static restore(s){
    if(![1,2,3,4].includes(s?.schema))return null;
    // A custom-league save embeds its definition, so a season restores (and
@@ -225,7 +372,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.negotiationLog=(Array.isArray(p.negotiationLog)?p.negotiationLog.filter(e=>e&&typeof e==='object'&&typeof e.kind==='string').slice(0,40):[]);p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.learnedPitches=(p.learnedPitches&&typeof p.learnedPitches==='object'&&!Array.isArray(p.learnedPitches))?Object.fromEntries(Object.entries(p.learnedPitches).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.filter(x=>typeof x==='string')] )):{};p.pitchLearning=(p.pitchLearning&&typeof p.pitchLearning==='object'&&!Array.isArray(p.pitchLearning))?p.pitchLearning:{};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.negotiationLog=(Array.isArray(p.negotiationLog)?p.negotiationLog.filter(e=>e&&typeof e==='object'&&typeof e.kind==='string').slice(0,40):[]);p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.learnedPitches=(p.learnedPitches&&typeof p.learnedPitches==='object'&&!Array.isArray(p.learnedPitches))?Object.fromEntries(Object.entries(p.learnedPitches).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.filter(x=>typeof x==='string')] )):{};p.pitchLearning=(p.pitchLearning&&typeof p.pitchLearning==='object'&&!Array.isArray(p.pitchLearning))?p.pitchLearning:{};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);p.interleague=NightPennant.normalizeInterleague(p.interleague,p);if(p.interleague)p.advanceInterleagueByes();
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -238,8 +385,17 @@
   get fixture(){return this.schedule[this.round].find(f=>[f.home,f.away].includes(this.clubId));}
   get roundDone(){return !!this.results[this.fixture.id];}
   get completed(){return this.round===this.schedule.length-1&&this.roundDone;}
-  get played(){return Object.values(this.results).filter(r=>[r.home,r.away].includes(this.clubId)).length;}
-  next(){if(!this.roundDone||this.completed)return false;this.round++;this.currentGame=null;this.advanceByes();return true;}
+  get played(){let n=Object.values(this.results).filter(r=>[r.home,r.away].includes(this.clubId)).length;const il=this.interleague;if(il?.results)n+=Object.values(il.results).filter(r=>[r.home,r.away].includes(this.clubId)).length;return n;}
+  next(){
+   // A driver advancing the season with completeActiveGame + next()
+   // (the classic career does exactly this) moves the interleague
+   // block forward with the same call once the current interleague
+   // round is fully resulted. An untouched block (no interleague
+   // results yet) falls through to the regular advance, so seasons
+   // driven purely through completeRound/next never engage it.
+   if(this.interleagueActive){const il=this.interleague,fixtures=il.rounds[il.index]||[];if(fixtures.length&&fixtures.every(f=>il.results[f.id]))return this.nextInterleague();}
+   if(!this.roundDone||this.completed)return false;this.round++;this.currentGame=null;this.advanceByes();return true;
+  }
   starterIndexFor(clubId){
    const club=this.clubRoster(clubId);if(!club)return 0;
    const out=new Set(this.injuredIds(clubId));
@@ -438,7 +594,7 @@
    this.season=(this.season||1)+1;
    this.schedule=roundRobin(this.clubs.map(c=>c.id),this.gamesPerOpponent,this.clubId);
    if(this.isNPB){this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),this.gamesPerOpponent,null,'other-r');this.otherResults={};}
-   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.preseason=this.buildPreseason();this.pitcher=this.starterIndexFor(this.clubId);
+   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.interleague=this.buildInterleague();this.preseason=this.buildPreseason();this.pitcher=this.starterIndexFor(this.clubId);
    if(this.isNPB)this.advanceByes();
    return true;
   }
@@ -855,15 +1011,15 @@
    return this.isNPB?NightNPBPostseason.activeSeries(this):this.postseason.stage==='qualifier'?this.postseason.qualifier:this.postseason.final;
   }
   get activeFixture(){
-   if(!this.postseason)return this.fixture;
+   if(!this.postseason)return this.interleagueActive?this.interleagueFixture:this.fixture;
    const series=this.activeSeries;if(!series)return null;
    if(this.postseason.awaitingNext||series.winner)return series.games.at(-1)||null;
    if(this.isNPB)return NightNPBPostseason.fixture(series);
    const index=series.games.length,upperHome=series.id==='qualifier'?[true,false,true][index]:[true,true,false,false,true,false,true][index];
    return {id:'po-'+series.id+'-'+(index+1),home:upperHome?series.higher:series.lower,away:upperHome?series.lower:series.higher,playoff:true,series:series.id,game:index+1};
   }
-  get activeResult(){if(!this.postseason)return this.results[this.fixture.id]||null;return this.activeSeries?.games.find(g=>g.id===this.activeFixture?.id)||null;}
-  get activeRoundDone(){return this.postseason?!!this.activeResult:this.roundDone;}
+  get activeResult(){if(!this.postseason)return this.interleagueActive?(this.interleagueFixture?this.interleague.results[this.interleagueFixture.id]||null:null):this.results[this.fixture.id]||null;return this.activeSeries?.games.find(g=>g.id===this.activeFixture?.id)||null;}
+  get activeRoundDone(){return !!this.activeResult;}
   get postseasonCompleted(){return this.postseason?.stage==='complete';}
   get userInActiveFixture(){const f=this.activeFixture;return !!f&&[f.home,f.away].includes(this.clubId);}
   playoffSeeds(leagueId=this.leagueId){
@@ -883,7 +1039,7 @@
    const seeds=this.playoffSeeds(),make=(id,higher,lower,target)=>({id,higher,lower,target,wins:{[higher]:0,[lower]:0},games:[],winner:null});
    this.postseason={schema:1,seeds,stage:'qualifier',qualifier:make('qualifier',seeds[1].clubId,seeds[2].clubId,2),final:null,awaitingNext:false,champion:null};this.currentGame=null;return true;
   }
-  completeActiveGame(score){return this.postseason?this.completePlayoffGame(score):this.completeRound(score);}
+  completeActiveGame(score){return this.postseason?this.completePlayoffGame(score):this.interleagueActive?this.completeInterleagueGame(score):this.completeRound(score);}
   completePlayoffGame(score){
    if(!this.postseason||this.postseasonCompleted||this.postseason.awaitingNext)return false;
    if(this.isNPB)return NightNPBPostseason.complete(this,score);
@@ -964,7 +1120,13 @@
    const order=clubsFor(leagueId).map(c=>c.id),results=leagueId===this.leagueId?this.results:this.otherResults;
    const rows=order.map(id=>({id,played:0,wins:0,losses:0,for:0,against:0}));
    const byId=Object.fromEntries(rows.map(r=>[r.id,r]));
-   Object.values(results).forEach(g=>{const h=byId[g.home],a=byId[g.away];h.played++;a.played++;h.for+=g.homeScore;h.against+=g.awayScore;a.for+=g.awayScore;a.against+=g.homeScore;if(g.homeScore>g.awayScore){h.wins++;a.losses++;}else{a.wins++;h.losses++;}});
+   // Interleague results (v166) are integrated: a cross game counts for
+   // the side that belongs to this league, in both leagues' tables.
+   const games=Object.values(results),il=this.interleague;
+   if(il?.results){const ids=new Set(order);for(const g of Object.values(il.results))if(ids.has(g.home)!==ids.has(g.away))games.push(g);}
+   for(const g of games){const h=byId[g.home],a=byId[g.away],homeWon=g.homeScore>g.awayScore;
+    if(h){h.played++;h.for+=g.homeScore;h.against+=g.awayScore;if(homeWon)h.wins++;else h.losses++;}
+    if(a){a.played++;a.for+=g.awayScore;a.against+=g.homeScore;if(homeWon)a.losses++;else a.wins++;}}
    rows.forEach(r=>{r.pct=r.played?r.wins/r.played:0;r.diff=r.for-r.against;});
    const tied=new Map();
    if(this.isNPB)for(const g of Object.values(results)){

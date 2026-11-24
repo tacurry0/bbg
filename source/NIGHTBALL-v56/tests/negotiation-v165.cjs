@@ -216,10 +216,10 @@ assert(app.includes('league?.tradeNegotiate(b.dataset.tradeCounter)'),'UI calls 
 assert(app.includes('data-fa-neg'),'FA rows offer negotiation');
 assert(app.includes('league?.faNegotiate(b.dataset.faNeg'),'UI calls faNegotiate');
 const index=fs.readFileSync(__dirname+'/../dist/index.html','utf8'),sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
-assert(index.includes('./game.js?v=165')&&index.includes('./app.js?v=165'),'index pins at v165');
-assert(index.includes('./pennant.js?v=85'),'index pin for the changed pennant.js moves');
-assert(sw.includes('nightball-v165-negotiation'),'SW cache renamed for v165');
-assert(sw.includes('./pennant.js?v=85')&&sw.includes('./app.js?v=165'),'SW precaches the v165 scripts');
+assert(index.includes('./game.js?v=166')&&index.includes('./app.js?v=166'),'index pins at v165');
+assert(index.includes('./pennant.js?v=86'),'index pin for the changed pennant.js moves');
+assert(sw.includes('nightball-v166-interleague'),'SW cache renamed for v165');
+assert(sw.includes('./pennant.js?v=86')&&sw.includes('./app.js?v=166'),'SW precaches the v165 scripts');
 
 console.log('negotiation-v165: unit + static assertions passed');
 
