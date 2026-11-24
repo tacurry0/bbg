@@ -163,7 +163,7 @@ assert.equal(new NightGame('practice','standard',()=>{},{survival:OPT}).survival
  assert(g.conditionFor(p)>=-2&&g.conditionFor(p)<=2,'normal condition stays in the classic -2..2 band');
 }
 
-// ---------- app wiring + v138 pins ----------
+// ---------- app wiring + v139 pins ----------
 const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
 const index=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
 const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
@@ -174,8 +174,8 @@ assert(app.includes('finishSurvivalResult'),'app has the survival result flow');
 assert(app.includes('NightSurvival.recordResult'),'results are recorded through the module');
 assert(app.includes('NightSurvival.loadBest'),'the setup/result screens show the best streak');
 assert(app.includes('引き分けは敗北扱い'),'the draw rule is stated in the UI');
-assert(index.includes('./game.js?v=138')&&index.includes('./app.js?v=138'),'index pins move to v138');
-assert(sw.includes('nightball-v138-survival'),'SW cache renamed for v138');
-assert(sw.includes('./game.js?v=138')&&sw.includes('./app.js?v=138'),'SW precaches the v138 scripts');
+assert(index.includes('./game.js?v=139')&&index.includes('./app.js?v=139'),'index pins move to v139');
+assert(sw.includes('nightball-v139-draft'),'SW cache renamed for v139');
+assert(sw.includes('./game.js?v=139')&&sw.includes('./app.js?v=139'),'SW precaches the v139 scripts');
 assert(sw.includes('./survival.js?v=1'),'SW precaches the survival module');
 console.log('survival-ladder-v138: all assertions passed');
