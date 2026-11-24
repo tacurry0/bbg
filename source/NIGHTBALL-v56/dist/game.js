@@ -2271,7 +2271,7 @@ window.NightGame=class NightGame{
   this.emit('cue','ball');
   this.emit('sound','catch');this.balls++;this.completePitch('ball');
   const before=this.battingScore;
-  if(this.balls>=4){const loaded=this.bases.every(Boolean);this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','',loaded?'押し出しで1点':'走者が進塁','','フォアボール。'+(loaded?'押し出しで1点':'走者が進塁'));this.checkEnd();}else{this.message('BALL','',`B ${this.balls} · S ${this.strikes}`,'',`ボール。${this.balls}ボール · ${this.strikes}ストライク`);this.resolveSteal();this.rollWildPitch();}
+  if(this.balls>=4){const loaded=this.bases.every(Boolean);this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','',loaded?'押し出しで1点':'走者が進塁','','フォアボール。'+(loaded?'押し出しで1点':'走者が進塁'));this.checkEnd();}else{this.message('BALL','','','','ボール。');this.resolveSteal();this.rollWildPitch();}
   this.emit('sound','ball');this.setPhase('result');
   if(this.battingScore>before)this.emit('scoring-walk');
   this.notify();
@@ -2280,7 +2280,7 @@ window.NightGame=class NightGame{
   this.emit('cue','strike');
   if(this.pitch)this.pitch.callResult=true;
   this.completePitch('miss');this.emit('sound','catch');this.emit('sound','strike');
-  if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'',`B ${this.balls} · S ${this.strikes}`,'',`${swung?'空振り':'ストライク'}。${this.balls}ボール · ${this.strikes}ストライク`);this.resolveSteal();this.rollWildPitch();}}
+  if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'','','',`${swung?'空振り':'ストライク'}。`);this.resolveSteal();this.rollWildPitch();}}
   else if(!this.derby)this.message('SWING & MISS','空振り','ボールの位置とカーソルを合わせよう');
   this.setPhase('result');this.notify();
  }

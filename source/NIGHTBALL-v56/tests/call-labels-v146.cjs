@@ -4,8 +4,10 @@
 // (BALL / STRIKE / SWING & MISS / WALK, and the ABS call display) no longer
 // carries the katakana call words ボール / ストライク: the verdict is read
 // from the English head (BALL / STRIKE / ...) and the banner colour
-// (pitch-call--ball / pitch-call--strike), and the count survives as
-// "B n · S n". Display text and spoken text are SEPARATE since v146:
+// (pitch-call--ball / pitch-call--strike). (v147, count-sentence-remove,
+// later removed the count notation from both display and speech — the
+// assertions below follow the v147 text: sub is empty and speech is just
+// the call word.) Display text and spoken text are SEPARATE since v146:
 // every call message also carries a `speech` field with the original
 // wording (call words included), and speakPlay() prefers data.speech, so
 // TTS keeps announcing ボール / ストライク / フォアボール exactly as
@@ -29,10 +31,10 @@ assert(/message\(en,ja,sub='',kind='',speech=''\)/.test(gameSrc),
   'NightGame.message carries a separate speech field');
 assert(gameSrc.includes("this.emit('message',{en,ja,sub,kind,speech})"),
   'the emitted message carries speech alongside the display text');
-assert(gameSrc.includes("this.message('BALL','',`B ${this.balls} · S ${this.strikes}`,'',`ボール。${this.balls}ボール · ${this.strikes}ストライク`)"),
-  'BALL: display ja is empty, count is B/S notation, speech keeps the original wording');
-assert(gameSrc.includes("swung?'空振り':'',`B ${this.balls} · S ${this.strikes}`,'',`${swung?'空振り':'ストライク'}。${this.balls}ボール · ${this.strikes}ストライク`"),
-  'STRIKE / SWING & MISS: display drops ストライク, speech keeps the original wording');
+assert(gameSrc.includes("this.message('BALL','','','','ボール。')"),
+  'BALL: display ja/sub are empty (v147: no count notation), speech keeps only the call word');
+assert(gameSrc.includes("swung?'空振り':'','','',`${swung?'空振り':'ストライク'}。`"),
+  'STRIKE / SWING & MISS: display drops ストライク and the count (v147), speech keeps only the call word');
 assert(gameSrc.includes("this.message('WALK','',loaded?'押し出しで1点':'走者が進塁','','フォアボール。'+(loaded?'押し出しで1点':'走者が進塁'))"),
   'WALK: display ja is empty, speech keeps フォアボール');
 assert(app.includes("const en=call.umpireStrike?'STRIKE':'BALL',speech=call.umpireStrike?'ストライク':'ボール';"),
@@ -53,10 +55,10 @@ assert(index.includes('<button id="umpire-ball" type="button">ボール</button>
 assert(index.includes('<button id="umpire-strike" type="button">ストライク</button>'),
   'umpire STRIKE button label is unchanged (operation label, not banner text)');
 
-// ---------- v146 version pins ----------
-assert(index.includes('./game.js?v=146') && index.includes('./app.js?v=146'), 'index pins move to v146');
-assert(sw.includes('nightball-v146-call-labels'), 'SW cache renamed for v146');
-assert(sw.includes('./game.js?v=146') && sw.includes('./app.js?v=146'), 'SW precaches the v146 scripts');
+// ---------- version pins (v147 since count-sentence-remove) ----------
+assert(index.includes('./game.js?v=147') && index.includes('./app.js?v=147'), 'index pins move to v147');
+assert(sw.includes('nightball-v147-count-sentence'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=147') && sw.includes('./app.js?v=147'), 'SW precaches the v146 scripts');
 
 // ---------- game level (Node): emitted messages ----------
 global.window = global;
@@ -79,16 +81,16 @@ function takenPitch(x, balls = 0, strikes = 0) {
   const { g, call } = takenPitch(1.6);
   assert.equal(call.en, 'BALL');
   noCallWords('BALL ja', call.ja); noCallWords('BALL sub', call.sub);
-  assert.equal(call.ja, ''); assert.equal(call.sub, 'B 1 · S 0');
-  assert(call.speech.includes('ボール'), 'BALL speech keeps the call word: ' + call.speech);
+  assert.equal(call.ja, ''); assert.equal(call.sub, '', 'v147: BALL sub carries no count notation');
+  assert.equal(call.speech, 'ボール。', 'BALL speech is only the call word (v147: no count): ' + call.speech);
   assert.equal(g.log.at(-1).speech, call.speech, 'the game log carries the speech text too');
 }
 { // taken strike (looking)
   const { call } = takenPitch(0);
   assert.equal(call.en, 'STRIKE');
   noCallWords('STRIKE ja', call.ja); noCallWords('STRIKE sub', call.sub);
-  assert.equal(call.ja, ''); assert.equal(call.sub, 'B 0 · S 1');
-  assert(call.speech.includes('ストライク'), 'STRIKE speech keeps the call word: ' + call.speech);
+  assert.equal(call.ja, ''); assert.equal(call.sub, '', 'v147: STRIKE sub carries no count notation');
+  assert.equal(call.speech, 'ストライク。', 'STRIKE speech is only the call word (v147: no count): ' + call.speech);
 }
 { // swing and miss
   const msgs = [];
@@ -100,8 +102,8 @@ function takenPitch(x, balls = 0, strikes = 0) {
   assert.equal(call.en, 'SWING & MISS');
   assert.equal(call.ja, '空振り', '空振り is a swing description, not a call word, and stays');
   noCallWords('SWING & MISS sub', call.sub);
-  assert.equal(call.sub, 'B 0 · S 1');
-  assert(CALL_WORDS.test(call.speech), 'SWING & MISS speech keeps the original count wording: ' + call.speech);
+  assert.equal(call.sub, '', 'v147: SWING & MISS sub carries no count notation');
+  assert.equal(call.speech, '空振り。', 'SWING & MISS speech is only the swing word (v147: no count): ' + call.speech);
 }
 { // ball four: walk
   const { call } = takenPitch(1.6, 3, 0);
@@ -198,7 +200,7 @@ const { resolve, extname, sep } = require('node:path');
     let m = await banner();
     assert.equal(m.en, 'BALL'); assert(m.cls.includes('pitch-call--ball'), 'ball colour class kept: ' + m.cls);
     assert.equal(m.ja, ''); noCallWords('banner BALL ja+sub', m.ja + m.sub);
-    assert.equal(m.sub, 'B 1 · S 0', 'count detail remains, without call words');
+    assert.equal(m.sub, '', 'v147: count notation is gone from the banner sub');
     assert(!m.jaVisible, 'empty Japanese line is hidden so the one-row banner does not collapse or leave a gap');
     assert(m.height >= 40 && m.height <= 65, 'v145 one-row banner height is intact: ' + m.height);
 
@@ -208,7 +210,7 @@ const { resolve, extname, sep } = require('node:path');
     m = await banner();
     assert.equal(m.en, 'STRIKE'); assert(m.cls.includes('pitch-call--strike'), 'strike colour class kept: ' + m.cls);
     assert.equal(m.ja, ''); noCallWords('banner STRIKE ja+sub', m.ja + m.sub);
-    assert.equal(m.sub, 'B 0 · S 1');
+    assert.equal(m.sub, '', 'v147: STRIKE banner sub is empty');
 
     // --- ABS call display: same separation ---
     await page.evaluate(() => {
