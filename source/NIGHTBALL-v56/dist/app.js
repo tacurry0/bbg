@@ -22,7 +22,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>'
  };
  function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.ball}</svg>`;}
- const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
+ const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
  const recordDefaults={games:0,wins:0,draws:0,hr:0,hits:0,maxDistance:0,bestTimedDerby:0,bestTimedDerbyDistance:0,perfect:0,grandSlam:false,ks:0,thrown:0,practicePitches:0,practiceHits:0,practiceHr:0,practiceMaxDistance:0,practiceThrown:0,practiceKs:0,achievements:{},winStreak:0,bestStreak:0};
  let settings,records;
  try{settings={...defaults,...JSON.parse(localStorage.getItem('nightball.settings')||'{}')};records={...recordDefaults,...JSON.parse(localStorage.getItem('nightball.records')||'{}')};}catch{settings={...defaults};records={...recordDefaults};}
@@ -59,7 +59,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  applyUniforms();
  const stadiumAudio=new NightAudio(),songVault=new SongVault(),ballparkMusic=new BallparkMusic(stadiumAudio,songVault);
  const review=new PlayReview();
- let game=null,screen='home',modalKind='',saved=false,pendingSpectate=false,pendingUmpire=false,lastMode='match',lastFocus=null,toastTimer;
+ let game=null,screen='home',modalKind='',saved=false,pendingSpectate=false,pendingUmpire=false,pendingTimeAttack=false,lastMode='match',lastFocus=null,toastTimer;
  function makeRenderer(id,hero=false){try{return new StadiumRenderer($(id),hero);}catch(e){console.error('3D stadium initialization failed',e);const el=$(id),replacement=el.cloneNode(true);el.parentElement.querySelector('.stadium-hud')?.remove();replacement.dataset.graphics='flat-compat';el.replaceWith(replacement);return new NightRenderer(replacement,hero);}}
  const renderer=makeRenderer('game-canvas');
  const absReview=new AbsReview($('abs-canvas'));
@@ -380,7 +380,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(screen==='game'&&game?.career&&game.career.fixtureId===career?.fixture?.id&&!['ended','career-pregame'].includes(game.phase)){
    career.currentGame=game.snapshot();saveCareer();
   }
-  if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
+  if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!game.timeAttack&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
  function activateGame(){
   if(!game.umpireMode&&(game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)){
@@ -1577,6 +1577,22 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function umpireSetup(){
   modal(`${modalTitle('UMPIRE MODE','審判モード')}<div class="umpire-howto"><p>両チーム自動の試合を、主審として裁くモードです。あなたの判定が、そのままコールとして試合に反映されます。</p><ul><li>見送られた投球ごとに、ボール／ストライクを判定します。</li><li>投球中はストライクゾーンが表示されません。ボールの行方だけを目で追って判定してください。</li><li>判定後にゾーンと実際の通過位置が表示され、答え合わせができます。</li><li>接戦の塁プレーでは、セーフ／アウトの判定も求められます。</li></ul><table class="umpire-points"><caption>得点（正解したときだけ入ります）</caption><tbody><tr><th>投球判定</th><td>ゾーンの縁から1インチ以内の際どい球：50点／2インチ以内：35点／3インチ以内：25点／5インチ以内：15点／それ以外：10点</td></tr><tr><th>塁上判定</th><td>セーフ／アウト正解で30点</td></tr></tbody></table><p class="modal-note">試合の長さは対戦設定のイニング数（現在 ${settings.innings} イニング）、対戦カードと球場も対戦設定に準じます。</p></div><button class="primary-button" data-action="umpire-start">審判として開始</button><button class="secondary-button" data-action="close">戻る</button>`,'umpire-setup');
  }
+ function setupTimeAttack(){
+  const best=NightTimeAttack.loadBest(),kind=settings.taKind==='pitch'?'pitch':'bat',secs=NightTimeAttack.DURATIONS.includes(settings.taSeconds)?settings.taSeconds:90;
+  const own=NightTeams.get(settings.matchTeam),opp=NightTeams.get(settings.matchOpponent),park=NightPlayers.parks.find(p=>p.id===settings.park);
+  modal(`${modalTitle('TIME ATTACK','タイムアタック')}<p class="modal-note">制限時間のあいだ同じ役割が続く短時間モードです。3アウトでも時間内は次のセットが始まります。球団・球場は対戦設定を使います（${own?own.short:''} vs ${opp?opp.short:''} / ${park?park.name:''}）。</p><div class="setup-section"><label>種別</label><div class="segmented">${[['bat','攻撃編','時間内に何点取れるか'],['pitch','守備編','時間内に何アウト取れるか']].map(([v,l,d])=>`<button data-ta-kind="${v}" class="${kind===v?'active':''}" aria-pressed="${kind===v}">${l}<small>${d}</small></button>`).join('')}</div></div><div class="setup-section"><label>制限時間</label><div class="segmented">${NightTimeAttack.DURATIONS.map(n=>`<button data-ta-seconds="${n}" class="${secs===n?'active':''}" aria-pressed="${secs===n}">${n}秒</button>`).join('')}</div></div><div class="derby-record"><span>攻撃編ベスト <b>${best.bat} 点</b></span><span>守備編ベスト <b>${best.pitch} アウト</b></span></div><button class="primary-button" data-action="ta-start">スタート</button><button class="secondary-button" data-action="close">戻る</button>`,'timeattack-setup');
+ }
+ function updateTimeAttackClock(g){
+  const clock=$('ta-clock');if(!clock||!g.timeAttack)return;
+  const seconds=Math.ceil(g.timeAttack.remaining/1000);clock.textContent=`${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
+ }
+ function finishTimeAttackResult(g){
+  const r=g.timeAttack.result||{kind:g.timeAttack.kind,runs:0,hits:0,hr:0,outs:0,allowed:0,ks:0,halves:0};
+  const rec=NightTimeAttack.recordBest(r.kind,NightTimeAttack.scoreOf(r));
+  commit(g);checkAchievements(g);$('swing').disabled=true;
+  const stats=r.kind==='bat'?[[r.runs,'得点'],[r.hits,'安打'],[r.hr,'本塁打']]:[[r.outs,'アウト'],[r.ks,'奪三振'],[r.allowed,'失点']];
+  modal(`${modalTitle('TIME UP','タイムアタック結果',false)}<div class="result-stats">${stats.map(([n,l])=>`<div><strong>${n}</strong><span>${l}</span></div>`).join('')}</div>${rec.updated?'<div class="new-best">ベストスコア更新！</div>':''}<p class="modal-note">${r.kind==='bat'?'攻撃編':'守備編'} ベスト: ${r.kind==='bat'?rec.best.bat+' 点':rec.best.pitch+' アウト'}（制限時間 ${g.timeAttack.seconds} 秒 / ${r.halves+1} セット）</p><button class="primary-button" data-action="ta-restart">もう一度挑戦</button><button class="secondary-button" data-action="timeattack">設定を変える</button><button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
+ }
  function start(mode,challengeId=null,fixedPark=null){
   if(mode==='apbc'){startAPBC();return;}if(mode==='apbc-cup'){playTournament(true);return;}
   if(mode==='match')clearCheckpoint();closeModal(false);unlockAudio();sound('tap');lastMode=mode;saved=false;$('distance').textContent='';$('timing-result').textContent='';
@@ -1587,11 +1603,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const selectedPitcher=club.pitchers.findIndex(p=>p.id===settings.pitchingPlayer);
   if(mode==='derby')onEvent('clear');
   const windPark=NightPlayers.parks.find(p=>p.id===(fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park)));const matchWind=(!training&&mode!=='derby'&&windPark&&windPark.theme!=='dome'&&!windPark.id.includes('dome'))?(Math.random()<.25?0:Math.round((Math.random()*10-5)*2)/2):0;
-  const randomClubs=mode==='match'&&settings.randomRoster&&!pendingUmpire?(()=>{const rm=ensureRandomMatch();if(!rm)return undefined;const homeId=settings.matchUserHome?settings.matchTeam:settings.matchOpponent,awayId=settings.matchUserHome?settings.matchOpponent:settings.matchTeam;return {home:rm.clubs[homeId],away:rm.clubs[awayId]};})():undefined;
-  game=new NightGame(mode,settings.difficulty,onEvent,{wind:matchWind,randomRoster:!!randomClubs,variantRules:mode==='match'&&!challengeId&&!pendingUmpire?{fullCount:!!settings.variantFullCount,metalBat:!!settings.variantMetalBat,noBreaking:!!settings.variantNoBreaking,twoOuts:!!settings.variantTwoOuts}:undefined,clubs:randomClubs||(mode==='match'&&(settings.matchTeam==='dream'||settings.matchOpponent==='dream')?{home:matchClub(settings.matchUserHome?settings.matchTeam:settings.matchOpponent),away:matchClub(settings.matchUserHome?settings.matchOpponent:settings.matchTeam)}:mode==='derby'&&club.alumni?{home:club,away:trainingOpponent(club.id)}:undefined),homeTeamId:club.id,arcadeRoster:training||mode==='derby',awayTeamId:mode==='match'?(settings.matchUserHome?settings.matchOpponent:settings.matchTeam):trainingOpponent(club.id).id,userHome:mode==='match'?settings.matchUserHome:true,defenseSpeed:settings.defenseSpeed,innings:settings.innings,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,park:fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park),pitcher:matchConfig?matchConfig.pitcher:selectedPitcher>=0?selectedPitcher:settings.pitcher,practicePitch:settings.practicePitch,practiceBatter:mode==='derby'?settings.derbyBatter:settings.practiceBatter,order:matchConfig?.order??(club.id==='owls'?settings.order:undefined),fielding:matchConfig?.fielding,battingAssist:settings.battingAssist,tiebreak:settings.tiebreak,umpire:pendingUmpire&&mode==='match'});
+  const randomClubs=mode==='match'&&settings.randomRoster&&!pendingUmpire&&!pendingTimeAttack?(()=>{const rm=ensureRandomMatch();if(!rm)return undefined;const homeId=settings.matchUserHome?settings.matchTeam:settings.matchOpponent,awayId=settings.matchUserHome?settings.matchOpponent:settings.matchTeam;return {home:rm.clubs[homeId],away:rm.clubs[awayId]};})():undefined;
+  game=new NightGame(mode,settings.difficulty,onEvent,{wind:matchWind,randomRoster:!!randomClubs,variantRules:mode==='match'&&!challengeId&&!pendingUmpire&&!pendingTimeAttack?{fullCount:!!settings.variantFullCount,metalBat:!!settings.variantMetalBat,noBreaking:!!settings.variantNoBreaking,twoOuts:!!settings.variantTwoOuts}:undefined,timeAttack:pendingTimeAttack&&mode==='match'?{kind:settings.taKind,seconds:settings.taSeconds}:undefined,clubs:randomClubs||(mode==='match'&&(settings.matchTeam==='dream'||settings.matchOpponent==='dream')?{home:matchClub(settings.matchUserHome?settings.matchTeam:settings.matchOpponent),away:matchClub(settings.matchUserHome?settings.matchOpponent:settings.matchTeam)}:mode==='derby'&&club.alumni?{home:club,away:trainingOpponent(club.id)}:undefined),homeTeamId:club.id,arcadeRoster:training||mode==='derby',awayTeamId:mode==='match'?(settings.matchUserHome?settings.matchOpponent:settings.matchTeam):trainingOpponent(club.id).id,userHome:mode==='match'?settings.matchUserHome:true,defenseSpeed:settings.defenseSpeed,innings:settings.innings,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,park:fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park),pitcher:matchConfig?matchConfig.pitcher:selectedPitcher>=0?selectedPitcher:settings.pitcher,practicePitch:settings.practicePitch,practiceBatter:mode==='derby'?settings.derbyBatter:settings.practiceBatter,order:matchConfig?.order??(club.id==='owls'?settings.order:undefined),fielding:matchConfig?.fielding,battingAssist:settings.battingAssist,tiebreak:settings.tiebreak,umpire:pendingUmpire&&mode==='match'});
   if(randomClubs)randomMatch=null;
   if(pendingSpectate&&mode==='match'){game.spectate=true;game.autoBatting=true;game.autoDefense=true;pendingSpectate=false;}
   if(pendingUmpire&&mode==='match'){game.spectate=true;game.autoBatting=true;game.autoDefense=true;pendingUmpire=false;}
+  if(pendingTimeAttack&&mode==='match')pendingTimeAttack=false;
   if(scenario){
    game.challenge=challengeId;
    game.manualRunning=challengeId==='tag';
@@ -1929,7 +1946,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function updateUI(){
    if(!game)return;const g=game;stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
-   if(g.isFixture||g.career||g.challenge){
+   if(g.timeAttack){
+     const ta=g.timeAttack,live=ta.kind==='pitch'?ta.outs+(g.defending?g.outs:0):(g.userHome?g.homeScore:g.awayScore),opp=g.userHome?g.awayScore:g.homeScore;
+     $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>タイムアタック · ${ta.kind==='bat'?'攻撃編':'守備編'} · ${ta.halves+1}セット目</span><strong id="ta-clock"></strong></div><div class="derby-names"><span>${ta.kind==='bat'?'得点':'アウト'}<b>${live}</b></span><span>${ta.kind==='bat'?`安打 ${g.session.hits} · 本塁打 ${g.session.hr}`:`失点 ${opp} · 奪三振 ${g.session.ks}`}</span></div></div>`;
+     updateTimeAttackClock(g);
+   }else if(g.isFixture||g.career||g.challenge){
      updateScoreCube($('scoreboard'),g);
    }else if(g.derby){
      const d=g.derby;
@@ -2363,6 +2384,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function hideOnlineGuest(){const v=$('online-view');if(v)v.hidden=true;}
  function finish(g){
    if(g.mode==='match'||g.mode==='pennant'||g.apbcFixtureId)foldCareerTotals(g);
+   if(g.timeAttack){finishTimeAttackResult(g);return;}
    if(g.ctFixture){finishCustomTourney(g);return;}
    if(g.worldFixture){finishWorld(g);return;}
    if(g.career){finishCareer(g);return;}
@@ -2431,7 +2453,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  $('contact').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('react').onclick=()=>{const p=$('react-panel');p.hidden=!p.hidden;};$('react-panel').innerHTML=REACTIONS.map(e=>`<button type="button" data-react="${e}" aria-label="リアクション ${e}">${e}</button>`).join('')+`<div class="chat-list">${NightOnline.QUICK_CHATS.map((t,i)=>`<button type="button" data-chat="${i}">${t}</button>`).join('')}</div>`;$('react-panel').addEventListener('click',ev=>{const b=ev.target.closest('[data-react]');if(b){sendReaction(b.dataset.react);return;}const c=ev.target.closest('[data-chat]');if(c)sendQuickChat(Number(c.dataset.chat));});$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('howto').onclick=howto;$('records').onclick=recordModal;
- document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():b.dataset.mode==='umpire'?umpireSetup():setupTraining(b.dataset.mode));
+ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():b.dataset.mode==='umpire'?umpireSetup():b.dataset.mode==='timeattack'?setupTimeAttack():setupTraining(b.dataset.mode));
  $('clubhouse').onclick=()=>lineupModal('edit');$('resume-game').onclick=resumeGame;$('players-tool').onclick=()=>rosterModal(game?.defending?game.pitcher.id:game?.batter.id,game?.userSide||'home');$('player-card').onclick=()=>{if(game)rosterModal(game.batter.id,game.side);};$('pitcher-card').onclick=()=>{if(game)rosterModal(game.pitcher.id,game.side==='home'?'away':'home');};$('tactics-tool').onclick=tacticsModal;$('history-tool').onclick=historyModal;$('practice-tool').onclick=practiceModal;
  $('auto-defense').onclick=()=>{if(game&&!game.umpireMode&&game.setAutoDefense(!game.autoDefense)){unlockAudio();updateUI();}};
  $('field-speed').onclick=()=>{if(game?.autoDefense&&game.defending){settings.defenseSpeed=game.defenseSpeed===1?2:1;game.defenseSpeed=settings.defenseSpeed;}else{settings.fieldSpeed=settings.fieldSpeed===1?2:1;if(game)game.fieldSpeed=settings.fieldSpeed;}save();updateUI();};
@@ -2481,6 +2503,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(b.dataset.lineupPitcher!==undefined){const {config}=lineupConfig(lineupContext);config.pitcher=Number(b.dataset.lineupPitcher);saveLineup(lineupContext);lineupModal(lineupContext,null,$('modal-content').scrollTop);return;}
    if(b.dataset.lineupPlayer){lineupModal(lineupContext,b.dataset.lineupPlayer);$('modal-content').querySelector('.lineup-ability').open=true;return;}
    if(b.dataset.derbyBatter){settings.derbyBatter=b.dataset.derbyBatter;const scroll=$('modal-content').scrollTop;setupDerby();$('modal-content').scrollTop=scroll;return;}
+   if(b.dataset.taKind){settings.taKind=b.dataset.taKind;save();setupTimeAttack();return;}
+   if(b.dataset.taSeconds){settings.taSeconds=Number(b.dataset.taSeconds);save();setupTimeAttack();return;}
    if(b.dataset.toggle){const k=b.dataset.toggle;settings[k]=!settings[k];b.classList.toggle('on',settings[k]);b.setAttribute('aria-checked',String(settings[k]));save();if(k==='randomRoster'){randomMatch=null;if(modalKind==='setup'){setupMatch();return;}}if(game)updateUI();if(k==='leftHanded'&&$('thumb-preview-wrap'))$('thumb-preview-wrap').innerHTML=thumbPreview();return;}
    if(b.dataset.ctClub){const id=b.dataset.ctClub,i=ctPicks.indexOf(id);if(i>=0)ctPicks.splice(i,1);else if(ctPicks.length<8)ctPicks.push(id);ctSetupModal();return;}
    if(b.dataset.roomJoin){if(b.dataset.roomRole==='host')onlineCreateRoom(b.dataset.roomJoin);else onlineJoinRoom(b.dataset.roomJoin);return;}
@@ -2605,6 +2629,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
      case'edit-lineup':lineupModal(matchContext==='apbc'?'apbc':'edit');break;
      case'editor-done':saveLineup(lineupContext);closeModal();break;
      case'start-derby':save();start('derby');break;
+     case'ta-start':save();pendingTimeAttack=true;start('match');break;
+     case'ta-restart':save();pendingTimeAttack=true;start('match');break;
+     case'timeattack':setupTimeAttack();break;
      case'derby-next':if(game?.continueDerby()){closeModal();sound('tap');}break;
      case'roster':rosterModal(null,game?.userSide||'home');break;
      case'bench':requestBench();break;
@@ -2726,6 +2753,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     if(game.phase==='field'&&!game.mirror)review.capture(game);
     if(game.mirror&&(game.phase==='field'||game.phase==='result')){try{review.capture(game);if(game.phase==='result'&&game.field?.resolved&&!game.field._rf){game.field._rf=1;if(review.capture(game,true))playFeedback.pendingReplay=true;}}catch{}}
     if(game.derby)updateDerbyClock(game);
+    if(game.timeAttack)updateTimeAttackClock(game);
     if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
     if(game.phase==='ended')queuedBench=false;
     if(game.phase==='field')renderer.adaptResolution?.(dt);
