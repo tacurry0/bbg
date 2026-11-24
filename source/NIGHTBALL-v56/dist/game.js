@@ -921,7 +921,15 @@ window.NightGame=class NightGame{
   const runner=this.lineups?.[this.side]?.find(p=>p.id===runnerId);
   if(!runner)return;
   const catcher=this.fielder('C');
-  const chance=clamp(.58+((runner?.run??60)-(catcher?.arm??70))*.008-(this.pitch?.speed??140)*.0008,.25,.92);
+  // v129 steal rebalance: the old line (.58 base, run-arm slope .008) left
+  // even fast runners below break-even against a typical catcher (arm 81,
+  // ~148 km/h pitch: run 50 -> ~28%, 80 -> ~47%, 95 -> ~59% over N=300
+  // paired-seed attempts). Anchor the curve at run 70 / arm 70 / 140 km/h,
+  // flatten the runner slope so speed still matters without deciding alone,
+  // and keep the catcher-arm and pitch-speed terms working against the
+  // runner: the same matchup now measures roughly 50 -> 60%, 65 -> 66%,
+  // 80 -> 73%, 95 -> 80% (real-baseball success sits near 70%).
+  const chance=clamp(.77+((runner?.run??60)-70)*.0045-((catcher?.arm??70)-70)*.007-((this.pitch?.speed??140)-140)*.0008,.30,.92);
   const id=this.baseIds[from-1],pid=this.basePitcherIds[from-1];
   this.bases[from-1]=false;this.baseIds[from-1]=null;this.basePitcherIds[from-1]=null;
   if(Math.random()<chance){
