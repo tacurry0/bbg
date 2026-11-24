@@ -2323,6 +2323,11 @@ function start(mode,challengeId=null,fixedPark=null){
   const offer=o.rematchOffer;
   modal(`${modalTitle('','試合終了')}<p class="career-status-line">${m.an} ${m.as} - ${m.hs} ${m.hn}</p><p class="career-status-line">${draw?'引き分け':mine?'あなたの勝利！':'あなたの敗戦'}</p>${rec?`<p class="modal-note">この相手との通算 ${rec.w}勝 ${rec.l}敗 ${rec.d}分</p>`:''}${offer?`<p class="career-status-line">ホストから再戦の申し込みが届きました${offer.swap?'（サイド入替）':''}</p><button class="primary-button" data-action="rematch-accept">再戦する</button><button class="secondary-button" data-action="rematch-decline">見送る</button>`:'<button class="primary-button" data-action="online-exit">ホームへ戻る</button>'}`,'online-result');
  }
+ // v151: the lobby's choice-type settings (mode / club / innings / side /
+ // park) use the same segmented control as the normal match setup
+ // (.segmented + .active + aria-pressed) instead of the old .online-club
+ // pills. Online-only elements (room code, join input, recent rooms,
+ // guest waiting state) are unchanged, as are all data-* handlers.
  function onlineModal(){
    const o=online;let inner='';
    if(!o){
@@ -2343,16 +2348,16 @@ function start(mode,challengeId=null,fixedPark=null){
      ${typeof navigator!=='undefined'&&typeof navigator.share==='function'?'<button class="secondary-button" data-action="online-share-link">招待リンクを共有</button>':''}
      <p class="online-status-line">${o.status||''}</p>
      <h3 class="arcade-section-title">モード</h3>
-     <div class="online-club-list">${[['match','通常対戦（試合）'],['derby','HRダービー']].map(([v,l])=>`<button class="online-club${(o.mode||'match')===v?' selected':''}" data-online-mode="${v}">${l}</button>`).join('')}</div>
+     <div class="segmented online-seg" role="group" aria-label="モード">${[['match','通常対戦（試合）'],['derby','HRダービー']].map(([v,l])=>`<button data-online-mode="${v}" class="${(o.mode||'match')===v?'active':''}" aria-pressed="${(o.mode||'match')===v}">${l}</button>`).join('')}</div>
      ${o.mode==='derby'?'<p class="modal-note">HRダービー: 交互に1スイングずつ、各10スイングで本数と最長飛距離を競います。打者は各球団のパワー最上位の選手が自動で選ばれます。</p>':''}
      <h3 class="arcade-section-title">自分の球団</h3>
-     <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
+     <div class="segmented online-seg online-seg-grid" role="group" aria-label="自分の球団">${onlineClubs().map(c=>`<button data-online-club="${c.id}" class="${o.myClub===c.id?'active':''}" aria-pressed="${o.myClub===c.id}">${c.name}</button>`).join('')}</div>
      ${o.mode==='derby'?'':`<h3 class="arcade-section-title">イニング</h3>
-     <div class="online-club-list">${[3,5,9].map(n=>`<button class="online-club${settings.innings===n?' selected':''}" data-online-innings="${n}">${n}回</button>`).join('')}</div>
+     <div class="segmented online-seg" role="group" aria-label="イニング">${[3,5,9].map(n=>`<button data-online-innings="${n}" class="${settings.innings===n?'active':''}" aria-pressed="${settings.innings===n}">${n}イニング<small>${n===9?'フル':n===5?'通常':'短め'}</small></button>`).join('')}</div>
      <h3 class="arcade-section-title">先攻・後攻（自分）</h3>
-     <div class="online-club-list"><button class="online-club${o.hostHome?' selected':''}" data-online-side="home">後攻・ホーム</button><button class="online-club${!o.hostHome?' selected':''}" data-online-side="away">先攻・アウェイ</button></div>`}
+     <div class="segmented online-seg" role="group" aria-label="先攻・後攻（自分）"><button data-online-side="home" class="${o.hostHome?'active':''}" aria-pressed="${o.hostHome}">後攻・ホーム</button><button data-online-side="away" class="${!o.hostHome?'active':''}" aria-pressed="${!o.hostHome}">先攻・アウェイ</button></div>`}
      <h3 class="arcade-section-title">スタジアム</h3>
-     <div class="online-club-list">${NightPlayers.parks.map(p=>`<button class="online-club${effPark===p.id?' selected':''}" data-online-park="${p.id}">${p.name}</button>`).join('')}</div>
+     <div class="segmented online-seg online-seg-grid" role="group" aria-label="スタジアム">${NightPlayers.parks.map(p=>`<button data-online-park="${p.id}" class="${effPark===p.id?'active':''}" aria-pressed="${effPark===p.id}">${p.name}</button>`).join('')}</div>
      ${o.guestClub?`<button class="primary-button" data-action="online-start">${o.mode==='derby'?'HRダービー開始':'対戦開始'}（相手: ${NightTeams.get(o.guestClub)?.name||o.guestClub}）</button>`:`<button class="primary-button" disabled>相手の球団選択を待っています</button>`}
      <button class="secondary-button" data-action="online-cancel">部屋を閉じる</button>`;
    }else{
@@ -2360,7 +2365,7 @@ function start(mode,challengeId=null,fixedPark=null){
      ${o.mode==='derby'?'<p class="career-status-line">モード: HRダービー（ホストが選択）</p>':o.mode==='match'?'<p class="career-status-line">モード: 通常対戦（ホストが選択）</p>':''}
      <p class="online-status-line">${o.status||''}</p>
      ${o.waitFailed?'<button class="primary-button" data-action="online-rejoin">もう一度接続する</button>':''}
-     <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
+     <div class="segmented online-seg online-seg-grid" role="group" aria-label="自分の球団">${onlineClubs().map(c=>`<button data-online-club="${c.id}" class="${o.myClub===c.id?'active':''}" aria-pressed="${o.myClub===c.id}">${c.name}</button>`).join('')}</div>
      <button class="secondary-button" data-action="online-cancel">退出する</button>`;
    }
    modal(`${modalTitle('','オンライン対戦')}${inner}`,'online');

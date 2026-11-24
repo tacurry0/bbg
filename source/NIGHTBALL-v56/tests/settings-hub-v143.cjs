@@ -75,7 +75,7 @@ assert(app.includes("function updateSound(){$('sound').innerHTML=svg(settings.so
 // ---------- online innings: bidirectionally linked with settings.innings ----------
 assert(!app.includes("mode:'match',innings:5,hostHome:true"), 'the lobby no longer hard-codes its own innings');
 assert(app.includes("mode:'match',innings:settings.innings,hostHome:true"), 'room creation initialises the lobby from the normal-match innings');
-assert(app.includes("${settings.innings===n?' selected':''}\" data-online-innings="), 'the lobby renders its innings selection from settings.innings');
+assert(app.includes("data-online-innings=\"${n}\" class=\"${settings.innings===n?'active':''}\""), 'the lobby renders its innings selection from settings.innings (v151 segmented markup)');
 assert(app.includes("innings:settings.innings,difficulty:settings.difficulty,park"), 'the start message sends the shared innings');
 assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0"), 'the host game is created with the shared innings');
 {
@@ -138,8 +138,8 @@ assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0
 }
 
 // ---------- v143 version pins ----------
-assert(index.includes('./game.js?v=150') && index.includes('./app.js?v=150'), 'index pins move to v143');
-assert(sw.includes('nightball-v150-chart-top'), 'SW cache renamed for v143');
-assert(sw.includes('./game.js?v=150') && sw.includes('./app.js?v=150'), 'SW precaches the v143 scripts');
+assert(index.includes('./game.js?v=151') && index.includes('./app.js?v=151'), 'index pins move to v143');
+assert(sw.includes('nightball-v151-online-seg'), 'SW cache renamed for v143');
+assert(sw.includes('./game.js?v=151') && sw.includes('./app.js?v=151'), 'SW precaches the v143 scripts');
 
 console.log('settings-hub-v143: all assertions passed');

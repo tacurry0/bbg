@@ -144,6 +144,9 @@
 .online-code-input{display:block;width:100%;box-sizing:border-box;padding:13px 12px;border-radius:10px;border:1px solid var(--line,#5f745d66);background:#101b14;color:#eef4ea;font-size:17px;letter-spacing:4px;text-align:center;text-transform:uppercase}
 .online-code-input::placeholder{letter-spacing:0;text-transform:none;color:#819780}
 .online-club-list{display:flex;flex-wrap:wrap;gap:6px;max-height:180px;overflow:auto;margin:6px 0 12px}
+.segmented.online-seg{margin:6px 0 12px}
+.segmented.online-seg-grid{flex-wrap:wrap;max-height:180px;overflow:auto}
+.segmented.online-seg-grid>button{flex:1 1 30%}
 .online-club{padding:8px 10px;border-radius:999px;border:1px solid #b9c4d0;background:#fff;font-weight:700;font-size:13px}
 .online-club.selected{background:#1256a0;color:#fff;border-color:#1256a0}
 .online-view{max-width:480px;margin:0 auto;padding:14px 14px 30px;display:flex;flex-direction:column;gap:10px}
