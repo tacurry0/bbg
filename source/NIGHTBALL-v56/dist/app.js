@@ -1640,7 +1640,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const unlockedMap=records.achievements||{};
    const derived={firstHit:records.hits>0,firstHr:records.hr>0,firstWin:records.wins>0,distance130:records.maxDistance>=130,derby5:records.bestTimedDerby>=5,grandSlam:!!records.grandSlam,games50:records.games>=50,streak5:(records.bestStreak||0)>=5,streak10:(records.bestStreak||0)>=10};
    const achievements=ACHIEVEMENTS.map(([id,icon,title,desc])=>{const ok=!!unlockedMap[id]||!!derived[id];const date=unlockedMap[id]?new Date(unlockedMap[id]).toLocaleDateString('ja-JP'):'';return [ok,icon,title,desc+(date?'（'+date+'）':'')];});
-   modal(`${modalTitle('YOUR BASEBALL STORY','プレイ記録')}<div class="stats-grid">${[[records.maxDistance,'m','最長飛距離'],[records.hr,'本','通算ホームラン'],[records.wins,'勝','対戦勝利数'],[records.bestTimedDerby,'/ 10','ダービー最高記録']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><span class="eyebrow">ACHIEVEMENTS</span>${achievements.map(([ok,icon,title,desc])=>`<div class="achievement ${ok?'unlocked':''}"><span>${icon}</span><div><strong>${title}</strong><small>${desc}</small></div><i>${ok?'獲得':'未獲得'}</i></div>`).join('')}<p class="modal-note">対戦 ${records.games}試合 / ${records.wins}勝 ${records.draws}分 / 通算 ${records.hits}安打<br>プレイを終了すると記録に反映されます。</p><button class="secondary-button" data-action="totals">選手通算成績（全モード）を見る</button>${records.practicePitches||records.practiceThrown?`<span class="eyebrow">PRACTICE</span><div class="stats-grid">${[[records.practiceHits,'安打','打撃練習 通算安打'],[records.practiceHr,'本','打撃練習 本塁打'],[records.practiceMaxDistance,'m','打撃練習 最長飛距離'],[records.practiceKs,'K','投球練習 奪三振']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><p class="modal-note">打撃練習 ${records.practicePitches}球 / 投球練習 ${records.practiceThrown}球</p>`:''}<button class="primary-button" data-action="close">閉じる</button>`, 'records');
+   modal(`${modalTitle('YOUR BASEBALL STORY','プレイ記録')}<div class="stats-grid">${[[records.maxDistance,'m','最長飛距離'],[records.hr,'本','通算ホームラン'],[records.wins,'勝','対戦勝利数'],[records.bestTimedDerby,'/ 10','ダービー最高記録']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><span class="eyebrow">ACHIEVEMENTS</span>${achievements.map(([ok,icon,title,desc])=>`<div class="achievement ${ok?'unlocked':''}"><span>${icon}</span><div><strong>${title}</strong><small>${desc}</small></div><i>${ok?'獲得':'未獲得'}</i></div>`).join('')}<p class="modal-note">対戦 ${records.games}試合 / ${records.wins}勝 ${records.draws}分 / 通算 ${records.hits}安打<br>プレイを終了すると記録に反映されます。</p><button class="secondary-button" data-action="record-room">通算戦績ダッシュボード（記録室）を見る</button><button class="secondary-button" data-action="totals">選手通算成績（全モード）を見る</button>${records.practicePitches||records.practiceThrown?`<span class="eyebrow">PRACTICE</span><div class="stats-grid">${[[records.practiceHits,'安打','打撃練習 通算安打'],[records.practiceHr,'本','打撃練習 本塁打'],[records.practiceMaxDistance,'m','打撃練習 最長飛距離'],[records.practiceKs,'K','投球練習 奪三振']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><p class="modal-note">打撃練習 ${records.practicePitches}球 / 投球練習 ${records.practiceThrown}球</p>`:''}<button class="primary-button" data-action="close">閉じる</button>`, 'records');
  }
  function canSimulateWorldRemainder(g){
   return !!g?.worldFixture&&!!g.career?.continuous&&
@@ -1811,7 +1811,7 @@ function start(mode,challengeId=null,fixedPark=null){
   game=new NightGame(mode,settings.difficulty,onEvent,{wind:matchWind,weather:forecast?forecast.weather:undefined,randomRoster:!!randomClubs,variantRules:mode==='match'&&!challengeId&&!pendingUmpire&&!pendingTimeAttack&&!pendingSurvival&&!pendingDraft&&!pendingConquest?{fullCount:!!settings.variantFullCount,metalBat:!!settings.variantMetalBat,noBreaking:!!settings.variantNoBreaking,twoOuts:!!settings.variantTwoOuts}:undefined,timeAttack:pendingTimeAttack&&mode==='match'?{kind:settings.taKind,seconds:settings.taSeconds}:undefined,survival:survClubs?NightSurvival.gameOption(survRun):undefined,clubs:draftClubs||survClubs||randomClubs||(mode==='match'&&(settings.matchTeam==='dream'||settings.matchOpponent==='dream')?{home:matchClub(settings.matchUserHome?settings.matchTeam:settings.matchOpponent),away:matchClub(settings.matchUserHome?settings.matchOpponent:settings.matchTeam)}:mode==='derby'&&club.alumni?{home:club,away:trainingOpponent(club.id)}:undefined),homeTeamId:survClubs?(settings.matchUserHome?survRun.userTeamId:survRun.opponentId):club.id,arcadeRoster:training||mode==='derby',awayTeamId:survClubs?(settings.matchUserHome?survRun.opponentId:survRun.userTeamId):mode==='match'?(settings.matchUserHome?settings.matchOpponent:settings.matchTeam):trainingOpponent(club.id).id,userHome:mode==='match'?settings.matchUserHome:true,defenseSpeed:settings.defenseSpeed,innings:settings.innings,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,park:fixedPark||scenario?.park||(mode==='derby'?settings.derbyPark:settings.park),pitcher:draftClubs?0:matchConfig?matchConfig.pitcher:selectedPitcher>=0?selectedPitcher:settings.pitcher,practicePitch:settings.practicePitch,practiceBatter:mode==='derby'?settings.derbyBatter:settings.practiceBatter,order:draftUserClub?draftUserClub.startingOrder.slice():(matchConfig?.order??(club.id==='owls'?settings.order:undefined)),fielding:draftUserClub?{...draftUserClub.startingFielding}:matchConfig?.fielding,battingAssist:settings.battingAssist,tiebreak:settings.tiebreak,umpire:pendingUmpire&&mode==='match'});
   if(randomClubs)randomMatch=null;
   if(forecast)matchForecast=null;
-  if(pendingDraft&&mode==='match'){pendingDraft=false;draftState=null;}
+  if(pendingDraft&&mode==='match'){game.draftBattle=true;pendingDraft=false;draftState=null;}
   if(pendingSpectate&&mode==='match'){game.spectate=true;game.autoBatting=true;game.autoDefense=true;pendingSpectate=false;}
   if(pendingUmpire&&mode==='match'){game.spectate=true;game.autoBatting=true;game.autoDefense=true;pendingUmpire=false;}
   if(pendingTimeAttack&&mode==='match')pendingTimeAttack=false;
@@ -2242,7 +2242,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function updateStyle(){if(game)updateUI();}
  function commit(g,abandoned=false){if(saved||g.challenge)return;saved=true;if(g.mode==='match'&&!g.apbcFixtureId)clearCheckpoint();const s=g.session;records.hits+=s.hits;records.hr+=s.hr;records.perfect+=s.perfect;records.maxDistance=Math.max(records.maxDistance,s.maxDistance);records.grandSlam ||= !!s.grandSlam;records.ks+=s.ks;records.thrown+=s.thrown;if(g.mode==='practice'){records.practicePitches+=s.pitches;records.practiceHits+=s.hits;records.practiceHr+=s.hr;records.practiceMaxDistance=Math.max(records.practiceMaxDistance,s.maxDistance);}if(g.mode==='pitching'){records.practiceThrown+=s.thrown;records.practiceKs+=s.ks;}
    if(g.isFixture&&!abandoned){records.games++;if(g.userScore>g.opponentScore){records.wins++;records.winStreak=(records.winStreak||0)+1;records.bestStreak=Math.max(records.bestStreak||0,records.winStreak);}else if(g.userScore<g.opponentScore)records.winStreak=0;if(g.homeScore===g.awayScore)records.draws++;}
-   if(g.mode==='derby'&&!abandoned){records.bestTimedDerby=Math.max(records.bestTimedDerby,...g.derby.rounds.flat().map(m=>m.normal[m.entrants.findIndex(e=>e.user)]??0));records.bestTimedDerbyDistance=Math.max(records.bestTimedDerbyDistance,s.maxDistance);}save();
+   if(g.mode==='derby'&&!abandoned){records.bestTimedDerby=Math.max(records.bestTimedDerby,...g.derby.rounds.flat().map(m=>m.normal[m.entrants.findIndex(e=>e.user)]??0));records.bestTimedDerbyDistance=Math.max(records.bestTimedDerbyDistance,s.maxDistance);}recordRoomCommit(g,abandoned);save();
  }
  let careerTotals=null;
  function loadTotals(){if(careerTotals)return careerTotals;try{careerTotals=JSON.parse(localStorage.getItem('nightball.careerTotals')||'{"rows":{}}');}catch{careerTotals={rows:{}};}careerTotals.rows??={};return careerTotals;}
@@ -2313,6 +2313,42 @@ function start(mode,challengeId=null,fixedPark=null){
  function startHostPing(){const o=online;if(!o||o.role!=='host'||o.pingTimer)return;const ping=()=>{if(online!==o||!o.session?.open)return;o.session.send({t:'ping',ts:Math.round(performance.now())});};ping();o.pingTimer=setInterval(ping,NightOnline.PING_INTERVAL_MS);}
  function onlineClubs(){return[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])];}
  function onlineLobbyRefresh(){if(modalKind==='online')onlineModal();}
+ // v156 record room (checker item "personal-record-room"): cross-mode
+ // personal W/L/D dashboard. commit() is the once-guarded result path
+ // shared by every fixture finish (versus / pennant / online host /
+ // survival / conquest / draft / APBC・大会), so recording there can
+ // never double-count: result-modal re-renders, snapshot restores and
+ // rematches either re-enter through a fresh game or not at all, and
+ // fixture-id entries are deduplicated again inside NightRecordRoom.
+ // The online guest has no local commit, so its end-message handler
+ // records through the same module (guarded by o.ended). Excluded:
+ // abandoned games, practice / pitching practice, HR derby, time
+ // attack (no W/L), umpire & spectate (not the player's own team),
+ // farm & all-star exhibitions, and the career modes (their results
+ // belong to the career saves, not to a versus record).
+ function recordRoomMode(g){
+  if(g.onlineGame)return 'online';
+  if(g.survival)return 'survival';
+  if(g.conquest)return 'conquest';
+  if(g.draftBattle)return 'draft';
+  if(g.apbcFixtureId||g.ctFixture)return 'apbc';
+  if(g.mode==='pennant')return 'pennant';
+  return 'match';
+ }
+ function recordRoomCommit(g,abandoned){
+  if(abandoned||!g.isFixture||g.umpireMode||g.spectate||g.timeAttack||g.farmGame||g.allstarEvent)return;
+  NightRecordRoom.recordResult({mode:recordRoomMode(g),result:g.userScore>g.opponentScore?'win':g.userScore<g.opponentScore?'loss':'draw',rs:g.userScore,ra:g.opponentScore,opp:g.teams[g.opponentSide]?.name||'',at:new Date().toISOString(),id:g.leagueFixtureId||g.apbcFixtureId||null});
+ }
+ function recordRoomModal(){
+  const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const R=NightRecordRoom,sum=R.summarize(R.load()),t=sum.total;
+  const rate=R.formatRate(t);
+  const modeRows=sum.byMode.filter(m=>m.games>0).map(m=>`<div class="career-list-row"><div><b>${esc(m.label)}</b><small>勝率 ${R.formatRate(m)} · 得点 ${m.rs} / 失点 ${m.ra}</small></div><strong>${m.games}試合 ${m.w}勝 ${m.l}敗 ${m.d}分</strong></div>`).join('');
+  const hist=sum.history.slice(0,10).map(h=>`<div class="career-list-row"><div><b>${esc(R.MODE_LABELS[h.mode]||h.mode)}${h.opp?' · '+esc(h.opp):''}</b><small>${h.at?new Date(h.at).toLocaleDateString('ja-JP'):''}</small></div><strong>${h.result==='win'?'勝':h.result==='loss'?'敗':'分'} ${h.rs} - ${h.ra}</strong></div>`).join('');
+  const onlineRec=loadOnlineRecord(),onlineTotal=Object.values(onlineRec.byOpponent||{}).reduce((a,o)=>({w:a.w+(o.w||0),l:a.l+(o.l||0),d:a.d+(o.d||0)}),{w:0,l:0,d:0});
+  const survivalBest=(()=>{try{return NightSurvival.loadBest();}catch{return 0;}})();
+  modal(`${modalTitle('RECORD ROOM','通算戦績')}<p class="modal-note">モードを横断した、あなた自身の通算戦績です。この記録は v156 以降に終了した試合から蓄積されます（過去の試合は遡って集計できません）。</p>${t.games?`<div class="stats-grid">${[[t.games,'試合','総試合数'],[t.w,'勝','勝利'],[t.l,'敗','敗戦'],[rate,'','勝率（引き分け除く）']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><p class="modal-note">引き分け ${t.d} · 得点 ${t.rs} / 失点 ${t.ra}</p>`:'<p class="career-status-line">まだ記録された試合がありません。対戦・ペナント・オンラインなどの試合を終えると、ここに通算戦績が蓄積されます。</p>'}${modeRows?`<h3 class="arcade-section-title">モード別</h3>${modeRows}`:''}${hist?`<h3 class="arcade-section-title">最近の試合</h3>${hist}`:''}<h3 class="arcade-section-title">参考（v156より前の記録）</h3><div class="career-list-row"><div><b>従来の対戦記録</b><small>これまでの対戦モードの累計（上の通算には合算していません）</small></div><strong>${records.games}試合 ${records.wins}勝 ${records.draws}分</strong></div><div class="career-list-row"><div><b>オンライン通算（相手球団別）</b><small>オンライン対戦の従来記録</small></div><strong>${onlineTotal.w}勝 ${onlineTotal.l}敗 ${onlineTotal.d}分</strong></div><div class="career-list-row"><div><b>サバイバル ベスト</b><small>勝ち抜きサバイバルの最長連勝</small></div><strong>${survivalBest} 連勝</strong></div><p class="modal-note">対象モード: 通常対戦 / ペナント / オンライン対戦 / サバイバル / 全球団制覇 / ドラフト対決 / APBC・大会。練習・HRダービー・タイムアタック・審判/観戦・二軍戦・オールスター・キャリア系は対象外です。</p><button class="secondary-button" data-action="records-back">プレイ記録へ戻る</button><button class="primary-button" data-action="close">閉じる</button>`,'record-room');
+ }
  function loadOnlineRecord(){try{const r=JSON.parse(localStorage.getItem('nightball.online')||'null');if(r&&typeof r==='object'&&r.byOpponent&&Array.isArray(r.history))return r;}catch{}return {byOpponent:{},history:[]};}
  function saveOnlineRecord(r){try{localStorage.setItem('nightball.online',JSON.stringify(r));}catch{}}
  function recordOnlineResult(oppClubId,won,draw,hs,as){
@@ -2598,6 +2634,7 @@ function start(mode,challengeId=null,fixedPark=null){
      if(o.ended)return;o.ended=true;
      const mine=(o.mySide==='home'?m.hs>m.as:m.as>m.hs),draw=m.as===m.hs;
      recordOnlineResult(o.mySide==='home'?o.awayClub:o.homeClub,mine,draw,m.hs,m.as);
+    NightRecordRoom.recordResult({mode:'online',result:draw?'draw':mine?'win':'loss',rs:o.mySide==='home'?m.hs:m.as,ra:o.mySide==='home'?m.as:m.hs,opp:NightTeams.get(o.mySide==='home'?o.awayClub:o.homeClub)?.name||'',at:new Date().toISOString()});
      o.lastEnd=m;o.rematchOffer=null;
      guestResultModal();
    }
@@ -2904,6 +2941,8 @@ function start(mode,challengeId=null,fixedPark=null){
      case'match-preset-save':{const preset=NightMatchPresets.add($('match-preset-name')?.value,NightMatchPresets.snapshot(settings,lineupConfig('match').config.pitcher));setupMatch();toast(`プリセット「${preset.name}」を保存しました`);break;}
      case'match-preset-delete':NightMatchPresets.remove(b.dataset.presetId);setupMatch();toast('プリセットを削除しました');break;
      case'close':closeModal();break;
+     case'record-room':recordRoomModal();break;
+     case'records-back':recordModal();break;
      case'totals':totalsModal();break;
    case'ct-start':customTourney={clubs:ctPicks.slice(),rounds:[[[0,7],[3,4],[2,5],[1,6]].map(([a,b])=>({home:ctPicks[a],away:ctPicks[b],winner:null,hs:null,as:null}))],champion:null};saveCustomTourney();customTourneyModal();break;
    case'ct-play':playCustomTourney();break;
