@@ -3,9 +3,12 @@
 // to stack the English head over the Japanese detail: measured 313.9x109.0px
 // at 393px wide (~10.8% of the stage). It is now ONE row — head chip and
 // detail side by side with compressed padding — at roughly half the height
-// (~50px). This is a dimensions/structure change ONLY: the wording is
-// untouched (same en/ja/sub strings in the same elements, still set by the
-// same app.js code), and non-pitch-call banners (hit/out/homer/career
+// (~50px). This is a dimensions/structure change ONLY: the wording was
+// untouched in v145 (same en/ja/sub strings in the same elements, still set
+// by the same app.js code). v146 (katakana-call-labels-remove) later changed
+// the pitch-call WORDING inside this same layout — the Japanese detail no
+// longer carries the call words; see call-labels-v146.cjs — so the wording
+// assertions below follow the v146 text. Non-pitch-call banners (hit/out/homer/career
 // intro) keep the original two-row design. The appear animation in app.js
 // animates opacity/transform only, so it follows the new size unchanged.
 const assert = require('node:assert/strict');
@@ -51,12 +54,12 @@ assert(app.includes("const pitchCall=['BALL','WALK'].includes(data.en)?'ball':")
 assert(app.includes("duration:pitchCall?245:impact?230:170"),
   'appear animation timing is unchanged (opacity/transform only, size-agnostic)');
 
-// ---------- v145 version pins ----------
-assert(index.includes('./game.js?v=145') && index.includes('./app.js?v=145'), 'index pins move to v145');
+// ---------- version pins (v146 since katakana-call-labels-remove) ----------
+assert(index.includes('./game.js?v=146') && index.includes('./app.js?v=146'), 'index pins move to v146');
 assert(index.includes('./abs.css?v=7'), 'abs.css pin moves with the compact rules');
-assert(sw.includes('nightball-v145-banner-compact'), 'SW cache renamed for v145');
-assert(sw.includes('./game.js?v=145') && sw.includes('./app.js?v=145') && sw.includes('./abs.css?v=7'),
-  'SW precaches the v145 assets');
+assert(sw.includes('nightball-v146-call-labels'), 'SW cache renamed for v146');
+assert(sw.includes('./game.js?v=146') && sw.includes('./app.js?v=146') && sw.includes('./abs.css?v=7'),
+  'SW precaches the v146 assets');
 
 // ---------- browser behaviour (393x852) ----------
 const { createServer } = require('node:http');
@@ -166,7 +169,7 @@ const { resolve, extname, sep } = require('node:path');
     await page.waitForTimeout(400); // appear animation (245ms) finished
     let m = await measure();
     assert(m.cls.includes('pitch-call') && m.cls.includes('pitch-call--ball'), 'ball call uses the pitch-call banner: ' + m.cls);
-    assert.equal(m.en, 'BALL'); assert.equal(m.ja, 'ボール'); assert(m.sub.includes('ボール'), 'wording unchanged: ' + m.sub);
+    assert.equal(m.en, 'BALL'); assert.equal(m.ja, ''); assert.equal(m.sub, 'B 1 · S 0', 'v146 wording: no katakana call words, count kept as B/S: ' + m.sub);
     console.log(`banner-compact-v145: pitch-call banner measured ${m.banner.width.toFixed(1)}x${m.banner.height.toFixed(1)}px (was 313.9x109.0)`);
     assert(m.banner.height >= 40 && m.banner.height <= 65, 'height is about half of 109px: ' + m.banner.height);
     assert(m.banner.height < 109 * 0.6, 'height is well under the old two-row height');
@@ -191,8 +194,8 @@ const { resolve, extname, sep } = require('node:path');
     const suppression = await page.evaluate(() => {
       const g = window.__bannerTest.game;
       window.__bannerAnims.length = 0;
-      g.message('BALL', 'ボール', '1ボール · 0ストライク');
-      g.message('BALL', 'ボール', '2ボール · 0ストライク');
+      g.message('BALL', '', 'B 1 · S 0', '', 'ボール。1ボール · 0ストライク');
+      g.message('BALL', '', 'B 2 · S 0', '', 'ボール。2ボール · 0ストライク');
       return { anims: window.__bannerAnims.length, cls: document.getElementById('stage-message').className };
     });
     assert.equal(suppression.anims, 1, 'repeating the same pitch call does not restart the animation');
@@ -216,7 +219,7 @@ const { resolve, extname, sep } = require('node:path');
       const g = window.__bannerTest.game;
       g.half = g.userHome ? 'top' : 'bottom'; // user pitching
       g.setPhase('result'); g.notify();
-      g.message('STRIKE', 'ストライク', '0ボール · 1ストライク');
+      g.message('STRIKE', '', 'B 0 · S 1', '', 'ストライク。0ボール · 1ストライク');
     });
     await page.waitForTimeout(400);
     m = await measure();
@@ -243,7 +246,7 @@ const { resolve, extname, sep } = require('node:path');
     // --- disappearance: removing .show fades the banner out as before ---
     await page.evaluate(() => {
       const g = window.__bannerTest.game;
-      g.message('BALL', 'ボール', '1ボール · 0ストライク');
+      g.message('BALL', '', 'B 1 · S 0', '', 'ボール。1ボール · 0ストライク');
       document.getElementById('stage-message').classList.remove('show');
     });
     await page.waitForFunction(() => getComputedStyle(document.getElementById('stage-message')).opacity < 0.05,

@@ -1343,7 +1343,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function historyModal(){
   if(!game)return;game.paused=true;const pitches=game.pitchTrace.filter(p=>p.half===game.half&&p.inning===game.inning).slice(-6);
   const map=`<svg class="pitch-map" viewBox="0 0 210 180" aria-label="直近の投球位置"><rect x="45" y="30" width="120" height="120" rx="3" fill="#304a2b" stroke="#b8cc9a66"/><path d="M85 30v120m40-120v120M45 70h120M45 110h120" stroke="#b8cc9a22"/>${pitches.map((p,i)=>`<circle cx="${105+p.x*60}" cy="${90+p.y*60}" r="9" fill="${i===pitches.length-1?'#d5f36a':'#8a9c72'}"/><text x="${105+p.x*60}" y="${93+p.y*60}" fill="#182b15" text-anchor="middle" font-size="9" font-weight="bold">${i+1}</text>`).join('')}</svg>`;
-  modal(`${modalTitle('GAME LOG','投球・試合の履歴')}${map}<p class="modal-note">同じイニングの直近6球。明るい色が最新です。</p>${game.log.slice(-20).reverse().map(l=>`<div class="history-item"><small>${l.inning}回${l.half==='top'?'表':'裏'} · ${l.batter}</small><b>${l.ja}</b><span> ${l.sub}</span></div>`).join('')}<button class="secondary-button" data-action="box-score">打撃成績を見る</button><button class="primary-button" data-action="close">戻る</button>`,'history');
+  modal(`${modalTitle('GAME LOG','投球・試合の履歴')}${map}<p class="modal-note">同じイニングの直近6球。明るい色が最新です。</p>${game.log.slice(-20).reverse().map(l=>`<div class="history-item"><small>${l.inning}回${l.half==='top'?'表':'裏'} · ${l.batter}</small><b>${l.speech||l.ja}</b><span> ${l.speech?'':l.sub}</span></div>`).join('')}<button class="secondary-button" data-action="box-score">打撃成績を見る</button><button class="primary-button" data-action="close">戻る</button>`,'history');
  }
  function boxModal(side=game?.userSide||'home'){
   if(!game)return;game.paused=true;const report=buildMatchReport(game);
@@ -1868,8 +1868,8 @@ function start(mode,challengeId=null,fixedPark=null){
   actor.hidden=!interactive;
   if(g.phase==='abs-call'&&call!==absShownCall){
    absShownCall=call;absLastTap=null;
-   const en=call.umpireStrike?'STRIKE':'BALL',ja=call.umpireStrike?'ストライク':'ボール';
-   onEvent('message',{en,ja});
+   const en=call.umpireStrike?'STRIKE':'BALL',speech=call.umpireStrike?'ストライク':'ボール';
+   onEvent('message',{en,ja:'',speech});
    const role=g.defending?'投手':'打者';
    actor.setAttribute('aria-label',role+'でABSチャレンジ 残り'+g.absRemaining+'回');
   }
@@ -2034,8 +2034,12 @@ function start(mode,challengeId=null,fixedPark=null){
  function speakPlay(data){
    if(!settings.tts||!('speechSynthesis' in window))return;
    const speakable=['homer','hit','out'].includes(data.kind)||/^(HOME RUN|STRIKEOUT|WALK|HIT BY PITCH|WILD PITCH|PASSED BALL|INTENTIONAL WALK|GAME SET|WALK-OFF)/.test(data.en||'');
-   if(!speakable||!data.ja)return;
-   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(data.ja+(data.sub?'。'+data.sub:''));u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
+   // Display text (data.ja/data.sub) and spoken text are separate since
+   // v146: pitch-call banners no longer show the katakana call words, but
+   // TTS keeps reading them from data.speech when a message carries one.
+   const text=data.speech||(data.ja?(data.ja+(data.sub?'。'+data.sub:'')):'');
+   if(!speakable||!text)return;
+   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
  }
  function onEvent(type,data){
    if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
