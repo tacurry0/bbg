@@ -150,8 +150,8 @@ for(const id of ['cpbl','kbo','npb-central'])for(let n=1;n<=3;n++)assert(S.key(i
  assert(sw.includes('./pennant.js?v=83'),'SW precaches the new pennant.js');
  assert(index.includes('./style.css?v=68'),'index pin for the changed style.css moves');
  assert(sw.includes('./style.css?v=68'),'SW precaches the new style.css');
- assert(index.includes('./game.js?v=137')&&index.includes('./app.js?v=137'),'index pins move to v136');
- assert(sw.includes('nightball-v137-preseason'),'SW cache renamed for v136');
- assert(sw.includes('./game.js?v=137')&&sw.includes('./app.js?v=137'),'SW precaches the v136 scripts');
+ assert(index.includes('./game.js?v=138')&&index.includes('./app.js?v=138'),'index pins move to v136');
+ assert(sw.includes('nightball-v138-survival'),'SW cache renamed for v136');
+ assert(sw.includes('./game.js?v=138')&&sw.includes('./app.js?v=138'),'SW precaches the v136 scripts');
 }
 console.log('pennant-slots-v136: all assertions passed');
