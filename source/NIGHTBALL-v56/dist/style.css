@@ -246,3 +246,12 @@
 .draft-announce{display:flex;flex-direction:column;gap:2px;padding:12px 14px;margin:8px 0;border-radius:12px;background:linear-gradient(135deg,#2c4a2e,#1d331f);border:1px solid #d5f36a55;color:#eef5e6}
 .draft-announce span{font-size:11px;letter-spacing:.14em;color:#d5f36a}
 .draft-announce strong{font-size:16px}
+.match-preset-save{display:flex;gap:8px}
+.match-preset-save .field-select{flex:1;min-width:0}
+.match-preset-save-button{flex-shrink:0;padding:9px 10px;background:#2d3e2b;color:#c8ddb6;border:1px solid #92a77b55;border-radius:5px;font-size:10px;white-space:nowrap;cursor:pointer}
+.match-preset-list{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.match-preset-row{display:flex;gap:8px}
+.match-preset-apply{flex:1;min-width:0;text-align:left;padding:10px 11px;background:#26352a;color:#e1eed5;border:1px solid #92a77b55;border-radius:5px;cursor:pointer}
+.match-preset-apply b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-preset-apply small{display:block;font-size:9px;color:#afc39d;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.match-preset-delete{flex-shrink:0;padding:9px 10px;background:none;color:#e0a3a3;border:1px solid #d9955555;border-radius:5px;font-size:10px;cursor:pointer}
