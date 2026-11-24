@@ -41,10 +41,10 @@ assert(
 );
 
 // ---------- v142 version pins ----------
-assert(index.includes('./game.js?v=154') && index.includes('./app.js?v=154'), 'index pins move to v142');
-assert(sw.includes('nightball-v154-weather-forecast'), 'SW cache renamed for v142');
-assert(sw.includes('./game.js?v=154') && sw.includes('./app.js?v=154'), 'SW precaches the v142 scripts');
-assert(index.includes('./arcade.css?v=78'), 'index pin for the changed arcade.css moves');
-assert(sw.includes('./arcade.css?v=78'), 'SW precaches the new arcade.css');
+assert(index.includes('./game.js?v=155') && index.includes('./app.js?v=155'), 'index pins move to v142');
+assert(sw.includes('nightball-v155-hero-interview'), 'SW cache renamed for v142');
+assert(sw.includes('./game.js?v=155') && sw.includes('./app.js?v=155'), 'SW precaches the v142 scripts');
+assert(index.includes('./arcade.css?v=79'), 'index pin for the changed arcade.css moves');
+assert(sw.includes('./arcade.css?v=79'), 'SW precaches the new arcade.css');
 
 console.log('settings-entry-v142: all assertions passed');

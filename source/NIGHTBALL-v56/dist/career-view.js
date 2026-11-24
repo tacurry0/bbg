@@ -1,5 +1,5 @@
 import {careerLifeHTML,careerBaseHTML} from './career-extras-view.js?v=56';
-import {lineScoreHTML} from './results.js?v=76';
+import {lineScoreHTML} from './results.js?v=77';
 const Career=window.NightCareer,Life=window.NightCareerLife;
 const option=(id,label)=>`<option value="${id}">${label}</option>`;
 const statValues=(s,pitching)=>pitching?[

@@ -2,12 +2,58 @@ const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>'
 // Existing pennant reports store the logo path at the time of the game.
 const reportLogo=path=>path?.replace(/^(\.\/assets\/(?:npb\/npb|kbo\/kbo)-[a-z]+)\.svg$/,'$1.png');
 const ip=outs=>`${Math.floor((outs||0)/3)}.${(outs||0)%3}`;
+// v155 hero interview (checker item "hero-interview"). The hero is the
+// user's own player with the highest score under the exact same formula
+// NightGame.matchSummary() uses for its "heroes" list (bat: rbi*2 + h +
+// hr*2 + r*.5, pitch: outs*.35 + k*.8 - runs*1.7), so the interview pick
+// always agrees with the existing 活躍した選手 display. Only a user win
+// produces an interview; losses, draws, umpire mode and spectate get none.
+const heroScoreBat=b=>b?((b.rbi||0)*2+(b.h||0)+(b.hr||0)*2+(b.r||0)*.5):0;
+const heroScorePitch=q=>q?((q.outs||0)*.35+(q.k||0)*.8-(q.runs||0)*1.7):0;
+export function buildHeroInterview(g,report){
+ if(g.umpireMode||g.spectate)return null;
+ if(!(g.userScore>g.opponentScore))return null;
+ const t=report.teams[g.userSide];if(!t)return null;
+ const cands=[];
+ for(const b of t.batters){const s=heroScoreBat(b);if(s>0)cands.push({id:b.id,name:b.name,kind:'bat',bat:b,score:s});}
+ for(const p of t.pitchers){if(cands.some(c=>c.id===p.id))continue;const s=heroScorePitch(p);if(s>0)cands.push({id:p.id,name:p.name,kind:'pitch',pitch:p,score:s});}
+ if(!cands.length)return null;
+ cands.sort((a,b)=>b.score-a.score);
+ const hero=cands[0];
+ if(hero.kind==='bat'){
+  const b=hero.bat,hr=b.hr||0,h=b.h||0,rbi=b.rbi||0;
+  const stat=`${b.ab||0}打数 ${h}安打${hr?` ${hr}本塁打`:''} ${rbi}打点`;
+  let type,comment;
+  if(g.walkoffWin&&rbi>0){type='walkoff';comment='最後は自分が決めるつもりで打席に入りました。サヨナラ打を打てて、チームのみんなと喜べて最高です';}
+  else if(hr>=2){type='homer';comment=`今日はバットがよく振れていました。${hr}本塁打は自分でも驚きです。この調子を続けていきたいです`;}
+  else if(hr===1){type='homer';comment='完璧に捉えられました。あの一発が勝ちにつながってよかったです';}
+  else if(h>=3){type='multihit';comment=`${h}安打と、状態は上がってきています。つなぐ意識が結果に出ました。次もこの調子でいきます`;}
+  else if(h===2){type='multihit';comment='2安打できて、少しずつ自分の形になってきました。チームの勝利が何よりうれしいです';}
+  else if(rbi>=2){type='clutch';comment='チャンスで回ってきたら、とにかく走者を還すことだけを考えていました。仕事ができてよかったです';}
+  else{type='bat';comment='チームの勝利に貢献できてうれしいです。この勢いのまま、次も勝ちにいきます';}
+  return {name:hero.name,role:'打者',type,comment,stat};
+ }
+ const q=hero.pitch,win=report.decision?.winner?.id===hero.id;
+ const stat=`${ip(q.outs)}回 ${(q.k||0)}奪三振 ${q.runs||0}失点${win?' ・ 勝利投手':''}`;
+ let type,comment;
+ if((q.runs||0)===0&&(q.outs||0)>=6){type='shutout';comment='最後まで集中して投げられました。無失点で抑えられたのは、野手のみんなのおかげです';}
+ else if((q.k||0)>=5){type='strikeout';comment=`今日は球が走っていました。${q.k}個の三振を奪えて、自分の投球ができたと思います`;}
+ else if(win){type='winner';comment='勝ち投手になれてほっとしています。チームの勝利に貢献できてうれしいです';}
+ else{type='pitch';comment='自分の役割は果たせたと思います。チームの勝利が何よりうれしいです';}
+ return {name:hero.name,role:'投手',type,comment,stat};
+}
+export function heroInterviewHTML(report){
+ const iv=report?.interview;if(!iv)return '';
+ return `<section class="hero-interview"><h3 class="report-heading">ヒーローインタビュー</h3><div class="hero-interview-card"><div class="hero-interview-name"><strong>${escape(iv.name)}</strong><span>${escape(iv.role)}</span></div><p class="hero-interview-comment">「${escape(iv.comment)}」</p><small class="hero-interview-stat">${escape(iv.stat)}</small></div></section>`;
+}
 export function buildMatchReport(g){
  const summary=g.matchSummary();
- return {innings:g.inning,ended:g.phase==='ended',decision:summary.decision,heroes:summary.heroes,teams:Object.fromEntries(['away','home'].map(side=>{
+ const report={innings:g.inning,ended:g.phase==='ended',decision:summary.decision,heroes:summary.heroes,teams:Object.fromEntries(['away','home'].map(side=>{
   const club=g.teams[side],used=new Set(side===g.userSide?g.usedPitchers:g.usedCpuPitchers);
   return [side,{name:club.name,logo:club.logo,score:g[side+'Score'],hits:g[side+'Hits'],line:g[side].slice(),batters:[...new Set(g.participants[side])].map(id=>{const p=club.batters.find(p=>p.id===id);return {id,name:p?.name||id,removed:g.removedPlayers[side].includes(id),...(g.box[id]||{})};}),pitchers:club.pitchers.filter((p,i)=>used.has(i)).map(p=>({id:p.id,name:p.name,...(g.pitchingStats[p.id]||{})}))}];
  }))};
+ report.interview=buildHeroInterview(g,report);
+ return report;
 }
 export function lineScoreHTML(report){
  const {teams,highlight,changes=[],hideHits=false}=report;

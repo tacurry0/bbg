@@ -94,9 +94,9 @@ const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
 const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
 assert(html.includes('./match-presets.js?v=2'),'page loads the v153 presets module');
 assert(sw.includes('./match-presets.js?v=2'),'service worker precaches the v153 presets module');
-assert(html.includes('./game.js?v=154')&&html.includes('./app.js?v=154'),'index pins at v153');
-assert(sw.includes('nightball-v154-weather-forecast'),'SW cache renamed for v153');
-assert(sw.includes('./game.js?v=154')&&sw.includes('./app.js?v=154'),'SW precaches the v153 scripts');
+assert(html.includes('./game.js?v=155')&&html.includes('./app.js?v=155'),'index pins at v153');
+assert(sw.includes('nightball-v155-hero-interview'),'SW cache renamed for v153');
+assert(sw.includes('./game.js?v=155')&&sw.includes('./app.js?v=155'),'SW precaches the v153 scripts');
 
 console.log('preset-variant-v153: module + static assertions passed');
 
