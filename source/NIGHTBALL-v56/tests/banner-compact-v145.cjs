@@ -58,10 +58,10 @@ assert(app.includes("duration:pitchCall?245:impact?230:170"),
   'appear animation timing is unchanged (opacity/transform only, size-agnostic)');
 
 // ---------- version pins (v147 since count-sentence-remove) ----------
-assert(index.includes('./game.js?v=160') && index.includes('./app.js?v=160'), 'index pins move to v147');
-assert(index.includes('./abs.css?v=8'), 'abs.css pin moves with the compact rules');
-assert(sw.includes('nightball-v160-catch-sound-timing'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=160') && sw.includes('./app.js?v=160') && sw.includes('./abs.css?v=8'),
+assert(index.includes('./game.js?v=161') && index.includes('./app.js?v=161'), 'index pins move to v147');
+assert(index.includes('./abs.css?v=9'), 'abs.css pin moves with the compact rules');
+assert(sw.includes('nightball-v161-call-banner-band'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=161') && sw.includes('./app.js?v=161') && sw.includes('./abs.css?v=9'),
   'SW precaches the v147 assets');
 
 // ---------- browser behaviour (393x852) ----------
@@ -176,10 +176,17 @@ const { resolve, extname, sep } = require('node:path');
     console.log(`banner-compact-v145: pitch-call banner measured ${m.banner.width.toFixed(1)}x${m.banner.height.toFixed(1)}px (was 313.9x109.0)`);
     assert(m.banner.height >= 40 && m.banner.height <= 65, 'height is about half of 109px: ' + m.banner.height);
     assert(m.banner.height < 109 * 0.6, 'height is well under the old two-row height');
-    assert(Math.abs((m.head.top + m.head.bottom) / 2 - (m.detail.top + m.detail.bottom) / 2) < 6,
-      'head and detail share one row (centres aligned)');
-    assert(m.detail.left >= m.head.right - 16 && m.detail.left < m.head.right + 4,
-      'detail sits beside the head, not below it');
+    // v161 premise change: a BALL call's detail is EMPTY (ja/sub both ''
+    // since v147), so the detail element is no longer rendered beside the
+    // head at all — the old one-row centre/beside assertions described the
+    // empty dark band that v161 removed. The banner now shrink-wraps the
+    // head chip alone. (Detail-present pitch calls are covered by
+    // call-banner-band-v161.cjs.)
+    assert.equal(m.detail.width, 0, 'v161: empty detail is not rendered (no empty dark band): ' + JSON.stringify(m.detail));
+    assert.equal(m.detail.height, 0, 'v161: empty detail has no height');
+    assert(Math.abs(m.banner.width - m.head.width) <= 16,
+      'v161: banner width shrink-wraps the head chip (clip-path overhang aside): ' + m.banner.width + ' vs head ' + m.head.width);
+    assert(m.banner.width < 200, 'v161: empty-detail banner is a compact label, not a stage-wide band: ' + m.banner.width);
     assert.equal(m.anims.length, 1, 'appear animation ran once');
     assert.equal(m.anims[0].duration, 245, 'pitch-call appear animation keeps its 245ms duration');
     assert(m.anims[0].frames.includes('opacity'), 'appear animation is opacity/transform based');

@@ -28,10 +28,26 @@
    changed. Non-pitch-call banners (hit / out / homer / career intro) keep
    the original two-row design. The appear animation in app.js animates
    opacity/transform only, so it is dimension-agnostic and needs no change. */
+/* v161: pitch-call banner empty band removed (real-device feedback: after
+   v146/v147 emptied the Japanese detail for BALL / STRIKE / SWING & MISS,
+   an empty dark band still stretched across the stage beside the head
+   chip). Root cause: the v145 one-row layout gave .stage-call a fixed
+   width (min(94%,360px)) and .stage-call-detail `flex: 1`; the detail
+   container itself keeps its --call-panel background and padding even
+   when both children are empty (only the empty strong/small children are
+   hidden, by the :empty rule in style.css), so the empty container was
+   painted as a wide dark rectangle filling the rest of the fixed width.
+   Fix: the banner shrink-wraps its content (fit-content, capped), the
+   detail no longer grows (flex: 0 1 auto), and a detail whose ja and sub
+   are BOTH empty is not rendered at all — via the [hidden] flag app.js
+   sets for pitch calls and, as a CSS-only fallback, the :has() rule
+   below. A detail with real text (WALK situation line, STRIKEOUT) still
+   renders beside the head exactly as before. */
 #stage-message.pitch-call .stage-call {
   display: flex;
   align-items: stretch;
-  width: min(94%, 360px);
+  width: fit-content;
+  max-width: min(94%, 360px);
   min-height: 50px;
 }
 #stage-message.pitch-call .stage-call-head {
@@ -49,10 +65,16 @@
   display: flex;
   align-items: baseline;
   gap: 7px;
-  flex: 1;
+  flex: 0 1 auto;
   min-width: 0;
   padding: 12px 12px 13px 14px;
   margin-right: 0;
+}
+#stage-message.pitch-call .stage-call-detail[hidden] {
+  display: none;
+}
+#stage-message.pitch-call .stage-call-detail:has(> strong:empty):has(> small:empty) {
+  display: none;
 }
 #stage-message.pitch-call #message-ja {
   font-size: clamp(15px, 4.4vw, 19px);

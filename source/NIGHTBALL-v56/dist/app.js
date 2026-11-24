@@ -2134,6 +2134,14 @@ function start(mode,challengeId=null,fixedPark=null){
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
      const samePitchCall=pitchCall&&previousCall===data.en&&stage.classList.contains('pitch-call');
      stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'');
+     // v161: a pitch call whose Japanese detail is entirely empty (BALL /
+     // STRIKE / SWING & MISS since v146/v147) must not render the detail
+     // container at all — left rendered, its panel background and flex
+     // growth painted an empty dark band across the stage beside the head
+     // chip. Details with real text (WALK situation line, STRIKEOUT) and
+     // all non-pitch-call banners keep the detail element visible.
+     const detailEl=stage.querySelector('.stage-call-detail');
+     if(detailEl)detailEl.hidden=!!pitchCall&&!String(data.ja||'').trim()&&!String(data.sub||'').trim();
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
