@@ -1487,7 +1487,7 @@ window.NightGame=class NightGame{
   this.hit.kind=kind;
   const label=hit?['BUNT HIT','バントヒット']:dp?['DOUBLE PLAY','ダブルプレー']:force?['FORCE OUT','二塁フォースアウト']:sac?['SACRIFICE BUNT','送りバント']:['BUNT OUT','バント失敗'];
   this.message(label[0],label[1],`${this.outs}アウト${runs?' · '+runs+'点':''}`,hit?'hit':'out');
-  this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
+  this.emit('cue',hit?'hit':'out');this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
  // Runners are human-commanded when the batting side is a person using
  // manual running. Offline that is the local user while batting. In an
@@ -1887,7 +1887,7 @@ window.NightGame=class NightGame{
   f.resolved=true;f.outcome=kind;this.hit.kind=kind;this.hit.contactType=this.contactType(kind);
   const label=outs>=2?['DOUBLE PLAY','ダブルプレー']:m.fly?[sacFly?'SACRIFICE FLY':'FLY OUT',scorers.length?'タッチアップで生還':'フライアウト']:hit?[kind.toUpperCase(),{single:'ヒット',double:'ツーベース',triple:'スリーベース'}[kind]]:['OUT',m.lastOut?.type==='tag'?'タッチアウト':m.lastOut?.type==='force'?'フォースアウト':'アウト'];
   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${this.contactType(kind)} · ${distance} m · ${this.outs}アウト${scorers.length?' · '+scorers.length+'点':''}`,hit?'hit':'out');
-  this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
+  this.emit('cue',hit?'hit':'out');this.emit('sound',hit?'safe':'out');this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
  completePitch(kind){
   if(this.pitch)this.lastPitch={name:this.pitch.name,speed:this.pitch.speed,id:this.pitch.id,breakCm:Math.round(Math.hypot(this.pitch.bx||0,this.pitch.by||0)*20.4),spinRpm:this.pitch.spinRpm??null};
@@ -1941,7 +1941,7 @@ window.NightGame=class NightGame{
   f.runners.forEach(r=>{r.target=advance?Math.min(4,r.start+advance):thirdOut?r.progress:r.start;if(!advance&&r.batter)r.out=true;r.running=false;});this.hit.kind=kind;
   const distance=Math.round(f.maxTravel),out=kind==='flyout'||kind==='groundout';let runs=0;
   if(kind==='foul'){
-   this.emit('sound','foul');this.steal=false;if(this.inMatch)this.strikes=Math.min(2,this.strikes+1);this.completePitch('foul');this.message('FOUL','ファウル',this.strikes===2?'2ストライク。もう一度。':'次の1球へ。');
+   this.emit('cue','foul');this.emit('sound','foul');this.steal=false;if(this.inMatch)this.strikes=Math.min(2,this.strikes+1);this.completePitch('foul');this.message('FOUL','ファウル',this.strikes===2?'2ストライク。もう一度。':'次の1球へ。');
   }else{
    if(!this.defending){if(!out){this.session.hits++;this.session.maxDistance=Math.max(this.session.maxDistance,distance);}if(kind==='hr')this.session.hr++;}
    if(!out){this[this.side+'Hits']++;this.pitcherRecord().h=(this.pitcherRecord().h||0)+1;}
@@ -1949,7 +1949,7 @@ window.NightGame=class NightGame{
    if(this.inMatch){if(out)this.addOut();else{const before=this.battingScore;this.advance({single:1,double:2,triple:3,hr:4}[kind]);runs=(this.battingScore)-before;if(!this.defending&&runs===4&&kind==='hr')this.session.grandSlam=true;}this.endAtBat(kind,runs);this.resetCount();this.checkEnd();}
    const label={single:['SINGLE','ヒット'],double:f.groundRule?['GROUND-RULE DOUBLE','エンタイトルツーベース']:['DOUBLE','ツーベース'],triple:['TRIPLE','スリーベース'],hr:['HOME RUN','ホームラン！'],flyout:['FLY OUT','フライをキャッチ！'],groundout:['OUT AT FIRST','一塁へ送球、アウト！']}[kind];
    this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${distance} m${runs?' · '+runs+'点':''}${out?' · '+this.outs+'アウト':''}`,kind==='hr'?'homer':out?'out':'hit');
-   this.emit('sound',kind==='hr'?'homer':out?'out':'safe');
+   this.emit('cue',kind==='hr'?'homer':out?'out':'hit');this.emit('sound',kind==='hr'?'homer':out?'out':'safe');
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();
  }
@@ -2175,6 +2175,7 @@ window.NightGame=class NightGame{
   if(this.rollHbp())return;
   if(strike){this.strike(false);return;}
   this.pitch.callResult=true;
+  this.emit('cue','ball');
   this.emit('sound','catch');this.balls++;this.completePitch('ball');
   const before=this.battingScore;
   if(this.balls>=4){const loaded=this.bases.every(Boolean);this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','フォアボール',loaded?'押し出しで1点':'走者が進塁');this.checkEnd();}else{this.message('BALL','ボール',`${this.balls}ボール · ${this.strikes}ストライク`);this.resolveSteal();this.rollWildPitch();}
@@ -2183,6 +2184,7 @@ window.NightGame=class NightGame{
   this.notify();
  }
  strike(swung){
+  this.emit('cue','strike');
   if(this.pitch)this.pitch.callResult=true;
   this.completePitch('miss');this.emit('sound','catch');this.emit('sound','strike');
   if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'ストライク',`${this.balls}ボール · ${this.strikes}ストライク`);this.resolveSteal();this.rollWildPitch();}}

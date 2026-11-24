@@ -5,7 +5,7 @@
  const FILES=['bat-1','bat-2','mitt-1','mitt-2','crowd-bed','crowd-cheer','swish'];
  class NightAudio{
   constructor(){
-   this.context=null;this.buffers={};this.voices=new Set();this.lastVariant={};this.scene={enabled:true,active:false,volume:78,crowd:50,park:'night'};this.sceneKey='';this.bed=null;this.lastCheer=-100;this.disposed=false;this.excitement=0;this.bedGain=.26;
+   this.context=null;this.buffers={};this.voices=new Set();this.lastVariant={};this.scene={enabled:true,active:false,volume:78,crowd:50,park:'night',cues:false};this.sceneKey='';this.bed=null;this.lastCheer=-100;this.disposed=false;this.excitement=0;this.bedGain=.26;
    // Fetch early; decode once a user gesture creates the context. Works offline via the service worker.
    this.files=Promise.all(FILES.map(async id=>{try{const r=await fetch(`./assets/audio/${id}.mp3`);if(!r.ok)throw Error(r.status);return [id,await r.arrayBuffer()];}catch{return [id,null];}}));
   }
@@ -32,7 +32,7 @@
    this.reverb.buffer=ir;this.wet.gain.setTargetAtTime(dome?.14:.065,c.currentTime,.08);
   }
   update(scene){
-   this.scene={...this.scene,...scene};const s=this.scene,key=[s.enabled,s.active,s.volume,s.crowd,s.park].join('/');if(key===this.sceneKey)return;this.sceneKey=key;
+   this.scene={...this.scene,...scene};const s=this.scene,key=[s.enabled,s.active,s.volume,s.crowd,s.park,s.cues].join('/');if(key===this.sceneKey)return;this.sceneKey=key;
    const c=this.context;if(!c)return;
    if(this.park!==s.park){this.setPark(s.park);this.stopBed();}
    const volume=Math.max(0,Math.min(100,Number(s.volume)||0))/100,crowd=Math.max(0,Math.min(100,Number(s.crowd)||0))/100;
@@ -84,6 +84,25 @@
    // Same bounded voice lifecycle as recordings, without caching throwaway buffers.
    this.buffers['transient']=buffer;this.sample('transient',{gain,rate:kind==='timing'?1.7:1});
   }
+  // Accessibility audio cues (v131): short, quiet synthesized tones routed
+  // through the effects bus, so the existing SE (sound) volume governs them.
+  // Patterns are deliberately distinct in pitch and rhythm; they only sound
+  // when the player turned the guide on (scene.cues, default off).
+  cue(kind){
+   const c=this.context;if(!c||!this.scene.enabled||!this.scene.cues||this.disposed||typeof c.createOscillator!=='function')return false;
+   const patterns=NightAudio.CUES[kind];if(!patterns)return false;
+   const now=c.currentTime;
+   if(this.lastCueKind===kind&&now-this.lastCueAt<.12)return true; // collapse duplicate emissions of the same event
+   this.lastCueKind=kind;this.lastCueAt=now;
+   for(const [freq,delay,dur] of patterns){
+    try{
+     const osc=c.createOscillator(),amp=c.createGain();osc.type='sine';osc.frequency.value=freq;
+     const start=now+delay;amp.gain.setValueAtTime(0,start);amp.gain.linearRampToValueAtTime(.14,start+.012);amp.gain.setValueAtTime(.14,start+Math.max(.013,dur-.03));amp.gain.linearRampToValueAtTime(0,start+dur);
+     osc.connect(amp);amp.connect(this.effects);osc.start(start);osc.stop(start+dur+.02);
+    }catch{return false;}
+   }
+   return true;
+  }
   play(name,detail={}){
    if(!this.context||!this.scene.enabled)return;
    const jitter=()=>.975+Math.random()*.05,pan=detail.hand==='L'?.16:-.16;
@@ -109,5 +128,6 @@
    }
   }
  }
+ NightAudio.CUES=Object.freeze({strike:[[880,0,.08]],ball:[[392,0,.09]],foul:[[587,0,.055],[587,.085,.055]],hit:[[659,0,.06],[988,.075,.09]],homer:[[659,0,.06],[880,.075,.06],[1319,.15,.11]],out:[[523,0,.06],[330,.075,.1]],safe:[[784,0,.06],[1047,.075,.09]]});
  NightAudio.FILES=FILES;window.NightAudio=NightAudio;
 })();
