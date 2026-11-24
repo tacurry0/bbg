@@ -15,6 +15,52 @@
   --call-ink: #102c16;
   --call-panel: #163723f7;
 }
+/* v145: pitch-call banner compact (checker item pitch-call-banner-compact).
+   Pitch calls (BALL / STRIKE / WALK / STRIKEOUT / SWING & MISS) used to stack
+   the English head over the Japanese detail: 313.9x109.0px at 393px wide,
+   ~10.8% of the stage. They now render as ONE row — head chip and detail
+   side by side with compressed padding — at roughly half the height
+   (~50px). Wording is unchanged (the head, ja and sub texts are the same
+   strings in the same elements); only the dimensions and row structure
+   changed. Non-pitch-call banners (hit / out / homer / career intro) keep
+   the original two-row design. The appear animation in app.js animates
+   opacity/transform only, so it is dimension-agnostic and needs no change. */
+#stage-message.pitch-call .stage-call {
+  display: flex;
+  align-items: stretch;
+  width: min(94%, 360px);
+  min-height: 50px;
+}
+#stage-message.pitch-call .stage-call-head {
+  display: flex;
+  align-items: center;
+  flex: none;
+  min-height: 0;
+  padding: 12px 14px 13px 16px;
+}
+#stage-message.pitch-call #message-en {
+  font-size: clamp(20px, 5.6vw, 27px);
+  white-space: nowrap;
+}
+#stage-message.pitch-call .stage-call-detail {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  padding: 12px 12px 13px 14px;
+  margin-right: 0;
+}
+#stage-message.pitch-call #message-ja {
+  font-size: clamp(15px, 4.4vw, 19px);
+  white-space: nowrap;
+}
+#stage-message.pitch-call #message-sub {
+  font-size: clamp(11px, 3.3vw, 14px);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 @media (max-height: 470px) and (orientation: landscape) {
   #stage-message.pitch-call { top: max(20%, 72px); }
 }
