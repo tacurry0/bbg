@@ -56,9 +56,9 @@ assert(index.includes('<button id="umpire-strike" type="button">ストライク<
   'umpire STRIKE button label is unchanged (operation label, not banner text)');
 
 // ---------- version pins (v147 since count-sentence-remove) ----------
-assert(index.includes('./game.js?v=156') && index.includes('./app.js?v=156'), 'index pins move to v147');
-assert(sw.includes('nightball-v156-record-room'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=156') && sw.includes('./app.js?v=156'), 'SW precaches the v146 scripts');
+assert(index.includes('./game.js?v=157') && index.includes('./app.js?v=157'), 'index pins move to v147');
+assert(sw.includes('nightball-v157-bullpen'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=157') && sw.includes('./app.js?v=157'), 'SW precaches the v146 scripts');
 
 // ---------- game level (Node): emitted messages ----------
 global.window = global;

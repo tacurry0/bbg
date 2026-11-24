@@ -192,3 +192,7 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 .dream-pick{display:block;width:100%;margin:10px 0 2px;padding:11px;border-radius:12px;border:2px solid #ffd34d;background:linear-gradient(#4b3a9e,#7a5cff);color:#fff;font-weight:900;font-size:13px;box-shadow:0 3px #372a75}
 .dream-pick.selected{outline:3px solid #ffd34d;background:linear-gradient(#6a55e0,#9a86ff)}
 .hero-interview{margin:0 0 20px;text-align:left}.hero-interview-card{background:linear-gradient(100deg,#e8f6ff,#fffbe8);border:1px solid #9dcfe8;border-radius:10px;padding:12px;color:#164d79}.hero-interview-name{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap}.hero-interview-name strong{font-size:16px;color:#0b4a75}.hero-interview-name span{font-size:10px;font-weight:700;color:#a57608;background:#fff3c4;border:1px solid #e3c56d;border-radius:999px;padding:2px 8px}.hero-interview-comment{margin:8px 0 6px;font-size:14px;line-height:1.7;font-weight:600;overflow-wrap:break-word}.hero-interview-stat{display:block;font-size:11px;color:#54738e}
+.menu-bullpen{background:linear-gradient(#ffe9c9,#ffc98a 47%,#f59b4e 48%,#ffd9a8)}
+.bullpen-types{flex-wrap:wrap}
+.bullpen-types button{flex:1 1 30%}
+.bullpen-zone{cursor:crosshair;touch-action:manipulation}

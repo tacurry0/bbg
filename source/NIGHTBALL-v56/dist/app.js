@@ -22,7 +22,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>'
  };
  function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.ball}</svg>`;}
- const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
+ const defaults={gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,bullpenClub:'owls',bullpenPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
  const recordDefaults={games:0,wins:0,draws:0,hr:0,hits:0,maxDistance:0,bestTimedDerby:0,bestTimedDerbyDistance:0,perfect:0,grandSlam:false,ks:0,thrown:0,practicePitches:0,practiceHits:0,practiceHr:0,practiceMaxDistance:0,practiceThrown:0,practiceKs:0,achievements:{},winStreak:0,bestStreak:0};
  let settings,records;
  try{settings={...defaults,...JSON.parse(localStorage.getItem('nightball.settings')||'{}')};records={...recordDefaults,...JSON.parse(localStorage.getItem('nightball.records')||'{}')};}catch{settings={...defaults};records={...recordDefaults};}
@@ -2349,6 +2349,45 @@ function start(mode,challengeId=null,fixedPark=null){
   const survivalBest=(()=>{try{return NightSurvival.loadBest();}catch{return 0;}})();
   modal(`${modalTitle('RECORD ROOM','通算戦績')}<p class="modal-note">モードを横断した、あなた自身の通算戦績です。この記録は v156 以降に終了した試合から蓄積されます（過去の試合は遡って集計できません）。</p>${t.games?`<div class="stats-grid">${[[t.games,'試合','総試合数'],[t.w,'勝','勝利'],[t.l,'敗','敗戦'],[rate,'','勝率（引き分け除く）']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div><p class="modal-note">引き分け ${t.d} · 得点 ${t.rs} / 失点 ${t.ra}</p>`:'<p class="career-status-line">まだ記録された試合がありません。対戦・ペナント・オンラインなどの試合を終えると、ここに通算戦績が蓄積されます。</p>'}${modeRows?`<h3 class="arcade-section-title">モード別</h3>${modeRows}`:''}${hist?`<h3 class="arcade-section-title">最近の試合</h3>${hist}`:''}<h3 class="arcade-section-title">参考（v156より前の記録）</h3><div class="career-list-row"><div><b>従来の対戦記録</b><small>これまでの対戦モードの累計（上の通算には合算していません）</small></div><strong>${records.games}試合 ${records.wins}勝 ${records.draws}分</strong></div><div class="career-list-row"><div><b>オンライン通算（相手球団別）</b><small>オンライン対戦の従来記録</small></div><strong>${onlineTotal.w}勝 ${onlineTotal.l}敗 ${onlineTotal.d}分</strong></div><div class="career-list-row"><div><b>サバイバル ベスト</b><small>勝ち抜きサバイバルの最長連勝</small></div><strong>${survivalBest} 連勝</strong></div><p class="modal-note">対象モード: 通常対戦 / ペナント / オンライン対戦 / サバイバル / 全球団制覇 / ドラフト対決 / APBC・大会。練習・HRダービー・タイムアタック・審判/観戦・二軍戦・オールスター・キャリア系は対象外です。</p><button class="secondary-button" data-action="records-back">プレイ記録へ戻る</button><button class="primary-button" data-action="close">閉じる</button>`,'record-room');
  }
+ let bullpenSel=null;
+ function setupBullpen(){
+  const club=arcadeClub(settings.bullpenClub||settings.pitchingClub);
+  bullpenSel={club:club.id,player:settings.bullpenPlayer||club.pitchers[0]?.id,type:'fast',aim:{x:.7,y:.7},session:NightBullpen.createSession(settings.bullpenPlayer||club.pitchers[0]?.id)};
+  bullpenModal();
+ }
+ function bullpenPitcher(){const club=arcadeClub(bullpenSel.club);return club.pitchers.find(p=>p.id===bullpenSel.player)||club.pitchers[0];}
+ function bullpenModal(){
+  if(!bullpenSel)return;
+  const club=arcadeClub(bullpenSel.club),pitcher=bullpenPitcher();
+  bullpenSel.player=pitcher.id;
+  if(!(pitcher.pitches||['fast']).includes(bullpenSel.type))bullpenSel.type=(pitcher.pitches||['fast'])[0];
+  const s=bullpenSel.session,sum=NightBullpen.summarize(s),last=s.pitches[s.pitches.length-1];
+  const cx=v=>110+v*56,cy=v=>95+v*56;
+  const dots=s.pitches.map((p,i)=>`<circle cx="${cx(p.x)}" cy="${cy(p.y)}" r="${i===s.pitches.length-1?7:5}" fill="${p.strike?'#d5f36a':'#ff9d5c'}" stroke="#14281c" stroke-width="1.5"/>`).join('');
+  const aim=bullpenSel.aim;
+  const zone=`<svg id="bullpen-zone" class="pitch-map bullpen-zone" viewBox="0 0 220 190" role="button" aria-label="ストライクゾーン図。タップで狙うコースを変更"><rect x="6" y="6" width="208" height="178" rx="7" fill="#1d3a24"/><rect x="${cx(-1.06)}" y="${cy(-1.06)}" width="${2.12*56}" height="${2.12*56}" fill="#304a2b" stroke="#b8cc9a" stroke-width="1.5"/><path d="M${cx(-.353)} ${cy(-1.06)}v${2.12*56}M${cx(.353)} ${cy(-1.06)}v${2.12*56}M${cx(-1.06)} ${cy(-.353)}h${2.12*56}M${cx(-1.06)} ${cy(.353)}h${2.12*56}" stroke="#b8cc9a33"/>${dots}<g stroke="#ffffff" stroke-width="2"><circle cx="${cx(aim.x)}" cy="${cy(aim.y)}" r="8" fill="none"/><path d="M${cx(aim.x)-12} ${cy(aim.y)}h24M${cx(aim.x)} ${cy(aim.y)-12}v24"/></g></svg>`;
+  modal(`${modalTitle('BULLPEN','ブルペン投球練習')}
+   <p class="modal-note">打者なしで、投手視点で同じ球を繰り返し投げる練習です。既存の「投球練習」は打者との対戦（カウント・奪三振）ですが、ブルペンは狙いと実際の到達点のずれ（散らばり）と変化量だけを確認します。試合の記録（記録室）には数えません。</p>
+   <div class="setup-section"><label for="bullpen-club">投手の所属</label><select class="field-select" id="bullpen-club">${arcadeClubOptions(club.id)}</select></div>
+   <div class="setup-section"><label for="bullpen-player">投手</label><select class="field-select" id="bullpen-player">${club.pitchers.map(p=>`<option value="${p.id}" ${p.id===pitcher.id?'selected':''}>${p.name} · ${p.velocity} km/h · 制球 ${p.control}</option>`).join('')}</select></div>
+   <div class="setup-section"><label>球種</label><div class="segmented bullpen-types">${(pitcher.pitches||['fast']).map(id=>{const t=NightGame.TYPES.find(x=>x.id===id);return `<button data-action="bullpen-type" data-type="${id}" class="${bullpenSel.type===id?'active':''}">${t?t.name:id}</button>`;}).join('')}</div></div>
+   <p class="modal-note">ゾーン図をタップして狙うコースを変えられます（白い照準）。点が蓄積表示：黄緑＝ストライク、橙＝ボール、大きい点が直近の投球です。</p>
+   ${zone}
+   ${last?`<div class="stats-grid">${[[last.speed,'km/h','直近の球速'],[last.breakCm,'cm','変化量（横'+last.breakXCm+' / 縦'+last.breakYCm+'）'],[last.devCm,'cm','狙いとのずれ'],[last.strike?'ストライク':'ボール','','直近の判定']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div>
+   <p class="modal-note">直近: ${last.n}球目 ${last.name} · 狙い (${last.aimX.toFixed(2)}, ${last.aimY.toFixed(2)}) → 到達 (${last.x.toFixed(2)}, ${last.y.toFixed(2)})${last.spinRpm!=null?` · 回転数 ${last.spinRpm} rpm`:''}</p>`:'<p class="career-status-line">まだ投げていません。球種と狙うコースを選んで「投げる」を押してください。</p>'}
+   ${sum.count?`<h3 class="arcade-section-title">セッション集計（${pitcher.name}）</h3><div class="stats-grid">${[[sum.count,'球','投球数'],[sum.strikeRate,'%','ストライク率'],[sum.avgDevCm,'cm','平均のずれ'],[sum.avgSpeed,'km/h','平均球速']].map(([n,u,l])=>`<div class="stat-box"><strong>${n}<small>${u}</small></strong><span>${l}</span></div>`).join('')}</div>
+   ${s.pitches.slice(-5).reverse().map(p=>`<div class="career-list-row"><div><b>${p.n}球目 ${p.name}</b><small>変化 ${p.breakCm}cm · ずれ ${p.devCm}cm</small></div><strong>${p.speed} km/h · ${p.strike?'ストライク':'ボール'}</strong></div>`).join('')}`:''}
+   <button class="primary-button" data-action="bullpen-throw">投げる（${(NightGame.TYPES.find(x=>x.id===bullpenSel.type)||{}).name||bullpenSel.type}）</button>
+   ${sum.count?'<button class="secondary-button" data-action="bullpen-reset">散らばりをリセット</button>':''}
+   <button class="secondary-button" data-action="close">閉じる</button>`,'bullpen');
+ }
+ function bullpenThrow(){
+  if(!bullpenSel)return;
+  const pitcher=bullpenPitcher();
+  settings.bullpenClub=bullpenSel.club;settings.bullpenPlayer=pitcher.id;save();
+  NightBullpen.throwPitch(bullpenSel.session,pitcher,bullpenSel.type,bullpenSel.aim);
+  bullpenModal();
+ }
  function loadOnlineRecord(){try{const r=JSON.parse(localStorage.getItem('nightball.online')||'null');if(r&&typeof r==='object'&&r.byOpponent&&Array.isArray(r.history))return r;}catch{}return {byOpponent:{},history:[]};}
  function saveOnlineRecord(r){try{localStorage.setItem('nightball.online',JSON.stringify(r));}catch{}}
  function recordOnlineResult(oppClubId,won,draw,hs,as){
@@ -2846,7 +2885,7 @@ function start(mode,challengeId=null,fixedPark=null){
  $('contact').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('react').onclick=()=>{const p=$('react-panel');p.hidden=!p.hidden;};$('react-panel').innerHTML=REACTIONS.map(e=>`<button type="button" data-react="${e}" aria-label="リアクション ${e}">${e}</button>`).join('')+`<div class="chat-list">${NightOnline.QUICK_CHATS.map((t,i)=>`<button type="button" data-chat="${i}">${t}</button>`).join('')}</div>`;$('react-panel').addEventListener('click',ev=>{const b=ev.target.closest('[data-react]');if(b){sendReaction(b.dataset.react);return;}const c=ev.target.closest('[data-chat]');if(c)sendQuickChat(Number(c.dataset.chat));});$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('howto').onclick=howto;$('records').onclick=recordModal;$('menu-settings').onclick=settingsModal;
- document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():b.dataset.mode==='umpire'?umpireSetup():b.dataset.mode==='timeattack'?setupTimeAttack():b.dataset.mode==='survival'?survivalSetup():b.dataset.mode==='draft'?draftSetup():b.dataset.mode==='conquest'?conquestSetup():setupTraining(b.dataset.mode));
+ document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatchTeams():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():b.dataset.mode==='umpire'?umpireSetup():b.dataset.mode==='timeattack'?setupTimeAttack():b.dataset.mode==='survival'?survivalSetup():b.dataset.mode==='draft'?draftSetup():b.dataset.mode==='conquest'?conquestSetup():b.dataset.mode==='bullpen'?setupBullpen():setupTraining(b.dataset.mode));
  $('clubhouse').onclick=()=>lineupModal('edit');$('resume-game').onclick=resumeGame;$('players-tool').onclick=()=>rosterModal(game?.defending?game.pitcher.id:game?.batter.id,game?.userSide||'home');$('player-card').onclick=()=>{if(game)rosterModal(game.batter.id,game.side);};$('pitcher-card').onclick=()=>{if(game)rosterModal(game.pitcher.id,game.side==='home'?'away':'home');};$('tactics-tool').onclick=tacticsModal;$('history-tool').onclick=historyModal;$('practice-tool').onclick=practiceModal;
  $('auto-defense').onclick=()=>{if(game&&!game.umpireMode&&game.setAutoDefense(!game.autoDefense)){unlockAudio();updateUI();}};
  $('field-speed').onclick=()=>{if(game?.autoDefense&&game.defending){settings.defenseSpeed=game.defenseSpeed===1?2:1;game.defenseSpeed=settings.defenseSpeed;}else{settings.fieldSpeed=settings.fieldSpeed===1?2:1;if(game)game.fieldSpeed=settings.fieldSpeed;}save();updateUI();};
@@ -2942,6 +2981,9 @@ function start(mode,challengeId=null,fixedPark=null){
      case'match-preset-delete':NightMatchPresets.remove(b.dataset.presetId);setupMatch();toast('プリセットを削除しました');break;
      case'close':closeModal();break;
      case'record-room':recordRoomModal();break;
+    case'bullpen-type':if(bullpenSel){bullpenSel.type=b.dataset.type;bullpenModal();}break;
+    case'bullpen-throw':bullpenThrow();break;
+    case'bullpen-reset':if(bullpenSel){bullpenSel.session=NightBullpen.createSession(bullpenSel.player);bullpenModal();}break;
      case'records-back':recordModal();break;
      case'totals':totalsModal();break;
    case'ct-start':customTourney={clubs:ctPicks.slice(),rounds:[[[0,7],[3,4],[2,5],[1,6]].map(([a,b])=>({home:ctPicks[a],away:ctPicks[b],winner:null,hs:null,as:null}))],champion:null};saveCustomTourney();customTourneyModal();break;
@@ -3099,6 +3141,18 @@ function start(mode,challengeId=null,fixedPark=null){
    $('training-club').focus({preventScroll:true});
   }
   if(e.target.id==='training-player')trainingSelection.player=e.target.value;
+ });
+ $('modal-content').addEventListener('change',e=>{
+  if(!bullpenSel)return;
+  if(e.target.id==='bullpen-club'){bullpenSel.club=e.target.value;bullpenSel.player=null;bullpenSel.session=NightBullpen.createSession(null);bullpenModal();$('bullpen-club')?.focus({preventScroll:true});}
+  if(e.target.id==='bullpen-player'){bullpenSel.player=e.target.value;bullpenSel.session=NightBullpen.createSession(e.target.value);settings.bullpenClub=bullpenSel.club;settings.bullpenPlayer=e.target.value;save();bullpenModal();}
+ });
+ $('modal-content').addEventListener('click',e=>{
+  const svg=e.target.closest('#bullpen-zone');if(!svg||!bullpenSel)return;
+  const r=svg.getBoundingClientRect();if(!r.width||!r.height)return;
+  const clampAim=v=>Math.max(-1.6,Math.min(1.6,v));
+  bullpenSel.aim={x:clampAim(((e.clientX-r.left)/r.width*220-110)/56),y:clampAim(((e.clientY-r.top)/r.height*190-95)/56)};
+  bullpenModal();
  });
  $('modal-content').addEventListener('change',e=>{
   if(e.target.id==='game-lighting'){
