@@ -114,7 +114,7 @@ const app = fs.readFileSync(__dirname + '/../dist/app.js', 'utf8');
 const html = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
 const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
 assert(app.includes('recordRoomCommit(g,abandoned);save();'), 'commit() (the once-guarded result path) records into the record room');
-assert(app.includes("if(abandoned||!g.isFixture||g.umpireMode||g.spectate||g.timeAttack||g.farmGame||g.allstarEvent)return;"), 'abandoned / umpire / spectate / time-attack / farm / all-star games are excluded');
+assert(app.includes("if(abandoned||!g.isFixture||g.umpireMode||g.spectate||g.timeAttack||g.farmGame||g.allstarEvent||g.scrimmageGame)return;"), 'abandoned / umpire / spectate / time-attack / farm / all-star / scrimmage (v163) games are excluded');
 assert(app.includes("if(g.onlineGame)return 'online';") && app.includes("if(g.survival)return 'survival';") && app.includes("if(g.conquest)return 'conquest';") && app.includes("if(g.draftBattle)return 'draft';") && app.includes("if(g.apbcFixtureId||g.ctFixture)return 'apbc';") && app.includes("if(g.mode==='pennant')return 'pennant';"), 'mode classification covers online/survival/conquest/draft/apbc/pennant/match');
 assert(app.includes('id:g.leagueFixtureId||g.apbcFixtureId||null'), 'fixture ids are passed for deduplication');
 assert(app.includes("NightRecordRoom.recordResult({mode:'online',result:draw?'draw':mine?'win':'loss'"), 'the online guest records through the same module from its end handler');
@@ -124,9 +124,9 @@ assert(app.includes('data-action="record-room"') && app.includes("case'record-ro
 assert(app.includes('v156 以降に終了した試合から蓄積されます'), 'the dashboard states that pre-v156 games are not backfilled');
 assert(app.includes('参考（v156より前の記録）') && app.includes('従来の対戦記録') && app.includes('オンライン通算（相手球団別）') && app.includes('サバイバル ベスト'), 'pre-existing aggregates (records / online / survival best) are shown as reference, not merged');
 assert(html.includes('./record-room.js?v=1'), 'index loads record-room.js at v1');
-assert(html.includes('./game.js?v=162') && html.includes('./app.js?v=162'), 'index pins at v156');
-assert(sw.includes('nightball-v162-result-banner-compact'), 'SW cache renamed for v156');
-assert(sw.includes('./game.js?v=162') && sw.includes('./app.js?v=162') && sw.includes('./record-room.js?v=1'), 'SW precaches the v156 scripts including the new module');
+assert(html.includes('./game.js?v=163') && html.includes('./app.js?v=163'), 'index pins at v156');
+assert(sw.includes('nightball-v163-scrimmage'), 'SW cache renamed for v156');
+assert(sw.includes('./game.js?v=163') && sw.includes('./app.js?v=163') && sw.includes('./record-room.js?v=1'), 'SW precaches the v156 scripts including the new module');
 
 console.log('record-room-v156: unit + static assertions passed');
 
