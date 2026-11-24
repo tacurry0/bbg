@@ -105,6 +105,16 @@ function uniqueName(base,taken){
  }
  return clean.slice(0,18)+' ('+Date.now().toString(36)+')';
 }
+// A fresh local id for an import. The editors' own fallback ids are
+// Date.now()+store-length based, so an export and an import landing in
+// the same millisecond could mint the SAME id — and upsert-by-id would
+// then silently replace the original. Imports therefore always carry
+// an explicit random id that is checked against the target store.
+function freshId(existingIds){
+ let id='';
+ do{id='custom-share-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10);}while(existingIds.has(id));
+ return id;
+}
 // Import a code as a NEW local creation. Returns
 // {ok:true, kind, item, renamed} or {ok:false, error} — never throws,
 // never overwrites an existing entry.
@@ -115,9 +125,10 @@ function importCode(code,storage,expectedKind){
  try{
   if(dec.kind==='park'){
    if(typeof NightStadium==='undefined')return fail('球場エディタが読み込まれていません');
-   const taken=new Set(NightStadium.loadSpecs(storage).map(s=>NightStadium.clampSpec(s).name));
+   const specs=NightStadium.loadSpecs(storage);
+   const taken=new Set(specs.map(s=>NightStadium.clampSpec(s).name));
    const name=uniqueName(NightStadium.clampSpec(dec.data).name,taken);
-   const park=NightStadium.upsert({...parkData(dec.data),name},storage);
+   const park=NightStadium.upsert({id:freshId(new Set(specs.map(s=>s.id))),...parkData(dec.data),name},storage);
    if(!park)return fail('球場を保存できませんでした');
    return {ok:true,kind:'park',item:park,renamed:name!==NightStadium.clampSpec(dec.data).name};
   }
@@ -125,9 +136,10 @@ function importCode(code,storage,expectedKind){
   const probe={id:'custom-share-import',...leagueData(dec.data)};
   const v=NightLeague.validate(probe);
   if(!v.ok)return fail('読み込めません：'+v.errors.join(' / '));
-  const taken=new Set(NightLeague.loadDefs(storage).map(d=>String(d.name??'')));
+  const defs=NightLeague.loadDefs(storage);
+  const taken=new Set(defs.map(d=>String(d.name??'')));
   const name=uniqueName(v.def.name,taken);
-  const saved=NightLeague.upsert({...v.def,name,id:undefined},storage);
+  const saved=NightLeague.upsert({...v.def,name,id:freshId(new Set(defs.map(d=>d.id)))},storage);
   if(!saved)return fail('リーグを保存できませんでした');
   return {ok:true,kind:'league',item:saved,renamed:name!==v.def.name};
  }catch{return fail('読み込み中にエラーが発生しました');}

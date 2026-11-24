@@ -90,6 +90,26 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  for(const d of NightLeague.loadDefs(store))NightLeague.remove(d.id,store);
 }
 
+// ---------- same-millisecond export/import still mints distinct ids ----------
+// The editors' fallback ids are Date.now()+store-length based, so with
+// the clock frozen an export and an import into an empty store would
+// mint the same id and upsert-by-id would replace the original entry.
+// Imports carry an explicit random id, so the ids must differ even here.
+{
+ const realNow=Date.now;Date.now=()=>1700000000000;
+ try{
+  const storeA=memStorage(),storeB=memStorage();
+  const savedP=NightStadium.upsert(parkSpec,storeA);
+  const impP=NightShare.importCode(NightShare.exportPark(savedP.id,storeA),storeB);
+  assert.equal(impP.ok,true);assert.notEqual(impP.item.id,savedP.id,'park import id differs even in the same millisecond');
+  const savedL=NightLeague.upsert(leagueDef,storeA);
+  const impL=NightShare.importCode(NightShare.exportLeague(savedL.id,storeA),storeB);
+  assert.equal(impL.ok,true);assert.notEqual(impL.item.id,savedL.id,'league import id differs even in the same millisecond');
+  NightStadium.remove(impP.item.id,storeB);NightStadium.remove(savedP.id,storeA);
+  NightLeague.remove(impL.item.id,storeB);NightLeague.remove(savedL.id,storeA);
+ }finally{Date.now=realNow;}
+}
+
 // ---------- rejection paths: no throw, nothing stored ----------
 {
  const store=memStorage();
