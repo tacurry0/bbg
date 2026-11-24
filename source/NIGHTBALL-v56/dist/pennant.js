@@ -124,6 +124,91 @@
     this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),gamesPerOpponent,null,'other-r');
     this.otherResults={};this.advanceByes();
    }
+   this.preseason=this.buildPreseason();
+  }
+  // ---- Preseason (オープン戦, v137): a short exhibition slate played before
+  // opening day. It lives entirely outside the regular schedule: results go
+  // to preseason.results (never this.results), simulated stats are discarded
+  // instead of folded into playerStats, and standings/totalGames never see
+  // it. Three games against the first three other clubs, alternating
+  // home/away. Farm-assigned players may appear in live games (app.js lifts
+  // the farm exclusion for preseason fixtures) and earn a small development
+  // credit, mirroring the v124 farm-game credit cadence at half size.
+  static PRESEASON_COUNT=3;
+  buildPreseason(){
+   const others=this.clubs.filter(c=>c.id!==this.clubId);
+   const games=others.slice(0,NightPennant.PRESEASON_COUNT).map((c,i)=>i%2?{id:'pre-'+(i+1),home:this.clubId,away:c.id,preseason:true}:{id:'pre-'+(i+1),home:c.id,away:this.clubId,preseason:true});
+   return {games,index:0,results:{},done:games.length===0,skipped:false};
+  }
+  static normalizePreseason(raw,p){
+   // Pre-v137 saves carry no preseason field: their season is already under
+   // way, so the preseason is simply over (never re-opened mid-season).
+   const over={games:[],index:0,results:{},done:true,skipped:false};
+   if(!raw||typeof raw!=='object'||!Array.isArray(raw.games)||!raw.games.length)return over;
+   const ids=new Set(p.clubs.map(c=>c.id)),games=[];
+   for(const g of raw.games){
+    if(!g||typeof g.id!=='string'||!ids.has(g.home)||!ids.has(g.away)||g.home===g.away||games.some(x=>x.id===g.id))return over;
+    games.push({id:g.id,home:g.home,away:g.away,preseason:true});
+   }
+   const results={};
+   if(raw.results&&typeof raw.results==='object')for(const g of games){
+    const r=raw.results[g.id];
+    if(r&&Number.isInteger(r.homeScore)&&Number.isInteger(r.awayScore)&&r.homeScore>=0&&r.awayScore>=0&&r.homeScore!==r.awayScore)results[g.id]={...g,homeScore:r.homeScore,awayScore:r.awayScore,innings:Number.isInteger(r.innings)?r.innings:1,credits:Array.isArray(r.credits)?r.credits.filter(x=>typeof x==='string'):[]};
+   }
+   const playedCount=Object.keys(results).length;
+   // Results must be exactly the first N fixtures in order; anything else is
+   // inconsistent, so fail safe to "preseason over" rather than trapping the
+   // season behind a broken slate.
+   if(games.slice(0,playedCount).some(g=>!results[g.id]))return {games,index:games.length,results:{},done:true,skipped:false};
+   const index=Number.isInteger(raw.index)?Math.max(playedCount,Math.min(games.length,raw.index)):playedCount;
+   if(index!==playedCount&&!(raw.done===true&&index===games.length))return {games,index:games.length,results:{},done:true,skipped:false};
+   return {games,index,results,done:raw.done===true||index>=games.length,skipped:raw.skipped===true};
+  }
+  get preseasonActive(){return !!this.preseason&&!this.preseason.done;}
+  get preseasonFixture(){if(!this.preseasonActive)return null;return this.preseason.games[this.preseason.index]||null;}
+  get preseasonPlayed(){return Object.keys(this.preseason?.results||{}).length;}
+  // One development step (half the v124 farm-game credit) for each of the
+  // user's farm-assigned players who actually appeared in a live preseason
+  // game, stepped through the same every-4-rounds bonus cadence.
+  preseasonCredit(game){
+   if(!game)return [];
+   const mine=new Set(this.farmIds(this.clubId));
+   const appeared=new Set([...Object.keys(game.box||{}),...Object.keys(game.pitchingStats||{})]);
+   const credited=[];
+   this.farmProgress=this.farmProgress||{};this.ratingMods=this.ratingMods||{};
+   for(const id of mine){
+    if(!appeared.has(id))continue;
+    const prog=this.farmProgress[id]||(this.farmProgress[id]={rounds:0,bonus:0});
+    prog.rounds++;
+    if(prog.rounds%4===0&&prog.bonus<6)this._farmBonus(id,prog,this.clubId);
+    credited.push(id);
+   }
+   return credited;
+  }
+  completePreseasonGame(score,game){
+   const pre=this.preseason,f=this.preseasonFixture;
+   if(!pre||!f||!score||pre.results[f.id])return false;
+   if(![score.homeScore,score.awayScore].every(n=>Number.isInteger(n)&&n>=0)||score.homeScore===score.awayScore)return false;
+   const credits=game?this.preseasonCredit(game):[];
+   pre.results[f.id]={...f,homeScore:score.homeScore,awayScore:score.awayScore,innings:score.inning||score.innings||1,credits};
+   pre.index++;this.currentGame=null;
+   if(pre.index>=pre.games.length){pre.done=true;this.pushNews('オープン戦が終了し、ペナントレースが開幕した');}
+   else this.pushNews(`オープン戦 第${pre.index}戦が終了（残り${pre.games.length-pre.index}試合）`);
+   return true;
+  }
+  simulatePreseasonGame(){
+   const f=this.preseasonFixture;if(!f)return false;
+   // The sim's player stats are deliberately discarded: preseason numbers
+   // never enter the season's playerStats.
+   const s=this.simulate(f);
+   return this.completePreseasonGame({homeScore:s.homeScore,awayScore:s.awayScore,inning:s.innings});
+  }
+  skipPreseason(){
+   const pre=this.preseason;
+   if(!pre||pre.done)return false;
+   pre.done=true;pre.skipped=true;this.currentGame=null;
+   this.pushNews('オープン戦をスキップして開幕した');
+   return true;
   }
   static restore(s){
    if(![1,2,3,4].includes(s?.schema))return null;
@@ -140,7 +225,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -280,7 +365,7 @@
    this.season=(this.season||1)+1;
    this.schedule=roundRobin(this.clubs.map(c=>c.id),this.gamesPerOpponent,this.clubId);
    if(this.isNPB){this.otherSchedule=roundRobin(clubsFor(this.otherLeague).map(c=>c.id),this.gamesPerOpponent,null,'other-r');this.otherResults={};}
-   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.pitcher=this.starterIndexFor(this.clubId);
+   this.results={};this.round=0;this.playerStats={};this.history=[];this.injuries={};this.rotation={};this.postseason=null;this.currentGame=null;this.settledRound=-1;this.tradeOffer=null;this.offseason=null;this.news=[];this.allstarPlayed=false;this.celebrated=false;this.preseason=this.buildPreseason();this.pitcher=this.starterIndexFor(this.clubId);
    if(this.isNPB)this.advanceByes();
    return true;
   }

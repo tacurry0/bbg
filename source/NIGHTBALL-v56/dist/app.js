@@ -196,8 +196,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   showCelebration('優勝！',league.club.short+' チャンピオン',5200);
   modal(modalTitle('','🏆 優勝セレモニー')+'<p class="career-status-line">'+league.club.name+' が'+(league.isNPB?'日本シリーズ':'プレーオフ')+'を制覇しました！</p><p class="modal-note">'+(league.season||1)+'年目のチャンピオンです。おめでとうございます。</p><button class="primary-button" data-action="close">閉じる</button>','ceremony');
  }
+ function preseasonDashboard(){
+  showLeagueScreen();
+  const pre=league.preseason,f=league.preseasonFixture,isHome=f.home===league.clubId,opponent=NightTeams.get(isHome?f.away:f.home),resume=!!league.currentGame;
+  const gameRow=g=>{const r=pre.results[g.id],h=NightTeams.get(g.home),a=NightTeams.get(g.away);return `<div class="fixture-row ${[g.home,g.away].includes(league.clubId)?'own-fixture':''}"><div class="fixture-team">${clubBadge(a.id,true)}<b>${a.short}</b>${a.id===league.clubId?'<i>自分</i>':''}</div><div class="fixture-score"><strong>${r?`${r.awayScore}<span> − </span>${r.homeScore}`:'vs'}</strong><small>${r?'試合終了':'試合前'}</small></div><div class="fixture-team right"><b>${h.short}</b>${clubBadge(h.id,true)}${h.id===league.clubId?'<i>自分</i>':''}</div></div>`;};
+  $('pennant').innerHTML=`<div class="league-heading"><button class="text-button" data-league-action="home">← ホーム</button><h1>ペナント</h1></div>${leagueTabs()}<div class="league-club-header">${clubBadge(league.clubId)}<div><span class="eyebrow">PRESEASON · オープン戦 · スロット${leagueSlot}</span><h1>${league.club.short}</h1><div class="season-summary"><span>開幕まであと <b>${pre.games.length-pre.index}</b> 試合</span></div></div></div><div class="season-progress"><i style="width:${pre.index/pre.games.length*100}%"></i></div><div class="season-caption"><span>オープン戦 第${pre.index+1}戦</span><span>${pre.index} / ${pre.games.length} 試合終了</span></div><div class="league-rule"><b>オープン戦</b><p>開幕前の調整期間です。結果は順位・シーズン個人成績には加算されません。二軍の選手も一軍戦に出場でき、出場した二軍選手には小さな育成クレジットが入ります。</p></div><section class="league-match-card"><div class="league-card-kicker"><span>${resume?'試合中':'次のオープン戦'}</span><span>第${pre.index+1}戦 · ${isHome?'後攻':'先攻'}</span></div><div class="league-versus"><div>${clubBadge(league.clubId)}<b>${league.club.short}</b></div><span class="versus-label">VS</span><div>${clubBadge(opponent.id)}<b>${opponent.short}</b></div></div><p>${isHome?'あなたは後攻。投球からスタート。':'あなたは先攻。打撃からスタート。'}<br>1回制 / 2アウト満塁 / 同点は延長</p><button class="primary-button" data-league-action="play">${resume?'再開':'試合開始'}　↗</button><button class="league-inline-button" data-league-action="preseason-sim">この試合をシミュレート</button><button class="league-inline-button" data-league-action="lineup">オーダー編成</button></section><div class="league-section-head"><h2>オープン戦の日程・結果</h2><span>先攻　／　後攻</span></div><div class="fixture-list">${pre.games.map(gameRow).join('')}</div><button class="secondary-button" data-league-action="preseason-skip">オープン戦をスキップして開幕</button><button class="secondary-button" data-league-action="roster">選手データ</button><button class="secondary-button" data-league-action="farm">二軍（ファーム）</button><button class="league-inline-button" data-league-action="picker">新しいペナント</button><p class="league-footnote">オープン戦をすべて終えるかスキップすると、ペナントレースが開幕します。</p>`;
+ }
  function leagueDashboard(){
-  if(!league){leaguePicker();return;}championshipCeremony();if(league.postseason){playoffDashboard();return;}showLeagueScreen();
+  if(!league){leaguePicker();return;}championshipCeremony();if(league.postseason){playoffDashboard();return;}if(league.preseasonActive){preseasonDashboard();return;}showLeagueScreen();
   const f=league.activeFixture,r=league.results[f.id],isHome=f.home===league.clubId,opponent=NightTeams.get(isHome?f.away:f.home),row=league.standings().find(s=>s.id===league.clubId),won=r&&(isHome?r.homeScore>r.awayScore:r.awayScore>r.homeScore),ownScore=r?(isHome?r.homeScore:r.awayScore):0,oppScore=r?(isHome?r.awayScore:r.homeScore):0;
   const leaders=league.standings().filter(s=>s.rank===1),champion=league.completed?league.playoffSeeds()[0].clubId===league.clubId:leaders.some(s=>s.id===league.clubId),resume=!!league.currentGame;
   const matchNumber=league.played+(r?0:1);
@@ -211,17 +217,20 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   modal(`${modalTitle('','プレーオフ 試合成績')}${resultReportHTML(report)}${playerBoxHTML(report,'away')}${playerBoxHTML(report,'home')}<button class="primary-button" data-action="close">戻る</button>`,'playoff-report');
  }
  function playLeague(ready=false){
-  if(!league||league.activeRoundDone||!league.userInActiveFixture)return;
-  const f=league.activeFixture,restored=NightGame.restore(league.currentGame,onEvent);
+  if(!league)return;
+  const pre=league.preseasonActive?league.preseasonFixture:null;
+  if(!pre&&(league.activeRoundDone||!league.userInActiveFixture))return;
+  const f=pre||league.activeFixture;if(!f)return;
+  const restored=NightGame.restore(league.currentGame,onEvent);
   if(!(restored&&restored.leagueFixtureId===f.id&&restored.phase!=='ended')&&!ready){lineupModal('league');return;}
   closeModal(false);unlockAudio();saved=false;lastMode='pennant';
   if(restored&&restored.leagueFixtureId===f.id&&restored.phase!=='ended'){
    game=restored;game.fieldSpeed=settings.fieldSpeed;game.battingAssist=settings.battingAssist;
    if(['pitch','windup'].includes(game.phase)){game.setPhase('windup');game.pitch.progress=0;game.pitch.swung=false;game.pitch.cpuActed=false;}
   }else{
-   game=new NightGame('pennant',settings.difficulty,onEvent,{npbPostseason:league.isNPB&&f.playoff,innings:f.innings,maxInnings:f.maxInnings,drawClinches:f.drawClinches,homeTeamId:f.home,awayTeamId:f.away,userHome:f.home===league.clubId,park:NightTeams.get(f.home).park,defenseSpeed:settings.defenseSpeed,opponentPitcher:league.starterIndexFor(f.away),pitcher:lineupConfig('league').config.pitcher,order:lineupConfig('league').config.order,fielding:lineupConfig('league').config.fielding,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,tiebreak:settings.tiebreak,injured:{home:[...league.injuredIds(f.home),...league.farmIds(f.home)],away:[...league.injuredIds(f.away),...league.farmIds(f.away)]},clubs:{home:league.clubRoster(f.home),away:league.clubRoster(f.away)},mastery:league.mastery});game.leagueFixtureId=f.id;
+   game=new NightGame('pennant',settings.difficulty,onEvent,{npbPostseason:league.isNPB&&f.playoff,innings:f.innings,maxInnings:f.maxInnings,drawClinches:f.drawClinches,homeTeamId:f.home,awayTeamId:f.away,userHome:f.home===league.clubId,park:NightTeams.get(f.home).park,defenseSpeed:settings.defenseSpeed,opponentPitcher:league.starterIndexFor(f.away),pitcher:lineupConfig('league').config.pitcher,order:lineupConfig('league').config.order,fielding:lineupConfig('league').config.fielding,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,tiebreak:settings.tiebreak,injured:pre?{home:league.injuredIds(f.home),away:league.injuredIds(f.away)}:{home:[...league.injuredIds(f.home),...league.farmIds(f.home)],away:[...league.injuredIds(f.away),...league.farmIds(f.away)]},clubs:{home:league.clubRoster(f.home),away:league.clubRoster(f.away)},mastery:league.mastery});game.leagueFixtureId=f.id;if(pre)game.preseasonGame=true;
   }
-  $('distance').textContent='';$('timing-result').textContent='';activateGame();onEvent('clear');if(game.phase==='intro')game.message('PENNANT PLAY BALL',`${league.postseason?(league.isNPB?NightNPBPostseason.title(league.activeSeries):league.activeSeries.id==='qualifier'?'準決勝':'決勝')+' 第'+f.game+'戦':'第'+(league.played+1)+'戦'} · ${game.userHome?'後攻':'先攻'}でプレイ`,game.loadedStart?'1回制 / 毎回2アウト満塁 / 同点は延長':f.maxInnings?'9回制 / 延長12回まで':'9回制 / 延長無制限');else if(['result','change'].includes(game.phase)){const last=game.log.at(-1);if(last)onEvent('message',last);}updateUI();
+  $('distance').textContent='';$('timing-result').textContent='';activateGame();onEvent('clear');if(game.phase==='intro')game.message('PENNANT PLAY BALL',`${pre?'オープン戦 第'+(league.preseason.index+1)+'戦':league.postseason?(league.isNPB?NightNPBPostseason.title(league.activeSeries):league.activeSeries.id==='qualifier'?'準決勝':'決勝')+' 第'+f.game+'戦':'第'+(league.played+1)+'戦'} · ${game.userHome?'後攻':'先攻'}でプレイ`,game.loadedStart?'1回制 / 毎回2アウト満塁 / 同点は延長':f.maxInnings?'9回制 / 延長12回まで':'9回制 / 延長無制限');else if(['result','change'].includes(game.phase)){const last=game.log.at(-1);if(last)onEvent('message',last);}updateUI();
  }
  function foldLeagueStats(g){
   const stats=league.playerStats||={};
@@ -329,7 +338,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   activateGame();updateStyle();updateUI();
  }
  function finishLeague(g){
-  if(!league||g.leagueFixtureId!==league.activeFixture.id)return;
+  if(!league)return;
+  if(league.preseasonActive&&league.preseasonFixture&&g.leagueFixtureId===league.preseasonFixture.id){
+   // Preseason results never fold into season playerStats or standings.
+   if(league.completePreseasonGame(g,g)){commit(g);checkAchievements(g);saveLeague();if(g.userScore>g.opponentScore)sound('win');}
+   leagueDashboard();return;
+  }
+  if(g.leagueFixtureId!==league.activeFixture.id)return;
   if(league.completeActiveGame(g)){league.addMasteryFromGame(g);foldLeagueStats(g);league.activeResult.report=buildMatchReport(g);commit(g);checkAchievements(g);if(league.completed&&league.playoffSeeds()[0]?.clubId===league.clubId)unlockAchievement('seasonFirst');saveLeague();if(g.userScore>g.opponentScore)sound('win');}
   leagueDashboard();
  }
@@ -371,6 +386,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    case'lineup':lineupModal('league');break;
    case'scout':scoutingModal();break;
    case'next':if(league.next()){game=null;saveLeague();leagueDashboard();}break;
+   case'preseason-sim':if(league.simulatePreseasonGame()){game=null;saveLeague();leagueDashboard();}break;
+   case'preseason-skip':if(league.skipPreseason()){game=null;saveLeague();leagueDashboard();}break;
    case'box':boxModal();break;
    case'roster':rosterModal(null,game?.mode==='pennant'?game.userSide:'home');break;
    case'farm':farmModal();break;
@@ -393,7 +410,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(screen==='game'&&game?.career&&game.career.fixtureId===career?.fixture?.id&&!['ended','career-pregame'].includes(game.phase)){
    career.currentGame=game.snapshot();saveCareer();
   }
-  if(game?.mode==='pennant'&&league&&!league.activeRoundDone&&game.leagueFixtureId===league.activeFixture.id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!game.timeAttack&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
+  if(game?.mode==='pennant'&&league&&(league.preseasonActive?league.preseasonFixture:league.activeFixture)&&game.leagueFixtureId===(league.preseasonActive?league.preseasonFixture:league.activeFixture).id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!game.timeAttack&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
  function activateGame(){
   if(!game.umpireMode&&(game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)){
