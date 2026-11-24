@@ -83,12 +83,12 @@ assert(/\.game-stage \.atbat-chart\{[^}]*top:\s*max\(126px/.test(hudCss) &&
   'v150 chart placement untouched');
 
 // ---------- version pins (v152) ----------
-assert(index.includes('./game.js?v=158') && index.includes('./app.js?v=158'), 'index pins at v152');
+assert(index.includes('./game.js?v=159') && index.includes('./app.js?v=159'), 'index pins at v152');
 assert(index.includes('./style.css?v=74'), 'style.css pin moves with the settings rules');
 assert(index.includes('./game-hud.css?v=80'), 'game-hud.css pin moves with the hit-area rules');
 assert(index.includes('./abs.css?v=8'), 'abs.css untouched in v152');
-assert(sw.includes('nightball-v158-chart-labels'), 'SW cache renamed for v152');
-assert(sw.includes('./game.js?v=158') && sw.includes('./app.js?v=158') &&
+assert(sw.includes('nightball-v159-result-banner-once'), 'SW cache renamed for v152');
+assert(sw.includes('./game.js?v=159') && sw.includes('./app.js?v=159') &&
   sw.includes('./style.css?v=74') && sw.includes('./game-hud.css?v=80'), 'SW precaches the v152 assets');
 
 console.log('chip-hitarea-v152: static assertions passed');

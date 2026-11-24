@@ -153,8 +153,8 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  assert(app.includes('id="share-park-code"')&&app.includes('id="share-league-code"'),'both editors render a share-code field');
  assert(index.includes('./share-codes.js?v=1'),'index loads share-codes');
  assert(sw.includes('./share-codes.js?v=1'),'SW precaches share-codes');
- assert(index.includes('./game.js?v=158')&&index.includes('./app.js?v=158'),'index pins move to v135');
- assert(sw.includes('nightball-v158-chart-labels'),'SW cache renamed for v135');
- assert(sw.includes('./game.js?v=158')&&sw.includes('./app.js?v=158'),'SW precaches the v135 scripts');
+ assert(index.includes('./game.js?v=159')&&index.includes('./app.js?v=159'),'index pins move to v135');
+ assert(sw.includes('nightball-v159-result-banner-once'),'SW cache renamed for v135');
+ assert(sw.includes('./game.js?v=159')&&sw.includes('./app.js?v=159'),'SW precaches the v135 scripts');
 }
 console.log('share-codes-v135: all assertions passed');

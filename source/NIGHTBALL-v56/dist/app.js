@@ -414,6 +414,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.mode==='pennant'&&league&&(league.preseasonActive?league.preseasonFixture:league.activeFixture)&&game.leagueFixtureId===(league.preseasonActive?league.preseasonFixture:league.activeFixture).id&&game.phase!=='ended'){league.currentGame=game.snapshot();saveLeague();}if(screen==='game'&&game?.apbcFixtureId&&game.apbcFixtureId===tournament?.active?.id&&game.phase!=='ended'){tournament.currentGame=game.snapshot();saveTournament();}if(game?.mode==='match'&&!game.apbcFixtureId&&!game.ctFixture&&!game.onlineGame&&!game.timeAttack&&!saved&&game.phase!=='ended')try{localStorage.setItem('nightball.match',JSON.stringify(game.snapshot()));}catch{}updateResume();}
  function clearCheckpoint(){try{localStorage.removeItem('nightball.match');}catch{}updateResume();}
  function activateGame(){
+  stageResultShown=new Set();stageResultKey='';
   if(!game.umpireMode&&(game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)){
    game.absRemaining??=2;
    game.absCpuRemaining??=2;
@@ -2081,9 +2082,46 @@ function start(mode,challengeId=null,fixedPark=null){
    if(!speakable||!text)return;
    try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
  }
+ // v159 (result-banner-once): a play result is announced exactly once, in
+ // the one stage-banner design. The engine emits each result once, but the
+ // banner itself had no lifetime of its own: it stayed visible until the
+ // next 'clear' event and nothing else ever hid it, and the same result
+ // could be delivered to onEvent a second time (the re-entry paths that
+ // re-emit the last log entry — playLeague / resumeGame / career /
+ // tournament starts — and online re-sends), presenting the identical
+ // result again, including over the next at-bat's batting screen. Result
+ // messages are therefore tracked by a signature (inning / half / batter /
+ // en / ja / sub / outs / score): a second delivery of the same play's
+ // result within one game-screen session is neither shown nor spoken
+ // again, and updateUI hides a tracked result banner the moment a new
+ // at-bat phase (aim / windup / pitch / miss / field / intro) begins, so a
+ // stale result can never sit on the batting screen. activateGame() resets
+ // the set, so a restored game may still present its in-progress result
+ // once on entry. STRIKEOUT and WALK are included because they end the
+ // at-bat exactly like FLY OUT (their pitch-call styling is unchanged —
+ // only the duplicate announcement is suppressed); pure pitch calls that
+ // do not end an at-bat (BALL / STRIKE / SWING & MISS / FOUL / TAKE) are
+ // not tracked and keep their existing display behaviour.
+ const RESULT_NON_RESULTS=['BALL','STRIKE','SWING & MISS','FOUL','TAKE'];
+ let stageResultKey='',stageResultShown=new Set();
+ function resultSignature(data){
+   if(!game||!data?.en||RESULT_NON_RESULTS.includes(data.en))return '';
+   const isResult=['hit','out','homer'].includes(data.kind)||
+     /^(SINGLE|DOUBLE|TRIPLE|GROUND-RULE DOUBLE|HOME RUN|FLY OUT|OUT|OUT AT FIRST|DOUBLE PLAY|FORCE OUT|BUNT HIT|SACRIFICE FLY|SACRIFICE BUNT|BUNT OUT|HIT BY PITCH|INTENTIONAL WALK|WALK|STEAL OUT|GAME SET|WALK-OFF)/.test(data.en);
+   if(!isResult)return '';
+   return [game.inning,game.half,game.batter?.name||'',data.en,data.ja||'',data.sub||'',game.outs,game.homeScore,game.awayScore].join('|');
+ }
+ function hideStaleResultBanner(){
+   if(!stageResultKey||!game)return;
+   if(!['aim','windup','pitch','miss','field','intro'].includes(game.phase))return;
+   $('stage-message').className='stage-message';stageResultKey='';
+ }
  function onEvent(type,data){
    if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
    if(type==='message'){
+     const resultSig=resultSignature(data);
+     if(resultSig&&stageResultShown.has(resultSig))return;
+     if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
      speakPlay(data);
      if(data.en==='HOME RUN'){const hr=$('hr-celebration');if(hr){hr.querySelector('strong').textContent='ホームラン！';$('hr-distance').textContent=data.sub||'';hr.hidden=false;hr.classList.remove('play');void hr.offsetWidth;hr.classList.add('play');clearTimeout(hr._hideTimer);hr._hideTimer=setTimeout(()=>{hr.hidden=true;},3000);}}
      const previousCall=$('message-en').textContent;
@@ -2105,7 +2143,7 @@ function start(mode,challengeId=null,fixedPark=null){
        {opacity:1,transform:'none'}
       ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
-   }else if(type==='clear'){$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
+   }else if(type==='clear'){stageResultKey='';$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
@@ -2156,7 +2194,7 @@ function start(mode,challengeId=null,fixedPark=null){
    $('atbat-chart-svg').innerHTML=`<rect x="24" y="8" width="36" height="48" rx="2" fill="#304a2b" stroke="#b8cc9a66"/><path d="M36 8v48m12-48v48M24 24h36M24 40h36" stroke="#b8cc9a22"/>${pitches.map((p,i)=>{const cx=clamp(42+p.x*18,7,77),cy=clamp(32+p.y*24,7,57),fill=ATBAT_RESULT_FILL[p.result]||'#d5f36a',last=i===pitches.length-1;return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.2" fill="${fill}"${last?' stroke="#fff" stroke-width="1.5"':''}/><text x="${cx.toFixed(1)}" y="${(cy+2.4).toFixed(1)}" fill="#182b15" text-anchor="middle" font-size="7" font-weight="bold">${i+1}</text>`;}).join('')}`;
  }
  function updateUI(){
-   if(!game)return;const g=game;stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
+   if(!game)return;const g=game;hideStaleResultBanner();stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
    if(g.timeAttack){
      const ta=g.timeAttack,live=ta.kind==='pitch'?ta.outs+(g.defending?g.outs:0):(g.userHome?g.homeScore:g.awayScore),opp=g.userHome?g.awayScore:g.homeScore;
      $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>タイムアタック · ${ta.kind==='bat'?'攻撃編':'守備編'} · ${ta.halves+1}セット目</span><strong id="ta-clock"></strong></div><div class="derby-names"><span>${ta.kind==='bat'?'得点':'アウト'}<b>${live}</b></span><span>${ta.kind==='bat'?`安打 ${g.session.hits} · 本塁打 ${g.session.hr}`:`失点 ${opp} · 奪三振 ${g.session.ks}`}</span></div></div>`;
