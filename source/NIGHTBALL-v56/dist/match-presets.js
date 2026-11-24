@@ -5,13 +5,23 @@
    (index into the own club's rotation, as kept in matchLineups), the
    difficulty preset plus the custom CPU sliders, and the match-affecting
    play options (field/defense speed, manual running, batting assist,
-   tiebreak). Applying a preset only writes those values back into the
-   live settings — it never starts a match by itself.
+   tiebreak). v153 (checker item "preset-variant-gap") adds the keys that
+   arrived after v130: the random roster toggle (v132, settings key
+   randomRoster) and the four variant rules (v133, settings keys
+   variantFullCount / variantMetalBat / variantNoBreaking /
+   variantTwoOuts). Applying a preset only writes those values back into
+   the live settings — it never starts a match by itself.
    sanitizeValues() is the safety net for stale presets: any entry whose
    referent no longer exists (a deleted custom park, a removed club, an
    unknown lighting/difficulty value) falls back to a safe default for
    that field only, so loading a preset can never throw or poison the
-   rest of the setup. Online matches do not use this module at all. */
+   rest of the setup. Online matches do not use this module at all.
+   The v132/v133 keys are OPTIONAL_BOOL_KEYS: a preset saved before v153
+   simply does not carry them, and cleanValues() then omits them from
+   the cleaned values instead of inventing a value, so applying an old
+   preset leaves the live random-roster / variant-rule settings exactly
+   as they are. A key that is present but not a boolean still falls back
+   to false, like every other malformed field. */
 (()=>{
 'use strict';
 const KEY='nightball.matchPresets';
@@ -19,8 +29,10 @@ const DIFFICULTIES=['casual','standard','pro'];
 const LIGHTING=['auto','day','night'];
 const INNINGS=[3,5,9];
 const CD_KEYS=['bat','pitch','field','run'];
-const FIELDS=['matchTeam','matchOpponent','matchUserHome','innings','park','gameLighting','pitcher','difficulty','customDifficulty','defenseSpeed','fieldSpeed','manualRunning','battingAssist','tiebreak'];
-const FALLBACKS={matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,innings:5,park:'night',gameLighting:'auto',pitcher:0,difficulty:'standard',defenseSpeed:1,fieldSpeed:1,manualRunning:true,battingAssist:true,tiebreak:false};
+const VARIANT_KEYS=['variantFullCount','variantMetalBat','variantNoBreaking','variantTwoOuts'];
+const OPTIONAL_BOOL_KEYS=['randomRoster',...VARIANT_KEYS];
+const FIELDS=['matchTeam','matchOpponent','matchUserHome','innings','park','gameLighting','pitcher','difficulty','customDifficulty','defenseSpeed','fieldSpeed','manualRunning','battingAssist','tiebreak',...OPTIONAL_BOOL_KEYS];
+const FALLBACKS={matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,innings:5,park:'night',gameLighting:'auto',pitcher:0,difficulty:'standard',defenseSpeed:1,fieldSpeed:1,manualRunning:true,battingAssist:true,tiebreak:false,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false};
 function cleanName(name){
  const clean=String(name??'').replace(/[<>&"']/g,'').trim().slice(0,24);
  return clean||'プリセット';
@@ -36,7 +48,7 @@ const speedOr=(value,fallback)=>value===2?2:value===1?1:fallback;
 // which knows the current lists.
 function cleanValues(values={}){
  const v=values&&typeof values==='object'?values:{};
- return {
+ const out={
   matchTeam:typeof v.matchTeam==='string'&&v.matchTeam?v.matchTeam:FALLBACKS.matchTeam,
   matchOpponent:typeof v.matchOpponent==='string'&&v.matchOpponent?v.matchOpponent:FALLBACKS.matchOpponent,
   matchUserHome:boolOr(v.matchUserHome,FALLBACKS.matchUserHome),
@@ -52,6 +64,12 @@ function cleanValues(values={}){
   battingAssist:boolOr(v.battingAssist,FALLBACKS.battingAssist),
   tiebreak:boolOr(v.tiebreak,FALLBACKS.tiebreak),
  };
+ // Optional boolean keys (random roster + variant rules): copy them only
+ // when the source actually carries the key. Pre-v153 presets have none
+ // of them, and omitting them here is what lets applyMatchPreset's
+ // Object.assign leave the live values untouched for those fields.
+ for(const k of OPTIONAL_BOOL_KEYS)if(Object.prototype.hasOwnProperty.call(v,k))out[k]=boolOr(v[k],FALLBACKS[k]);
+ return out;
 }
 // Snapshot the live versus settings. The starting pitcher lives in the
 // per-club lineup config rather than in settings for non-default clubs,
@@ -105,7 +123,7 @@ function remove(id,storage){
  return presets;
 }
 function get(id,storage){return load(storage).find(p=>p.id===id)||null;}
-const api={KEY,FIELDS,DIFFICULTIES,LIGHTING,INNINGS,FALLBACKS,cleanName,cleanValues,snapshot,sanitizeValues,load,saveAll,add,remove,get};
+const api={KEY,FIELDS,VARIANT_KEYS,OPTIONAL_BOOL_KEYS,DIFFICULTIES,LIGHTING,INNINGS,FALLBACKS,cleanName,cleanValues,snapshot,sanitizeValues,load,saveAll,add,remove,get};
 if(typeof window!=='undefined')window.NightMatchPresets=api;
 if(typeof globalThis!=='undefined')globalThis.NightMatchPresets=api;
 })();

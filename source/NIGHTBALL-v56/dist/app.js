@@ -1267,7 +1267,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   // inside sanitizeValues; applying only rewrites the setup screen's
   // settings — the match still starts through the usual flow.
   const values=NightMatchPresets.sanitizeValues(preset.values,matchPresetContext());
+  // v153: presets now also carry randomRoster + the variant rules.
+  // Keys a pre-v153 preset does not carry are omitted from values, so
+  // Object.assign leaves those live settings untouched. When the random
+  // roster flag actually flips, drop the drawn roster like the setup
+  // toggle handler does, so the next lineup is drawn under the new flag.
+  const hadRandomRoster=settings.randomRoster;
   Object.assign(settings,values);settings.customDifficulty={...values.customDifficulty};globalThis.NightGameCustomDifficulty=settings.customDifficulty;
+  if(settings.randomRoster!==hadRandomRoster)randomMatch=null;
   lineupConfig('match').config.pitcher=values.pitcher;
   save();setupMatch();toast(`プリセット「${preset.name}」を呼び出しました`);
  }
