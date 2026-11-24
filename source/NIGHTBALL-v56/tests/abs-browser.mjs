@@ -91,7 +91,11 @@ try{
   });
   assert(!layout.oldClass,'the pitch selector sprite class must not style the call banner');
   assert.equal(layout.color,expectedColor);
-  assert(layout.top<layout.height*.24&&layout.bottom<layout.head,'banner sits above the pitcher');
+  // v150: the pitch-call banner moved DOWN (top floor 266u in abs.css) so it
+  // never covers the at-bat pitch chart, which now sits at the top of the
+  // stage — it must start below that chart zone (~32% of the stage) while
+  // still sitting fully above the pitcher.
+  assert(layout.top>layout.height*.30&&layout.bottom<layout.head,'banner sits below the top chart and above the pitcher');
   bannerTop??=layout.top;
   assert.equal(layout.top,bannerTop,'balls and strikes use the same banner position');
   assert(await initialCount.isVisible());
