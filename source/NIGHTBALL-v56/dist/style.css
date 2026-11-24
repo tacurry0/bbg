@@ -265,3 +265,20 @@
 .match-preset-apply b{display:block;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .match-preset-apply small{display:block;font-size:9px;color:#afc39d;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .match-preset-delete{flex-shrink:0;padding:9px 10px;background:none;color:#e0a3a3;border:1px solid #d9955555;border-radius:5px;font-size:10px;cursor:pointer}
+
+/* ---- v152 (checker ingame-chip-hitarea): settings-modal tap targets.
+   The modal .toggle measured 44x27px and the close button 34x34px, well
+   under the pause-menu baseline (primary/secondary buttons are 44-48px).
+   Toggles and the close button keep their exact visual size and gain an
+   invisible expanded hit area instead (the toggle's ::after is its knob,
+   so the hit area uses ::before; the close button uses ::after). The
+   small in-flow buttons (segmented groups, audio preview, inline link
+   buttons) grow for real to min-height:44px — the modal is a scrolling
+   column, so the extra few px cannot break any layout or overlap. */
+.modal .toggle{position:relative}
+.modal .toggle::before{content:"";position:absolute;inset:-11px 0}
+#modal-content .close-button{position:relative}
+#modal-content .close-button::after{content:"";position:absolute;inset:-8px}
+#modal-content :is(.segmented,.preset-buttons,.bench-tabs)>button{min-height:44px}
+#modal-content .audio-preview-buttons button{min-height:44px}
+#modal-content .league-inline-button{min-height:44px}

@@ -228,3 +228,35 @@
 .atbat-chart svg{display:block;width:100%;height:auto}
 .atbat-chart-seq{font-size:calc(8.5 * var(--hud-u));text-align:center;color:#cfe6c8;white-space:nowrap;overflow:hidden}
 .game-stage .pitch-info .pitch-detail:empty{display:none}
+
+/* ---- v152 (checker ingame-chip-hitarea): tap targets near the pause-menu
+   baseline (44-47px tall) WITHOUT changing any visual size or position.
+   Measured at 393px wide before this change: auto-defense chip 92.8x26.5px,
+   speed chip ~23u tall, bat-style buttons 102.2x36.3px, pitch-deck type
+   buttons 96x32.2px (straight 38px), run-action buttons ~39px tall.
+   Each tappable chip/button below keeps its exact visual rect (so the
+   v150 chart/banner/chip overlap audit is unaffected) and gains an
+   invisible ::after hit area that extends the tappable height to >=44px
+   (bat-style buttons instead grow for real to min-height:44px — their
+   column is bottom-anchored and simply extends upward into free space).
+   The speed and auto-defense chips are stacked only ~4px apart
+   (speed 109.8-132.4px, auto-defense 136.8-163.3px at 393px wide), so
+   their expansions are split asymmetrically at the shared boundary:
+   the speed chip expands UP into the pitch-meta zone (that HUD is
+   pointer-events:none, so there is no click conflict) and the
+   auto-defense chip expands DOWN over the at-bat chart's corner zone
+   while pitching (the chart is pointer-events:none too).
+   Non-interactive displays (ABS/wind pitch-meta chips, scoring chip,
+   pitch-info) are NOT tappable and are intentionally left alone. The
+   play-challenge button already measures 123x45px, so it needs no help. */
+.game-stage .auto-defense-chip::after{content:"";position:absolute;inset:-2px 0 -18px}
+.game-stage .speed-chip{position:absolute}
+.game-stage .speed-chip::after{content:"";position:absolute;inset:-20px 0 -2px}
+.game-stage .bench-chip::after{content:"";position:absolute;inset:-4px 0}
+.game-stage .running-mode-chip::after{content:"";position:absolute;inset:-3px 0}
+.game-stage .batting-actions .bat-style button{min-height:44px}
+.game-stage .pitch-deck .pitch-type{position:relative}
+.game-stage .pitch-deck .pitch-type::after{content:"";position:absolute;inset:-6px 0}
+.game-stage .run-actions>button{position:relative}
+.game-stage .run-actions>button::after{content:"";position:absolute;inset:-3px 0}
+.game-stage .abs-challenge::after{content:"";position:absolute;inset:-6px 0}
