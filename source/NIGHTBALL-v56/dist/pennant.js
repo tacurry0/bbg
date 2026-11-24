@@ -707,5 +707,62 @@
    rows.forEach((r,i)=>{const prev=rows[i-1];r.rank=!this.isNPB&&prev&&r.wins===prev.wins&&r.losses===prev.losses&&r.diff===prev.diff?prev.rank:i+1;r.behind=((rows[0].wins-r.wins)+(r.losses-rows[0].losses))/2;});return rows;
   }
  }
+ // ---- Multiple save slots per league (v136, checker "pennant-save-slots").
+ // Three slots per league. Slot 1 is an alias for the legacy key
+ // (nightball.pennant for CPBL, nightball.pennant.<leagueId> otherwise), so
+ // every pre-v136 save is slot 1 with no migration and no data movement:
+ // the bytes stay exactly where they were. Slots 2 and 3 add new keys
+ // (<base>.slot2 / <base>.slot3) that did not exist before, so nothing old
+ // can be overwritten by them. The last-used slot per league is remembered
+ // under <base>.activeSlot. All of these keys start with "nightball.", so
+ // the save-data backup (which exports/imports every nightball.* key)
+ // covers the extra slots automatically.
+ const PENNANT_SLOT_COUNT=3;
+ const pennantBaseKey=id=>id==='cpbl'?'nightball.pennant':'nightball.pennant.'+id;
+ const normSlot=slot=>{const n=Number(slot);return Number.isInteger(n)&&n>=1&&n<=PENNANT_SLOT_COUNT?n:1;};
+ const pennantSlotKey=(id,slot)=>{const n=normSlot(slot);return n===1?pennantBaseKey(id):pennantBaseKey(id)+'.slot'+n;};
+ const defaultStorage=()=>{try{return localStorage;}catch{return null;}};
+ function slotInfo(storage,id,slot){
+  const key=pennantSlotKey(id,slot);let raw=null;
+  try{raw=storage?.getItem(key)??null;}catch{}
+  if(!raw)return {slot,key,exists:false,valid:false,clubId:null,clubShort:null,season:null,played:null,totalGames:null,savedAt:null,createdAt:null};
+  let parsed=null;try{parsed=JSON.parse(raw);}catch{}
+  const restored=parsed?NightPennant.restore(parsed):null;
+  const ok=!!restored&&restored.leagueId===id;
+  return {slot,key,exists:true,valid:ok,
+   clubId:ok?restored.clubId:(parsed?.clubId||null),
+   clubShort:ok?(NightTeams.get(restored.clubId)?.short||restored.clubId):null,
+   season:ok?(restored.season||1):(parsed?.season||null),
+   played:ok?restored.played:null,totalGames:ok?restored.totalGames:null,
+   savedAt:parsed?.updatedAt||parsed?.createdAt||null,createdAt:parsed?.createdAt||null};
+ }
+ const NightPennantSlots={
+  COUNT:PENNANT_SLOT_COUNT,
+  baseKey:pennantBaseKey,
+  key:pennantSlotKey,
+  activeKey:id=>pennantBaseKey(id)+'.activeSlot',
+  getActive(storage,id){storage=storage||defaultStorage();try{return normSlot(storage?.getItem(NightPennantSlots.activeKey(id)));}catch{return 1;}},
+  setActive(storage,id,slot){storage=storage||defaultStorage();const n=normSlot(slot);try{storage?.setItem(NightPennantSlots.activeKey(id),String(n));}catch{}return n;},
+  restore(storage,id,slot){
+   storage=storage||defaultStorage();
+   let raw=null;try{raw=storage?.getItem(pennantSlotKey(id,slot))??null;}catch{}
+   if(!raw)return null;
+   let parsed=null;try{parsed=JSON.parse(raw);}catch{return null;}
+   const restored=NightPennant.restore(parsed);
+   return restored&&restored.leagueId===id?restored:null;
+  },
+  // Stamps updatedAt so slot lists can show the last-saved time; older saves
+  // without the field fall back to createdAt. Returns false on quota errors
+  // so the caller can warn instead of silently losing progress.
+  write(storage,id,slot,data){
+   storage=storage||defaultStorage();if(!storage||!data)return false;
+   try{if(typeof data==='object')data.updatedAt=new Date().toISOString();storage.setItem(pennantSlotKey(id,slot),typeof data==='string'?data:JSON.stringify(data));return true;}catch{return false;}
+  },
+  remove(storage,id,slot){storage=storage||defaultStorage();try{storage?.removeItem(pennantSlotKey(id,slot));return true;}catch{return false;}},
+  info:(storage,id,slot)=>slotInfo(storage||defaultStorage(),id,slot),
+  list(storage,id){storage=storage||defaultStorage();return Array.from({length:PENNANT_SLOT_COUNT},(_,i)=>slotInfo(storage,id,i+1));},
+  anyExists(storage,id){return NightPennantSlots.list(storage,id).some(s=>s.exists);},
+ };
  window.NightPennant=NightPennant;
+ window.NightPennantSlots=NightPennantSlots;
 })();
