@@ -117,7 +117,7 @@
    if(!leagueId)throw Error('Unknown club');
    if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.learnedPitches={};this.pitchLearning={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.negotiationLog=[];this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.learnedPitches={};this.pitchLearning={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -225,7 +225,7 @@
    const p=Object.assign(Object.create(NightPennant.prototype),s,{schema:split?4:3,leagueId,gamesPerOpponent:count});
    if(customLeagues.has(leagueId)){p.customLeague=customLeagues.get(leagueId);p.dh=p.dh!==false;p.playoffs=p.playoffs!==false;}
    else{p.customLeague=null;p.dh=true;p.playoffs=true;}
-   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.learnedPitches=(p.learnedPitches&&typeof p.learnedPitches==='object'&&!Array.isArray(p.learnedPitches))?Object.fromEntries(Object.entries(p.learnedPitches).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.filter(x=>typeof x==='string')] )):{};p.pitchLearning=(p.pitchLearning&&typeof p.pitchLearning==='object'&&!Array.isArray(p.pitchLearning))?p.pitchLearning:{};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
+   p.results ||= {};p.postseason ||= null;p.rotation ||= {};p.playerStats ||= {};p.history ||= [];p.injuries ||= {};p.settledRound ??= -1;p.season ??= 1;p.rosterMoves ||= {};p.customPlayers ||= {};p.departed ||= [];p.ratingMods ||= {};p.ages ||= {};p.news ||= [];p.tradeOffer ??= null;p.negotiationLog=(Array.isArray(p.negotiationLog)?p.negotiationLog.filter(e=>e&&typeof e==='object'&&typeof e.kind==='string').slice(0,40):[]);p.offseason ??= null;p.titles ||= [];p.seasonArchive ||= [];p.mastery ||= {};p.learnedPitches=(p.learnedPitches&&typeof p.learnedPitches==='object'&&!Array.isArray(p.learnedPitches))?Object.fromEntries(Object.entries(p.learnedPitches).filter(([,v])=>Array.isArray(v)).map(([k,v])=>[k,v.filter(x=>typeof x==='string')] )):{};p.pitchLearning=(p.pitchLearning&&typeof p.pitchLearning==='object'&&!Array.isArray(p.pitchLearning))?p.pitchLearning:{};p.farmGameRound ??= -1;p.farmMoves ||= {};p.farmProgress ||= {};p.allstarPlayed ??= false;p.celebrated ??= false;p.faDone ??= false;p.preseason=NightPennant.normalizePreseason(p.preseason,p);
    if(split)p.otherResults ||= {};
    if(p.postseason&&!(split?NightNPBPostseason.valid(p):p.validPostseason()))return null;
    return p;
@@ -284,10 +284,83 @@
   }
   acceptTrade(){
    const o=this.tradeOffer;if(!o)return false;
-   this.rosterMoves=this.rosterMoves||{};this.rosterMoves[o.giveId]=this.clubId;this.rosterMoves[o.takeId]=o.fromClub;
-   this.pushNews(`トレード成立: ${o.giveName} ⇄ ${o.takeName}`);this.tradeOffer=null;return true;
+   return this._executeTrade(o.takeId,false);
   }
-  declineTrade(){if(!this.tradeOffer)return;this.pushNews('トレード提案を見送った');this.tradeOffer=null;}
+  _executeTrade(takeId,negotiated){
+   const o=this.tradeOffer;if(!o)return false;
+   let takeName=o.takeName;
+   if(takeId!==o.takeId){
+    const mine=this.clubRoster(this.clubId);
+    const t=[...mine.batters,...mine.pitchers].find(x=>x.id===takeId);if(!t)return false;
+    takeName=t.name;
+   }
+   this.rosterMoves=this.rosterMoves||{};this.rosterMoves[o.giveId]=this.clubId;this.rosterMoves[takeId]=o.fromClub;
+   this._negLog({kind:'trade',targetId:o.giveId,targetName:o.giveName,clubId:o.fromClub,offer:takeName,response:'accepted',negotiated:!!negotiated});
+   this.pushNews(`トレード成立: ${o.giveName} ⇄ ${takeName}`);this.tradeOffer=null;return true;
+  }
+  declineTrade(){if(!this.tradeOffer)return;this._negLog({kind:'trade',targetId:this.tradeOffer.giveId,targetName:this.tradeOffer.giveName,clubId:this.tradeOffer.fromClub,offer:this.tradeOffer.takeName,response:'declined'});this.pushNews('トレード提案を見送った');this.tradeOffer=null;}
+  _negLog(entry){
+   this.negotiationLog=this.negotiationLog||[];
+   this.negotiationLog.unshift({season:this.season||1,round:this.round,...entry});
+   this.negotiationLog=this.negotiationLog.slice(0,40);
+  }
+  // ---- Trade negotiation (v165, checker item "negotiation-dialogue"):
+  // the incoming offer (maybeTradeOffer) used to be accept/decline only.
+  // The user may instead counter with a DIFFERENT player of their own:
+  // the partner club evaluates the swap with the same playerValue metric
+  // that built the original offer. A rejection is recorded on the offer
+  // (rejectedTakeIds), the same player can never be re-proposed, and the
+  // partner answers with a concrete counter demand (counterTakeId: the
+  // roster player closest in value to what they give up). At most
+  // TRADE_NEG_MAX rounds; a third rejection breaks the talks down and
+  // the offer is withdrawn. The offer's existing expiry still applies.
+  static TRADE_NEG_MAX=3;
+  tradeNegotiation(){
+   const o=this.tradeOffer;if(!o)return null;
+   o.negotiation=o.negotiation&&typeof o.negotiation==='object'?o.negotiation:{rounds:0,history:[],rejectedTakeIds:[],counterTakeId:null,counterTakeName:null,status:'open'};
+   return o.negotiation;
+  }
+  tradeNegChance(takeValue,giveValue){
+   const r=giveValue>0?takeValue/giveValue:0;
+   return r>=.9?1:r>=.75?.6:r>=.6?.25:.05;
+  }
+  tradeNegotiate(takeId,roll){
+   const o=this.tradeOffer;if(!o)return false;
+   const neg=this.tradeNegotiation();
+   if(neg.status!=='open'||neg.rounds>=NightPennant.TRADE_NEG_MAX)return {response:'closed',rounds:neg.rounds};
+   if(takeId===o.takeId)return {response:'original',rounds:neg.rounds};
+   if(neg.rejectedTakeIds.includes(takeId))return {response:'blocked',reason:'same-condition',rounds:neg.rounds};
+   const mine=this.clubRoster(this.clubId),theirs=this.clubRoster(o.fromClub);
+   const take=[...mine.batters,...mine.pitchers].find(x=>x.id===takeId);
+   const give=[...theirs.batters,...theirs.pitchers].find(x=>x.id===o.giveId);
+   if(!take||!give)return false;
+   const chance=takeId===neg.counterTakeId?1:this.tradeNegChance(this.playerValue(take),this.playerValue(give));
+   const r=roll===undefined?random(hash(this.id+'/trade-neg/'+(this.season||1)+'/'+o.giveId+'/'+takeId+'/'+neg.rounds))():roll;
+   if(!(r>=0&&r<1))return false;
+   if(r<chance){
+    neg.history.push({takeId,takeName:take.name,response:'accepted',round:this.round});
+    this._executeTrade(takeId,true);
+    return {response:'accepted',takeId,takeName:take.name,chance,rounds:neg.rounds};
+   }
+   neg.rounds++;neg.rejectedTakeIds.push(takeId);
+   // Concrete counter demand: from the same pool maybeTradeOffer draws
+   // from, the not-yet-rejected player closest in value to the give.
+   const pool=[...mine.batters.slice(2,12),...mine.pitchers.slice(1,6)].filter(x=>x.id!==takeId&&!neg.rejectedTakeIds.includes(x.id));
+   const gv=this.playerValue(give);
+   const counter=pool.map(x=>({x,d:Math.abs(this.playerValue(x)-gv),ok:this.playerValue(x)>=gv*.7})).sort((a,b)=>(b.ok-a.ok)||a.d-b.d)[0]?.x||null;
+   neg.counterTakeId=counter?counter.id:null;neg.counterTakeName=counter?counter.name:null;
+   neg.history.push({takeId,takeName:take.name,response:'rejected',counterTakeId:neg.counterTakeId,round:this.round});
+   this._negLog({kind:'trade',targetId:o.giveId,targetName:o.giveName,clubId:o.fromClub,offer:take.name,response:'rejected',counter:neg.counterTakeName});
+   if(neg.rounds>=NightPennant.TRADE_NEG_MAX){
+    neg.status='broken';
+    this._negLog({kind:'trade',targetId:o.giveId,targetName:o.giveName,clubId:o.fromClub,offer:take.name,response:'broken'});
+    this.pushNews(`${o.giveName}のトレード交渉は決裂した`);
+    this.tradeOffer=null;
+    return {response:'broken',takeId,chance,rounds:neg.rounds};
+   }
+   this.pushNews(`${o.giveName}のトレード交渉: ${take.name}では合意できず、相手は${neg.counterTakeName||o.takeName}を要求`);
+   return {response:'counter',takeId,chance,rounds:neg.rounds,counterTakeId:neg.counterTakeId,counterTakeName:neg.counterTakeName};
+  }
   cpuTrade(){
    if(Math.random()>=.15)return;
    const cs=this.clubs.filter(c=>c.id!==this.clubId);if(cs.length<2)return;
@@ -569,13 +642,75 @@
   faSign(playerId,clubId=this.clubId){
    if(!this.faActive)return false;
    const fa=this.offseason.fa,i=fa.pool.findIndex(p=>p.id===playerId);if(i<0)return false;
-   const p=fa.pool[i],cost=this.faCost(p);if((fa.points[clubId]??0)<cost)return false;
+   return this._faSignAt(playerId,clubId,this.faCost(fa.pool[i]));
+  }
+  _faSignAt(playerId,clubId,cost){
+   if(!this.faActive)return false;
+   const fa=this.offseason.fa,i=fa.pool.findIndex(p=>p.id===playerId);if(i<0)return false;
+   const p=fa.pool[i];if((fa.points[clubId]??0)<cost)return false;
    fa.points[clubId]-=cost;fa.pool.splice(i,1);fa.signed.push({clubId,playerId:p.id,name:p.name,pos:p.pos,cost});
    if(p.id.startsWith('fa-')){this.customPlayers=this.customPlayers||{};this.customPlayers[p.id]={...p,clubId};}
    else if(this.customPlayers?.[p.id])this.customPlayers[p.id]={...this.customPlayers[p.id],clubId};
    else{this.rosterMoves=this.rosterMoves||{};this.rosterMoves[p.id]=clubId;}
    if(clubId===this.clubId)this.pushNews(`FAで${p.name}を獲得（${cost}pt）`);
    return true;
+  }
+  // ---- FA negotiation (v165, checker item "negotiation-dialogue"):
+  // faSign stays the instant route at the asking price (faCost, the
+  // existing evaluation). faNegotiate layers a dialogue on top of it:
+  // offer fewer points and the player answers accept / reject with a
+  // concrete counter demand (counter points, which drop slightly each
+  // round as a concession). A rejected offer is recorded in the session
+  // history and in negotiationLog; the same or a lower offer can never
+  // be re-presented to that player — the next offer must improve on it.
+  // Offering at or above the current demand (ask, or the counter after
+  // a rejection) always signs, executed through _faSignAt so the
+  // roster/points bookkeeping is exactly faSign's. At most FA_NEG_MAX
+  // rejected rounds per player per offseason (faActive already confines
+  // talks to the offseason FA window); after that the player refuses
+  // further talks, though the instant full-price faSign remains.
+  static FA_NEG_MAX=3;
+  faNegotiation(playerId){
+   if(!this.faActive)return null;
+   const fa=this.offseason.fa;
+   fa.negotiations=fa.negotiations&&typeof fa.negotiations==='object'?fa.negotiations:{};
+   return fa.negotiations[playerId]||null;
+  }
+  faNegChance(offer,ask){
+   const r=ask>0?offer/ask:0;
+   return r>=1?1:r>=.95?.75:r>=.85?.5:r>=.7?.25:.08;
+  }
+  faNegotiate(playerId,offer,roll){
+   if(!this.faActive)return false;
+   const fa=this.offseason.fa,p=fa.pool.find(x=>x.id===playerId);if(!p)return false;
+   if(!Number.isInteger(offer)||offer<1||offer>(fa.points[this.clubId]??0))return false;
+   const ask=this.faCost(p);
+   let ses=this.faNegotiation(playerId);
+   if(ses&&ses.status==='closed')return {response:'closed',rounds:ses.rounds};
+   if(!ses)ses=fa.negotiations[playerId]={playerId,rounds:0,status:'open',ask,counter:null,history:[]};
+   const last=ses.history[ses.history.length-1];
+   if(last&&last.response!=='accepted'&&offer<=last.offer)return {response:'blocked',reason:'same-or-lower',rounds:ses.rounds};
+   const demand=ses.counter??ask;
+   const chance=offer>=demand?1:this.faNegChance(offer,ask);
+   const r=roll===undefined?random(hash(this.id+'/fa-neg/'+(this.season||1)+'/'+playerId+'/'+ses.rounds))():roll;
+   if(!(r>=0&&r<1))return false;
+   if(r<chance){
+    ses.history.push({offer,response:'accepted',round:this.round});
+    ses.status='signed';
+    this._negLog({kind:'fa',targetId:p.id,targetName:p.name,clubId:this.clubId,offer,response:'accepted'});
+    return this._faSignAt(playerId,this.clubId,offer)?{response:'accepted',cost:offer,ask,chance,rounds:ses.rounds}:false;
+   }
+   ses.rounds++;
+   const counter=ses.rounds>=NightPennant.FA_NEG_MAX?null:Math.max(offer+1,Math.min(ask,Math.ceil(ask*(1-.03*ses.rounds))));
+   ses.counter=counter;
+   ses.history.push({offer,response:'rejected',counter,round:this.round});
+   this._negLog({kind:'fa',targetId:p.id,targetName:p.name,clubId:this.clubId,offer,response:'rejected',counter});
+   if(ses.rounds>=NightPennant.FA_NEG_MAX){
+    ses.status='closed';
+    this.pushNews(`${p.name}とのFA交渉は決裂した`);
+    return {response:'broken',ask,chance,rounds:ses.rounds};
+   }
+   return {response:'counter',ask,chance,rounds:ses.rounds,counter};
   }
   faCpuSign(){
    if(!this.faActive)return false;

@@ -44,9 +44,9 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=164' dist/index.html
+          grep -Fq 'game.js?v=165' dist/index.html
           grep -Fq 'npb-rosters.js?v=74' dist/index.html
-          grep -Fq 'app.js?v=164' dist/index.html
+          grep -Fq 'app.js?v=165' dist/index.html
           grep -Fq 'kbo-rosters.js?v=74' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
           grep -Fq 'stadium3d.js?v=77' dist/app.js
