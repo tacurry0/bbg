@@ -1129,6 +1129,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }else body=`<p class="editor-hint">守備位置を選んで交換</p>${g.lineups[side].map((p,i)=>`<div class="squad-defense-row"><b class="squad-slot">${i+1}</b>${playerTile(p,{club,disabled:true})}<select class="squad-position tone-${NightSquad.tone(p.fieldPos)}" data-bench-position="${p.id}" aria-label="${p.name}の守備位置" ${!can?'disabled':''}>${positionOptions.map(pos=>`<option value="${pos}" ${pos===p.fieldPos?'selected':''}>${NightSquad.label(pos)}</option>`).join('')}</select></div>`).join('')}`;
   modal(`${modalTitle('','選手交代')}<div class="bench-tabs">${[['hit','代打'],['run','代走'],['pitch','投手'],['defense','守備']].map(([id,label])=>`<button data-bench-tab="${id}" class="${tab===id?'selected':''}">${label}</button>`).join('')}</div>${!can?'<p class="bench-window-note">投球前に交代できます</p>':''}${body}<p class="bench-window-note">交代した選手は再出場できません</p>${g.substitutions.length?`<details class="substitution-log"><summary>交代履歴</summary>${g.substitutions.map(x=>`<p>${x.outName} → ${x.inName}</p>`).join('')}</details>`:''}<button class="primary-button" data-action="close">試合に戻る</button>`,'bench');
  }
+ // v143 (settings-hub-consolidation): this one field is shared by every
+ // setup screen (gear settings / match / APBC / derby); all of them read
+ // and write the single settings.gameLighting value — no per-screen copy.
  function lightingField(){
   return `<div class="setup-section"><label for="game-lighting">試合の時間帯</label><select id="game-lighting" class="field-select">${GAME_LIGHTING_OPTIONS.map(([mode,label])=>`<option value="${mode}" ${settings.gameLighting===mode?'selected':''}>${label}</option>`).join('')}</select></div>`;
  }
@@ -2324,7 +2327,7 @@ function start(mode,challengeId=null,fixedPark=null){
      <h3 class="arcade-section-title">自分の球団</h3>
      <div class="online-club-list">${onlineClubs().map(c=>`<button class="online-club${o.myClub===c.id?' selected':''}" data-online-club="${c.id}">${c.name}</button>`).join('')}</div>
      ${o.mode==='derby'?'':`<h3 class="arcade-section-title">イニング</h3>
-     <div class="online-club-list">${[3,5,9].map(n=>`<button class="online-club${o.innings===n?' selected':''}" data-online-innings="${n}">${n}回</button>`).join('')}</div>
+     <div class="online-club-list">${[3,5,9].map(n=>`<button class="online-club${settings.innings===n?' selected':''}" data-online-innings="${n}">${n}回</button>`).join('')}</div>
      <h3 class="arcade-section-title">先攻・後攻（自分）</h3>
      <div class="online-club-list"><button class="online-club${o.hostHome?' selected':''}" data-online-side="home">後攻・ホーム</button><button class="online-club${!o.hostHome?' selected':''}" data-online-side="away">先攻・アウェイ</button></div>`}
      <h3 class="arcade-section-title">スタジアム</h3>
@@ -2348,10 +2351,14 @@ function start(mode,challengeId=null,fixedPark=null){
    try{await navigator.clipboard.writeText(text);return true;}catch{}
    try{const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();const ok=document.execCommand('copy');ta.remove();return !!ok;}catch{return false;}
  }
+ // v143: the host lobby's innings ARE settings.innings (the normal-match
+ // value). The room object only mirrors it for the guest-start record;
+ // changing it in the lobby writes settings.innings and saves, so the
+ // normal match setup shows the same value, and vice versa.
  async function onlineCreateRoom(codeOverride){
    onlineCleanup();
    const code=codeOverride||NightOnline.makeCode();
-   online={role:'host',code,session:null,myClub:settings.matchTeam,guestClub:null,mode:'match',innings:5,hostHome:true,park:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null};
+   online={role:'host',code,session:null,myClub:settings.matchTeam,guestClub:null,mode:'match',innings:settings.innings,hostHome:true,park:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null};
    onlineModal();
    try{
      online.session=await NightOnline.host(code,{
@@ -2461,10 +2468,10 @@ function start(mode,challengeId=null,fixedPark=null){
    const home=NightTeams.get(homeId),away=NightTeams.get(awayId),mine=NightTeams.get(o.myClub);
    if(!home||!away||!mine)return;
    const park=o.park||home.park;
-   o.session?.send({t:'start',home:homeId,away:awayId,innings:o.innings,difficulty:settings.difficulty,park});
+   o.session?.send({t:'start',home:homeId,away:awayId,innings:settings.innings,difficulty:settings.difficulty,park});
    NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
-   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:o.innings,park,pitcher:0,opponentPitcher:0,order:mine.startingOrder,fielding:mine.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home'});
+   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:settings.innings,park,pitcher:0,opponentPitcher:0,order:mine.startingOrder,fielding:mine.startingFielding,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home'});
    game.onlineGame=true;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;
    activateGame();updateStyle();updateUI();
  }
@@ -2537,6 +2544,9 @@ function start(mode,challengeId=null,fixedPark=null){
      guestResultModal();
    }
  }
+ // The guest's innings come from the host's start message and are kept
+ // only as this match's record (o.innings): a guest never writes the
+ // host's choice into their own settings.innings.
  function startOnlineGuestMatch(m){
    const o=online;if(!o)return;
    const home=NightTeams.get(m.home),away=NightTeams.get(m.away);
@@ -2802,7 +2812,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(b.dataset.roomDelete){NightOnline.forgetRoom(b.dataset.roomDelete,b.dataset.roomRole);onlineModal();return;}
    if(b.dataset.onlineMode){if(online?.role==='host'){online.mode=b.dataset.onlineMode==='derby'?'derby':'match';online.session?.send({t:'lobby-mode',mode:online.mode});onlineModal();}return;}
    if(b.dataset.onlineClub){const id=b.dataset.onlineClub;if(online?.role==='host'){online.myClub=id;onlineModal();}else if(online?.role==='guest'){online.myClub=id;online.session?.send({t:'club',club:id});online.status='球団を送信しました。ホストの開始を待っています…';onlineModal();}return;}
-   if(b.dataset.onlineInnings){if(online?.role==='host'){online.innings=Number(b.dataset.onlineInnings);onlineModal();}return;}
+   if(b.dataset.onlineInnings){if(online?.role==='host'){settings.innings=Number(b.dataset.onlineInnings);online.innings=settings.innings;save();onlineModal();}return;}
    if(b.dataset.onlineSide){if(online?.role==='host'){online.hostHome=b.dataset.onlineSide==='home';onlineModal();}return;}
    if(b.dataset.onlinePark){if(online?.role==='host'){online.park=b.dataset.onlinePark;onlineModal();}return;}
    if(b.dataset.draftPick){if(league?.draftUserPick(b.dataset.draftPick)){saveLeague();draftModal();}return;}
