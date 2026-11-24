@@ -43,15 +43,15 @@ assert(/#stage-message\.pitch-call \.stage-call-detail\[hidden\]\s*\{\s*display:
   'a hidden pitch-call detail is not rendered');
 assert(/#stage-message\.pitch-call \.stage-call-detail:has\(> strong:empty\):has\(> small:empty\)\s*\{\s*display:\s*none/.test(absCss),
   'CSS-only fallback hides a detail whose ja and sub are both empty');
-assert(app.includes('detailEl.hidden=!!pitchCall&&!String(data.ja||\'\').trim()&&!String(data.sub||\'\').trim()'),
-  'app.js hides the detail element for pitch calls with an entirely empty detail');
+assert(app.includes('detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?\'\':String(data.ja||\'\').trim())&&!String(data.sub||\'\').trim()'),
+  'app.js hides the detail element for pitch calls (v161) and compact results (v162) with an entirely empty detail');
 assert(app.includes('stageResultShown'), 'v159 result-banner dedup machinery is still present (untouched by v161)');
 
 // ---------- version pins (v161) ----------
-assert(index.includes('./game.js?v=161') && index.includes('./app.js?v=161'), 'index pins at v161');
+assert(index.includes('./game.js?v=162') && index.includes('./app.js?v=162'), 'index pins at v161');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin bumped for the v161 CSS change');
-assert(sw.includes('nightball-v161-call-banner-band'), 'SW cache renamed for v161');
-assert(sw.includes('./game.js?v=161') && sw.includes('./app.js?v=161') && sw.includes('./abs.css?v=9'),
+assert(sw.includes('nightball-v162-result-banner-compact'), 'SW cache renamed for v161');
+assert(sw.includes('./game.js?v=162') && sw.includes('./app.js?v=162') && sw.includes('./abs.css?v=9'),
   'SW precaches the v161 assets');
 
 // ---------- browser behaviour (393x852) ----------
@@ -203,11 +203,15 @@ const { resolve, extname, sep } = require('node:path');
     const take = await measure(); results.TAKE = take;
     assert(take.detail.width > 30 && take.ja === '見送り', 'TAKE detail is rendered with its text (not an empty band)');
 
-    // Non-pitch-call regression: a hit banner keeps its two-row detail.
+    // Non-pitch-call regression, updated for v162: a hit banner is no
+    // longer two-row — it uses the v162 result-compact one-row layout —
+    // but the v161 pitch-call rule itself still does not touch it (no
+    // pitch-call class), its detail still renders (the sub line), and
+    // only the duplicate ja line (ヒット for SINGLE) is suppressed.
     await show({ en: 'SINGLE', ja: 'ヒット', sub: 'レフト前へ', kind: 'hit' }); await page.waitForTimeout(400);
     const hit = await measure();
-    assert(!hit.cls.includes('pitch-call') && hit.detailHidden === false && hit.detail.width > 30,
-      'hit banner detail is untouched by the v161 pitch-call rule');
+    assert(!hit.cls.includes('pitch-call') && hit.cls.includes('result-compact') && hit.detailHidden === false && hit.detail.width > 30,
+      'hit banner detail renders via the v162 result-compact layout, untouched by the v161 pitch-call rule');
 
     assert(!errors.length, 'no page errors: ' + errors.join(' | '));
     console.log('call-banner-band-v161: all assertions passed');

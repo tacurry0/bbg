@@ -58,10 +58,10 @@ assert(app.includes("duration:pitchCall?245:impact?230:170"),
   'appear animation timing is unchanged (opacity/transform only, size-agnostic)');
 
 // ---------- version pins (v147 since count-sentence-remove) ----------
-assert(index.includes('./game.js?v=161') && index.includes('./app.js?v=161'), 'index pins move to v147');
+assert(index.includes('./game.js?v=162') && index.includes('./app.js?v=162'), 'index pins move to v147');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin moves with the compact rules');
-assert(sw.includes('nightball-v161-call-banner-band'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=161') && sw.includes('./app.js?v=161') && sw.includes('./abs.css?v=9'),
+assert(sw.includes('nightball-v162-result-banner-compact'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=162') && sw.includes('./app.js?v=162') && sw.includes('./abs.css?v=9'),
   'SW precaches the v147 assets');
 
 // ---------- browser behaviour (393x852) ----------
@@ -211,14 +211,20 @@ const { resolve, extname, sep } = require('node:path');
     assert.equal(suppression.anims, 1, 'repeating the same pitch call does not restart the animation');
     assert(suppression.cls.includes('pitch-call'), 'banner stays shown for the repeated call');
 
-    // --- non-pitch-call banners keep the tall two-row design ---
+    // --- non-pitch-call banners: premise changed by v162 ---
+    // v145-v161 this asserted hit banners keep the tall two-row design.
+    // v162 deliberately compacts batted-ball result banners into the
+    // same one-row form as pitch calls (real-device feedback), so the
+    // hit banner is now asserted compact and one-row instead; the full
+    // v162 behaviour is covered by result-banner-compact-v162.cjs.
     await page.evaluate(() => window.__bannerTest.game.message('SINGLE', 'ヒット', 'レフト前へ', 'hit'));
     await page.waitForTimeout(400);
     m = await measure();
     assert(!m.cls.includes('pitch-call'), 'hit banner is not a pitch call');
-    console.log(`banner-compact-v145: hit banner measured ${m.banner.width.toFixed(1)}x${m.banner.height.toFixed(1)}px (two-row design kept)`);
-    assert(m.banner.height > 80, 'hit banner keeps the original two-row height: ' + m.banner.height);
-    assert(m.detail.top >= m.head.bottom - 2, 'hit detail still sits below the head');
+    assert(m.cls.includes('result-compact'), 'v162: hit banner uses the result-compact layout');
+    console.log(`banner-compact-v145: hit banner measured ${m.banner.width.toFixed(1)}x${m.banner.height.toFixed(1)}px (v162 one-row compact)`);
+    assert(m.banner.height >= 40 && m.banner.height <= 65, 'v162: hit banner is one-row compact like a pitch call: ' + m.banner.height);
+    assert(Math.abs((m.head.top + m.head.bottom) / 2 - (m.detail.top + m.detail.bottom) / 2) < 6, 'v162: hit detail sits beside the head in one row');
 
     // --- pitching state: the banner shows during pitch/result phases, when
     // the chart and the auto-defense chip are on screen. The pitch deck only

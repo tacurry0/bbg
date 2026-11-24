@@ -2103,6 +2103,17 @@ function start(mode,challengeId=null,fixedPark=null){
  // do not end an at-bat (BALL / STRIKE / SWING & MISS / FOUL / TAKE) are
  // not tracked and keep their existing display behaviour.
  const RESULT_NON_RESULTS=['BALL','STRIKE','SWING & MISS','FOUL','TAKE'];
+// v162 (result-banner-compact): Japanese result lines that merely restate
+// the English head (フライアウト for FLY OUT, ヒット for SINGLE, ...) are
+// not rendered in the compact result banner — the same display/TTS split
+// v146 applied to pitch calls. This is display-only: data.ja is left
+// untouched, so speakPlay (which reads data.speech || data.ja) and the
+// history modal (which renders game.log entries) keep the full wording.
+// Japanese lines that add information (タッチアップで生還 on a sacrifice
+// fly, タッチアウト/フォースアウト on OUT, 空振り/見逃し三振 on STRIKEOUT,
+// 一塁へ送球、アウト！ is a pure restatement of OUT AT FIRST so it IS
+// listed) stay visible as the banner's single detail line.
+const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DOUBLE':['ツーベース'],'TRIPLE':['スリーベース'],'GROUND-RULE DOUBLE':['エンタイトルツーベース'],'BUNT HIT':['バントヒット'],'DOUBLE PLAY':['ダブルプレー'],'FORCE OUT':['二塁フォースアウト'],'SACRIFICE BUNT':['送りバント'],'OUT AT FIRST':['一塁へ送球、アウト！'],'OUT':['アウト'],'JUMPING CATCH':['ジャンピングキャッチ'],'DIVING CATCH':['ダイビングキャッチ']};
  let stageResultKey='',stageResultShown=new Set();
  function resultSignature(data){
    if(!game||!data?.en||RESULT_NON_RESULTS.includes(data.en))return '';
@@ -2133,15 +2144,31 @@ function start(mode,challengeId=null,fixedPark=null){
      const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
      const samePitchCall=pitchCall&&previousCall===data.en&&stage.classList.contains('pitch-call');
-     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'');
+     // v162: batted-ball result banners (kind hit/out that are not pitch
+     // calls) get the .result-compact one-row layout from style.css, at
+     // the same ~50px height as the v145 pitch-call banner instead of
+     // the old two-row 103px design. HOME RUN is excluded: its banner is
+     // part of the home-run celebration (with the separate full-screen
+     // #hr-celebration overlay), and walk-off / championship celebrations
+     // use their own overlays, so none of those are shrunk here.
+     const resultCompact=!pitchCall&&['hit','out'].includes(kind)&&data.en!=='HOME RUN';
+     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'');
+     // v162: hide a Japanese line that only restates the English head
+     // (RESULT_JA_DUP). Display only — data.ja, TTS and the history log
+     // are untouched (speakPlay already ran on the raw data above).
+     const jaDup=resultCompact&&(RESULT_JA_DUP[data.en]||[]).includes(data.ja||'');
+     $('message-ja').hidden=jaDup;
      // v161: a pitch call whose Japanese detail is entirely empty (BALL /
      // STRIKE / SWING & MISS since v146/v147) must not render the detail
      // container at all — left rendered, its panel background and flex
      // growth painted an empty dark band across the stage beside the head
      // chip. Details with real text (WALK situation line, STRIKEOUT) and
      // all non-pitch-call banners keep the detail element visible.
+     // v162: the same no-empty-band rule now covers result banners: when
+     // the ja line is suppressed as a duplicate and sub is empty, the
+     // result detail container is not rendered either.
      const detailEl=stage.querySelector('.stage-call-detail');
-     if(detailEl)detailEl.hidden=!!pitchCall&&!String(data.ja||'').trim()&&!String(data.sub||'').trim();
+     if(detailEl)detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());

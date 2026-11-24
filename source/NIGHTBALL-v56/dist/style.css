@@ -111,6 +111,41 @@
 #message-ja { font-size:clamp(15px,4.7vw,23px); font-weight:800; line-height:1.24; overflow-wrap:anywhere; }
 #message-sub { font-size:clamp(12px,3.6vw,16px); color:#e4eddb; line-height:1.35; overflow-wrap:anywhere; }
 .stage-call-detail :is(strong,small):empty { display:none; }
+/* v162: result banner compact (real-device feedback: batted-ball result
+   banners — FLY OUT, SINGLE, ... — were still the old two-row design at
+   295.1x103.1px measured at 393px wide, while pitch calls have been a
+   one-row ~50px banner since v145; the user reads both as the same
+   oversized display). Result banners (app.js adds .result-compact for
+   kind hit/out messages that are neither pitch calls nor HOME RUN) now
+   use the pitch-call layout: head chip and detail side by side in ONE
+   row, shrink-wrapped width, ~50px tall. The detail is a single small
+   line: a Japanese line that merely restates the English head is not
+   rendered at all (app.js sets [hidden] on #message-ja; the data, TTS
+   text and history log keep the full wording), and a detail whose ja
+   and sub are both empty/not rendered is not painted either — the same
+   no-empty-band rule v161 applied to pitch calls. HOME RUN keeps the
+   two-row banner plus its separate full-screen celebration, and the
+   career-intro / neutral announcements keep the original design. */
+#stage-message.result-compact .stage-call {
+ display:flex; align-items:stretch; width:fit-content; max-width:min(94%,360px); min-height:50px;
+}
+#stage-message.result-compact .stage-call-head {
+ display:flex; align-items:center; flex:none; min-height:0; padding:12px 14px 13px 16px;
+}
+#stage-message.result-compact #message-en { font-size:clamp(20px,5.6vw,27px); white-space:nowrap; }
+#stage-message.result-compact .stage-call-detail {
+ display:flex; align-items:baseline; gap:7px; flex:0 1 auto; min-width:0;
+ padding:12px 12px 13px 14px; margin-right:0;
+}
+#stage-message.result-compact .stage-call-detail[hidden] { display:none; }
+#stage-message.result-compact .stage-call-detail:has(> strong:empty):has(> small:empty) { display:none; }
+#stage-message.result-compact #message-ja {
+ font-size:clamp(12px,3.6vw,15px); white-space:nowrap;
+}
+#stage-message.result-compact #message-ja[hidden] { display:none; }
+#stage-message.result-compact #message-sub {
+ font-size:clamp(11px,3.3vw,14px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 @media (max-height:470px) and (orientation:landscape) {
  .game-stage .stage-message { padding-bottom:10px; }
  .stage-call-head { min-height:28px; padding-block:3px; }
