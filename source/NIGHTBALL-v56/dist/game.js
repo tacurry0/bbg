@@ -580,8 +580,22 @@ window.NightGame=class NightGame{
   else if(this.phase==='pitch'){
    this.pitch.progress=this.phaseTime/this.pitch.duration;
    if((this.defending||this.autoBatting||this.umpireMode)&&!this.pitch.cpuActed&&this.pitch.progress>=this.pitch.cpuTime){this.pitch.cpuActed=true;this.cpuBat();}
+   // v160: the mitt sound belongs to the ball's arrival (progress 1.0),
+   // not to the call resolution in take()/commitCalledPitch()/strike(),
+   // which only runs at progress 1.24 — or, when an ABS challenge window
+   // opens, seconds later. Fire it at the arrival frame, once per pitch;
+   // the resolution paths keep a guarded fallback (catchPitchSound) for
+   // direct calls that never pass through this frame loop.
+   if(this.phase==='pitch'&&!this.pitch.swung&&!derby&&this.pitch.progress>=1)this.catchPitchSound();
    if(this.phase==='pitch'&&this.pitch.progress>1.24&&!(this.remoteBatter&&!this.pitch.swung&&this.pitch.progress<1.8))this.take();
-  }else if(this.phase==='miss'&&this.phaseTime>330)this.strike(true);
+  }else if(this.phase==='miss'){
+   // A whiff leaves the ball travelling: pitch.progress froze when the
+   // swing missed, and the renderers extend it by phaseTime/duration
+   // (capped at 1.24). The mitt sound fires when that extended travel
+   // reaches the catcher (u>=1), not when strike() resolves 330 ms later.
+   if(this.pitch&&this.pitch.progress+this.phaseTime/(this.pitch.duration||1)>=1)this.catchPitchSound();
+   if(this.phaseTime>330)this.strike(true);
+  }
   else if(this.phase==='field'){let remaining=dt/1000;while(remaining>1e-6&&this.phase==='field'){const untilCatch=this.field?.throw?Math.max(.000001,this.field.throw.duration-this.field.throw.t):Infinity;const step=Math.min(remaining,1/120,untilCatch);this.updateField(step);remaining-=step;}}
   else if(this.phase==='result'&&!holdResult&&this.phaseTime>(derby?(this.hit?.kind==='hr'?700:240):this.field?(this.runningDemo?3300:620):this.pitch?.callResult?NightGame.ABS_TIMING.pitchResult:720)){
    if(this.challenge&&(this.field&&!this.field.foul||this.outs>=this.outsNeeded))return;
@@ -2213,8 +2227,17 @@ window.NightGame=class NightGame{
   this.commitCalledPitch(reviewed?call.strike:call.umpireStrike);
   if(!reviewed&&!this.batFinished)this.phaseTime=NightGame.ABS_TIMING.pitchResult;
  }
+ // v160: mitt sound for a pitch that reaches the catcher, exactly once
+ // per pitch. update() fires it at the arrival frame (progress 1.0, or
+ // the extended travel in the miss phase); the call-resolution paths
+ // below call it as a fallback so direct take()/strike()/
+ // commitCalledPitch() calls (tests, restores) still sound exactly once.
+ catchPitchSound(){
+  const p=this.pitch;if(!p||p.catchSound)return false;
+  p.catchSound=true;this.emit('sound','catch');return true;
+ }
  take(){
-  if(!this.inMatch)this.emit('sound','catch');
+  if(!this.inMatch)this.catchPitchSound();
   if(this.derby){this.completePitch('take');this.setPhase('result');this.notify();return;}
   if(!this.inMatch){this.completePitch('take');this.message('TAKE','見送り','カーソルをコースへ動かそう');this.setPhase('result');this.notify();return;}
   if(this.umpireMode){
@@ -2286,7 +2309,7 @@ window.NightGame=class NightGame{
   if(strike){this.strike(false);return;}
   this.pitch.callResult=true;
   this.emit('cue','ball');
-  this.emit('sound','catch');this.balls++;this.completePitch('ball');
+  this.catchPitchSound();this.balls++;this.completePitch('ball');
   const before=this.battingScore;
   if(this.balls>=4){const loaded=this.bases.every(Boolean);this.walk();this.endAtBat('walk',this.battingScore-before);this.resetCount();this.message('WALK','',loaded?'押し出しで1点':'走者が進塁','','フォアボール。'+(loaded?'押し出しで1点':'走者が進塁'));this.checkEnd();}else{this.message('BALL','','','','ボール。');this.resolveSteal();this.rollWildPitch();}
   this.emit('sound','ball');this.setPhase('result');
@@ -2296,7 +2319,7 @@ window.NightGame=class NightGame{
  strike(swung){
   this.emit('cue','strike');
   if(this.pitch)this.pitch.callResult=true;
-  this.completePitch('miss');this.emit('sound','catch');this.emit('sound','strike');
+  this.completePitch('miss');this.catchPitchSound();this.emit('sound','strike');
   if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'','','',`${swung?'空振り':'ストライク'}。`);this.resolveSteal();this.rollWildPitch();}}
   else if(!this.derby)this.message('SWING & MISS','空振り','ボールの位置とカーソルを合わせよう');
   this.setPhase('result');this.notify();

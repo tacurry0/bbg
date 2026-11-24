@@ -182,8 +182,8 @@ assert(app.includes('NightConquest.recordResult'),'results are recorded through 
 assert(app.includes('NightConquest.loadProgress'),'the list screen reads per-club progress');
 assert(app.includes('全球団制覇達成'),'the completion celebration is in the UI');
 assert(app.includes('game.conquest=conquestCtx'),'the match carries its conquest context');
-assert(index.includes('./game.js?v=159')&&index.includes('./app.js?v=159'),'index pins move to v140');
-assert(sw.includes('nightball-v159-result-banner-once'),'SW cache renamed for v140');
-assert(sw.includes('./game.js?v=159')&&sw.includes('./app.js?v=159'),'SW precaches the v140 scripts');
+assert(index.includes('./game.js?v=160')&&index.includes('./app.js?v=160'),'index pins move to v140');
+assert(sw.includes('nightball-v160-catch-sound-timing'),'SW cache renamed for v140');
+assert(sw.includes('./game.js?v=160')&&sw.includes('./app.js?v=160'),'SW precaches the v140 scripts');
 assert(sw.includes('./conquest.js?v=1'),'SW precaches the conquest module');
 console.log('conquest-v140: all assertions passed');
