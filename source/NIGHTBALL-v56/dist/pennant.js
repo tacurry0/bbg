@@ -694,6 +694,7 @@
   startPlayoffs(){
    if(this.playoffs===false)return false;
    if(!this.regularCompleted||this.postseason)return false;
+   if(this.preseason)this.preseason.done=true;
    if(this.isNPB)return NightNPBPostseason.start(this);
    const seeds=this.playoffSeeds(),make=(id,higher,lower,target)=>({id,higher,lower,target,wins:{[higher]:0,[lower]:0},games:[],winner:null});
    this.postseason={schema:1,seeds,stage:'qualifier',qualifier:make('qualifier',seeds[1].clubId,seeds[2].clubId,2),final:null,awaitingNext:false,champion:null};this.currentGame=null;return true;

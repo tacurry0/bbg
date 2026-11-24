@@ -157,6 +157,19 @@ const roundTrip=p=>NightPennant.restore(JSON.parse(JSON.stringify(p)));
  assert.equal(p.played,0);
 }
 
+// ---------- playoffs close any leftover preseason state ----------
+{
+ const p=new NightPennant('owls',1);
+ assert.equal(p.preseasonActive,true);
+ for(let r=0;r<p.schedule.length;r++){assert(p.completeRound(p.simulate(p.fixture)));if(!p.completed)assert(p.next());}
+ assert(p.completed);
+ assert.equal(p.startPlayoffs(),true);
+ assert.equal(p.preseasonActive,false,'starting the playoffs closes the preseason for good');
+ const restored=roundTrip(p);
+ assert.equal(restored.preseasonActive,false,'postseason saves never resurrect the preseason');
+ assert(restored.postseason,'postseason survives the round trip');
+}
+
 // ---------- NPB split leagues get a preseason too, other league untouched ----------
 {
  for(const file of ['npb-postseason'])vm.runInThisContext(fs.readFileSync(__dirname+'/../dist/'+file+'.js','utf8'),{filename:file+'.js'});
