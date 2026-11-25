@@ -264,39 +264,40 @@
 .game-stage .run-actions>button::after{content:"";position:absolute;inset:-3px 0}
 .game-stage .abs-challenge::after{content:"";position:absolute;inset:-6px 0}
 
-/* ===== Pitch deck redesign (v175) =====
-   Dark glass chips on the break-direction compass. Every chip keeps the
-   full information set (direction arrow, pitch name, speed, break level)
-   at a 44px touch height; the selected chip is a filled lime pill and
-   unavailable pitches (e.g. no-breaking variant) dim out. The compass
-   geometry fits the measured worst cases across all rosters (left x2,
-   down-right x2, everything else x1) without chips overlapping. */
-.pitch-deck{height:248px;background:rgba(5,11,19,.42);border:1px solid rgba(255,255,255,.10);border-radius:20px;box-shadow:0 14px 34px rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.07);backdrop-filter:blur(9px) saturate(1.25);-webkit-backdrop-filter:blur(9px) saturate(1.25)}
-.pitch-deck .pitch-direction{width:88px;gap:5px}
-.pitch-deck .pitch-direction.up{left:96px;top:9px;width:80px}
-.pitch-deck .pitch-direction.left{left:5px;top:56px}
-.pitch-deck .pitch-direction.right{right:5px;top:56px}
-.pitch-deck .pitch-direction.down{left:96px;top:136px;width:80px}
-.pitch-deck .pitch-direction.downleft{left:5px;top:152px}
-.pitch-deck .pitch-direction.downright{right:5px;top:152px}
-.pitch-deck .pitch-ball{left:121px;top:80px;width:30px;height:30px;border:1px solid rgba(110,130,155,.45);border-radius:50%;background:radial-gradient(circle at 34% 28%,#ffffff,#e3eaf2 62%,#aeb9c6);box-shadow:0 3px 8px rgba(0,0,0,.5),inset 0 -3px 6px rgba(90,110,140,.35);font-size:0}
-.pitch-deck .pitch-ball::before,.pitch-deck .pitch-ball::after{content:"";position:absolute;top:2px;bottom:2px;width:11px;border:2px solid rgba(216,74,74,.9);border-radius:50%}
-.pitch-deck .pitch-ball::before{left:1px;border-left-color:transparent;border-bottom-color:transparent;transform:rotate(28deg)}
-.pitch-deck .pitch-ball::after{right:1px;border-right-color:transparent;border-top-color:transparent;transform:rotate(28deg)}
-.pitch-deck .pitch-type{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;min-height:44px;height:44px;padding:4px 8px 5px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:linear-gradient(180deg,rgba(31,45,64,.92),rgba(13,22,36,.94));color:#eef4fb;box-shadow:0 3px 10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.08);text-align:left;pointer-events:auto;-webkit-tap-highlight-color:transparent}
-.pitch-deck .pitch-type.straight{background:linear-gradient(180deg,rgba(31,45,64,.92),rgba(13,22,36,.94));border-color:rgba(255,255,255,.16);color:#eef4fb;flex-wrap:nowrap}
-.pitch-deck .pitch-type .pt-row{display:flex;align-items:center;gap:5px;min-width:0}
-.pitch-deck .pitch-type i{display:grid;place-items:center;width:18px;height:18px;flex:none;border-radius:50%;font-size:11px;font-style:normal;font-weight:900;line-height:1}
-.pitch-deck .pitch-type.straight i{background:rgba(87,168,255,.18);color:#9fd0ff;box-shadow:inset 0 0 0 1px rgba(87,168,255,.45)}
-.pitch-deck .pitch-type.breaking i{background:rgba(255,179,64,.16);color:#ffd28f;box-shadow:inset 0 0 0 1px rgba(255,179,64,.42)}
-.pitch-deck .pitch-type .pt-name{font-size:11px;font-weight:800;letter-spacing:.02em;white-space:nowrap;overflow:hidden}
-.pitch-deck .pitch-type .pt-meta{display:flex;align-items:center;gap:4px;min-height:12px;white-space:nowrap}
-.pitch-deck .pitch-type small{display:block;position:static;font-size:8.5px;font-weight:700;color:#a9bdd2;font-variant-numeric:tabular-nums;letter-spacing:.02em}
-.pitch-deck .pitch-type em{position:static;font-size:8.5px;font-style:normal;font-weight:800;color:#ffd28f;background:rgba(255,179,64,.14);border-radius:6px;padding:0 3px;line-height:12px}
+/* ===== Pitch deck redesign (v176) =====
+   v175's compass panel measured 272x248px: it crowded the whole
+   upper-left of the stage and, on shorter screens, its lower edge
+   closed to within ~45px of the strike-zone frame — rejected on real
+   devices as too big and in the way. v176 removes the compass
+   scaffolding entirely: a flat, aligned 2-column grid of identical
+   chips on a quieter, more transparent panel. Every chip has the same
+   structure — direction badge + pitch name on the first row, speed
+   (tabular numerals) and break level on the second — and the palette
+   is restrained to dark neutrals, one lime accent for the selected
+   pitch and one muted amber for the break level. The decorative
+   centre ball is gone. Break-direction grouping now only defines the
+   reading order and each chip's arrow. Chip visual height is 40px;
+   the ::after hit expansion below keeps the effective tap height at
+   45px (in the grid the next row's chip shadows the downward half of
+   the expansion, so it is widened to -9px on the vertical axis).
+   Measured at 393x852: 244px wide, 104px tall with 4 pitches and
+   150px with the roster-worst 5 (v175: 272x248). */
+.game-stage .pitch-deck{width:min(244px,76%);height:auto;padding:8px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(6,12,20,.58);box-shadow:0 10px 26px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
+.game-stage .pitch-deck .pitch-types{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px;margin:0}
+.pitch-deck .pitch-type{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:2px;min-height:40px;height:40px;padding:4px 9px;border-radius:10px;border:1px solid rgba(255,255,255,.13);background:rgba(15,25,39,.88);color:#edf3f9;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);text-align:left;pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.pitch-deck .pitch-type.straight{background:rgba(15,25,39,.88);border-color:rgba(255,255,255,.13);color:#edf3f9;flex-wrap:nowrap}
+.pitch-deck .pitch-type .pt-row{display:flex;align-items:center;gap:6px;min-width:0}
+.pitch-deck .pitch-type i{display:grid;place-items:center;width:16px;height:16px;flex:none;border-radius:50%;font-size:10px;font-style:normal;font-weight:900;line-height:1}
+.pitch-deck .pitch-type.straight i{background:rgba(120,180,245,.16);color:#a8cff7;box-shadow:inset 0 0 0 1px rgba(120,180,245,.35)}
+.pitch-deck .pitch-type.breaking i{background:rgba(240,198,126,.13);color:#eec987;box-shadow:inset 0 0 0 1px rgba(240,198,126,.32)}
+.pitch-deck .pitch-type .pt-name{font-size:11px;font-weight:800;letter-spacing:.04em;white-space:nowrap;overflow:hidden}
+.pitch-deck .pitch-type .pt-meta{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:12px;white-space:nowrap}
+.pitch-deck .pitch-type small{display:block;position:static;font-size:9px;font-weight:600;color:#9db1c7;font-variant-numeric:tabular-nums;letter-spacing:.05em}
+.pitch-deck .pitch-type em{position:static;font-size:8.5px;font-style:normal;font-weight:700;color:#eec987;background:rgba(240,198,126,.12);border-radius:5px;padding:0 4px;line-height:13px}
 .pitch-deck .pitch-type em:empty{display:none}
-.pitch-deck .pitch-type.active{background:linear-gradient(180deg,#e7f7c0,#c9e784);border-color:#eaffb0;color:#1c2a12;box-shadow:0 0 0 2px rgba(213,243,106,.85),0 6px 16px rgba(160,220,80,.35)}
-.pitch-deck .pitch-type.active i{background:rgba(20,40,10,.16);color:#1c2a12;box-shadow:inset 0 0 0 1px rgba(20,40,10,.35)}
-.pitch-deck .pitch-type.active small{color:#42512c}
-.pitch-deck .pitch-type.active em{background:rgba(20,40,10,.14);color:#1c2a12}
-.pitch-deck .pitch-type:disabled{opacity:.38;filter:saturate(.3);box-shadow:none}
-@media (max-width:340px){.pitch-deck .pitch-types{transform:scale(.92);transform-origin:top left}}
+.pitch-deck .pitch-type.active,.pitch-deck .pitch-type.breaking.active{background:linear-gradient(180deg,#e9f9c3,#cde98b);border-color:#eaffb0;color:#1d2a12;box-shadow:0 0 0 2px rgba(213,243,106,.8),0 4px 12px rgba(160,220,80,.3);outline:none}
+.pitch-deck .pitch-type.active i{background:rgba(20,40,10,.14);color:#1d2a12;box-shadow:inset 0 0 0 1px rgba(20,40,10,.3)}
+.pitch-deck .pitch-type.active small{color:#4a5a30}
+.pitch-deck .pitch-type.active em{background:rgba(20,40,10,.13);color:#1d2a12}
+.pitch-deck .pitch-type:disabled{opacity:.35;filter:saturate(.35);box-shadow:none}
+.game-stage .pitch-deck .pitch-type::after{inset:-9px 0}
