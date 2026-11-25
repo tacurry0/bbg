@@ -126,9 +126,9 @@ assert(app.includes('data-learn-pitch'),'pennant roster UI offers new-pitch trai
 assert(app.includes('league.trainNewPitch('),'UI calls the pennant learning action');
 assert(app.includes('learnPitchHTML(selected'),'roster shows the learning section');
 const index=fs.readFileSync(__dirname+'/../dist/index.html','utf8'),sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
-assert(index.includes('./game.js?v=183')&&index.includes('./app.js?v=183'),'index pins at v164');
+assert(index.includes('./game.js?v=184')&&index.includes('./app.js?v=184'),'index pins at v164');
 assert(index.includes('./pennant.js?v=86'),'index pin for the changed pennant.js moves');
-assert(sw.includes('nightball-v183-pitch-feel'),'SW cache renamed for v164');
-assert(sw.includes('./pennant.js?v=86')&&sw.includes('./app.js?v=183'),'SW precaches the v164 scripts');
+assert(sw.includes('nightball-v184-pitch-guide'),'SW cache renamed for v164');
+assert(sw.includes('./pennant.js?v=86')&&sw.includes('./app.js?v=184'),'SW precaches the v164 scripts');
 
 console.log('new-pitch-v164: all assertions passed');

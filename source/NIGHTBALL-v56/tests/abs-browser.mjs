@@ -29,7 +29,7 @@ try{
  page.on('pageerror',e=>errors.push(e.stack));
  await page.goto('http://127.0.0.1:'+server.address().port+'/');
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=78');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=79');
   const render=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game)window.absTest={game,renderer:this};

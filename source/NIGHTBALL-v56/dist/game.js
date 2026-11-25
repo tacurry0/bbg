@@ -1000,8 +1000,24 @@ window.NightGame=class NightGame{
   if(counter&&type.id!=='fast')y=Math.max(.18,y);
   if(two&&['fork','split','change','vslider','curve'].includes(type.id))y=rnd(.5,.93);
   if(!strike){if(['fork','split','change','vslider','curve'].includes(type.id))y=rnd(1.14,1.51)+lostCommand*.16;else x=outside*(rnd(1.14,1.53)+lostCommand*.16);}
-  const error=.025+(100-control)*.0045+lostCommand*.2;
-  return {type,target:{x:x+rnd(-error,error),y:y+rnd(-error,error)}};
+  // Control scatter (v184, direct user request: "make the ball miss
+  // by more, depending on control"). Two-part shape, mirroring
+  // throwPitch(): at control 70+ the long-standing precision is kept
+  // exactly (an S-grade arm scatters ~0.6 cm, so the screenshot's
+  // S-control pitcher stays a surgeon), while below 70 the aim error
+  // grows on a second, steeper slope, and below 65 a wild chance can
+  // shove the target clear out of the zone on one axis — a wild arm
+  // now visibly cannot find the zone, instead of every arm spraying
+  // the same token amount. Fatigue (lostCommand) feeds both parts.
+  const error=.025+(100-control)*.0045+Math.max(0,70-control)*.004+lostCommand*.25;
+  const target={x:x+rnd(-error,error),y:y+rnd(-error,error)};
+  const wildChance=clamp((65-control)*.0035,0,.12)+lostCommand*.08;
+  if(Math.random()<wildChance){
+   const axis=Math.abs(target.x)>Math.abs(target.y)?'x':'y';
+   const sign=Math.sign(target[axis])||(Math.random()<.5?-1:1);
+   target[axis]=sign*rnd(1.19,1.52);
+  }
+  return {type,target};
  }
 
  createPitch(type,target){
@@ -1146,11 +1162,14 @@ window.NightGame=class NightGame{
   const type=TYPES.find(t=>t.id===this.pitchType)||TYPES[0];
   const pressure=this.inning>=7&&this.bases.some(Boolean)?(this.pitcher.careerPerks?.pressure||0)*5:0;
   const control=clamp(this.pitcher.control+pressure+this.conditionFor(this.pitcher)*3+this.masteryFor(this.pitcher.id,this.pitchType)*.06,0,99),fatigue=this.pitchFatigue(),lostCommand=fatigue*fatigue;
-  const error=.03+(100-control)*.006+lostCommand*.35;
+  // Same v184 control-scatter shape as cpuPitchPlan: unchanged at
+  // control 70+, a steeper second slope below it, and a steeper
+  // zone-miss chance for wild arms (remoteThrowPitch matches).
+  const error=.03+(100-control)*.006+Math.max(0,70-control)*.004+lostCommand*.4;
   let target=autoTarget;
   if(!target){
    target={x:this.cursor.x+rnd(-error,error),y:this.cursor.y+rnd(-error,error)};
-   const missChance=clamp(.01+(70-control)*.0035+lostCommand*.18,.005,.32);
+   const missChance=clamp(.01+(70-control)*.0045+lostCommand*.18,.005,.32);
    if(Math.abs(this.cursor.x)<=1.06&&Math.abs(this.cursor.y)<=1.06&&Math.random()<missChance){
     const axis=Math.abs(this.cursor.x)>Math.abs(this.cursor.y)?'x':'y';
     const sign=Math.sign(this.cursor[axis])||(Math.random()<.5?-1:1);
@@ -1166,9 +1185,9 @@ window.NightGame=class NightGame{
   const type=TYPES.find(t=>t.id===this.pitchType)||TYPES[0];
   const pressure=this.inning>=7&&this.bases.some(Boolean)?(this.pitcher.careerPerks?.pressure||0)*5:0;
   const control=clamp(this.pitcher.control+pressure+this.conditionFor(this.pitcher)*3,0,99),fatigue=this.pitchFatigue(),lostCommand=fatigue*fatigue;
-  const error=.03+(100-control)*.006+lostCommand*.35;
+  const error=.03+(100-control)*.006+Math.max(0,70-control)*.004+lostCommand*.4;
   const target={x:this.cursor.x+rnd(-error,error),y:this.cursor.y+rnd(-error,error)};
-  const missChance=clamp(.01+(70-control)*.0035+lostCommand*.18,.005,.32);
+  const missChance=clamp(.01+(70-control)*.0045+lostCommand*.18,.005,.32);
   if(Math.abs(this.cursor.x)<=1.06&&Math.abs(this.cursor.y)<=1.06&&Math.random()<missChance){
    const axis=Math.abs(this.cursor.x)>Math.abs(this.cursor.y)?'x':'y';
    const sign=Math.sign(this.cursor[axis])||(Math.random()<.5?-1:1);
@@ -1263,6 +1282,21 @@ window.NightGame=class NightGame{
  pitchAt(u){
   const p=this.pitch,k=Math.pow(clamp(u,0,1.3),1.65),late=Math.pow(clamp(u,0,1.3),4.4);
   const flutter=p.id==='knuckle'?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX??((p.throwHand||this.pitcher.hand)==='L'?1:-1)*.76/.68)*(1-Math.min(1,Math.max(0,u)))+p.targetX*k+p.bx*(late-k)+flutter,y:p.targetY*k+p.by*(late-k)+flutter*.6};
+ }
+ // The batting guide point (v184): where this pitch would arrive if it
+ // did not break. pitchAt's flight already encodes exactly this — the
+ // base path heads for (target - break) and the break term (bx/by,
+ // weighted by late(u), reaching the full break at u=1) carries the
+ // ball the rest of the way to the target, so the ball always arrives
+ // one full break away from this point. The timing ring and the
+ // practice assist dot therefore mark THIS point, not the arrival:
+ // the batter reads the pitch type, estimates the break, and moves
+ // the cursor by that much — the same read as in Pawapuro/ProSpi.
+ // (Before v184 both markers sat on the arrival point itself, so
+ // every pitch, however big its break, landed exactly on the marker
+ // and breaking balls were no harder to hit than fastballs.)
+ pitchGuidePoint(){
+  const p=this.pitch;return p?{x:p.targetX-p.bx,y:p.targetY-p.by}:null;
  }
  swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung)return false;this._mirrorSwung=true;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
  buntBall(){
