@@ -306,13 +306,24 @@ batting.setPhase('pitch');
 batting.pitch.progress = .2;
 const drawPitchGuide = renderer.drawPitchGuide;
 let drawnGuide;
-renderer.drawPitchGuide = game => { drawnGuide = game.pitchGuidePoint(); drawPitchGuide.call(renderer, game); };
+renderer.drawPitchGuide = game => {
+  const guide = game.pitchGuidePoint();
+  drawnGuide = renderer.aimPoint(guide.x, guide.y);
+  drawPitchGuide.call(renderer, game);
+};
 renderer.render(batting, 0);
-assert.deepEqual(drawnGuide, batting.pitchGuidePoint(), 'a guide is visible early, at the no-break location');
-assert.notDeepEqual(drawnGuide, batting.pitchAt(1));
+const startGuide = renderer.aimPoint(-batting.pitch.bx, -batting.pitch.by);
+assert.deepEqual(drawnGuide, startGuide, 'a guide is visible early, at the no-break location');
+batting.pitch.progress = .8;
+renderer.render(batting, 12);
+assert.notDeepEqual(drawnGuide, startGuide, 'the guide has started following the break');
+batting.pitch.progress = 1;
+renderer.render(batting, 16);
+assert.deepEqual(drawnGuide, renderer.project(...renderer.ball.position.toArray()), 'the guide and white ball overlap at the plate');
 window.nightSettings = { timingGuide: false };
 drawnGuide = null;
-renderer.render(batting, 16);
+batting.pitch.progress = .5;
+renderer.render(batting, 24);
 assert.equal(drawnGuide, null);
 delete window.nightSettings;
 batting.hardcore = true;
@@ -433,7 +444,7 @@ renderer.hud=oldHud;renderer.ctx=oldContext;
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v185-pitch-flight'));
+assert(swCode.includes('nightball-v186-pitch-guide'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 

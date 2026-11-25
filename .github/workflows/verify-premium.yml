@@ -44,12 +44,12 @@ jobs:
           node --check dist/kbo-rosters.js
           test -s dist/menu-polish.css
           grep -q 'menu-polish.css?v=58' dist/index.html
-          grep -Fq 'game.js?v=185' dist/index.html
+          grep -Fq 'game.js?v=186' dist/index.html
           grep -Fq 'npb-rosters.js?v=74' dist/index.html
-          grep -Fq 'app.js?v=185' dist/index.html
+          grep -Fq 'app.js?v=186' dist/index.html
           grep -Fq 'kbo-rosters.js?v=74' dist/index.html
           grep -q 'stadium-premium.js?v=57' dist/stadium3d.js
-          grep -Fq 'stadium3d.js?v=80' dist/app.js
+          grep -Fq 'stadium3d.js?v=81' dist/app.js
       - name: Test real 3D construction and player details
         working-directory: source/NIGHTBALL-v56
         run: |

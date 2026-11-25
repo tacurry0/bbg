@@ -6,10 +6,8 @@
 // and the break term carries the ball to the target — but both
 // batting markers (the 3D timing ring and the 2D assist dot) were
 // drawn ON the arrival point, so the marker gave the arrival away.
-// Fix: markers now draw NightGame.pitchGuidePoint() = target - break,
-// the no-break arrival; the ball arrives exactly one break away.
-// Flight, arrival, strike/ball judgment and contact judgment are
-// untouched (they all read the target, which is the arrival).
+// The guide starts at target - break. As the pitch approaches home it
+// moves to the target so the guide and the ball meet at the plate.
 // (2) "Make the ball miss by more, depending on control." The aim
 // scatter in cpuPitchPlan (CPU arms) and throwPitch /
 // remoteThrowPitch (the user's arms) gained a second, steeper slope
@@ -29,7 +27,7 @@ for (const file of ['ratings-data.js', 'players.js', 'pennant.js', 'game.js'])
 function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const near = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol;
 
-// ---------- guide point: marker = no-break arrival, ball = marker + break ----------
+// ---------- guide starts at the no-break point and converges on the arrival ----------
 {
   const restore = Math.random; Math.random = mulberry32(4242);
   try {
@@ -45,6 +43,18 @@ const near = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol;
     assert(Math.abs(offsetCm - shownCm) < 1e-6, 'marker-to-arrival offset equals the break amount');
     assert(shownCm > 20 && shownCm < 29, `the test curve breaks ~24cm like the user's screenshot (got ${shownCm.toFixed(1)})`);
     assert.equal(p.isStrike, Math.abs(p.targetX) <= 1.06 && Math.abs(p.targetY) <= 1.06, 'strike judgment still reads the arrival point');
+    p.progress = .5;
+    assert.deepEqual(g.pitchGuidePoint(), guide);
+    const distanceToArrival = ({ x, y }) => Math.hypot(x - arrival.x, y - arrival.y);
+    p.progress = .75;
+    const lateDistance = distanceToArrival(g.pitchGuidePoint());
+    assert(lateDistance > 0 && lateDistance < distanceToArrival(guide));
+    p.progress = .99;
+    assert(distanceToArrival(g.pitchGuidePoint()) < lateDistance);
+    p.progress = 1;
+    assert.deepEqual(g.pitchGuidePoint(), g.pitchAt(1), 'guide and ball meet at the plate');
+    p.progress = 1.1;
+    assert.deepEqual(g.pitchGuidePoint(), arrival, 'the guide does not overshoot after crossing');
     // A fastball's guide sits almost on the arrival (tiny break).
     g.createPitch({ id: 'fast' }, { x: 0.2, y: 0.15 });
     const fp = g.pitch, fg = g.pitchGuidePoint();
@@ -57,10 +67,8 @@ const near = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol;
 {
   const stadium = fs.readFileSync(__dirname + '/../dist/stadium3d.js', 'utf8');
   const renderer = fs.readFileSync(__dirname + '/../dist/renderer.js', 'utf8');
-  assert(stadium.includes('pitchGuidePoint'), 'the 3D timing ring is drawn at the guide point');
-  assert(renderer.includes('pitchGuidePoint'), 'the 2D assist dot is drawn at the guide point');
-  assert(!stadium.includes('aimPoint(g.pitch.targetX,g.pitch.targetY)'), 'the timing ring no longer sits on the arrival point');
-  assert(!renderer.includes('tx=x+g.pitch.targetX*75'), 'the assist dot no longer sits on the arrival point');
+  assert(stadium.includes('pitchGuidePoint'), 'the 3D overlay uses the moving guide point');
+  assert(renderer.includes('pitchGuidePoint'), 'the 2D fallback uses the moving guide point');
   // Umpire mode keeps every aiming overlay hidden (the whole HUD
   // block is gated on !g.umpireMode) and hardcore still hides the ring.
   assert(stadium.includes('!g.umpireMode') && stadium.includes('!g.hardcore'), 'umpire/hardcore overlay gates untouched');
@@ -138,10 +146,10 @@ const near = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol;
 {
   const index = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
   const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-  assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v184');
-  assert(index.includes('./renderer.js?v=63'), 'the changed renderer module pin moved in index');
-  assert(fs.readFileSync(__dirname + '/../dist/app.js', 'utf8').includes('stadium3d.js?v=80'), 'the changed stadium module pin moved in app.js');
-  assert(sw.includes("const CACHE='nightball-v185-pitch-flight'"), 'SW cache renamed for v184');
-  assert(sw.includes('./game.js?v=185') && sw.includes('./renderer.js?v=63') && sw.includes('./stadium3d.js?v=80'), 'SW precaches the v184 assets');
+  assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v184');
+  assert(index.includes('./renderer.js?v=64'), 'the changed renderer module pin moved in index');
+  assert(fs.readFileSync(__dirname + '/../dist/app.js', 'utf8').includes('stadium3d.js?v=81'), 'the changed stadium module pin moved in app.js');
+  assert(sw.includes("const CACHE='nightball-v186-pitch-guide'"), 'SW cache renamed for v184');
+  assert(sw.includes('./game.js?v=186') && sw.includes('./renderer.js?v=64') && sw.includes('./stadium3d.js?v=81'), 'SW precaches the v184 assets');
 }
 console.log('pitch-guide-v184: all assertions passed');

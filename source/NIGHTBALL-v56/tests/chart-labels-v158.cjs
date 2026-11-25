@@ -39,10 +39,10 @@ assert(/\.game-screen\.pitching-touch \.game-stage \.atbat-chart\{[^}]*top:\s*ma
   'pitching chart top is unchanged (168px, mirrored right)');
 
 // ---------- version pins (v158) ----------
-assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v158');
+assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v158');
 assert(index.includes('./game-hud.css?v=86'), 'game-hud.css pin moves with the chart rules');
-assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v158');
-assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185') && sw.includes('./game-hud.css?v=86'),
+assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v158');
+assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186') && sw.includes('./game-hud.css?v=86'),
   'SW precaches the v158 assets');
 
 console.log('chart-labels-v158: static assertions passed');
@@ -78,7 +78,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=81');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__chartTest = { game, renderer: this };

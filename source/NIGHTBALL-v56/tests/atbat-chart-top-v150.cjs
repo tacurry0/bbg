@@ -39,11 +39,11 @@ assert(/#stage-message\.pitch-call \{[^}]*inset:\s*max\(20%, calc\(266 \* var\(-
   'pitch-call banner floor drops to 266u so it stays below the top chart');
 
 // ---------- version pins (v150) ----------
-assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v150');
+assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v150');
 assert(index.includes('./game-hud.css?v=86'), 'game-hud.css pin moves with the chart rules');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin moves with the banner floor');
-assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v150');
-assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185') &&
+assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v150');
+assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186') &&
   sw.includes('./game-hud.css?v=86') && sw.includes('./abs.css?v=9'), 'SW precaches the v150 assets');
 
 console.log('atbat-chart-top-v150: static assertions passed');
@@ -79,7 +79,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=81');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__chartTest = { game, renderer: this };

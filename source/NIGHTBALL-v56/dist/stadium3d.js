@@ -888,7 +888,8 @@ export class StadiumRenderer {
   const c=this.ctx;
   c.save();
   c.translate(point.x,point.y);
-  c.globalAlpha=.82*clamp(g.pitch.progress/.075,0,1);
+  const u=g.pitch.progress;
+  c.globalAlpha=.66*Math.max(0,Math.min(1,u/.075,(1-u)/.08));
   c.beginPath();c.arc(0,0,radius,0,Math.PI*2);
   c.fillStyle='#fff6ea';c.fill();
   c.lineWidth=1;c.strokeStyle='#563737';c.stroke();

@@ -36,10 +36,10 @@ assert(stadium.includes('!g.defending&&!g.hardcore&&window.nightSettings?.timing
 assert(renderer2d.includes('showTrace&&!g.hardcore&&last'), 'previous-pitch marker is suppressed in hardcore');
 
 // ---------- version pins (v172) ----------
-assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v172');
-assert(app.includes('./stadium3d.js?v=80'), 'stadium3d pin bumped for the ring gate');
-assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v172');
-assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185') && sw.includes('./stadium3d.js?v=80') && sw.includes('./renderer.js?v=63'), 'SW precaches the v172 assets');
+assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v172');
+assert(app.includes('./stadium3d.js?v=81'), 'stadium3d pin bumped for the ring gate');
+assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v172');
+assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186') && sw.includes('./stadium3d.js?v=81') && sw.includes('./renderer.js?v=64'), 'SW precaches the v172 assets');
 
 console.log('hardcore-v172: engine + static assertions passed');
 
@@ -76,7 +76,7 @@ const { resolve, extname, sep } = require('node:path');
       page.on('pageerror', e => errors.push(e.message));
       await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
       await page.evaluate(async () => {
-        const { StadiumRenderer } = await import('./stadium3d.js?v=80');
+        const { StadiumRenderer } = await import('./stadium3d.js?v=81');
         const render = StadiumRenderer.prototype.render;
         StadiumRenderer.prototype.render = function (game, time) { if (game) window.__hcTest = { game }; return render.call(this, game, time); };
       });

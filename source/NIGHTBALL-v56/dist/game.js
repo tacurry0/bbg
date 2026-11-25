@@ -1283,20 +1283,14 @@ window.NightGame=class NightGame{
   const p=this.pitch,k=Math.pow(clamp(u,0,1.3),1.65),late=Math.pow(clamp(u,0,1.3),4.4);
   const flutter=p.id==='knuckle'?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX??((p.throwHand||this.pitcher.hand)==='L'?1:-1)*.76/.68)*(1-Math.min(1,Math.max(0,u)))+p.targetX*k+p.bx*(late-k)+flutter,y:p.targetY*k+p.by*(late-k)+flutter*.6};
  }
- // The batting guide point (v184): where this pitch would arrive if it
- // did not break. pitchAt's flight already encodes exactly this — the
- // base path heads for (target - break) and the break term (bx/by,
- // weighted by late(u), reaching the full break at u=1) carries the
- // ball the rest of the way to the target, so the ball always arrives
- // one full break away from this point. The timing ring and the
- // practice assist dot therefore mark THIS point, not the arrival:
- // the batter reads the pitch type, estimates the break, and moves
- // the cursor by that much — the same read as in Pawapuro/ProSpi.
- // (Before v184 both markers sat on the arrival point itself, so
- // every pitch, however big its break, landed exactly on the marker
- // and breaking balls were no harder to hit than fastballs.)
+ // Start at the no-break point on the plate plane, then follow the
+ // developing break so the guide and live ball meet at the plate.
  pitchGuidePoint(){
-  const p=this.pitch;return p?{x:p.targetX-p.bx,y:p.targetY-p.by}:null;
+  const p=this.pitch;
+  if(!p)return null;
+  const t=clamp((p.progress-.52)/(1-.52),0,1);
+  const remainingBreak=1-t*t*(3-2*t);
+  return {x:p.targetX-p.bx*remainingBreak,y:p.targetY-p.by*remainingBreak};
  }
  swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung)return false;this._mirrorSwung=true;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
  buntBall(){

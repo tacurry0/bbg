@@ -184,7 +184,8 @@ window.NightRenderer=class NightRenderer{
         }else{c.shadowColor='#ffce8b';c.shadowBlur=5;c.lineWidth=1.5;this.ellipse(c,cx,cy,10,10,'#ffce8b1c','#ffce8b');c.shadowBlur=0;c.strokeStyle='#ffe5bb';c.lineWidth=1;c.beginPath();c.moveTo(cx-16,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+16,cy);c.moveTo(cx,cy-16);c.lineTo(cx,cy-6);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);c.stroke();}
         if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&(window.nightSettings?.timingGuide!==false||window.nightSettings?.assist)){
           const guide=g.pitchGuidePoint();
-          c.globalAlpha=.82*Math.min(1,g.pitch.progress/.075);
+          const u=g.pitch.progress;
+          c.globalAlpha=.66*Math.max(0,Math.min(1,u/.075,(1-u)/.08));
           this.drawBall(c,x+guide.x*75,y+guide.y*64,7,-.38);
           c.globalAlpha=1;
         }

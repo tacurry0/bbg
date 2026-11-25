@@ -197,8 +197,8 @@ const roundTrip=p=>NightPennant.restore(JSON.parse(JSON.stringify(p)));
  assert(app.includes('game.preseasonGame=true'),'live preseason games are flagged');
  assert(index.includes('./pennant.js?v=86'),'index pin for the changed pennant.js moves');
  assert(sw.includes('./pennant.js?v=86'),'SW precaches the new pennant.js');
- assert(index.includes('./game.js?v=185')&&index.includes('./app.js?v=185'),'index pins move to v137');
- assert(sw.includes('nightball-v185-pitch-flight'),'SW cache renamed for v137');
- assert(sw.includes('./game.js?v=185')&&sw.includes('./app.js?v=185'),'SW precaches the v137 scripts');
+ assert(index.includes('./game.js?v=186')&&index.includes('./app.js?v=186'),'index pins move to v137');
+ assert(sw.includes('nightball-v186-pitch-guide'),'SW cache renamed for v137');
+ assert(sw.includes('./game.js?v=186')&&sw.includes('./app.js?v=186'),'SW precaches the v137 scripts');
 }
 console.log('pennant-preseason-v137: all assertions passed');
