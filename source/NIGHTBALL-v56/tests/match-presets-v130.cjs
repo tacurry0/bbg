@@ -111,6 +111,6 @@ const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
 const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
 assert(html.includes('./match-presets.js?v=3'),'page loads the presets module');
 assert(sw.includes('./match-presets.js?v=3'),'service worker precaches the presets module');
-assert(sw.includes('nightball-v182-online-rules'),'SW cache renamed for v130');
+assert(sw.includes('nightball-v183-pitch-feel'),'SW cache renamed for v130');
 
 console.log('PASS: match presets save/load round-trips the full versus setup, multiple presets add/delete cleanly, stale custom-park/club references fall back per-field without throwing, corrupt storage reads empty, and the wiring lives only in the versus setup screen with apply reflecting into settings (no auto-start).');

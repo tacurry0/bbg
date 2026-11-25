@@ -141,11 +141,34 @@ window.NightGame=class NightGame{
   }
   return improved;
  }
+ // Pitch feel rebalance (v183, direct user request: "the fast ones
+ // faster, the slow ones slower — there is not enough speed
+ // differential — and make breaking balls bend more"). Two global
+ // transforms live here in pitchSpec, the single source every mode
+ // reads (matches, bullpen, practice, the pitch deck), so displays
+ // and flight can never disagree:
+ //  - Speed stretch around a 124 km/h pivot: a 150 km/h fastball
+ //    becomes ~156, a 109 km/h curve ~106, a 101 km/h slow curve ~96.
+ //    The middle of the range barely moves, and because the stretch
+ //    is affine in each pitch's own set speed, one pitcher's
+ //    fastball/off-speed gap widens by the same factor as the
+ //    difference between pitchers — individuality grows, never
+ //    flattens. A 70 km/h floor guards generated (school/career)
+ //    pitchers whose raw off-speed speeds can start far lower.
+ //    Paired fixed-seed probe over all 84 roster pitchers: fastball
+ //    set speeds 133.9-150.1 -> 136.1-155.8, slowest pitch 101 -> 96.
+ //  - Break scale x1.30 on bx/by: the deck's 1-7 level conversion
+ //    divides by 18*1.3 as well (app.js), so the chart numbers keep
+ //    exactly their pre-v183 meaning instead of saturating at 7.
+ static PITCH_SPEED_PIVOT=124;
+ static PITCH_SPEED_STRETCH=1.22;
+ static PITCH_BREAK_MUL=1.3;
+ static stretchPitchSpeed(v){return Math.max(70,NightGame.PITCH_SPEED_PIVOT+(v-NightGame.PITCH_SPEED_PIVOT)*NightGame.PITCH_SPEED_STRETCH);}
  static pitchSpec(pitcher,id){
   const type=TYPES.find(t=>t.id===id)||TYPES[0],detail=pitcher.pitchDetails?.[id]||{},scale=(pitcher.movement/82)*(detail.breakScale||1);
   const rawSpeed=detail.speed||pitcher.velocity*type.speed/148;
   const fastSpeed=pitcher.pitchDetails?.fast?.speed||pitcher.velocity;
-  const speed=type.gap?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed;
+  const speed=NightGame.stretchPitchSpeed(type.gap?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed);
   // Spin rate (rpm): the pitch type's baseline spin, scaled by the pitcher's
   // movement quality. The existing bx/by break is read as the Magnus break
   // that spin produces, with a small spin-driven correction on top (a few
@@ -153,7 +176,7 @@ window.NightGame=class NightGame{
   // knuckleball barely spins, so its flutter break is not Magnus-driven.
   const spinRpm=Math.round((type.spin||0)*(.78+.22*(pitcher.movement/82))*(detail.spinScale||1));
   const mag=type.id==='knuckle'?1:clamp(.9+.1*(type.spin?spinRpm/type.spin:1),.9,1.1);
-  return {...type,name:detail.label||type.name,short:detail.label||type.short,speed,bx:type.bx*scale*mag,by:type.by*scale*mag,spinRpm};
+  return {...type,name:detail.label||type.name,short:detail.label||type.short,speed,bx:type.bx*scale*mag*NightGame.PITCH_BREAK_MUL,by:type.by*scale*mag*NightGame.PITCH_BREAK_MUL,spinRpm};
  }
 
  // Variant rules (v133, checker item "variant-rules-match"): regular
@@ -983,7 +1006,7 @@ window.NightGame=class NightGame{
 
  createPitch(type,target){
   if(this.bases[1]||this.bases[2])this.atBatRisp=true;
-  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0,ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax||spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj),velocity=Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
+  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0,ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax?NightGame.stretchPitchSpeed(pitcher.velocityEvidence.fastMax):spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj),velocity=Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
   this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/velocity,progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){

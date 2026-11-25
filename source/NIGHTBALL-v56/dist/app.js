@@ -3153,7 +3153,10 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   // ring, not a row. Arrow markers grow to 28px on a ring of 41.
   const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
   const flip=g.pitcher.hand==='L'?-1:1;
-  const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
+  // v183: pitchSpec scales every break by 1.3, so the level divisor
+  // grows by the same factor (18 -> 23.4) and a level keeps meaning
+  // exactly what it meant before the break rebalance.
+  const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/23.4)))};});
   const fast=items.find(i=>i.id==='fast');
   const breaking=items.filter(i=>i.id!=='fast').sort((a,b)=>orderIds.indexOf(a.id)-orderIds.indexOf(b.id));
   const W=264,CX=W/2,PW=96,PH=38;

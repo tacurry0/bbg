@@ -57,9 +57,9 @@ assert(index.includes('id="stage-message"'), 'the one stage banner element remai
 assert(!app.includes('stage-message-2') && !index.includes('result-banner'), 'no second result banner component was added');
 
 // ---------- version pins (v159) ----------
-assert(index.includes('./game.js?v=182') && index.includes('./app.js?v=182'), 'index pins at v159');
-assert(sw.includes('nightball-v182-online-rules'), 'SW cache renamed for v159');
-assert(sw.includes('./game.js?v=182') && sw.includes('./app.js?v=182'), 'SW precaches the v159 scripts');
+assert(index.includes('./game.js?v=183') && index.includes('./app.js?v=183'), 'index pins at v159');
+assert(sw.includes('nightball-v183-pitch-feel'), 'SW cache renamed for v159');
+assert(sw.includes('./game.js?v=183') && sw.includes('./app.js?v=183'), 'SW precaches the v159 scripts');
 
 // ---------- browser behaviour (393x852) ----------
 const { createServer } = require('node:http');

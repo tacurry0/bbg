@@ -175,7 +175,7 @@ assert(app.includes('変則ルール（通常対戦のみ・組み合わせ可�
 assert(app.includes("variantRules:mode==='match'&&!challengeId&&!pendingUmpire"),'the app passes rules only for regular versus matches');
 assert(app.includes('fullCount:!!settings.variantFullCount'),'settings map into the game options');
 assert(app.includes('g.variantRules.noBreaking'),'pitch-type buttons are disabled under noBreaking');
-assert(index.includes('./game.js?v=182')&&index.includes('./app.js?v=182'),'index pins move to v133');
-assert(sw.includes('nightball-v182-online-rules'),'SW cache renamed for v133');
-assert(sw.includes('./game.js?v=182')&&sw.includes('./app.js?v=182'),'SW precaches the v133 scripts');
+assert(index.includes('./game.js?v=183')&&index.includes('./app.js?v=183'),'index pins move to v133');
+assert(sw.includes('nightball-v183-pitch-feel'),'SW cache renamed for v133');
+assert(sw.includes('./game.js?v=183')&&sw.includes('./app.js?v=183'),'SW precaches the v133 scripts');
 console.log('PASS: full-count 2-2 starts (walk/strikeout/foul), no-breaking on CPU plan + user throws + UI gate, metal-bat paired carry probe, two-out halves, scope gates, OFF identical, restore, combined game completion, app wiring + v133 pins.');

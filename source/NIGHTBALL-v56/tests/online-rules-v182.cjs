@@ -42,8 +42,8 @@ const app = fs.readFileSync(__dirname + '/../dist/app.js', 'utf8');
   assert(app.includes('id="online-starter-select"'), 'lobby offers a starting-pitcher select');
   const index = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
   const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-  assert(index.includes('./game.js?v=182') && index.includes('./app.js?v=182'), 'index pins at v182');
-  assert(sw.includes("'nightball-v182-online-rules'"), 'service worker cache at v182');
+  assert(index.includes('./game.js?v=183') && index.includes('./app.js?v=183'), 'index pins at v182');
+  assert(sw.includes("'nightball-v183-pitch-feel'"), 'service worker cache at v182');
 }
 
 // ---------- engine gates ----------
