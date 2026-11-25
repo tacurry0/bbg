@@ -60,10 +60,10 @@ assert(app.includes('function resultSignature(data)') && app.includes('function 
   'v159 dedup / phase guard is still present');
 
 // ---------- version pins (v162) ----------
-assert(index.includes('./game.js?v=167') && index.includes('./app.js?v=167'), 'index pins at v162');
+assert(index.includes('./game.js?v=168') && index.includes('./app.js?v=168'), 'index pins at v162');
 assert(index.includes('./style.css?v=75'), 'style.css pin bumped for the v162 CSS change');
-assert(sw.includes('nightball-v167-back-guard'), 'SW cache renamed for v162');
-assert(sw.includes('./game.js?v=167') && sw.includes('./app.js?v=167') && sw.includes('./style.css?v=75'),
+assert(sw.includes('nightball-v168-wind-balance'), 'SW cache renamed for v162');
+assert(sw.includes('./game.js?v=168') && sw.includes('./app.js?v=168') && sw.includes('./style.css?v=75'),
   'SW precaches the v162 assets');
 
 // ---------- browser behaviour (393x852) ----------

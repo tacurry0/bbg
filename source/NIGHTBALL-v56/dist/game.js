@@ -51,12 +51,22 @@ function catchType(player,ball,distance,special=true){
 // 48.85%, carry +0.06 m). The spin derivation and the rpm readouts are
 // unchanged; only the lift's effect size is rebalanced.
 const MAGNUS_LIFT=.000004,MAGNUS_SIDE=.0006;
+// Wind coupling (v168, checker item wind-carry-overeffect): wind used to be
+// added as a constant acceleration (vy += wind*dt) regardless of ball speed,
+// which measured +31.1 m of extra carry for a +5 tailwind on the reference
+// fly (44 m/s, 32 deg, calm carry 109.4 m) — roughly 3-4x the real-world
+// effect of an 18 km/h tailwind (+5..9 m) and enough to tilt whole games.
+// Wind now acts through the relative air velocity, like the flight drag
+// itself: the per-step gain is wind*WIND_COUPLING*step. Paired probe with
+// the reference fly: +5 -> +6.2 m, +3 -> +3.7 m, -5 -> -6.2 m, and a weak
+// 25 m/s pop-up drifts 5.5 m at +5 instead of being shoved uniformly.
+const WIND_COUPLING=.2;
 function moveBattedBall(b,dt,wind){
  const airborne=!b.bounces&&(b.z>.1||b.vz>0);
  // Compress and lower the first flight, keeping its horizontal carry. Ground
  // rolls, bounces and throws still run at their normal speed.
  const step=airborne?dt*(b.flightRate??1):dt,groundDrag=!airborne&&Math.hypot(b.x,b.y)>54?.32:.85,drag=Math.max(0,1-(airborne?.15:groundDrag)*step);
- b.vx*=drag;b.vy=(b.vy+wind*step)*drag;
+ b.vx*=drag;b.vy=(b.vy+wind*WIND_COUPLING*step)*drag;
  b.vz-=(airborne?11.25*(b.flightLift??1):9.81)*step;
  if(airborne&&b.vz>0)b.vz*=Math.max(0,1-.10*step);
  if(airborne){
