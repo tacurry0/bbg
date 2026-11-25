@@ -88,6 +88,30 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function sound(name){syncAudio();stadiumAudio.play(name,{hand:game?.batter?.hand});if(name==='homer')vibrate([30,30,60]);else if(name==='hit'||name==='perfect')vibrate(20);}
  function vibrate(v){if(settings.vibration&&navigator.vibrate)try{navigator.vibrate(v);}catch{}}
  function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').classList.remove('show');$('toast').textContent='';},2500);}
+ // Loading progress (v169, checker item loading-progress-display): one shared
+ // overlay for waits that used to look like a freeze — match-start preparation
+ // (indeterminate, set by activateGame) and the on-demand Tokyo Dome download
+ // (real byte progress, reported by tokyo-nightball.js through
+ // 'nightball-loading' events). The overlay appears only when a wait outlasts
+ // a 250ms grace period, so fast cached loads never flash it, and while it is
+ // up it blocks taps so a waiting user cannot double-fire a start button.
+ const loadingState={prep:false,asset:null,shown:false,timer:0};
+ function currentLoading(){return loadingState.asset||(loadingState.prep?{label:'試合を準備しています',fraction:null}:null);}
+ function paintLoading(){
+  const el=$('loading-overlay');if(!el)return;
+  const active=currentLoading();
+  if(!active){if(loadingState.shown){el.hidden=true;loadingState.shown=false;}return;}
+  el.hidden=false;loadingState.shown=true;$('loading-label').textContent=active.label||'読み込んでいます';const f=active.fraction,bar=$('loading-bar');bar.style.width=f==null?'40%':Math.max(2,Math.round(f*100))+'%';bar.classList.toggle('indeterminate',f==null);$('loading-pct').textContent=f==null?'':Math.round(f*100)+'%';
+ }
+ function renderLoading(){
+  const el=$('loading-overlay');if(!el)return;
+  if(!currentLoading()){clearTimeout(loadingState.timer);loadingState.timer=0;if(loadingState.shown){el.hidden=true;loadingState.shown=false;}return;}
+  if(loadingState.shown){paintLoading();return;}
+  // The grace timer is armed once per wait, never re-armed by progress
+  // updates (they arrive faster than the grace period during a download).
+  if(!loadingState.timer)loadingState.timer=setTimeout(()=>{loadingState.timer=0;paintLoading();},250);
+ }
+ window.addEventListener('nightball-loading',e=>{const d=e.detail||{};loadingState.asset=(d.phase==='done'||d.phase==='error')?null:{label:d.label,fraction:d.fraction};renderLoading();});
  function modal(html,kind){$('modal-content').dataset.kind=kind;if(game?.phase!=='ended')stadiumAudio.stopEffects();if(kind!=='music-settings')ballparkMusic.stop('preview');const same=modalKind===kind;if(!same)lastFocus=document.activeElement;modalKind=kind;$('modal-content').innerHTML=html;$('modal-content').scrollTop=0;$('modal').hidden=false;document.body.style.overflow='hidden';if(!same)setTimeout(()=>{if(modalKind===kind)$('modal-content').querySelector('button')?.focus({preventScroll:true});},30);}
  function closeModal(resume=true){const previous=modalKind;ballparkMusic.stop('preview');$('modal').hidden=true;document.body.style.overflow='';modalKind='';if(resume&&game&&screen==='game'&&game.phase!=='ended')game.paused=false;lastFocus?.focus?.({preventScroll:true});if(resume&&game&&screen==='game')updateUI();if(resume&&game?.phase==='career-ready')$('career-field-overlay').querySelector('button')?.focus({preventScroll:true});if(resume&&screen==='game'&&game?.phase==='ended'&&!['result','career-result'].includes(previous))finish(game);}
  const modalTitle=(en,ja,close=true)=>`<div class="modal-top"><h2 id="modal-title">${({'今夜の試合':'試合設定','親指の操作・ゲーム設定':'設定','押して、狙って、離す。':'遊び方','ひと休み。':'タイム','練習おつかれさま':'練習結果','選手・ベンチ':'選手データ'})[ja]||ja}</h2>${close?'<button class="close-button" data-action="close" aria-label="閉じる">×</button>':''}</div>`;
@@ -458,7 +482,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    game.playChallenges??=2;
    game.playCpuChallenges??=2;
   }
-  stopReplay();review.reset();resetPlayFeedback();[...$('bases').children].forEach(e=>e.classList.remove('on'));$('bases').setAttribute('aria-label','走者なし');updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;queuedBench=false;stadiumAudio.stopEffects();screen='game';$('apbc-cup').hidden=true;$('home').hidden=true;$('pennant').hidden=true;$('game').hidden=false;$('pause').hidden=false;$('settings').hidden=false;document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);history.replaceState({nightball:'home'},'',location.href);history.pushState({nightball:'game'},'',location.href);history.pushState({nightball:'game'},'',location.href);/* v167: two guard entries — one lost popstate must never exit mid-match */window.scrollTo(0,0);renderer.resize();}
+  stopReplay();review.reset();resetPlayFeedback();[...$('bases').children].forEach(e=>e.classList.remove('on'));$('bases').setAttribute('aria-label','走者なし');updatePlayTools();updateChallenge();resetCareerOverlay();$('career').hidden=true;queuedBench=false;stadiumAudio.stopEffects();screen='game';$('apbc-cup').hidden=true;$('home').hidden=true;$('pennant').hidden=true;$('game').hidden=false;$('pause').hidden=false;$('settings').hidden=false;document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);history.replaceState({nightball:'home'},'',location.href);history.pushState({nightball:'game'},'',location.href);history.pushState({nightball:'game'},'',location.href);/* v167: two guard entries — one lost popstate must never exit mid-match */window.scrollTo(0,0);renderer.resize();loadingState.prep=true;renderLoading();requestAnimationFrame(()=>requestAnimationFrame(()=>{loadingState.prep=false;renderLoading();}));}
  function resumeGame(){try{const snapshot=JSON.parse(localStorage.getItem('nightball.match')||'null');const restored=NightGame.restore(snapshot,onEvent);if(!restored){clearCheckpoint();toast('再開できる試合がありません');return;}closeModal(false);game=restored;saved=false;lastMode=game.competition==='apbc2026'?'apbc':'match';matchContext=lastMode;game.fieldSpeed=settings.fieldSpeed;game.battingAssist=settings.battingAssist;activateGame();onEvent('clear');if(['pitch','windup'].includes(game.phase)){game.setPhase('windup');game.pitch.progress=0;game.pitch.swung=false;game.pitch.cpuActed=false;}else if(game.phase==='result'){const last=game.log.at(-1);if(last)onEvent('message',last);}updateUI();}catch{toast('保存した試合を読み込めませんでした');}}
  let lineupContext='match',pregameTarget=null,matchPickSide='home',matchContext='match',apbcPickSide='own',matchClubGroup=settings.matchTeam?.startsWith('kbo-')?'kbo':settings.matchTeam?.startsWith('npb-')?'npb':'cpbl';
  let career=null,careerSaveWarned=false,careerTab='next',alumni=[];

@@ -124,9 +124,9 @@ assert(app.includes('data-action="record-room"') && app.includes("case'record-ro
 assert(app.includes('v156 以降に終了した試合から蓄積されます'), 'the dashboard states that pre-v156 games are not backfilled');
 assert(app.includes('参考（v156より前の記録）') && app.includes('従来の対戦記録') && app.includes('オンライン通算（相手球団別）') && app.includes('サバイバル ベスト'), 'pre-existing aggregates (records / online / survival best) are shown as reference, not merged');
 assert(html.includes('./record-room.js?v=1'), 'index loads record-room.js at v1');
-assert(html.includes('./game.js?v=168') && html.includes('./app.js?v=168'), 'index pins at v156');
-assert(sw.includes('nightball-v168-wind-balance'), 'SW cache renamed for v156');
-assert(sw.includes('./game.js?v=168') && sw.includes('./app.js?v=168') && sw.includes('./record-room.js?v=1'), 'SW precaches the v156 scripts including the new module');
+assert(html.includes('./game.js?v=169') && html.includes('./app.js?v=169'), 'index pins at v156');
+assert(sw.includes('nightball-v169-loading-progress'), 'SW cache renamed for v156');
+assert(sw.includes('./game.js?v=169') && sw.includes('./app.js?v=169') && sw.includes('./record-room.js?v=1'), 'SW precaches the v156 scripts including the new module');
 
 console.log('record-room-v156: unit + static assertions passed');
 
