@@ -110,9 +110,9 @@ assert(app.includes("['variantLowReboundBat','低反発バット'"), 'the setup 
 assert(app.includes('lowReboundBat:!!settings.variantLowReboundBat'), 'the app passes the rule into regular versus matches');
 assert(app.includes("k==='variantMetalBat'||k==='variantLowReboundBat'"), 'the toggle handler enforces bat exclusivity');
 assert(presets.includes("'variantLowReboundBat'"), 'the presets module lists the settings key');
-assert(index.includes('./game.js?v=187') && index.includes('./app.js?v=187'), 'index pins at v180');
+assert(index.includes('./game.js?v=188') && index.includes('./app.js?v=188'), 'index pins at v180');
 assert(index.includes('./match-presets.js?v=3'), 'presets module pin bumped for the new key');
-assert(sw.includes('nightball-v187-pitch-directions'), 'SW cache renamed for v180');
+assert(sw.includes('nightball-v188-batting-timing'), 'SW cache renamed for v180');
 assert(sw.includes('./match-presets.js?v=3'), 'SW precaches the v180 presets module');
 
 console.log('low-rebound-v180: all assertions passed');

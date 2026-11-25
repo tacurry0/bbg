@@ -29,6 +29,48 @@ function resolve(g){
  return g.hit.kind;
 }
 
+// ---------- manual batting: pull, opposite field and fouls ----------
+{
+ const random=Math.random;
+ Math.random=()=>.5;
+ try{
+  const swingAt=(hand,delta,{course=0,strikes=0}={})=>{
+   const g=match(187);
+   g.battingIndex.home=g.lineups.home.findIndex(batter=>batter.hand===hand);
+   assert.equal(g.battingHand,hand);
+   g.strikes=strikes;
+   g.createPitch(NightGame.TYPES[0],{x:course,y:0});
+   g.pitch.delivered=true;
+   g.pitch.progress=1+delta;
+   g.cursor={x:course,y:0};
+   g.setPhase('pitch');
+   assert(g.swing());
+   return g;
+  };
+  for(const hand of ['R','L']){
+   const pull=hand==='R'?-1:1;
+   const onTime=swingAt(hand,0);
+   assert.equal(Math.abs(onTime.hit.sprayAngle),0);
+   assert(onTime.hit.perfect);
+   for(const timing of [-1,1]){
+    const side=-timing*pull;
+    const fair=swingAt(hand,timing*.077);
+    assert(!fair.field.foul && fair.hit.sprayAngle*side>20);
+    assert(!fair.hit.perfect);
+    const foul=swingAt(hand,timing*.16,{strikes:2});
+    assert(foul.field.foul && foul.hit.sprayAngle*side>45);
+    assert.equal(resolve(foul),'foul');
+    assert.equal(foul.strikes,2);
+   }
+   assert(swingAt(hand,0,{course:.9*pull}).hit.sprayAngle*pull>4);
+   assert(swingAt(hand,0,{course:-.9*pull}).hit.sprayAngle*pull<-4);
+   assert.equal(swingAt(hand,.18).phase,'miss');
+  }
+ }finally{
+  Math.random=random;
+ }
+}
+
 // ---------- spin derivation direction ----------
 {
  const restore=seeded(10701);

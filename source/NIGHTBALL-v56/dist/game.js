@@ -1313,19 +1313,26 @@ window.NightGame=class NightGame{
   const form=this.batter.careerForm;
   const tight=!cpu&&this.career?.difficulty!=='relaxed'&&(this.career?.difficulty?1:0);
   const penalty=(!cpu&&p.id!=='fast'&&this.batter.careerWeakness>=2?.018:0)+(form==='legkick'?.024:0);
-  const timeWindow=(cpu?{casual:.24,standard:.21,pro:.18}:{casual:.22,standard:.185,pro:.16})[this.difficulty]-(tight?.027:0)-penalty
+  const baseWindow=(cpu?{casual:.24,standard:.21,pro:.18}:{casual:.22,standard:.185,pro:.16})[this.difficulty]-(tight?.027:0)-penalty
    +(!cpu&&this.career?.scouted?.012:0)+(form==='compact'?.009:0);
+  const timeWindow=cpu?baseWindow:baseWindow*.93;
   if(Math.abs(delta)>timeWindow||contactError>1.07){if(!cpu)this.emit('timing',{text:contactError>1.07?'カーソルが合っていない':delta<0?'振り出しが早い':'振り遅れ'});this.setPhase('miss');this.notify();return;}
-  const core=clamp(1-contactError,0,1),timing=clamp(1-Math.abs(delta)/timeWindow,0,1),quality=core*.82+timing*.18;
-  if(!cpu){this.session.contacts++;if(core>.82&&timing>.7)this.session.perfect++;this.emit('timing',{text:core>.82?'芯で捉えた！':core>.45?'ナイスミート':'バットの端に当たった'});}
-  // Off-center contact sets launch angle and spray; contact is spatially required.
-  const spray=clamp(delta*(cpu?3.0:4.6)*(this.battingHand==='L'?-1:1)+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
+  const timingOffset=delta/timeWindow;
+  const core=clamp(1-contactError,0,1),timing=1-Math.abs(timingOffset),quality=core*.82+timing*.18;
+  const perfect=core>.82&&(cpu||timing>.7);
+  if(!cpu){this.session.contacts++;if(perfect)this.session.perfect++;this.emit('timing',{text:perfect?'芯で捉えた！':core>.45?'ナイスミート':'バットの端に当たった'});}
+  // Early contact pulls and late contact goes the other way. At the
+  // edges of the timing window the angle grows enough to cross a foul line.
+  const timingSpray=cpu?delta*3:delta*5.4+.18*timingOffset**3;
+  const courseSpray=cpu?0:clamp(p.targetX,-1,1)*.14;
+  const handed=this.battingHand==='L'?-1:1;
+  const spray=clamp(timingSpray*handed+courseSpray+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
   const launch=clamp(13+(this.batter.trait==='長距離砲'&&power?3:0)+(aim.y-p.targetY)*77+(power?12:0)+rnd(-4,4),-8,65);
   const exitSpeed=22+quality*19+(this.matchup().power-60)*.12+(power?6:0)+(this.batter.trait==='勝負強い'&&(this.bases[1]||this.bases[2])?1.5:0);
   // Horizontal miss distance signs the side spin: dragging across the ball
   // slices/hooks it in flight (initial spray above stays as modelled).
   const sideMiss=clamp((aim.x-p.targetX)/(rx+.07),-1,1);
-  this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,core>.82,{quality,side:sideMiss});
+  this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,perfect,{quality,side:sideMiss});
  }
  startField(speed,launch,spray,cpu,perfect=false,contact=null){
   // Metal bat (variant rule): a flat +3% exit-velocity boost, applied
