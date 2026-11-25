@@ -3060,92 +3060,79 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
  const types=NightGame.TYPES;
  function renderPitchDirections(g){
   const key=NightPlayers.ratingVersion+'/'+g.pitcher.id+'/'+g.pitcher.pitches.join(',');if($('pitch-types').dataset.key===key)return;$('pitch-types').dataset.key=key;
-  // v177: Power Pro / ProSpi style pitch chart. The fastball sits at
-  // the origin; each breaking pitch is placed in its actual break
-  // direction (the engine's screen direction: +bx is screen-right for
-  // a right-handed pitcher, mirrored for left-handers, +by is down),
-  // with the distance from the origin proportional to the break
-  // amount. An SVG guide arrow runs from the origin to each badge,
-  // its length and weight encoding the same amount, and each badge
-  // carries an arrow rotated to the pitch's true break angle. A
-  // deterministic relaxation pass separates badges that would collide
-  // (worst real case: sinker vs curve, 20 degrees apart at nearly the
-  // same radius); if a repertoire still cannot fit, the chart grows
-  // taller once and lays out again. Name / speed / break level ride
-  // in a label offset outward from each badge.
-  // v178: the panel is gone — no background, border, shadow or blur
-  // in the CSS; badges and hairline guides float directly over the
-  // field. The chart shrinks with it (192px wide, 30px badges,
-  // radius and separation rescaled below) and the guide arrows thin
-  // out; labels keep their text shadows for on-grass readability.
+  // v179: Power Pro style pitch picker, following the reference
+  // layout the user supplied. A ball sits at the centre; around it,
+  // one chunky blue arrow marker per pitch points in that pitch's
+  // true break direction (engine screen direction: +bx is
+  // screen-right for a right-handed pitcher, mirrored for
+  // left-handers, +by is down; the fastball points up) and carries
+  // the break level as a number inside the arrow; the pitch name
+  // rides on a blue pill beyond the arrow in the same direction.
+  // Every control is blue (the user waived the reference's gold).
+  // No panel behind any of it (v178). Arrows start on a ring at
+  // each pitch's exact break angle and relax apart when two breaks
+  // nearly coincide; pills start on an ellipse along the same
+  // direction and relax as rectangles, so the worst real
+  // repertoires (sinker + curve sit 20 degrees apart) still never
+  // overlap. If a repertoire cannot fit, the deck grows taller
+  // once and lays out again. Speeds stay off the pills — the
+  // selected pitch's speed / break still shows in the pitch-info
+  // display, as before (updateUI keeps filling the hidden <small>
+  // each pill carries for it).
   const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
   const flip=g.pitcher.hand==='L'?-1:1;
-  const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,hyp:Math.hypot(dx,dy),level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
+  const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
   const fast=items.find(i=>i.id==='fast');
   const breaking=items.filter(i=>i.id!=='fast').sort((a,b)=>orderIds.indexOf(a.id)-orderIds.indexOf(b.id));
-  const W=192,CX=W/2,CY=46,MIN=33;
+  const W=264,CX=W/2,PW=92,PH=34;
+  const angOf=b=>b.id==='fast'?-Math.PI/2:Math.atan2(b.dy,b.dx);
   const layout=H=>{
-   const pos=new Map([['fast',{x:CX,y:CY}]]);
-   for(const b of breaking){const r=Math.max(33,21+(b.hyp/1.55)*24),ux=b.hyp?b.dx/b.hyp:0,uy=b.hyp?b.dy/b.hyp:0;pos.set(b.id,{x:CX+ux*r,y:CY+uy*r});}
-   const pts=breaking.map(b=>({id:b.id,...pos.get(b.id)}));
+   const CY=H/2+8;
+   const arrows=new Map();
+   for(const b of items){const a=angOf(b);arrows.set(b.id,{x:CX+Math.cos(a)*34,y:CY+Math.sin(a)*34});}
+   const apts=items.map(b=>({id:b.id,...arrows.get(b.id)}));
    for(let it=0;it<240;it++){
     let moved=false;
-    const all=[{id:'fast',x:CX,y:CY,fixed:true},...pts];
-    for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){
-     const a=all[i],c=all[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
-     if(d<MIN){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=MIN-d;
-      if(a.fixed){c.x+=ux*push;c.y+=uy*push;}else if(c.fixed){a.x-=ux*push;a.y-=uy*push;}
-      else{a.x-=ux*push/2;a.y-=uy*push/2;c.x+=ux*push/2;c.y+=uy*push/2;}
-      moved=true;}
+    for(let i=0;i<apts.length;i++)for(let j=i+1;j<apts.length;j++){
+     const a=apts[i],c=apts[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
+     if(d<27){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=(27-d)/2;a.x-=ux*push;a.y-=uy*push;c.x+=ux*push;c.y+=uy*push;moved=true;}
     }
-    for(const p of pts){p.x=Math.max(15,Math.min(W-15,p.x));p.y=Math.max(15,Math.min(H-15,p.y));}
+    for(const p of apts){const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,r=Math.max(28,Math.min(56,d));p.x=CX+dx/d*r;p.y=CY+dy/d*r;p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));}
     if(!moved)break;
    }
-   let worst=Infinity;
-   const all=[{id:'fast',x:CX,y:CY},...pts];
-   for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++)worst=Math.min(worst,Math.hypot(all[j].x-all[i].x,all[j].y-all[i].y));
-   return{pts,worst};
-  };
-  let H=118,laid=layout(H);
-  if(laid.worst<MIN-2){H=146;laid=layout(H);}
-  const posOf=id=>id==='fast'?{x:CX,y:CY}:laid.pts.find(p=>p.id===id);
-  const guides=breaking.map(b=>{const p=posOf(b.id),dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;return `<line x1="${CX}" y1="${CY}" x2="${(p.x-ux*18).toFixed(1)}" y2="${(p.y-uy*18).toFixed(1)}" stroke="rgba(219,236,255,.45)" stroke-width="${(0.9+b.level*.22).toFixed(2)}" marker-end="url(#pd-arrow)"/>`;}).join('');
-  const svg=`<svg class="pitch-chart-guides" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(219,236,255,.6)"/></marker></defs><line x1="0" y1="${CY}" x2="${W}" y2="${CY}" stroke="rgba(255,255,255,.06)"/><line x1="${CX}" y1="0" x2="${CX}" y2="${H}" stroke="rgba(255,255,255,.06)"/>${guides}</svg>`;
-  // Label placement: score all four sides of each badge (label box
-  // 68x28) against the panel bounds, every badge and every label
-  // already placed, preferring the radially outward side. Fixed
-  // side rules put neighbouring labels on top of each other in the
-  // down cluster and at the chart edges; scoring keeps every name,
-  // speed and break level readable.
-  const placedLabels=[];
-  const labelSide=(b,p)=>{
-   const pref=b.id==='fast'?'u':Math.abs(p.x-CX)>Math.abs(p.y-CY)*1.15?(p.x>CX?'r':'l'):((p.y-CY)>=0?'d':'u');
-   const boxes={r:[p.x+19,p.y-13,64,27],l:[p.x-83,p.y-13,64,27],d:[p.x-32,p.y+18,64,27],u:[p.x-32,p.y-45,64,27]};
-   const area=(a,q)=>Math.max(0,Math.min(a[0]+a[2],q[0]+q[2])-Math.max(a[0],q[0]))*Math.max(0,Math.min(a[1]+a[3],q[1]+q[3])-Math.max(a[1],q[1]));
-   let best=pref,bestScore=Infinity;
-   for(const s of ['r','l','d','u']){
-    const box=boxes[s];let score=s===pref?0:4;
-    if(box[0]<0)score+=(0-box[0])*3;if(box[1]<0)score+=(0-box[1])*3;
-    if(box[0]+box[2]>W)score+=(box[0]+box[2]-W)*3;if(box[1]+box[3]>H)score+=(box[1]+box[3]-H)*3;
-    for(const q of laid.pts)if(q.id!==b.id)score+=area(box,[q.x-16,q.y-16,32,32])*2;
-    if(b.id!=='fast')score+=area(box,[CX-16,CY-16,32,32])*2;
-    for(const q of placedLabels)score+=area(box,q)*2;
-    if(score<bestScore){bestScore=score;best=s;}
+   for(const p of apts)arrows.set(p.id,{x:p.x,y:p.y});
+   const pills=new Map();
+   for(const b of items){const a=arrows.get(b.id),dx=a.x-CX,dy=a.y-CY,d=Math.hypot(dx,dy)||1;pills.set(b.id,{x:CX+dx/d*84,y:CY+dy/d*66});}
+   const ppts=items.map(b=>({id:b.id,...pills.get(b.id)}));
+   for(let it=0;it<300;it++){
+    let moved=false;
+    for(let i=0;i<ppts.length;i++)for(let j=i+1;j<ppts.length;j++){
+     const a=ppts[i],c=ppts[j];const dx=c.x-a.x,dy=c.y-a.y,ox=PW+18-Math.abs(dx),oy=PH+18-Math.abs(dy);
+     if(ox>0&&oy>0){if(ox<oy){const push=ox/2*(dx<0?-1:1);a.x-=push;c.x+=push;}else{const push=oy/2*(dy<0?-1:1);a.y-=push;c.y+=push;}moved=true;}
+    }
+    for(const p of ppts){p.x=Math.max(PW/2,Math.min(W-PW/2,p.x));p.y=Math.max(PH/2,Math.min(H-PH/2,p.y));
+     const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(d<72&&d>0){const r=72/d;p.x=CX+dx*r;p.y=CY+dy*r;}}
+    if(!moved)break;
    }
-   placedLabels.push(boxes[best]);
-   return best;
+   for(const p of ppts)pills.set(p.id,{x:p.x,y:p.y});
+   let worst=Infinity;
+   for(let i=0;i<ppts.length;i++)for(let j=i+1;j<ppts.length;j++){const a=ppts[i],c=ppts[j];worst=Math.min(worst,Math.max(Math.abs(c.x-a.x)-PW,Math.abs(c.y-a.y)-PH));}
+   return{CY,arrows,pills,worst};
   };
-  const sideOf=new Map();
-  if(fast)sideOf.set('fast',labelSide(fast,posOf('fast')));
-  for(const b of breaking)sideOf.set(b.id,labelSide(b,posOf(b.id)));
-  const badge=b=>{
-   const p=posOf(b.id),ang=b.id==='fast'?-90:Math.round(Math.atan2(b.dy,b.dx)*180/Math.PI);
-   const side=sideOf.get(b.id);
-   return `<button class="pitch-type ${b.id==='fast'?'straight':'breaking'}" data-pitch="${b.id}" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px" aria-label="${b.p.name}${b.id==='fast'?'':' 変化量'+b.level}"><span class="pt-arrow" style="transform:rotate(${ang}deg)" aria-hidden="true">→</span><span class="pt-label pt-lab-${side}"><span class="pt-name">${b.p.short}</span><span class="pt-meta"><small></small>${b.id==='fast'?'':`<em>変化${b.level}</em>`}</span></span></button>`;
+  let H=184,laid=layout(H);
+  if(laid.worst<2){H=212;laid=layout(H);}
+  const arrowMark=b=>{
+   const p=laid.arrows.get(b.id),deg=b.id==='fast'?-90:Math.round(Math.atan2(p.y-laid.CY,p.x-CX)*180/Math.PI);
+   return `<span class="pt-arrow-mark" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px" aria-hidden="true"><span class="pt-arrow-shape" style="transform:rotate(${deg}deg)"></span>${b.id==='fast'?'':`<span class="pt-arrow-num">${b.level}</span>`}</span>`;
+  };
+  const pill=b=>{
+   const p=laid.pills.get(b.id);
+   return `<button class="pitch-type ${b.id==='fast'?'straight':'breaking'}" data-pitch="${b.id}" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px" aria-label="${b.p.name}${b.id==='fast'?'':' 変化量'+b.level}"><span class="pt-name">${b.p.name}</span><small aria-hidden="true"></small></button>`;
   };
   $('pitch-types').style.height=H+'px';
-  $('pitch-types').innerHTML=svg+[...breaking,...(fast?[fast]:[])].map(badge).join('');
+  $('pitch-types').innerHTML=`<div class="pitch-ball" style="left:${CX}px;top:${laid.CY}px" aria-hidden="true"></div>`+items.map(arrowMark).join('')+[...breaking,...(fast?[fast]:[])].map(pill).join('');
  }
+
  $('pitch-types').addEventListener('click',e=>{const b=e.target.closest('[data-pitch]');if(b&&game&&!game.umpireMode&&!game.spectate&&game.phase==='aim'){game.pitchType=b.dataset.pitch;sound('tap');updateUI();}});
  function bindFieldAim(el){
   let gesture=null;
