@@ -101,11 +101,11 @@ async function scenario({controlled = true, playing = false} = {}) {
 
   assert(index.includes('./pwa-update.js?v=2'));
   assert(index.includes('./pwa-update.css?v=1'));
-  assert(index.includes('./app.js?v=169'));
+  assert(index.includes('./app.js?v=170'));
   assert(sw.includes('./pwa-update.js?v=2'));
   assert(sw.includes('./pwa-update.css?v=1'));
   assert(sw.includes('./stadium3d.js?v=77'));
-  assert(sw.includes('./app.js?v=169'));
+  assert(sw.includes('./app.js?v=170'));
   assert(sw.includes("'SKIP_WAITING'"));
   assert(!/self.addEventListener\('install',[^\n]*skipWaiting/.test(sw), 'install must not replace an active match');
   assert(!/caches\.delete\([^)]*localStorage/.test(sw));

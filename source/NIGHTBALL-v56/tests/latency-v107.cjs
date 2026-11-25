@@ -108,6 +108,6 @@ async function realTime(){
  assert(app.includes("m.t==='swing'"),'guest swing handling still exists');
  assert(online.includes('class LatencyEstimator')&&online.includes('class InputDelayQueue'),'pure latency logic lives in online.js');
  const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
- assert(sw.includes('nightball-v169-loading-progress'),'SW cache renamed for the latency build');
+ assert(sw.includes('nightball-v170-leaders-sort'),'SW cache renamed for the latency build');
 }
 realTime().then(()=>console.log('latency-v107: all assertions passed')).catch(e=>{console.error(e);process.exit(1);});

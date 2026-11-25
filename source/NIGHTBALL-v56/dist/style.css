@@ -334,3 +334,7 @@
 #loading-bar.indeterminate{animation:loading-slide 1.1s ease-in-out infinite alternate}
 @keyframes loading-slide{from{margin-left:0}to{margin-left:60%}}
 #loading-pct{font-size:11px;color:#9eb3a5;min-height:14px}
+/* Leaders ranking metric / scope switchers (v170, records-sort-options) */
+.leaders-scope{margin:2px 0 10px}
+.leaders-metrics{flex-wrap:wrap;margin-bottom:4px}
+.leaders-metrics button{flex:1 1 23%}

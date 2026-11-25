@@ -291,12 +291,29 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    const formHTML=report?`<h3 class="arcade-section-title">直近の調子</h3><p>${report.standing?`${report.standing.rank}位 · ${report.standing.wins}勝${report.standing.losses}敗<br>`:''}${report.form.length?report.form.map(g=>`${g.win?'○':'●'} ${g.for}-${g.against} vs ${NightTeams.get(g.opponent)?.short||''}`).join('　'):'まだ試合がありません'}</p>${(report.leaders.hr||report.leaders.avg||report.leaders.era)?`<h3 class="arcade-section-title">今季の主力</h3><p>${[report.leaders.avg?`打率 ${report.leaders.avg.name}（${(report.leaders.avg.h/Math.max(1,report.leaders.avg.ab)).toFixed(3).replace(/^0/,'')}）`:'',report.leaders.hr?`本塁打 ${report.leaders.hr.name}（${report.leaders.hr.hr}本）`:'',report.leaders.era?`防御率 ${report.leaders.era.name}（${(report.leaders.era.runs*27/Math.max(1,report.leaders.era.outs)).toFixed(2)}）`:''].filter(Boolean).join('<br>')}</p>`:''}`:'';
    modal(`${modalTitle('SCOUTING',`${club.name} スカウティング`)}<h3 class="arcade-section-title">監督</h3><p>${NightGame.managerFor(club.id).label} — ${NightGame.managerFor(club.id).desc}</p><h3 class="arcade-section-title">先発投手</h3>${starter?`<p><b>${starter.name}</b>（${starter.hand==='L'?'左':'右'}投） 最速 ${starter.velocity}km/h · 制球 ${starter.control} · 体力 ${starter.stamina}${starter.trait?`<br>特性：${starter.trait}`:''}<br>球種：${pitchList}</p>`:'<p>投手情報がありません</p>'}<h3 class="arcade-section-title">打線の特徴</h3><p>ミート ${avg('contact')} · パワー ${avg('power')} · 走力 ${avg('run')}（先発9人の平均）<br>左打者 ${lefts}人 / 右打者 ${lineup.length-lefts}人<br>${tags.join('・')}<br>主砲：${sluggers.map(p=>`${p.name}（パワー${p.power}）`).join('、')}</p>${formHTML}<button class="primary-button" data-action="close">閉じる</button>`,'scouting');
  }
+ let leadersMetric='avg',leadersScope='league';
  function leadersModal(){
+  // v170 (checker item records-sort-options): the ranking used to print a
+  // fixed top-10 for every metric at once. It now shows one metric at a
+  // time, switchable, with a league-wide / own-team scope toggle.
   const rows=Object.values(league.playerStats||{});
-  const bat=rows.filter(r=>r.ab>=3),pit=rows.filter(r=>r.outs>=9);
-  const list=(title,items,fmt)=>`<h3 class="arcade-section-title">${title}</h3>${items.length?items.map((r,i)=>`<div class="career-list-row"><div><b>${i+1}. ${r.name}</b><small>${NightTeams.get(r.clubId)?.short||''}</small></div><strong>${fmt(r)}</strong></div>`).join(''):'<p class="modal-note">まだ記録がありません</p>'}`;
   const saber=NightGame.saberMetrics(rows);
-  modal(`${modalTitle('','個人成績ランキング')}<p class="modal-note">シーズン全試合（自動進行分も含む）の通算成績です。</p>${list('打率',[...bat].sort((a,b)=>b.h/Math.max(1,b.ab)-a.h/Math.max(1,a.ab)).slice(0,10),r=>(r.h/r.ab).toFixed(3).replace(/^0/,''))}${list('本塁打',[...bat].sort((a,b)=>b.hr-a.hr||b.rbi-a.rbi).slice(0,10),r=>r.hr+' 本')}${list('打点',[...bat].sort((a,b)=>b.rbi-a.rbi).slice(0,10),r=>r.rbi+' 打点')}${list('OPS',[...bat].sort((a,b)=>saber.calc(b).ops-saber.calc(a).ops).slice(0,10),r=>saber.calc(r).ops.toFixed(3))}${list('防御率',[...pit].sort((a,b)=>a.runs*27/Math.max(1,a.outs)-b.runs*27/Math.max(1,b.outs)).slice(0,10),r=>(r.runs*27/r.outs).toFixed(2))}${list('奪三振',[...pit].sort((a,b)=>b.k-a.k).slice(0,10),r=>r.k+' K')}${list('WAR相当（打者）',[...bat].sort((a,b)=>saber.calc(b).batWar-saber.calc(a).batWar).slice(0,10),r=>saber.calc(r).batWar.toFixed(1))}${list('WAR相当（投手）',[...pit].sort((a,b)=>saber.calc(b).pitWar-saber.calc(a).pitWar).slice(0,10),r=>saber.calc(r).pitWar.toFixed(1))}<p class="modal-note">WAR相当はゲーム独自の換算です（打者はwOBA、投手は防御率と投球回をもとに、リーグ平均との差から算出）。</p><button class="primary-button" data-action="close">閉じる</button>`,'leaders');
+  const scoped=leadersScope==='team'?rows.filter(r=>r.clubId===league.clubId):rows;
+  const bat=scoped.filter(r=>r.ab>=3),pit=scoped.filter(r=>r.outs>=9);
+  const metrics=[
+   ['avg','打率','bat',(a,b)=>b.h/Math.max(1,b.ab)-a.h/Math.max(1,a.ab),r=>(r.h/r.ab).toFixed(3).replace(/^0/,'')],
+   ['hr','本塁打','bat',(a,b)=>b.hr-a.hr||b.rbi-a.rbi,r=>r.hr+' 本'],
+   ['rbi','打点','bat',(a,b)=>b.rbi-a.rbi,r=>r.rbi+' 打点'],
+   ['ops','OPS','bat',(a,b)=>saber.calc(b).ops-saber.calc(a).ops,r=>saber.calc(r).ops.toFixed(3)],
+   ['era','防御率','pit',(a,b)=>a.runs*27/Math.max(1,a.outs)-b.runs*27/Math.max(1,b.outs),r=>(r.runs*27/r.outs).toFixed(2)],
+   ['k','奪三振','pit',(a,b)=>b.k-a.k,r=>r.k+' K'],
+   ['warBat','WAR相当（打者）','bat',(a,b)=>saber.calc(b).batWar-saber.calc(a).batWar,r=>saber.calc(r).batWar.toFixed(1)],
+   ['warPit','WAR相当（投手）','pit',(a,b)=>saber.calc(b).pitWar-saber.calc(a).pitWar,r=>saber.calc(r).pitWar.toFixed(1)],
+  ];
+  const m=metrics.find(x=>x[0]===leadersMetric)||metrics[0];
+  const items=[...(m[2]==='bat'?bat:pit)].sort(m[3]).slice(0,10);
+  const list=items.length?items.map((r,i)=>`<div class="career-list-row"><div><b>${i+1}. ${r.name}</b><small>${NightTeams.get(r.clubId)?.short||''}</small></div><strong>${m[4](r)}</strong></div>`).join(''):'<p class="modal-note">まだ記録がありません</p>';
+  modal(`${modalTitle('','個人成績ランキング')}<p class="modal-note">シーズン全試合（自動進行分も含む）の通算成績です。指標と範囲を切り替えて表示できます。</p><div class="segmented leaders-scope">${[['league','リーグ全体'],['team','自チームのみ']].map(([v,l])=>`<button data-leaders-scope="${v}" class="${leadersScope===v?'active':''}" aria-pressed="${leadersScope===v}">${l}</button>`).join('')}</div><div class="segmented leaders-metrics">${metrics.map(([k,t])=>`<button data-leaders-metric="${k}" class="${m[0]===k?'active':''}" aria-pressed="${m[0]===k}">${t}</button>`).join('')}</div><h3 class="arcade-section-title">${m[1]}${leadersScope==='team'?'（自チーム）':''}</h3>${list}<p class="modal-note">対象は打者3打数以上・投手9アウト以上、上位10人まで表示します。WAR相当はゲーム独自の換算です（打者はwOBA、投手は防御率と投球回をもとに、リーグ平均との差から算出）。</p><button class="primary-button" data-action="close">閉じる</button>`,'leaders');
  }
  function tradeNegotiationModal(){
   if(!league?.tradeOffer)return;
@@ -3098,6 +3115,8 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    if(b.dataset.tradeDecline!==undefined){league?.declineTrade();saveLeague();closeModal(false);leagueDashboard();return;}
    if(b.dataset.farmPlayer){if(league){const id=b.dataset.farmPlayer;league.setFarm(id,!league.farmIds(league.clubId).includes(id));saveLeague();farmModal();}return;}
    if(b.dataset.learnPitch){if(league){const r=league.trainNewPitch(b.dataset.learnPitch,b.dataset.learnType);saveLeague();toast(r?(r.learned?'新球種を習得しました！':'まだ習得できませんでした。次の節も挑戦できます'):'今節はトレーニング済みです');rosterModal(b.dataset.learnPitch,'home');}return;}
+   if(b.dataset.leadersMetric){leadersMetric=b.dataset.leadersMetric;leadersModal();return;}
+   if(b.dataset.leadersScope){leadersScope=b.dataset.leadersScope;leadersModal();return;}
    if(b.dataset.difficulty){settings.difficulty=b.dataset.difficulty;save();$('modal-content').querySelectorAll('[data-difficulty]').forEach(el=>el.classList.toggle('active',el.dataset.difficulty===settings.difficulty));return;}
    if(b.dataset.injuryRate){settings.injuries=b.dataset.injuryRate;save();NightPennant.injuryRate=settings.injuries;$('modal-content').querySelectorAll('[data-injury-rate]').forEach(el=>el.classList.toggle('active',el.dataset.injuryRate===settings.injuries));return;}
    if(b.dataset.innings){settings.innings=Number(b.dataset.innings);save();setupMatch();return;}

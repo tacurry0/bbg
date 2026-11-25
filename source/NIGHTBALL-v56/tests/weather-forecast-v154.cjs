@@ -64,10 +64,10 @@ const gameSrc = fs.readFileSync(__dirname + '/../dist/game.js', 'utf8');
 assert(gameSrc.includes('static rollForecast('), 'game.js exposes the forecast roller');
 const html = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
 const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-assert(html.includes('./game.js?v=169') && html.includes('./app.js?v=169'), 'index pins at v154');
-assert(html.includes('./style.css?v=76') && sw.includes('./style.css?v=76'), 'style.css pin moves with the forecast styles');
-assert(sw.includes('nightball-v169-loading-progress'), 'SW cache renamed for v154');
-assert(sw.includes('./game.js?v=169') && sw.includes('./app.js?v=169'), 'SW precaches the v154 scripts');
+assert(html.includes('./game.js?v=170') && html.includes('./app.js?v=170'), 'index pins at v154');
+assert(html.includes('./style.css?v=77') && sw.includes('./style.css?v=77'), 'style.css pin moves with the forecast styles');
+assert(sw.includes('nightball-v170-leaders-sort'), 'SW cache renamed for v154');
+assert(sw.includes('./game.js?v=170') && sw.includes('./app.js?v=170'), 'SW precaches the v154 scripts');
 const style = fs.readFileSync(__dirname + '/../dist/style.css', 'utf8');
 assert(style.includes('.weather-forecast{'), 'style.css carries the forecast styles');
 

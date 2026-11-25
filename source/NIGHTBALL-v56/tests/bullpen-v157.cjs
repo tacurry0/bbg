@@ -108,10 +108,10 @@ const throwFn = app.slice(app.indexOf('function bullpenThrow(){'), app.indexOf('
 assert(!throwFn.includes('NightRecordRoom') && !throwFn.includes('records.'), 'bullpen throws never touch the record room or the match records');
 assert(arcade.includes('.bullpen-zone{') && arcade.includes('.menu-bullpen{'), 'arcade.css carries the bullpen styles');
 assert(html.includes('./bullpen.js?v=1'), 'index loads bullpen.js at v1');
-assert(html.includes('./game.js?v=169') && html.includes('./app.js?v=169'), 'index pins at v157');
+assert(html.includes('./game.js?v=170') && html.includes('./app.js?v=170'), 'index pins at v157');
 assert(html.includes('./arcade.css?v=80'), 'index pin for the changed arcade.css moves');
-assert(sw.includes('nightball-v169-loading-progress'), 'SW cache renamed for v157');
-assert(sw.includes('./game.js?v=169') && sw.includes('./app.js?v=169') && sw.includes('./bullpen.js?v=1') && sw.includes('./arcade.css?v=80'), 'SW precaches the v157 scripts including the new module');
+assert(sw.includes('nightball-v170-leaders-sort'), 'SW cache renamed for v157');
+assert(sw.includes('./game.js?v=170') && sw.includes('./app.js?v=170') && sw.includes('./bullpen.js?v=1') && sw.includes('./arcade.css?v=80'), 'SW precaches the v157 scripts including the new module');
 
 console.log('bullpen-v157: unit + static assertions passed');
 

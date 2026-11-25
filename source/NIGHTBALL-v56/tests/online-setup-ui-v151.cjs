@@ -67,10 +67,10 @@ assert(css.includes('.segmented.online-seg-grid{flex-wrap:wrap;max-height:180px;
 assert(css.includes('.segmented.online-seg-grid>button{flex:1 1 30%}'), 'grid buttons share rows evenly');
 
 // ---------- version pins (v151) ----------
-assert(index.includes('./game.js?v=169') && index.includes('./app.js?v=169'), 'index pins at v151');
-assert(index.includes('./style.css?v=76'), 'index style.css pin moves with the CSS change');
-assert(sw.includes('nightball-v169-loading-progress'), 'SW cache renamed for v151');
-assert(sw.includes('./game.js?v=169') && sw.includes('./app.js?v=169') && sw.includes('./style.css?v=76'), 'SW precaches the v151 assets');
+assert(index.includes('./game.js?v=170') && index.includes('./app.js?v=170'), 'index pins at v151');
+assert(index.includes('./style.css?v=77'), 'index style.css pin moves with the CSS change');
+assert(sw.includes('nightball-v170-leaders-sort'), 'SW cache renamed for v151');
+assert(sw.includes('./game.js?v=170') && sw.includes('./app.js?v=170') && sw.includes('./style.css?v=77'), 'SW precaches the v151 assets');
 
 console.log('online-setup-ui-v151: static assertions passed');
 
