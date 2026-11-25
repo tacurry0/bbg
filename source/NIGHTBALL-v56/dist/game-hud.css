@@ -264,7 +264,7 @@
 .game-stage .run-actions>button::after{content:"";position:absolute;inset:-3px 0}
 .game-stage .abs-challenge::after{content:"";position:absolute;inset:-6px 0}
 
-/* ===== Pitch picker (v179) =====
+/* ===== Pitch picker (v181) =====
    Power Pro style layout, following the reference image the user
    supplied: a ball at the centre of the deck, one chunky blue
    arrow marker per pitch around it (the arrow points in the
@@ -274,23 +274,27 @@
    gold was waived by the user. Still NO panel (v178): the ball,
    arrows and pills float directly over the field. Positions are
    computed in renderPitchDirections (arrows on a ring at each
-   pitch's exact break angle, pills on an ellipse beyond them,
+   pitch's exact break angle, pills on a circle beyond them,
    both relaxed so no two overlap); this block only styles them.
    The ::after expansion below widens the v152 rule for the pills,
-   so each 34px pill keeps an effective tap height above 44px.
-   Measured at 393x852: deck 264x184px of stage area, no
+   so each 38px pill keeps an effective tap height above 44px.
+   v181 aligns the proportions to the user's own mockup (an
+   edited real-device screenshot): ball 38px, pills 96x38px,
+   arrows 28px, and the deck nudged right and down so the ball
+   sits at about (37% of stage width, 35% of stage height).
+   Measured at 393x852: deck 264x204px of stage area, no
    strike-zone overlap. */
-.game-stage .pitch-deck{width:min(264px,90%);height:auto;padding:0;border:none;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
-.game-stage .pitch-deck .pitch-types{display:block!important;position:relative;height:184px;margin:0}
-.game-stage .pitch-deck .pitch-ball{position:absolute;transform:translate(-50%,-50%);width:34px;height:34px;border:2.5px solid #1c7fe0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ffffff,#eef3f7 62%,#c3cedb);box-shadow:0 2px 6px rgba(0,10,30,.5);font-size:0;pointer-events:none}
-.game-stage .pitch-deck .pitch-ball::before,.game-stage .pitch-deck .pitch-ball::after{content:"";position:absolute;top:3px;width:11px;height:26px;border:2px solid rgba(216,74,74,.85);border-radius:50%}
+.game-stage .pitch-deck{left:14px;top:max(125px,calc(30px + 115 * var(--hud-u)))!important;width:min(264px,90%);height:auto;padding:0;border:none;border-radius:0;background:transparent;box-shadow:none;backdrop-filter:none;-webkit-backdrop-filter:none}
+.game-stage .pitch-deck .pitch-types{display:block!important;position:relative;height:204px;margin:0}
+.game-stage .pitch-deck .pitch-ball{position:absolute;transform:translate(-50%,-50%);width:38px;height:38px;border:2.5px solid #1c7fe0;border-radius:50%;background:radial-gradient(circle at 34% 28%,#ffffff,#eef3f7 62%,#c3cedb);box-shadow:0 2px 6px rgba(0,10,30,.5);font-size:0;pointer-events:none}
+.game-stage .pitch-deck .pitch-ball::before,.game-stage .pitch-deck .pitch-ball::after{content:"";position:absolute;top:4px;width:12px;height:30px;border:2px solid rgba(216,74,74,.85);border-radius:50%}
 .game-stage .pitch-deck .pitch-ball::before{left:-4px}
 .game-stage .pitch-deck .pitch-ball::after{right:-4px}
-.pitch-deck .pt-arrow-mark{position:absolute;width:26px;height:26px;transform:translate(-50%,-50%);pointer-events:none}
+.pitch-deck .pt-arrow-mark{position:absolute;width:28px;height:28px;transform:translate(-50%,-50%);pointer-events:none}
 .pitch-deck .pt-arrow-shape{position:absolute;inset:0;background:linear-gradient(180deg,#6fc2ff,#1c7fe0);clip-path:polygon(0 24%,52% 24%,52% 2%,98% 50%,52% 98%,52% 76%,0 76%);filter:drop-shadow(0 1px 1px rgba(0,20,50,.5))}
-.pitch-deck .pt-arrow-num{position:absolute;inset:0;display:grid;place-items:center;font-size:11px;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,40,90,.85);letter-spacing:0}
-.game-stage .pitch-deck .pitch-type{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;width:92px;height:34px;min-height:34px;padding:0 6px;border-radius:999px;border:1.5px solid rgba(178,224,255,.9);background:linear-gradient(180deg,#3f9bf0,#1668c4 60%,#0d4f9e);color:#fff;box-shadow:0 2px 6px rgba(0,10,30,.45),inset 0 1px 0 rgba(255,255,255,.35);pointer-events:auto;-webkit-tap-highlight-color:transparent}
-.pitch-deck .pitch-type .pt-name{font-size:11.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;color:#fff;text-shadow:0 1px 2px rgba(0,30,70,.55);pointer-events:none}
+.pitch-deck .pt-arrow-num{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;font-weight:900;color:#fff;text-shadow:0 1px 2px rgba(0,40,90,.85);letter-spacing:0}
+.game-stage .pitch-deck .pitch-type{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;justify-content:center;width:96px;height:38px;min-height:38px;padding:0 6px;border-radius:999px;border:1.5px solid rgba(178,224,255,.9);background:linear-gradient(180deg,#3f9bf0,#1668c4 60%,#0d4f9e);color:#fff;box-shadow:0 2px 6px rgba(0,10,30,.45),inset 0 1px 0 rgba(255,255,255,.35);pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.pitch-deck .pitch-type .pt-name{font-size:12.5px;font-weight:800;letter-spacing:.02em;white-space:nowrap;color:#fff;text-shadow:0 1px 2px rgba(0,30,70,.55);pointer-events:none}
 .game-stage .pitch-deck .pitch-type small,.game-stage .pitch-deck .pitch-type.straight small{display:none}
 .pitch-deck .pitch-type.active{background:linear-gradient(180deg,#d6efff,#7cc0ff 55%,#3f96ec);border-color:#ffffff;color:#08305e;box-shadow:0 0 0 2px rgba(140,205,255,.9),0 2px 8px rgba(0,20,60,.5);outline:none}
 .pitch-deck .pitch-type.active .pt-name{color:#08305e;text-shadow:0 1px 0 rgba(255,255,255,.5)}

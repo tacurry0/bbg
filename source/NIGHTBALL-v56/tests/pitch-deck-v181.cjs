@@ -1,4 +1,4 @@
-// v179 regression: the pitch picker follows the Power Pro
+// v181 regression: the pitch picker follows the Power Pro
 // reference layout the user supplied — a ball at the centre of the
 // deck, one chunky blue arrow marker per pitch around it (arrow
 // points in the pitch's true break direction: engine screen
@@ -11,7 +11,11 @@
 // pitch-info display keeps that job); updateUI still fills the
 // hidden <small> each pill carries. The deck never overlaps the
 // strike zone and every pill keeps an effective tap height of at
-// least 44px (34px pill + the v152 ::after expansion).
+// least 44px (38px pill + the v152 ::after expansion).
+// v181 proportions follow the user's own mockup (an edited
+// real-device screenshot): ball 38px at about (37% W, 35% H) of
+// the stage, pills 96x38px riding a circle of radius ~80 around
+// the ball (bottom pills hang ~+64px below it), arrows 28px.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -22,21 +26,21 @@ const index = fs.readFileSync(path.join(root, 'dist', 'index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'dist', 'sw.js'), 'utf8');
 
 // ---------- static ----------
-assert(hud.includes('Pitch picker (v179)'), 'v179 picker block exists');
+assert(hud.includes('Pitch picker (v181)'), 'v181 picker block exists');
 assert(hud.includes('.pt-arrow-mark') && hud.includes('.pt-arrow-shape') && hud.includes('.pt-arrow-num'), 'arrow markers are styled');
 assert(hud.includes('width:min(264px,90%)'), 'the deck is capped at 264px wide');
 assert(hud.includes('background:transparent') && hud.includes('backdrop-filter:none'), 'the deck panel stays gone: transparent background, no blur');
 assert(!hud.includes('Pitch chart (v178)'), 'the v178 chart block is gone');
-assert(hud.includes('width:92px;height:34px'), 'pills are uniform 92x34px');
+assert(hud.includes('width:96px;height:38px'), 'pills are uniform 96x38px');
 assert(hud.includes('clip-path:polygon(0 24%,52% 24%'), 'the arrow marker is a chunky arrow shape');
 assert(app.includes('pt-arrow-mark') && app.includes('pt-arrow-num') && app.includes('pitch-ball'), 'picker markup carries ball, arrow markers and numbers');
 assert(app.includes('pt-name') && app.includes('${b.p.name}'), 'pills show the full pitch name');
 assert(!app.includes('pitch-chart-guides') && !app.includes('pd-arrow') && !app.includes('pt-label'), 'the v177/v178 badge chart markup is gone');
-assert(index.includes('./game.js?v=180') && index.includes('./app.js?v=180'), 'index pins at v179');
-assert(index.includes('./game-hud.css?v=85'), 'game-hud pin bumped for the redesign');
-assert(sw.includes('nightball-v180-low-rebound-bat'), 'SW cache renamed for v179');
+assert(index.includes('./game.js?v=181') && index.includes('./app.js?v=181'), 'index pins at v181');
+assert(index.includes('./game-hud.css?v=86'), 'game-hud pin bumped for the redesign');
+assert(sw.includes('nightball-v181-mockup-chart'), 'SW cache renamed for v181');
 
-console.log('pitch-deck-v179: static assertions passed');
+console.log('pitch-deck-v181: static assertions passed');
 
 // ---------- browser behaviour (393x852) ----------
 const { createServer } = require('node:http');
@@ -46,7 +50,7 @@ const { resolve, extname, sep } = require('node:path');
 (async () => {
   let chromium;
   try { ({ chromium } = require('playwright')); }
-  catch { console.log('pitch-deck-v179: playwright unavailable — browser checks skipped, static assertions passed'); return; }
+  catch { console.log('pitch-deck-v181: playwright unavailable — browser checks skipped, static assertions passed'); return; }
   const dir = resolve(__dirname, '../dist');
   const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
     '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml',
@@ -131,14 +135,16 @@ const { resolve, extname, sep } = require('node:path');
 
     const checkCommon = async (layout, label) => {
       assert(layout.deck.w <= 270, `${label}: deck is at most 270px wide (got ${layout.deck.w})`);
-      assert(layout.deck.h <= 218, `${label}: deck is at most 218px tall (got ${layout.deck.h})`);
+      assert(layout.deck.h <= 245, `${label}: deck is at most 245px tall (got ${layout.deck.h})`);
       assert(layout.deck.bg === 'rgba(0, 0, 0, 0)', `${label}: no panel background (got ${layout.deck.bg})`);
       assert(layout.deck.blur === 'none', `${label}: no backdrop blur (got ${layout.deck.blur})`);
       assert(layout.deck.shadow === 'none', `${label}: no panel shadow (got ${layout.deck.shadow})`);
-      assert(layout.ball && layout.ball.w >= 32 && layout.ball.w <= 36, `${label}: centre ball renders (~34px)`);
+      assert(layout.ball && layout.ball.w >= 36 && layout.ball.w <= 40, `${label}: centre ball renders (~38px)`);
       assert(layout.marks.length === layout.pills.length, `${label}: one arrow marker per pitch (${layout.marks.length} vs ${layout.pills.length})`);
       for (const b of layout.pills) {
-        assert(b.w >= 90 && b.w <= 94 && b.h >= 32 && b.h <= 36, `${label}: ${b.pitch} pill is a ~92x34px pill (got ${b.w}x${b.h})`);
+        assert(b.w >= 94 && b.w <= 98 && b.h >= 36 && b.h <= 40, `${label}: ${b.pitch} pill is a ~96x38px pill (got ${b.w}x${b.h})`);
+        const rad = Math.hypot(b.cx - layout.ball.cx, b.cy - layout.ball.cy);
+        assert(rad >= 66 && rad <= 102, `${label}: ${b.pitch} pill rides the mockup ring around the ball (radius ${rad.toFixed(1)})`);
         assert(b.name.length >= 2, `${label}: ${b.pitch} pill shows its pitch name (got "${b.name}")`);
         assert(/^\d+km\/h$/.test(b.speed), `${label}: ${b.pitch} speed data still fills the hidden slot (got "${b.speed}")`);
         assert(b.smallDisplay === 'none', `${label}: ${b.pitch} speed is not printed on the pill (display ${b.smallDisplay})`);
@@ -158,7 +164,7 @@ const { resolve, extname, sep } = require('node:path');
       if (layout.zone) {
         assert(overlap(layout.deck, layout.zone) === 0, `${label}: the deck never overlaps the strike zone`);
         assert(layout.zone.y - layout.deck.bottom >= 30, `${label}: at least 30px clearance above the strike zone (got ${(layout.zone.y - layout.deck.bottom).toFixed(1)})`);
-      } else console.log(`pitch-deck-v179: ${label}: strike-zone projection unavailable — zone check skipped`);
+      } else console.log(`pitch-deck-v181: ${label}: strike-zone projection unavailable — zone check skipped`);
     };
 
     // Default repertoire (right-handed pitcher: fast, slider, curve, change).
@@ -172,11 +178,15 @@ const { resolve, extname, sep } = require('node:path');
     // Reference layout: fastball pill above the ball, slider pill to
     // the right (engine: a right-hander's slider breaks right),
     // curve down-left, change below the ball.
-    assert(fast.cy < ball.cy - 40, `fastball pill sits above the ball (fast ${fast.cy.toFixed(1)} vs ball ${ball.cy.toFixed(1)})`);
+    assert(fast.cy < ball.cy - 60, `fastball pill sits above the ball (fast ${fast.cy.toFixed(1)} vs ball ${ball.cy.toFixed(1)})`);
+    // Mockup placement: the ball sits at about 37% of the stage
+    // width and 35% of its height (upper-centre cluster).
+    assert(ball.cx >= 138 && ball.cx <= 154, `ball sits near the mockup x (got ${ball.cx.toFixed(1)})`);
+    assert(ball.cy >= 290 && ball.cy <= 310, `ball sits near the mockup y (got ${ball.cy.toFixed(1)})`);
     assert(slider.cx > ball.cx + 50, `slider pill sits right of the ball (slider ${slider.cx.toFixed(1)} vs ball ${ball.cx.toFixed(1)})`);
-    assert(curve.cx < ball.cx - 20 && curve.cy > ball.cy + 25, 'curve pill sits down-left of the ball');
-    assert(change.cy > ball.cy + 30, 'change pill sits below the ball');
-    console.log(`pitch-deck-v179: default deck ${layout.deck.w}x${layout.deck.h}px, zone clearance ${layout.zone ? (layout.zone.y - layout.deck.bottom).toFixed(1) + 'px' : 'n/a'}, picker directions verified`);
+    assert(curve.cx < ball.cx - 20 && curve.cy > ball.cy + 40, 'curve pill sits down-left of the ball');
+    assert(change.cy > ball.cy + 40, 'change pill sits below the ball');
+    console.log(`pitch-deck-v181: default deck ${layout.deck.w}x${layout.deck.h}px, zone clearance ${layout.zone ? (layout.zone.y - layout.deck.bottom).toFixed(1) + 'px' : 'n/a'}, picker directions verified`);
 
     // Worst real repertoire (sinker + curve sit 20 degrees apart at
     // nearly the same radius — the hardest layout in the roster data).
@@ -190,7 +200,7 @@ const { resolve, extname, sep } = require('node:path');
     await page.waitForTimeout(400);
     const worst = await measure();
     await checkCommon(worst, 'worst-case repertoire (5 pitches)');
-    console.log(`pitch-deck-v179: worst-case deck ${worst.deck.w}x${worst.deck.h}px, zone clearance ${worst.zone ? (worst.zone.y - worst.deck.bottom).toFixed(1) + 'px' : 'n/a'}`);
+    console.log(`pitch-deck-v181: worst-case deck ${worst.deck.w}x${worst.deck.h}px, zone clearance ${worst.zone ? (worst.zone.y - worst.deck.bottom).toFixed(1) + 'px' : 'n/a'}`);
 
     // Selected state: clicking a pill highlights it unlike the others.
     await page.locator('[data-pitch="slider"]').first().click();
@@ -207,9 +217,9 @@ const { resolve, extname, sep } = require('node:path');
     assert(states.slider.active && states.slider.bg !== states.curve.bg, 'the selected pill is visually distinct');
     assert(Number(states.disabledOpacity) <= 0.5, `a disabled pill dims out (opacity ${states.disabledOpacity})`);
     assert.deepEqual(errors, [], 'no page errors during the picker flow');
-    console.log('pitch-deck-v179: browser checks passed (Power Pro picker, no overlaps, blue throughout)');
+    console.log('pitch-deck-v181: browser checks passed (Power Pro picker, no overlaps, blue throughout)');
   } finally {
     await browser.close();
     server.close();
   }
-})().catch(e => { console.error('pitch-deck-v179 FAILED:', e.message); process.exit(1); });
+})().catch(e => { console.error('pitch-deck-v181 FAILED:', e.message); process.exit(1); });

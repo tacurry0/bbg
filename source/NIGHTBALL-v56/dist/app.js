@@ -3071,7 +3071,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   // Every control is blue (the user waived the reference's gold).
   // No panel behind any of it (v178). Arrows start on a ring at
   // each pitch's exact break angle and relax apart when two breaks
-  // nearly coincide; pills start on an ellipse along the same
+  // nearly coincide; pills start on a ring along the same
   // direction and relax as rectangles, so the worst real
   // repertoires (sinker + curve sit 20 degrees apart) still never
   // overlap. If a repertoire cannot fit, the deck grows taller
@@ -3079,30 +3079,38 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   // selected pitch's speed / break still shows in the pitch-info
   // display, as before (updateUI keeps filling the hidden <small>
   // each pill carries for it).
+  // v181: proportions aligned to the user's own mockup (an edited
+  // real-device screenshot): the ball grows to 38px and sits lower
+  // and a touch more central on the stage (the deck itself shifts
+  // down in game-hud.css), the pills grow to 96x38px and ride on a
+  // circle of radius 80 around the ball instead of the wider,
+  // flatter ellipse — in the mockup the bottom pills hang lower
+  // (about +64px under the ball) and the whole cluster reads as a
+  // ring, not a row. Arrow markers grow to 28px on a ring of 41.
   const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
   const flip=g.pitcher.hand==='L'?-1:1;
   const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
   const fast=items.find(i=>i.id==='fast');
   const breaking=items.filter(i=>i.id!=='fast').sort((a,b)=>orderIds.indexOf(a.id)-orderIds.indexOf(b.id));
-  const W=264,CX=W/2,PW=92,PH=34;
+  const W=264,CX=W/2,PW=96,PH=38;
   const angOf=b=>b.id==='fast'?-Math.PI/2:Math.atan2(b.dy,b.dx);
   const layout=H=>{
    const CY=H/2+8;
    const arrows=new Map();
-   for(const b of items){const a=angOf(b);arrows.set(b.id,{x:CX+Math.cos(a)*34,y:CY+Math.sin(a)*34});}
+   for(const b of items){const a=angOf(b);arrows.set(b.id,{x:CX+Math.cos(a)*41,y:CY+Math.sin(a)*41});}
    const apts=items.map(b=>({id:b.id,...arrows.get(b.id)}));
    for(let it=0;it<240;it++){
     let moved=false;
     for(let i=0;i<apts.length;i++)for(let j=i+1;j<apts.length;j++){
      const a=apts[i],c=apts[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
-     if(d<27){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=(27-d)/2;a.x-=ux*push;a.y-=uy*push;c.x+=ux*push;c.y+=uy*push;moved=true;}
+     if(d<29){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=(29-d)/2;a.x-=ux*push;a.y-=uy*push;c.x+=ux*push;c.y+=uy*push;moved=true;}
     }
-    for(const p of apts){const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,r=Math.max(28,Math.min(56,d));p.x=CX+dx/d*r;p.y=CY+dy/d*r;p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));}
+    for(const p of apts){const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,r=Math.max(35,Math.min(62,d));p.x=CX+dx/d*r;p.y=CY+dy/d*r;p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));}
     if(!moved)break;
    }
    for(const p of apts)arrows.set(p.id,{x:p.x,y:p.y});
    const pills=new Map();
-   for(const b of items){const a=arrows.get(b.id),dx=a.x-CX,dy=a.y-CY,d=Math.hypot(dx,dy)||1;pills.set(b.id,{x:CX+dx/d*84,y:CY+dy/d*66});}
+   for(const b of items){const a=arrows.get(b.id),dx=a.x-CX,dy=a.y-CY,d=Math.hypot(dx,dy)||1;pills.set(b.id,{x:CX+dx/d*80,y:CY+dy/d*80});}
    const ppts=items.map(b=>({id:b.id,...pills.get(b.id)}));
    for(let it=0;it<300;it++){
     let moved=false;
@@ -3111,7 +3119,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      if(ox>0&&oy>0){if(ox<oy){const push=ox/2*(dx<0?-1:1);a.x-=push;c.x+=push;}else{const push=oy/2*(dy<0?-1:1);a.y-=push;c.y+=push;}moved=true;}
     }
     for(const p of ppts){p.x=Math.max(PW/2,Math.min(W-PW/2,p.x));p.y=Math.max(PH/2,Math.min(H-PH/2,p.y));
-     const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(d<72&&d>0){const r=72/d;p.x=CX+dx*r;p.y=CY+dy*r;}}
+     const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(d<76&&d>0){const r=76/d;p.x=CX+dx*r;p.y=CY+dy*r;}}
     if(!moved)break;
    }
    for(const p of ppts)pills.set(p.id,{x:p.x,y:p.y});
@@ -3119,8 +3127,8 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    for(let i=0;i<ppts.length;i++)for(let j=i+1;j<ppts.length;j++){const a=ppts[i],c=ppts[j];worst=Math.min(worst,Math.max(Math.abs(c.x-a.x)-PW,Math.abs(c.y-a.y)-PH));}
    return{CY,arrows,pills,worst};
   };
-  let H=184,laid=layout(H);
-  if(laid.worst<2){H=212;laid=layout(H);}
+  let H=204,laid=layout(H);
+  if(laid.worst<2){H=232;laid=layout(H);}
   const arrowMark=b=>{
    const p=laid.arrows.get(b.id),deg=b.id==='fast'?-90:Math.round(Math.atan2(p.y-laid.CY,p.x-CX)*180/Math.PI);
    return `<span class="pt-arrow-mark" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px" aria-hidden="true"><span class="pt-arrow-shape" style="transform:rotate(${deg}deg)"></span>${b.id==='fast'?'':`<span class="pt-arrow-num">${b.level}</span>`}</span>`;
