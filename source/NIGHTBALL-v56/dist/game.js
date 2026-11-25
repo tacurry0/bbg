@@ -9,7 +9,13 @@ const TYPES=[
  {id:'curve',name:'カーブ',short:'カーブ',speed:108,gap:26,bx:-.50,by:.95,cost:1.7,spin:2350},
  {id:'fork',name:'フォーク',short:'フォーク',speed:129,gap:14,bx:.04,by:1.15,cost:2.2,spin:1050},
  {id:'sinker',name:'シンカー',short:'シンカー',speed:126,gap:12,bx:-.72,by:.64,cost:1.8,spin:1850},
- {id:'change',name:'チェンジアップ',short:'チェンジ',speed:108,gap:24,bx:.20,by:.46,cost:1.4,spin:1550},
+ // v187 direction audit: the changeup fades ARM-side like the sinker /
+ // shoot family (a right-hander's change drops down-left from the
+ // batter's view); it previously carried bx +.20, the glove side, so
+ // it bent the same way as the slider — the odd one out in the table.
+ // Sign only: |bx| and by are unchanged, so the v183 break magnitude
+ // (hypot x1.30) is untouched.
+ {id:'change',name:'チェンジアップ',short:'チェンジ',speed:108,gap:24,bx:-.20,by:.46,cost:1.4,spin:1550},
  {id:'cutter',name:'カットボール',short:'カット',speed:141,gap:7,bx:.42,by:.08,cost:1.6,spin:2150},
  {id:'shoot',name:'シュート',short:'シュート',speed:139,gap:8,bx:-.56,by:.16,cost:1.7,spin:2000},
  {id:'split',name:'スプリット',short:'スプリット',speed:135,gap:10,bx:.02,by:.85,cost:2,spin:1200},

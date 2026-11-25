@@ -32,10 +32,10 @@ assert(tokyo.includes("reportLoading({phase:'done'})"), 'completion is reported'
 assert(tokyo.includes("phase:'error'"), 'failure clears the overlay');
 
 // ---------- version pins (v169) ----------
-assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v169');
+assert(index.includes('./game.js?v=187') && index.includes('./app.js?v=187'), 'index pins at v169');
 assert(index.includes('./style.css?v=77'), 'style.css pin bumped for the overlay styles');
-assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v169');
-assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186') && sw.includes('./style.css?v=77'), 'SW precaches the v169 assets');
+assert(sw.includes('nightball-v187-pitch-directions'), 'SW cache renamed for v169');
+assert(sw.includes('./game.js?v=187') && sw.includes('./app.js?v=187') && sw.includes('./style.css?v=77'), 'SW precaches the v169 assets');
 
 console.log('loading-v169: static assertions passed');
 

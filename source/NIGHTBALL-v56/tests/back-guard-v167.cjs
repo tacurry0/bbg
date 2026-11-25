@@ -55,9 +55,9 @@ const pauseBody = app.slice(app.indexOf('function pause()'), app.indexOf('functi
 assert(pauseBody.includes('try{checkpoint();}catch{}'), 'pause() guards checkpoint() with try/catch');
 
 // ---------- version pins (v167) ----------
-assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v167');
-assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v167');
-assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186'), 'SW precaches the v167 assets');
+assert(index.includes('./game.js?v=187') && index.includes('./app.js?v=187'), 'index pins at v167');
+assert(sw.includes('nightball-v187-pitch-directions'), 'SW cache renamed for v167');
+assert(sw.includes('./game.js?v=187') && sw.includes('./app.js?v=187'), 'SW precaches the v167 assets');
 
 console.log('back-guard-v167: static assertions passed');
 

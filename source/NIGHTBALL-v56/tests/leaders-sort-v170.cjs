@@ -21,10 +21,10 @@ for (const key of ['avg', 'hr', 'rbi', 'ops', 'era', 'k', 'warBat', 'warPit']) a
 assert(style.includes('.leaders-metrics'), 'metric switcher styles exist');
 
 // ---------- version pins (v170) ----------
-assert(index.includes('./game.js?v=186') && index.includes('./app.js?v=186'), 'index pins at v170');
+assert(index.includes('./game.js?v=187') && index.includes('./app.js?v=187'), 'index pins at v170');
 assert(index.includes('./style.css?v=77'), 'style.css pin bumped for the switcher styles');
-assert(sw.includes('nightball-v186-pitch-guide'), 'SW cache renamed for v170');
-assert(sw.includes('./game.js?v=186') && sw.includes('./app.js?v=186') && sw.includes('./style.css?v=77'), 'SW precaches the v170 assets');
+assert(sw.includes('nightball-v187-pitch-directions'), 'SW cache renamed for v170');
+assert(sw.includes('./game.js?v=187') && sw.includes('./app.js?v=187') && sw.includes('./style.css?v=77'), 'SW precaches the v170 assets');
 
 console.log('leaders-sort-v170: static assertions passed');
 
