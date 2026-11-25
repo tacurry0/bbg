@@ -105,7 +105,7 @@ assert(app.includes('NightRandomRoster.buildMatch'),'the app draws through Night
 assert(app.includes('if(randomClubs)randomMatch=null;'),'a started match consumes the draw, so a rematch draws again');
 assert(!app.includes("mode==='pennant'&&settings.randomRoster"),'pennant never draws random rosters');
 assert(index.includes('./random-roster.js?v=1'),'index loads the random roster module');
-assert(index.includes('./game.js?v=170')&&index.includes('./app.js?v=170'),'index pins move to v133');
-assert(sw.includes("nightball-v170-leaders-sort"),'SW cache renamed for v133');
+assert(index.includes('./game.js?v=171')&&index.includes('./app.js?v=171'),'index pins move to v133');
+assert(sw.includes("nightball-v171-tab-swipe"),'SW cache renamed for v133');
 assert(sw.includes('./random-roster.js?v=1'),'SW precaches the random roster module');
 console.log('PASS: seeded reproducibility, position-eligible full lineups with no duplicates, cross-club pool, roster sizes/identity preserved, OFF identical to stock, drawn match starts and restores, app wiring + v132 pins.');

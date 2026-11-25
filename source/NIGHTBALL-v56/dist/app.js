@@ -112,6 +112,34 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(!loadingState.timer)loadingState.timer=setTimeout(()=>{loadingState.timer=0;paintLoading();},250);
  }
  window.addEventListener('nightball-loading',e=>{const d=e.detail||{};loadingState.asset=(d.phase==='done'||d.phase==='error')?null:{label:d.label,fraction:d.fraction};renderLoading();});
+ // Tab swipe navigation (v171, checker item tab-swipe-navigation): on tabbed
+ // screens a decisive horizontal swipe moves to the adjacent tab, exactly as
+ // if that tab had been tapped. Swipes starting on form controls or the game
+ // canvas never trigger it, vertical-dominant and slow drags are ignored,
+ // and the ends of the tab row do not wrap.
+ function attachTabSwipe(el,buttonsSel){
+  if(!el||el.dataset.swipeBound)return;el.dataset.swipeBound='1';
+  let sx=0,sy=0,st=0,tracking=false;
+  el.addEventListener('touchstart',e=>{
+   if(e.touches.length!==1||e.target.closest('input,textarea,select,canvas,[data-no-swipe]')){tracking=false;return;}
+   const t=e.touches[0];sx=t.clientX;sy=t.clientY;st=Date.now();tracking=true;
+  },{passive:true});
+  el.addEventListener('touchend',e=>{
+   if(!tracking)return;tracking=false;
+   const t=e.changedTouches[0];if(!t)return;
+   const dx=t.clientX-sx,dy=t.clientY-sy;
+   if(Math.abs(dx)<60||Math.abs(dx)<Math.abs(dy)*1.6||Date.now()-st>700)return;
+   const buttons=[...el.querySelectorAll(buttonsSel)];
+   if(buttons.length<2)return;
+   const cur=buttons.findIndex(b=>b.getAttribute('aria-current')==='page'||b.getAttribute('aria-pressed')==='true');
+   if(cur<0)return;
+   const next=cur+(dx<0?1:-1);
+   if(next<0||next>=buttons.length)return;
+   buttons[next].click();
+  },{passive:true});
+ }
+ attachTabSwipe($('career'),'.career-tabs [data-tab]');
+ attachTabSwipe($('pennant'),'.pennant-league-options [data-pennant-league]');
  function modal(html,kind){$('modal-content').dataset.kind=kind;if(game?.phase!=='ended')stadiumAudio.stopEffects();if(kind!=='music-settings')ballparkMusic.stop('preview');const same=modalKind===kind;if(!same)lastFocus=document.activeElement;modalKind=kind;$('modal-content').innerHTML=html;$('modal-content').scrollTop=0;$('modal').hidden=false;document.body.style.overflow='hidden';if(!same)setTimeout(()=>{if(modalKind===kind)$('modal-content').querySelector('button')?.focus({preventScroll:true});},30);}
  function closeModal(resume=true){const previous=modalKind;ballparkMusic.stop('preview');$('modal').hidden=true;document.body.style.overflow='';modalKind='';if(resume&&game&&screen==='game'&&game.phase!=='ended')game.paused=false;lastFocus?.focus?.({preventScroll:true});if(resume&&game&&screen==='game')updateUI();if(resume&&game?.phase==='career-ready')$('career-field-overlay').querySelector('button')?.focus({preventScroll:true});if(resume&&screen==='game'&&game?.phase==='ended'&&!['result','career-result'].includes(previous))finish(game);}
  const modalTitle=(en,ja,close=true)=>`<div class="modal-top"><h2 id="modal-title">${({'今夜の試合':'試合設定','親指の操作・ゲーム設定':'設定','押して、狙って、離す。':'遊び方','ひと休み。':'タイム','練習おつかれさま':'練習結果','選手・ベンチ':'選手データ'})[ja]||ja}</h2>${close?'<button class="close-button" data-action="close" aria-label="閉じる">×</button>':''}</div>`;
