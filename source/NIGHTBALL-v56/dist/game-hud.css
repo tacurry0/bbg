@@ -264,40 +264,43 @@
 .game-stage .run-actions>button::after{content:"";position:absolute;inset:-3px 0}
 .game-stage .abs-challenge::after{content:"";position:absolute;inset:-6px 0}
 
-/* ===== Pitch deck redesign (v176) =====
-   v175's compass panel measured 272x248px: it crowded the whole
-   upper-left of the stage and, on shorter screens, its lower edge
-   closed to within ~45px of the strike-zone frame — rejected on real
-   devices as too big and in the way. v176 removes the compass
-   scaffolding entirely: a flat, aligned 2-column grid of identical
-   chips on a quieter, more transparent panel. Every chip has the same
-   structure — direction badge + pitch name on the first row, speed
-   (tabular numerals) and break level on the second — and the palette
-   is restrained to dark neutrals, one lime accent for the selected
-   pitch and one muted amber for the break level. The decorative
-   centre ball is gone. Break-direction grouping now only defines the
-   reading order and each chip's arrow. Chip visual height is 40px;
-   the ::after hit expansion below keeps the effective tap height at
-   45px (in the grid the next row's chip shadows the downward half of
-   the expansion, so it is widened to -9px on the vertical axis).
-   Measured at 393x852: 244px wide, 104px tall with 4 pitches and
-   150px with the roster-worst 5 (v175: 272x248). */
+/* ===== Pitch deck redesign (v177) =====
+   v176's flat grid was compact but threw away the one thing the deck
+   exists for: seeing WHERE each pitch breaks. v177 is a Power Pro /
+   ProSpi style pitch chart. The fastball badge sits at the origin of
+   a small chart; every breaking badge is placed in its true break
+   direction (engine screen direction: +bx is screen-right for a
+   right-handed pitcher, mirrored for left-handers, +by is down) at a
+   distance proportional to its break amount, with an SVG guide arrow
+   from the origin whose length and weight encode the same amount and
+   an arrow inside each badge rotated to the exact break angle. A
+   deterministic relaxation pass in renderPitchDirections separates
+   colliding badges (worst real case: sinker vs curve, 20 degrees
+   apart at nearly the same radius) and grows the chart once, from
+   148px to 176px tall, only for repertoires that cannot fit. Name /
+   speed / break level ride in a label offset outward from each
+   badge. Badges are 36px circles; the ::after expansion below keeps
+   the effective tap height at 50px. Measured at 393x852: panel
+   244x166px (v175's rejected compass: 272x248). */
 .game-stage .pitch-deck{width:min(244px,76%);height:auto;padding:8px;border:1px solid rgba(255,255,255,.09);border-radius:14px;background:rgba(6,12,20,.58);box-shadow:0 10px 26px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
-.game-stage .pitch-deck .pitch-types{display:grid!important;grid-template-columns:1fr 1fr!important;gap:6px;margin:0}
-.pitch-deck .pitch-type{display:flex;flex-direction:column;align-items:stretch;justify-content:center;gap:2px;min-height:40px;height:40px;padding:4px 9px;border-radius:10px;border:1px solid rgba(255,255,255,.13);background:rgba(15,25,39,.88);color:#edf3f9;box-shadow:inset 0 1px 0 rgba(255,255,255,.05);text-align:left;pointer-events:auto;-webkit-tap-highlight-color:transparent}
-.pitch-deck .pitch-type.straight{background:rgba(15,25,39,.88);border-color:rgba(255,255,255,.13);color:#edf3f9;flex-wrap:nowrap}
-.pitch-deck .pitch-type .pt-row{display:flex;align-items:center;gap:6px;min-width:0}
-.pitch-deck .pitch-type i{display:grid;place-items:center;width:16px;height:16px;flex:none;border-radius:50%;font-size:10px;font-style:normal;font-weight:900;line-height:1}
-.pitch-deck .pitch-type.straight i{background:rgba(120,180,245,.16);color:#a8cff7;box-shadow:inset 0 0 0 1px rgba(120,180,245,.35)}
-.pitch-deck .pitch-type.breaking i{background:rgba(240,198,126,.13);color:#eec987;box-shadow:inset 0 0 0 1px rgba(240,198,126,.32)}
-.pitch-deck .pitch-type .pt-name{font-size:11px;font-weight:800;letter-spacing:.04em;white-space:nowrap;overflow:hidden}
-.pitch-deck .pitch-type .pt-meta{display:flex;align-items:center;justify-content:space-between;gap:4px;min-height:12px;white-space:nowrap}
-.pitch-deck .pitch-type small{display:block;position:static;font-size:9px;font-weight:600;color:#9db1c7;font-variant-numeric:tabular-nums;letter-spacing:.05em}
-.pitch-deck .pitch-type em{position:static;font-size:8.5px;font-style:normal;font-weight:700;color:#eec987;background:rgba(240,198,126,.12);border-radius:5px;padding:0 4px;line-height:13px}
+.game-stage .pitch-deck .pitch-types{display:block!important;position:relative;height:148px;margin:0}
+.pitch-deck .pitch-chart-guides{position:absolute;left:0;top:0;pointer-events:none}
+.game-stage .pitch-deck .pitch-type{position:absolute;transform:translate(-50%,-50%);display:grid;place-items:center;width:36px;height:36px;min-height:36px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.18);background:rgba(15,25,39,.92);color:#edf3f9;box-shadow:0 3px 9px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.07);pointer-events:auto;-webkit-tap-highlight-color:transparent}
+.pitch-deck .pitch-type .pt-arrow{display:block;font-size:13px;font-weight:900;line-height:1;pointer-events:none}
+.pitch-deck .pitch-type.straight .pt-arrow{color:#a8cff7}
+.pitch-deck .pitch-type.breaking .pt-arrow{color:#eec987}
+.pitch-deck .pitch-type .pt-label{position:absolute;display:flex;flex-direction:column;gap:1px;white-space:nowrap;pointer-events:none;text-align:left}
+.pitch-deck .pitch-type .pt-lab-r{left:calc(100% + 5px);top:50%;transform:translateY(-50%)}
+.pitch-deck .pitch-type .pt-lab-l{right:calc(100% + 5px);top:50%;transform:translateY(-50%);text-align:right;align-items:flex-end}
+.pitch-deck .pitch-type .pt-lab-d{top:calc(100% + 3px);left:50%;transform:translateX(-50%);text-align:center;align-items:center}
+.pitch-deck .pitch-type .pt-lab-u{bottom:calc(100% + 3px);left:50%;transform:translateX(-50%);text-align:center;align-items:center}
+.pitch-deck .pitch-type .pt-name{font-size:10px;font-weight:800;letter-spacing:.03em;color:#f2f7fc;text-shadow:0 1px 3px rgba(0,0,0,.85),0 0 6px rgba(0,0,0,.5)}
+.pitch-deck .pitch-type .pt-meta{display:flex;align-items:center;gap:4px;white-space:nowrap}
+.pitch-deck .pitch-type .pt-lab-l .pt-meta{flex-direction:row-reverse}
+.pitch-deck .pitch-type small{display:block;position:static;font-size:8.5px;font-weight:600;color:#b9cbdf;font-variant-numeric:tabular-nums;letter-spacing:.04em;text-shadow:0 1px 3px rgba(0,0,0,.85)}
+.pitch-deck .pitch-type em{position:static;font-size:8px;font-style:normal;font-weight:700;color:#eec987;background:rgba(10,16,26,.55);border-radius:5px;padding:0 4px;line-height:12px}
 .pitch-deck .pitch-type em:empty{display:none}
 .pitch-deck .pitch-type.active,.pitch-deck .pitch-type.breaking.active{background:linear-gradient(180deg,#e9f9c3,#cde98b);border-color:#eaffb0;color:#1d2a12;box-shadow:0 0 0 2px rgba(213,243,106,.8),0 4px 12px rgba(160,220,80,.3);outline:none}
-.pitch-deck .pitch-type.active i{background:rgba(20,40,10,.14);color:#1d2a12;box-shadow:inset 0 0 0 1px rgba(20,40,10,.3)}
-.pitch-deck .pitch-type.active small{color:#4a5a30}
-.pitch-deck .pitch-type.active em{background:rgba(20,40,10,.13);color:#1d2a12}
+.pitch-deck .pitch-type.active .pt-arrow{color:#1d2a12}
 .pitch-deck .pitch-type:disabled{opacity:.35;filter:saturate(.35);box-shadow:none}
-.game-stage .pitch-deck .pitch-type::after{inset:-9px 0}
+.game-stage .pitch-deck .pitch-type::after{inset:-7px 0}

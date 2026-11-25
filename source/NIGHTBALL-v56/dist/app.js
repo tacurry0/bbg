@@ -3060,13 +3060,86 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
  const types=NightGame.TYPES;
  function renderPitchDirections(g){
   const key=NightPlayers.ratingVersion+'/'+g.pitcher.id+'/'+g.pitcher.pitches.join(',');if($('pitch-types').dataset.key===key)return;$('pitch-types').dataset.key=key;
-  // v176: the deck is a flat, aligned grid of identical chips. The
-  // break-direction groups below now only define the reading order and
-  // each pitch's direction arrow (mirrored for left-handed pitchers);
-  // the v175 compass scaffolding and centre ball are gone.
-  const directions=[['up','↑',['fast']],['left','←',['slider','cutter']],['right','→',['shoot']],['downleft','↙',['curve','slowcurve']],['down','↓',['fork','split','vslider']],['downright','↘',['sinker','change','knuckle']]];
-  const flipArrow={'←':'→','→':'←','↙':'↘','↘':'↙'};
-  $('pitch-types').innerHTML=directions.flatMap(([,arrow,ids])=>g.pitcher.pitches.filter(id=>ids.includes(id)).map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),level=Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)));return `<button class="pitch-type ${id==='fast'?'straight':'breaking'}" data-pitch="${id}" aria-label="${p.name}${id==='fast'?'': ' 変化量'+level}"><span class="pt-row"><i aria-hidden="true">${g.pitcher.hand==='L'?(flipArrow[arrow]||arrow):arrow}</i><span class="pt-name">${p.short}</span></span><span class="pt-meta"><small></small>${id==='fast'?'':`<em>変化${level}</em>`}</span></button>`;})).join('');
+  // v177: Power Pro / ProSpi style pitch chart. The fastball sits at
+  // the origin; each breaking pitch is placed in its actual break
+  // direction (the engine's screen direction: +bx is screen-right for
+  // a right-handed pitcher, mirrored for left-handers, +by is down),
+  // with the distance from the origin proportional to the break
+  // amount. An SVG guide arrow runs from the origin to each badge,
+  // its length and weight encoding the same amount, and each badge
+  // carries an arrow rotated to the pitch's true break angle. A
+  // deterministic relaxation pass separates badges that would collide
+  // (worst real case: sinker vs curve, 20 degrees apart at nearly the
+  // same radius); if a repertoire still cannot fit, the chart grows
+  // taller once and lays out again. Name / speed / break level ride
+  // in a label offset outward from each badge.
+  const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
+  const flip=g.pitcher.hand==='L'?-1:1;
+  const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,hyp:Math.hypot(dx,dy),level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
+  const fast=items.find(i=>i.id==='fast');
+  const breaking=items.filter(i=>i.id!=='fast').sort((a,b)=>orderIds.indexOf(a.id)-orderIds.indexOf(b.id));
+  const W=226,CX=W/2,CY=58,MIN=40;
+  const layout=H=>{
+   const pos=new Map([['fast',{x:CX,y:CY}]]);
+   for(const b of breaking){const r=Math.max(40,26+(b.hyp/1.55)*30),ux=b.hyp?b.dx/b.hyp:0,uy=b.hyp?b.dy/b.hyp:0;pos.set(b.id,{x:CX+ux*r,y:CY+uy*r});}
+   const pts=breaking.map(b=>({id:b.id,...pos.get(b.id)}));
+   for(let it=0;it<240;it++){
+    let moved=false;
+    const all=[{id:'fast',x:CX,y:CY,fixed:true},...pts];
+    for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++){
+     const a=all[i],c=all[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
+     if(d<MIN){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=MIN-d;
+      if(a.fixed){c.x+=ux*push;c.y+=uy*push;}else if(c.fixed){a.x-=ux*push;a.y-=uy*push;}
+      else{a.x-=ux*push/2;a.y-=uy*push/2;c.x+=ux*push/2;c.y+=uy*push/2;}
+      moved=true;}
+    }
+    for(const p of pts){p.x=Math.max(20,Math.min(W-20,p.x));p.y=Math.max(20,Math.min(H-20,p.y));}
+    if(!moved)break;
+   }
+   let worst=Infinity;
+   const all=[{id:'fast',x:CX,y:CY},...pts];
+   for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++)worst=Math.min(worst,Math.hypot(all[j].x-all[i].x,all[j].y-all[i].y));
+   return{pts,worst};
+  };
+  let H=148,laid=layout(H);
+  if(laid.worst<MIN-2){H=176;laid=layout(H);}
+  const posOf=id=>id==='fast'?{x:CX,y:CY}:laid.pts.find(p=>p.id===id);
+  const guides=breaking.map(b=>{const p=posOf(b.id),dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;return `<line x1="${CX}" y1="${CY}" x2="${(p.x-ux*23).toFixed(1)}" y2="${(p.y-uy*23).toFixed(1)}" stroke="rgba(219,236,255,.52)" stroke-width="${(1.3+b.level*.35).toFixed(2)}" marker-end="url(#pd-arrow)"/>`;}).join('');
+  const svg=`<svg class="pitch-chart-guides" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(219,236,255,.72)"/></marker></defs><line x1="0" y1="${CY}" x2="${W}" y2="${CY}" stroke="rgba(255,255,255,.06)"/><line x1="${CX}" y1="0" x2="${CX}" y2="${H}" stroke="rgba(255,255,255,.06)"/>${guides}</svg>`;
+  // Label placement: score all four sides of each badge (label box
+  // 68x28) against the panel bounds, every badge and every label
+  // already placed, preferring the radially outward side. Fixed
+  // side rules put neighbouring labels on top of each other in the
+  // down cluster and at the chart edges; scoring keeps every name,
+  // speed and break level readable.
+  const placedLabels=[];
+  const labelSide=(b,p)=>{
+   const pref=b.id==='fast'?'u':Math.abs(p.x-CX)>Math.abs(p.y-CY)*1.15?(p.x>CX?'r':'l'):((p.y-CY)>=0?'d':'u');
+   const boxes={r:[p.x+21,p.y-14,68,28],l:[p.x-89,p.y-14,68,28],d:[p.x-34,p.y+20,68,28],u:[p.x-34,p.y-48,68,28]};
+   const area=(a,q)=>Math.max(0,Math.min(a[0]+a[2],q[0]+q[2])-Math.max(a[0],q[0]))*Math.max(0,Math.min(a[1]+a[3],q[1]+q[3])-Math.max(a[1],q[1]));
+   let best=pref,bestScore=Infinity;
+   for(const s of ['r','l','d','u']){
+    const box=boxes[s];let score=s===pref?0:4;
+    if(box[0]<0)score+=(0-box[0])*3;if(box[1]<0)score+=(0-box[1])*3;
+    if(box[0]+box[2]>W)score+=(box[0]+box[2]-W)*3;if(box[1]+box[3]>H)score+=(box[1]+box[3]-H)*3;
+    for(const q of laid.pts)if(q.id!==b.id)score+=area(box,[q.x-19,q.y-19,38,38])*2;
+    if(b.id!=='fast')score+=area(box,[CX-19,CY-19,38,38])*2;
+    for(const q of placedLabels)score+=area(box,q)*2;
+    if(score<bestScore){bestScore=score;best=s;}
+   }
+   placedLabels.push(boxes[best]);
+   return best;
+  };
+  const sideOf=new Map();
+  if(fast)sideOf.set('fast',labelSide(fast,posOf('fast')));
+  for(const b of breaking)sideOf.set(b.id,labelSide(b,posOf(b.id)));
+  const badge=b=>{
+   const p=posOf(b.id),ang=b.id==='fast'?-90:Math.round(Math.atan2(b.dy,b.dx)*180/Math.PI);
+   const side=sideOf.get(b.id);
+   return `<button class="pitch-type ${b.id==='fast'?'straight':'breaking'}" data-pitch="${b.id}" style="left:${p.x.toFixed(1)}px;top:${p.y.toFixed(1)}px" aria-label="${b.p.name}${b.id==='fast'?'':' 変化量'+b.level}"><span class="pt-arrow" style="transform:rotate(${ang}deg)" aria-hidden="true">→</span><span class="pt-label pt-lab-${side}"><span class="pt-name">${b.p.short}</span><span class="pt-meta"><small></small>${b.id==='fast'?'':`<em>変化${b.level}</em>`}</span></span></button>`;
+  };
+  $('pitch-types').style.height=H+'px';
+  $('pitch-types').innerHTML=svg+[...breaking,...(fast?[fast]:[])].map(badge).join('');
  }
  $('pitch-types').addEventListener('click',e=>{const b=e.target.closest('[data-pitch]');if(b&&game&&!game.umpireMode&&!game.spectate&&game.phase==='aim'){game.pitchType=b.dataset.pitch;sound('tap');updateUI();}});
  function bindFieldAim(el){
