@@ -39,12 +39,12 @@ assert(/#stage-message\.pitch-call \{[^}]*inset:\s*max\(20%, calc\(266 \* var\(-
   'pitch-call banner floor drops to 266u so it stays below the top chart');
 
 // ---------- version pins (v150) ----------
-assert(index.includes('./game.js?v=177') && index.includes('./app.js?v=177'), 'index pins at v150');
-assert(index.includes('./game-hud.css?v=83'), 'game-hud.css pin moves with the chart rules');
+assert(index.includes('./game.js?v=178') && index.includes('./app.js?v=178'), 'index pins at v150');
+assert(index.includes('./game-hud.css?v=84'), 'game-hud.css pin moves with the chart rules');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin moves with the banner floor');
-assert(sw.includes('nightball-v177-pitch-chart'), 'SW cache renamed for v150');
-assert(sw.includes('./game.js?v=177') && sw.includes('./app.js?v=177') &&
-  sw.includes('./game-hud.css?v=83') && sw.includes('./abs.css?v=9'), 'SW precaches the v150 assets');
+assert(sw.includes('nightball-v178-bare-chart'), 'SW cache renamed for v150');
+assert(sw.includes('./game.js?v=178') && sw.includes('./app.js?v=178') &&
+  sw.includes('./game-hud.css?v=84') && sw.includes('./abs.css?v=9'), 'SW precaches the v150 assets');
 
 console.log('atbat-chart-top-v150: static assertions passed');
 

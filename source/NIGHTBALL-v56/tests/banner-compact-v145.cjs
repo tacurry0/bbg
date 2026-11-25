@@ -58,10 +58,10 @@ assert(app.includes("duration:pitchCall?245:impact?230:170"),
   'appear animation timing is unchanged (opacity/transform only, size-agnostic)');
 
 // ---------- version pins (v147 since count-sentence-remove) ----------
-assert(index.includes('./game.js?v=177') && index.includes('./app.js?v=177'), 'index pins move to v147');
+assert(index.includes('./game.js?v=178') && index.includes('./app.js?v=178'), 'index pins move to v147');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin moves with the compact rules');
-assert(sw.includes('nightball-v177-pitch-chart'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=177') && sw.includes('./app.js?v=177') && sw.includes('./abs.css?v=9'),
+assert(sw.includes('nightball-v178-bare-chart'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=178') && sw.includes('./app.js?v=178') && sw.includes('./abs.css?v=9'),
   'SW precaches the v147 assets');
 
 // ---------- browser behaviour (393x852) ----------

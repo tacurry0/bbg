@@ -3073,15 +3073,20 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   // same radius); if a repertoire still cannot fit, the chart grows
   // taller once and lays out again. Name / speed / break level ride
   // in a label offset outward from each badge.
+  // v178: the panel is gone — no background, border, shadow or blur
+  // in the CSS; badges and hairline guides float directly over the
+  // field. The chart shrinks with it (192px wide, 30px badges,
+  // radius and separation rescaled below) and the guide arrows thin
+  // out; labels keep their text shadows for on-grass readability.
   const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
   const flip=g.pitcher.hand==='L'?-1:1;
   const items=g.pitcher.pitches.map(id=>{const p=NightGame.pitchSpec(g.pitcher,id),dx=p.bx*flip,dy=p.by;return{id,p,dx,dy,hyp:Math.hypot(dx,dy),level:Math.max(1,Math.min(7,Math.round(Math.hypot(p.bx,p.by)*82/18)))};});
   const fast=items.find(i=>i.id==='fast');
   const breaking=items.filter(i=>i.id!=='fast').sort((a,b)=>orderIds.indexOf(a.id)-orderIds.indexOf(b.id));
-  const W=226,CX=W/2,CY=58,MIN=40;
+  const W=192,CX=W/2,CY=46,MIN=33;
   const layout=H=>{
    const pos=new Map([['fast',{x:CX,y:CY}]]);
-   for(const b of breaking){const r=Math.max(40,26+(b.hyp/1.55)*30),ux=b.hyp?b.dx/b.hyp:0,uy=b.hyp?b.dy/b.hyp:0;pos.set(b.id,{x:CX+ux*r,y:CY+uy*r});}
+   for(const b of breaking){const r=Math.max(33,21+(b.hyp/1.55)*24),ux=b.hyp?b.dx/b.hyp:0,uy=b.hyp?b.dy/b.hyp:0;pos.set(b.id,{x:CX+ux*r,y:CY+uy*r});}
    const pts=breaking.map(b=>({id:b.id,...pos.get(b.id)}));
    for(let it=0;it<240;it++){
     let moved=false;
@@ -3093,7 +3098,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
       else{a.x-=ux*push/2;a.y-=uy*push/2;c.x+=ux*push/2;c.y+=uy*push/2;}
       moved=true;}
     }
-    for(const p of pts){p.x=Math.max(20,Math.min(W-20,p.x));p.y=Math.max(20,Math.min(H-20,p.y));}
+    for(const p of pts){p.x=Math.max(15,Math.min(W-15,p.x));p.y=Math.max(15,Math.min(H-15,p.y));}
     if(!moved)break;
    }
    let worst=Infinity;
@@ -3101,11 +3106,11 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    for(let i=0;i<all.length;i++)for(let j=i+1;j<all.length;j++)worst=Math.min(worst,Math.hypot(all[j].x-all[i].x,all[j].y-all[i].y));
    return{pts,worst};
   };
-  let H=148,laid=layout(H);
-  if(laid.worst<MIN-2){H=176;laid=layout(H);}
+  let H=118,laid=layout(H);
+  if(laid.worst<MIN-2){H=146;laid=layout(H);}
   const posOf=id=>id==='fast'?{x:CX,y:CY}:laid.pts.find(p=>p.id===id);
-  const guides=breaking.map(b=>{const p=posOf(b.id),dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;return `<line x1="${CX}" y1="${CY}" x2="${(p.x-ux*23).toFixed(1)}" y2="${(p.y-uy*23).toFixed(1)}" stroke="rgba(219,236,255,.52)" stroke-width="${(1.3+b.level*.35).toFixed(2)}" marker-end="url(#pd-arrow)"/>`;}).join('');
-  const svg=`<svg class="pitch-chart-guides" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(219,236,255,.72)"/></marker></defs><line x1="0" y1="${CY}" x2="${W}" y2="${CY}" stroke="rgba(255,255,255,.06)"/><line x1="${CX}" y1="0" x2="${CX}" y2="${H}" stroke="rgba(255,255,255,.06)"/>${guides}</svg>`;
+  const guides=breaking.map(b=>{const p=posOf(b.id),dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;return `<line x1="${CX}" y1="${CY}" x2="${(p.x-ux*18).toFixed(1)}" y2="${(p.y-uy*18).toFixed(1)}" stroke="rgba(219,236,255,.45)" stroke-width="${(0.9+b.level*.22).toFixed(2)}" marker-end="url(#pd-arrow)"/>`;}).join('');
+  const svg=`<svg class="pitch-chart-guides" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" aria-hidden="true"><defs><marker id="pd-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="rgba(219,236,255,.6)"/></marker></defs><line x1="0" y1="${CY}" x2="${W}" y2="${CY}" stroke="rgba(255,255,255,.06)"/><line x1="${CX}" y1="0" x2="${CX}" y2="${H}" stroke="rgba(255,255,255,.06)"/>${guides}</svg>`;
   // Label placement: score all four sides of each badge (label box
   // 68x28) against the panel bounds, every badge and every label
   // already placed, preferring the radially outward side. Fixed
@@ -3115,15 +3120,15 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   const placedLabels=[];
   const labelSide=(b,p)=>{
    const pref=b.id==='fast'?'u':Math.abs(p.x-CX)>Math.abs(p.y-CY)*1.15?(p.x>CX?'r':'l'):((p.y-CY)>=0?'d':'u');
-   const boxes={r:[p.x+21,p.y-14,68,28],l:[p.x-89,p.y-14,68,28],d:[p.x-34,p.y+20,68,28],u:[p.x-34,p.y-48,68,28]};
+   const boxes={r:[p.x+19,p.y-13,64,27],l:[p.x-83,p.y-13,64,27],d:[p.x-32,p.y+18,64,27],u:[p.x-32,p.y-45,64,27]};
    const area=(a,q)=>Math.max(0,Math.min(a[0]+a[2],q[0]+q[2])-Math.max(a[0],q[0]))*Math.max(0,Math.min(a[1]+a[3],q[1]+q[3])-Math.max(a[1],q[1]));
    let best=pref,bestScore=Infinity;
    for(const s of ['r','l','d','u']){
     const box=boxes[s];let score=s===pref?0:4;
     if(box[0]<0)score+=(0-box[0])*3;if(box[1]<0)score+=(0-box[1])*3;
     if(box[0]+box[2]>W)score+=(box[0]+box[2]-W)*3;if(box[1]+box[3]>H)score+=(box[1]+box[3]-H)*3;
-    for(const q of laid.pts)if(q.id!==b.id)score+=area(box,[q.x-19,q.y-19,38,38])*2;
-    if(b.id!=='fast')score+=area(box,[CX-19,CY-19,38,38])*2;
+    for(const q of laid.pts)if(q.id!==b.id)score+=area(box,[q.x-16,q.y-16,32,32])*2;
+    if(b.id!=='fast')score+=area(box,[CX-16,CY-16,32,32])*2;
     for(const q of placedLabels)score+=area(box,q)*2;
     if(score<bestScore){bestScore=score;best=s;}
    }

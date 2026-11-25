@@ -1,15 +1,17 @@
-// v177 regression: pitch deck as a Power Pro / ProSpi style pitch
-// chart. v176's flat grid was compact but hid where each pitch
-// breaks; v177 puts the fastball badge at the origin of a small
-// chart and every breaking badge in its true break direction
-// (engine screen direction: +bx is screen-right for a right-handed
-// pitcher, mirrored for left-handers, +by is down) at a distance
-// proportional to the break amount, with an SVG guide arrow from
-// the origin and an in-badge arrow rotated to the exact break
-// angle. The panel stays compact (244x166px at 393x852 for real
-// repertoires) and never overlaps the strike zone. Name / speed /
-// break level stay visible in a label beside each badge, and every
-// badge keeps an effective tap height of at least 44px.
+// v178 regression: the Power Pro / ProSpi style pitch chart from
+// v177 (fastball badge at the origin, every breaking badge in its
+// true break direction — engine screen direction: +bx is
+// screen-right for a right-handed pitcher, mirrored for
+// left-handers, +by is down — at a distance proportional to the
+// break amount, SVG guide arrow from the origin, in-badge arrow at
+// the exact break angle) with the panel REMOVED: v177's frosted
+// panel (244x166px) read as big and heavy on real devices, so v178
+// drops the deck background, border, shadow and blur entirely and
+// shrinks the chart itself (192px wide, 30px badges). Badges and
+// hairline guides float directly over the field; labels keep
+// strong text shadows so names / speeds / break levels stay
+// readable on the grass. The chart never overlaps the strike zone
+// and every badge keeps an effective tap height of at least 44px.
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -20,18 +22,20 @@ const index = fs.readFileSync(path.join(root, 'dist', 'index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(root, 'dist', 'sw.js'), 'utf8');
 
 // ---------- static ----------
-assert(hud.includes('Pitch deck redesign (v177)'), 'v177 deck block exists');
+assert(hud.includes('Pitch chart (v178)'), 'v178 chart block exists');
 assert(hud.includes('.pitch-chart-guides'), 'the chart guide layer is styled');
-assert(hud.includes('width:min(244px,76%)'), 'the panel is capped at 244px wide');
-assert(hud.includes('width:36px;height:36px'), 'badges are uniform 36px circles');
+assert(hud.includes('width:min(192px,64%)'), 'the chart is capped at 192px wide');
+assert(hud.includes('background:transparent') && hud.includes('backdrop-filter:none'), 'the deck panel is gone: transparent background, no blur');
+assert(!hud.includes('Pitch deck redesign (v177)'), 'the v177 frosted panel block is gone');
+assert(hud.includes('width:30px;height:30px'), 'badges are uniform 30px circles');
 assert(app.includes('pitch-chart-guides') && app.includes('pd-arrow'), 'guide arrows are rendered per pitch');
 assert(app.includes('pt-arrow') && app.includes('pt-label') && app.includes('変化${b.level}'), 'badge markup carries arrow, name label and break-level pill');
 assert(!app.includes('pitch-ball') && !app.includes('pitch-direction'), 'the compass scaffolding stays gone');
-assert(index.includes('./game.js?v=177') && index.includes('./app.js?v=177'), 'index pins at v177');
-assert(index.includes('./game-hud.css?v=83'), 'game-hud pin bumped for the redesign');
-assert(sw.includes('nightball-v177-pitch-chart'), 'SW cache renamed for v177');
+assert(index.includes('./game.js?v=178') && index.includes('./app.js?v=178'), 'index pins at v178');
+assert(index.includes('./game-hud.css?v=84'), 'game-hud pin bumped for the redesign');
+assert(sw.includes('nightball-v178-bare-chart'), 'SW cache renamed for v178');
 
-console.log('pitch-deck-v177: static assertions passed');
+console.log('pitch-deck-v178: static assertions passed');
 
 // ---------- browser behaviour (393x852) ----------
 const { createServer } = require('node:http');
@@ -41,7 +45,7 @@ const { resolve, extname, sep } = require('node:path');
 (async () => {
   let chromium;
   try { ({ chromium } = require('playwright')); }
-  catch { console.log('pitch-deck-v177: playwright unavailable — browser checks skipped, static assertions passed'); return; }
+  catch { console.log('pitch-deck-v178: playwright unavailable — browser checks skipped, static assertions passed'); return; }
   const dir = resolve(__dirname, '../dist');
   const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
     '.json': 'application/json', '.webmanifest': 'application/manifest+json', '.svg': 'image/svg+xml',
@@ -82,7 +86,10 @@ const { resolve, extname, sep } = require('node:path');
 
     const measure = () => page.evaluate(() => {
       const rect = el => { const r = el.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height, right: r.right, bottom: r.bottom, cx: r.x + r.width / 2, cy: r.y + r.height / 2 }; };
-      const deck = rect(document.getElementById('pitch-deck'));
+      const deckEl = document.getElementById('pitch-deck');
+      const deck = rect(deckEl);
+      const dcs = getComputedStyle(deckEl);
+      deck.bg = dcs.backgroundColor; deck.blur = dcs.backdropFilter; deck.shadow = dcs.boxShadow; deck.borderW = dcs.borderTopWidth;
       const btns = [...document.querySelectorAll('[data-pitch]')].map(b => ({
         pitch: b.dataset.pitch, ...rect(b),
         speed: b.querySelector('small')?.textContent || '',
@@ -116,11 +123,14 @@ const { resolve, extname, sep } = require('node:path');
     const byPitch = (btns, id) => btns.find(b => b.pitch === id);
 
     const checkCommon = async (layout, label) => {
-      assert(layout.deck.w <= 250, `${label}: deck is at most 250px wide (got ${layout.deck.w})`);
-      assert(layout.deck.h <= 172, `${label}: deck is at most 172px tall (got ${layout.deck.h})`);
+      assert(layout.deck.w <= 198, `${label}: chart is at most 198px wide (got ${layout.deck.w})`);
+      assert(layout.deck.h <= 152, `${label}: chart is at most 152px tall (got ${layout.deck.h})`);
+      assert(layout.deck.bg === 'rgba(0, 0, 0, 0)', `${label}: no panel background behind the chart (got ${layout.deck.bg})`);
+      assert(layout.deck.blur === 'none', `${label}: no backdrop blur behind the chart (got ${layout.deck.blur})`);
+      assert(layout.deck.shadow === 'none', `${label}: no panel shadow behind the chart (got ${layout.deck.shadow})`);
       assert(layout.guides >= layout.btns.length - 1, `${label}: one guide arrow per breaking pitch (${layout.guides})`);
       for (const b of layout.btns) {
-        assert(b.w >= 34 && b.w <= 38 && b.h >= 34 && b.h <= 38, `${label}: ${b.pitch} badge is a ~36px circle (got ${b.w}x${b.h})`);
+        assert(b.w >= 28 && b.w <= 32 && b.h >= 28 && b.h <= 32, `${label}: ${b.pitch} badge is a ~30px circle (got ${b.w}x${b.h})`);
         assert(b.name.length > 0, `${label}: ${b.pitch} label shows its name`);
         assert(/^\d+km\/h$/.test(b.speed), `${label}: ${b.pitch} label shows its speed (got "${b.speed}")`);
         if (b.pitch !== 'fast') assert(/^変化[1-7]$/.test(b.level), `${label}: ${b.pitch} label shows its break level (got "${b.level}")`);
@@ -131,12 +141,12 @@ const { resolve, extname, sep } = require('node:path');
       // Badges are circles: non-overlap means centre distance >= diameter.
       for (let i = 0; i < layout.btns.length; i++) for (let j = i + 1; j < layout.btns.length; j++) {
         const d = Math.hypot(layout.btns[j].cx - layout.btns[i].cx, layout.btns[j].cy - layout.btns[i].cy);
-        assert(d >= 35, `${label}: ${layout.btns[i].pitch} and ${layout.btns[j].pitch} badges do not overlap (centre distance ${d.toFixed(1)})`);
+        assert(d >= 32, `${label}: ${layout.btns[i].pitch} and ${layout.btns[j].pitch} badges do not overlap (centre distance ${d.toFixed(1)})`);
       }
       if (layout.zone) {
         assert(overlap(layout.deck, layout.zone) === 0, `${label}: the deck frame never overlaps the strike zone`);
         assert(layout.zone.y - layout.deck.bottom >= 30, `${label}: at least 30px clearance above the strike zone (got ${(layout.zone.y - layout.deck.bottom).toFixed(1)})`);
-      } else console.log(`pitch-deck-v177: ${label}: strike-zone projection unavailable — zone check skipped`);
+      } else console.log(`pitch-deck-v178: ${label}: strike-zone projection unavailable — zone check skipped`);
     };
 
     // Default repertoire (right-handed pitcher: fast, slider, curve, change).
@@ -147,12 +157,12 @@ const { resolve, extname, sep } = require('node:path');
     assert(fast && slider && curve && change, 'default repertoire renders fast/slider/curve/change');
     // Engine screen direction for a right-hander: slider breaks right,
     // curve breaks left and down, change drops below-right of the origin.
-    assert(slider.cx > fast.cx + 20, `slider sits right of the origin (slider ${slider.cx.toFixed(1)} vs fast ${fast.cx.toFixed(1)})`);
-    assert(curve.cx < fast.cx - 12 && curve.cy > fast.cy + 12, 'curve sits left-down of the origin');
-    assert(change.cy > fast.cy + 12, 'change sits below the origin');
+    assert(slider.cx > fast.cx + 14, `slider sits right of the origin (slider ${slider.cx.toFixed(1)} vs fast ${fast.cx.toFixed(1)})`);
+    assert(curve.cx < fast.cx - 10 && curve.cy > fast.cy + 10, 'curve sits left-down of the origin');
+    assert(change.cy > fast.cy + 10, 'change sits below the origin');
     const dist = b => Math.hypot(b.cx - fast.cx, b.cy - fast.cy);
-    assert(dist(curve) > dist(change) + 2, `distance encodes break amount: curve (${dist(curve).toFixed(1)}) is farther out than change (${dist(change).toFixed(1)})`);
-    console.log(`pitch-deck-v177: default deck ${layout.deck.w}x${layout.deck.h}px, zone clearance ${layout.zone ? (layout.zone.y - layout.deck.bottom).toFixed(1) + 'px' : 'n/a'}, chart directions verified`);
+    assert(dist(curve) > dist(change) + 1, `distance encodes break amount: curve (${dist(curve).toFixed(1)}) is farther out than change (${dist(change).toFixed(1)})`);
+    console.log(`pitch-deck-v178: default deck ${layout.deck.w}x${layout.deck.h}px, zone clearance ${layout.zone ? (layout.zone.y - layout.deck.bottom).toFixed(1) + 'px' : 'n/a'}, chart directions verified`);
 
     // Worst real repertoire (sinker + curve sit 20 degrees apart at
     // nearly the same radius — the hardest layout in the roster data).
@@ -166,7 +176,7 @@ const { resolve, extname, sep } = require('node:path');
     await page.waitForTimeout(400);
     const worst = await measure();
     await checkCommon(worst, 'worst-case repertoire (5 pitches)');
-    console.log(`pitch-deck-v177: worst-case deck ${worst.deck.w}x${worst.deck.h}px, zone clearance ${worst.zone ? (worst.zone.y - worst.deck.bottom).toFixed(1) + 'px' : 'n/a'}`);
+    console.log(`pitch-deck-v178: worst-case deck ${worst.deck.w}x${worst.deck.h}px, zone clearance ${worst.zone ? (worst.zone.y - worst.deck.bottom).toFixed(1) + 'px' : 'n/a'}`);
 
     // Selected state: clicking a badge fills it (lime) unlike the others.
     await page.locator('[data-pitch="slider"]').first().click();
@@ -183,9 +193,9 @@ const { resolve, extname, sep } = require('node:path');
     assert(states.slider.active && states.slider.bg !== states.curve.bg, 'the selected badge is visually distinct');
     assert(Number(states.disabledOpacity) <= 0.5, `a disabled badge dims out (opacity ${states.disabledOpacity})`);
     assert.deepEqual(errors, [], 'no page errors during the deck flow');
-    console.log('pitch-deck-v177: browser checks passed (pitch chart, info intact, no badge/deck/zone overlaps)');
+    console.log('pitch-deck-v178: browser checks passed (pitch chart, info intact, no badge/deck/zone overlaps)');
   } finally {
     await browser.close();
     server.close();
   }
-})().catch(e => { console.error('pitch-deck-v177 FAILED:', e.message); process.exit(1); });
+})().catch(e => { console.error('pitch-deck-v178 FAILED:', e.message); process.exit(1); });
