@@ -59,7 +59,7 @@ assert(om.includes('data-action="online-start"'), 'start button unchanged');
 for (const attr of ['onlineMode', 'onlineClub', 'onlineInnings', 'onlineSide', 'onlinePark']) {
   assert(app.includes(`if(b.dataset.${attr})`), `click handler for ${attr} still exists`);
 }
-assert(app.includes("o.session?.send({t:'start',home:homeId,away:awayId,innings:settings.innings,difficulty:settings.difficulty,park})"), 'start message shape unchanged');
+assert(app.includes("o.session?.send({t:'start',home:homeId,away:awayId,innings:settings.innings,difficulty:settings.difficulty,park,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:o.myPitcher||0})"), 'start message carries the v182 match config (rules / absolute handicap / tiebreak / host starter)');
 
 // ---------- CSS for the segmented lobby groups ----------
 assert(css.includes('.segmented.online-seg{margin:6px 0 12px}'), 'segmented lobby groups keep the old list spacing');
@@ -67,10 +67,10 @@ assert(css.includes('.segmented.online-seg-grid{flex-wrap:wrap;max-height:180px;
 assert(css.includes('.segmented.online-seg-grid>button{flex:1 1 30%}'), 'grid buttons share rows evenly');
 
 // ---------- version pins (v151) ----------
-assert(index.includes('./game.js?v=181') && index.includes('./app.js?v=181'), 'index pins at v151');
+assert(index.includes('./game.js?v=182') && index.includes('./app.js?v=182'), 'index pins at v151');
 assert(index.includes('./style.css?v=77'), 'index style.css pin moves with the CSS change');
-assert(sw.includes('nightball-v181-mockup-chart'), 'SW cache renamed for v151');
-assert(sw.includes('./game.js?v=181') && sw.includes('./app.js?v=181') && sw.includes('./style.css?v=77'), 'SW precaches the v151 assets');
+assert(sw.includes('nightball-v182-online-rules'), 'SW cache renamed for v151');
+assert(sw.includes('./game.js?v=182') && sw.includes('./app.js?v=182') && sw.includes('./style.css?v=77'), 'SW precaches the v151 assets');
 
 console.log('online-setup-ui-v151: static assertions passed');
 

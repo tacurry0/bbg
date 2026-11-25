@@ -268,8 +268,8 @@ for(const [leagueId,[clubId,partner,userGames]] of Object.entries(EXPECT)){
  assert(app.includes('league.interleagueActive'),'dashboard marks the block');
  assert(app.includes('league.advanceInterleagueByes()'),'dashboard advances user-bye rounds at phase entry');
  assert(index.includes('./pennant.js?v=86')&&sw.includes('./pennant.js?v=86'),'pennant pin bumped');
- assert(index.includes('./game.js?v=181')&&index.includes('./app.js?v=181'),'index pins at v166');
- assert(sw.includes('nightball-v181-mockup-chart'),'SW cache renamed for v166');
- assert(sw.includes('./game.js?v=181')&&sw.includes('./app.js?v=181'),'SW precaches the v166 scripts');
+ assert(index.includes('./game.js?v=182')&&index.includes('./app.js?v=182'),'index pins at v166');
+ assert(sw.includes('nightball-v182-online-rules'),'SW cache renamed for v166');
+ assert(sw.includes('./game.js?v=182')&&sw.includes('./app.js?v=182'),'SW precaches the v166 scripts');
 }
 console.log('interleague-v166: all assertions passed');

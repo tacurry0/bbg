@@ -158,13 +158,18 @@ window.NightGame=class NightGame{
 
  // Variant rules (v133, checker item "variant-rules-match"): regular
  // versus matches only. normalizeVariantRules is the single gate — any
- // other mode (pennant / career / online / umpire / practice / derby),
- // or a game built without the option, gets every rule OFF, so the
- // engine below only ever checks this.variantRules flags.
+ // other mode (pennant / career / umpire / practice / derby), or a game
+ // built without the option, gets every rule OFF, so the engine below
+ // only ever checks this.variantRules flags. Since v182 the gate has
+ // one explicit exception: an ONLINE versus match opts in with
+ // options.onlineMatch (set only by the two online starters in app.js,
+ // which pass the host's lobby choices to both engines), so a remote
+ // game built any other way — career-world's remoteSide path included —
+ // is still blocked exactly as before.
  static VARIANT_RULE_KEYS=['fullCount','metalBat','noBreaking','twoOuts','lowReboundBat'];
  static normalizeVariantRules(mode,options={}){
   const out={};for(const k of NightGame.VARIANT_RULE_KEYS)out[k]=false;
-  if(mode!=='match'||options.umpire||options.remoteSide||options.career)return out;
+  if(mode!=='match'||options.umpire||options.career||(options.remoteSide&&!options.onlineMatch))return out;
   const src=options.variantRules||{};
   for(const k of NightGame.VARIANT_RULE_KEYS)out[k]=src[k]===true;
   // The two bat rules are opposites and mutually exclusive (v180):
@@ -182,11 +187,19 @@ window.NightGame=class NightGame{
  // change, so all in-half outs checks see the right number. Anything
  // invalid or all-default returns null = no handicap, exactly as before.
  static normalizeHandicap(mode,options={}){
-  if(mode!=='match'||options.umpire||options.remoteSide||options.career||options.timeAttack||options.apbcFixtureId||options.ctFixture||options.worldFixture||options.competition)return null;
+  if(mode!=='match'||options.umpire||options.career||options.timeAttack||options.apbcFixtureId||options.ctFixture||options.worldFixture||options.competition||(options.remoteSide&&!options.onlineMatch))return null;
   const src=options.handicap;
   if(!src||typeof src!=='object')return null;
   const runs=v=>Number.isInteger(v)?Math.min(3,Math.max(0,v)):0;
-  const out={userRuns:runs(src.userRuns),cpuRuns:runs(src.cpuRuns),userOuts:src.userOuts===4?4:3,cpuOuts:src.cpuOuts===2?2:3};
+  // Offline, the user's own outs can only be eased to 4 and the CPU's
+  // only cut to 2. Online (v182) the handicap crosses the wire in
+  // absolute home/away terms and each side converts it back to its own
+  // perspective, which can legitimately put 2 on userOuts or 4 on
+  // cpuOuts — so the online path accepts the full 2..4 range on both.
+  const outs=v=>Number.isInteger(v)&&v>=2&&v<=4?v:3;
+  const out=options.onlineMatch
+   ?{userRuns:runs(src.userRuns),cpuRuns:runs(src.cpuRuns),userOuts:outs(src.userOuts),cpuOuts:outs(src.cpuOuts)}
+   :{userRuns:runs(src.userRuns),cpuRuns:runs(src.cpuRuns),userOuts:src.userOuts===4?4:3,cpuOuts:src.cpuOuts===2?2:3};
   return out.userRuns||out.cpuRuns||out.userOuts!==3||out.cpuOuts!==3?out:null;
  }
  // Time attack (v134, checker item "time-attack-mode"): regular versus

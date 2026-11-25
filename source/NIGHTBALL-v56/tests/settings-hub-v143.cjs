@@ -76,8 +76,8 @@ assert(app.includes("function updateSound(){$('sound').innerHTML=svg(settings.so
 assert(!app.includes("mode:'match',innings:5,hostHome:true"), 'the lobby no longer hard-codes its own innings');
 assert(app.includes("mode:'match',innings:settings.innings,hostHome:true"), 'room creation initialises the lobby from the normal-match innings');
 assert(app.includes("data-online-innings=\"${n}\" class=\"${settings.innings===n?'active':''}\""), 'the lobby renders its innings selection from settings.innings (v151 segmented markup)');
-assert(app.includes("innings:settings.innings,difficulty:settings.difficulty,park"), 'the start message sends the shared innings');
-assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0"), 'the host game is created with the shared innings');
+assert(app.includes("innings:settings.innings,difficulty:settings.difficulty,park,rules"), 'the start message sends the shared innings (and the v182 match config)');
+assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:o.myPitcher||0"), 'the host game is created with the shared innings');
 {
   // Run the real lobby handler body: changing innings in the lobby must
   // change (and persist) the normal-match setting, and vice versa the
@@ -89,8 +89,10 @@ assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0
   let saved = null, modalCalls = 0;
   const save = () => { saved = JSON.parse(JSON.stringify(settings)); };
   const onlineModal = () => { modalCalls++; };
-  const handler = new Function('b', 'online', 'settings', 'save', 'onlineModal', line.replace(/return;$/, ''));
-  handler({ dataset: { onlineInnings: '3' } }, online, settings, save, onlineModal);
+  const handler = new Function('b', 'online', 'settings', 'save', 'onlineModal', 'onlineSendLobbyConfig', line.replace(/return;$/, ''));
+  let configSends = 0;
+  handler({ dataset: { onlineInnings: '3' } }, online, settings, save, onlineModal, () => { configSends++; });
+  assert.equal(configSends, 1, 'the lobby change also broadcasts the v182 lobby config to the guest');
   assert.equal(settings.innings, 3, 'changing innings in the online lobby changes the normal-match setting');
   assert.equal(saved.innings, 3, 'the lobby change is persisted to nightball.settings');
   assert.equal(online.innings, 3, 'the room mirror follows the shared value');
@@ -138,8 +140,8 @@ assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0
 }
 
 // ---------- v143 version pins ----------
-assert(index.includes('./game.js?v=181') && index.includes('./app.js?v=181'), 'index pins move to v143');
-assert(sw.includes('nightball-v181-mockup-chart'), 'SW cache renamed for v143');
-assert(sw.includes('./game.js?v=181') && sw.includes('./app.js?v=181'), 'SW precaches the v143 scripts');
+assert(index.includes('./game.js?v=182') && index.includes('./app.js?v=182'), 'index pins move to v143');
+assert(sw.includes('nightball-v182-online-rules'), 'SW cache renamed for v143');
+assert(sw.includes('./game.js?v=182') && sw.includes('./app.js?v=182'), 'SW precaches the v143 scripts');
 
 console.log('settings-hub-v143: all assertions passed');
