@@ -54,7 +54,7 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({timeout:90000,path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=77');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=78');
   const original=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(game,time){
    if(game){

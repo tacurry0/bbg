@@ -172,7 +172,7 @@ window.NightRenderer=class NightRenderer{
         for(const [sx,sy]of [[-1,-1],[1,-1],[1,1],[-1,1]]){const px=x+sx*w/2,py=y+sy*h/2;c.moveTo(px-sx*13,py);c.lineTo(px,py);c.lineTo(px,py-sy*13);}c.stroke();
         if(umpireReveal){this.ellipse(c,x+umpireReveal.x*75,y+umpireReveal.y*64,6,6,umpireReveal.strike?'#7dff8a':'#ff9a7d','#14252d');}
         const last=g.pitchTrace.filter(p=>p.half===g.half&&p.inning===g.inning).at(-1);
-        if(window.nightSettings?.showTrace&&last&&['aim','windup'].includes(g.phase)){const px=x+last.x*75,py=y+last.y*64;this.ellipse(c,px,py,5,5,'#ffffff0b','#d0e0b65c');c.fillStyle='#b4c79a';c.font='5px Arial';c.textAlign='center';c.fillText('前球',px,py-9);}
+        if(window.nightSettings?.showTrace&&!g.hardcore&&last&&['aim','windup'].includes(g.phase)){const px=x+last.x*75,py=y+last.y*64;this.ellipse(c,px,py,5,5,'#ffffff0b','#d0e0b65c');c.fillStyle='#b4c79a';c.font='5px Arial';c.textAlign='center';c.fillText('前球',px,py-9);}
         if(!umpireReveal){
         const cx=x+g.cursor.x*75,cy=y+g.cursor.y*64;
         if(g.touch){c.strokeStyle='#eaf4d454';c.lineWidth=1;c.setLineDash([2,4]);c.beginPath();c.moveTo(g.touch.x,g.touch.y-3);c.lineTo(cx,cy+10);c.stroke();c.setLineDash([]);this.ellipse(c,g.touch.x,g.touch.y,3,3,'#e6f3cb40');}

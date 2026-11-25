@@ -60,10 +60,10 @@ assert(app.includes('function resultSignature(data)') && app.includes('function 
   'v159 dedup / phase guard is still present');
 
 // ---------- version pins (v162) ----------
-assert(index.includes('./game.js?v=171') && index.includes('./app.js?v=171'), 'index pins at v162');
+assert(index.includes('./game.js?v=172') && index.includes('./app.js?v=172'), 'index pins at v162');
 assert(index.includes('./style.css?v=77'), 'style.css pin bumped for the v162 CSS change');
-assert(sw.includes('nightball-v171-tab-swipe'), 'SW cache renamed for v162');
-assert(sw.includes('./game.js?v=171') && sw.includes('./app.js?v=171') && sw.includes('./style.css?v=77'),
+assert(sw.includes('nightball-v172-hardcore'), 'SW cache renamed for v162');
+assert(sw.includes('./game.js?v=172') && sw.includes('./app.js?v=172') && sw.includes('./style.css?v=77'),
   'SW precaches the v162 assets');
 
 // ---------- browser behaviour (393x852) ----------
@@ -97,7 +97,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=77');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=78');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__bannerTest = { game, renderer: this };

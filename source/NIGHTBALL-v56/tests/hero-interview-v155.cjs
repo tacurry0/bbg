@@ -133,9 +133,9 @@ assert(app.includes('${resultReportHTML(report)+heroInterviewHTML(report)}'), 't
 assert(app.includes('resultReportHTML(r.report)+heroInterviewHTML(r.report)'), 'the pennant dashboard appends the interview to the stored report');
 const html = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
 const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-assert(html.includes('./game.js?v=171') && html.includes('./app.js?v=171'), 'index pins at v155');
-assert(sw.includes('nightball-v171-tab-swipe'), 'SW cache renamed for v155');
-assert(sw.includes('./game.js?v=171') && sw.includes('./app.js?v=171') && sw.includes('./results.js?v=77'), 'SW precaches the v155 scripts');
+assert(html.includes('./game.js?v=172') && html.includes('./app.js?v=172'), 'index pins at v155');
+assert(sw.includes('nightball-v172-hardcore'), 'SW cache renamed for v155');
+assert(sw.includes('./game.js?v=172') && sw.includes('./app.js?v=172') && sw.includes('./results.js?v=77'), 'SW precaches the v155 scripts');
 assert(html.includes('./arcade.css?v=80') && sw.includes('./arcade.css?v=80'), 'arcade.css pin moves with the interview styles');
 const arcade = fs.readFileSync(__dirname + '/../dist/arcade.css', 'utf8');
 assert(arcade.includes('.hero-interview-card{') && arcade.includes('.hero-interview-comment{'), 'arcade.css carries the interview styles');
