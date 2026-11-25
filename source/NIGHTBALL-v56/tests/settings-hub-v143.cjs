@@ -138,8 +138,8 @@ assert(app.includes("userHome:o.hostHome,innings:settings.innings,park,pitcher:0
 }
 
 // ---------- v143 version pins ----------
-assert(index.includes('./game.js?v=174') && index.includes('./app.js?v=174'), 'index pins move to v143');
-assert(sw.includes('nightball-v174-back-nav'), 'SW cache renamed for v143');
-assert(sw.includes('./game.js?v=174') && sw.includes('./app.js?v=174'), 'SW precaches the v143 scripts');
+assert(index.includes('./game.js?v=175') && index.includes('./app.js?v=175'), 'index pins move to v143');
+assert(sw.includes('nightball-v175-pitch-deck'), 'SW cache renamed for v143');
+assert(sw.includes('./game.js?v=175') && sw.includes('./app.js?v=175'), 'SW precaches the v143 scripts');
 
 console.log('settings-hub-v143: all assertions passed');

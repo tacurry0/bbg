@@ -247,8 +247,8 @@ async function main(){
   const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
   assert(index.includes('./online-derby.js?v=1'),'index loads the online derby module');
   assert(sw.includes('./online-derby.js?v=1'),'SW precaches the online derby module');
-  assert(index.includes('./game.js?v=174')&&index.includes('./app.js?v=174'),'index pins move to v141');
-  assert(sw.includes('nightball-v174-back-nav'),'SW cache renamed for v141');
+  assert(index.includes('./game.js?v=175')&&index.includes('./app.js?v=175'),'index pins move to v141');
+  assert(sw.includes('nightball-v175-pitch-deck'),'SW cache renamed for v141');
  }
 
  console.log('online-derby-v141: all assertions passed');

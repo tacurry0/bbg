@@ -55,9 +55,9 @@ assert(app.includes("[['B',g.balls,3,'b'],['S',g.strikes,2,'s'],['O',g.outs,3,'o
   'scoreboard still renders the B/S/O lamp groups from the live count');
 
 // ---------- v147 version pins ----------
-assert(index.includes('./game.js?v=174') && index.includes('./app.js?v=174'), 'index pins move to v147');
-assert(sw.includes('nightball-v174-back-nav'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=174') && sw.includes('./app.js?v=174'), 'SW precaches the v147 scripts');
+assert(index.includes('./game.js?v=175') && index.includes('./app.js?v=175'), 'index pins move to v147');
+assert(sw.includes('nightball-v175-pitch-deck'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=175') && sw.includes('./app.js?v=175'), 'SW precaches the v147 scripts');
 
 // ---------- game level (Node): emitted messages + live count state ----------
 global.window = global;
