@@ -121,9 +121,9 @@ assert(app.includes('g.scrimmageGame)return;'),'record room excludes scrimmage g
 assert(!app.slice(app.indexOf('if(g.scrimmageGame){'),app.indexOf('if(g.scrimmageGame){')+600).includes('foldLeagueStats'),'scrimmage finish never folds league stats');
 assert(!app.slice(app.indexOf('if(g.scrimmageGame){'),app.indexOf('if(g.scrimmageGame){')+600).includes('farmGameCredit'),'scrimmage finish grants no farm credit');
 assert(html.includes('./scrimmage.js?v=1'),'index loads scrimmage.js at v1');
-assert(html.includes('./game.js?v=184')&&html.includes('./app.js?v=184'),'index pins at v163');
-assert(sw.includes('nightball-v184-pitch-guide'),'SW cache renamed for v163');
-assert(sw.includes('./scrimmage.js?v=1')&&sw.includes('./game.js?v=184')&&sw.includes('./app.js?v=184'),'SW precaches the v163 scripts including the new module');
+assert(html.includes('./game.js?v=185')&&html.includes('./app.js?v=185'),'index pins at v163');
+assert(sw.includes('nightball-v185-pitch-flight'),'SW cache renamed for v163');
+assert(sw.includes('./scrimmage.js?v=1')&&sw.includes('./game.js?v=185')&&sw.includes('./app.js?v=185'),'SW precaches the v163 scripts including the new module');
 
 console.log('scrimmage-v163: unit + static assertions passed');
 

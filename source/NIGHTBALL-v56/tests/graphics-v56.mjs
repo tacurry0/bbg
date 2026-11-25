@@ -272,7 +272,7 @@ assert(renderer.lights.every(light=>light.userData.pole.visible&&!light.userData
 assert(renderer.tokyoCutouts.every(mesh => !mesh.visible));
 console.log('PASS 3: Non-mirrored fence distance panels, unobstructed Tokyo Dome scoreboard, and park surface swaps verified.');
 
-// 4. Pitcher release hand accuracy at t=0 AND living idle/waggle animations at t>0
+// 4. Pitch presentation from the release hand to the plate
 const throwing = new NightGame('match', 'standard', () => {});
 throwing.pitchingStaff = { ...throwing.pitchingStaff, home: throwing.pitchingStaff.home.map(p => ({ ...p })) };
 for (const hand of ['R', 'L']) {
@@ -287,7 +287,38 @@ for (const hand of ['R', 'L']) {
   assert(Math.abs(pos.x - renderer.ball.position.x) < 1e-6);
   assert(Math.abs(pos.y - renderer.ball.position.y) < 1e-6);
   assert(Math.abs(-pos.z - renderer.ball.position.z) < 1e-6);
+  assert(renderer.ball.visible && !renderer.ballHalo.visible, 'a clean white ball leaves the throwing hand');
+  const releaseScale = renderer.ball.scale.x;
+  const releaseRotation = renderer.ball.quaternion.clone();
+  throwing.pitch.progress = 1;
+  renderer.render(throwing, throwing.pitch.duration);
+  const arrival = throwing.pitchAt(1);
+  const ball = renderer.project(...renderer.ball.position.toArray());
+  assert.deepEqual(ball, renderer.aimPoint(arrival.x, arrival.y), 'the visible ball agrees with plate-crossing coordinates');
+  assert(renderer.ball.scale.x > releaseScale);
+  assert(renderer.ball.quaternion.angleTo(releaseRotation) > .01, 'the seams turn in flight');
 }
+
+const batting = new NightGame('match', 'standard', () => {}, { userHome: true });
+batting.half = 'bottom';
+batting.createPitch(NightGame.TYPES.find(type => type.id === 'sinker'), { x: 0, y: 0 });
+batting.setPhase('pitch');
+batting.pitch.progress = .2;
+const drawPitchGuide = renderer.drawPitchGuide;
+let drawnGuide;
+renderer.drawPitchGuide = game => { drawnGuide = game.pitchGuidePoint(); drawPitchGuide.call(renderer, game); };
+renderer.render(batting, 0);
+assert.deepEqual(drawnGuide, batting.pitchGuidePoint(), 'a guide is visible early, at the no-break location');
+assert.notDeepEqual(drawnGuide, batting.pitchAt(1));
+window.nightSettings = { timingGuide: false };
+drawnGuide = null;
+renderer.render(batting, 16);
+assert.equal(drawnGuide, null);
+delete window.nightSettings;
+batting.hardcore = true;
+renderer.render(batting, 32);
+assert.equal(drawnGuide, null);
+renderer.drawPitchGuide = drawPitchGuide;
 
 const poses = {};
 for (const hand of ['R', 'L']) {
@@ -354,7 +385,7 @@ const vfx = new StadiumVFX({ gl: mockGl, scene: mockScene, camera: renderer.came
 enhanceCrowdMaterial(crowdMat, mockGl, vfx.crowdUniforms);
 assert(typeof crowdMat.onBeforeCompile === 'function');
 
-// Simulate pitch ribbon, swing arc, contact flash, and outdoor HR fireworks
+// Simulate a clean pitch, swing arc, contact flash, and outdoor HR fireworks
 const vfxGame = new NightGame('match', 'standard', () => {}, { park: 'harbor', userHome: true });
 vfxGame.half = 'bottom';
 vfxGame.power = true;
@@ -363,7 +394,7 @@ vfxGame.setPhase('pitch');
 vfxGame.pitch.progress = 0.75;
 vfxGame.swingAge = 90;
 vfx.update(vfxGame, 1000, false);
-assert.equal(vfx.ribbon.visible, true, '3D ball ribbon visible on incoming pitch');
+assert.equal(vfx.ribbon.visible, false, 'no ribbon is drawn behind the incoming pitch');
 assert.equal(vfx.swingArc.visible, true, '3D bat-swing arc visible during swing');
 
 vfxGame.startField(51, 30, 0.05, false, true);
@@ -402,11 +433,11 @@ renderer.hud=oldHud;renderer.ctx=oldContext;
 
 // 7. Service Worker latest asset manifest integrity check
 const swCode = readFileSync('dist/sw.js', 'utf8');
-assert(swCode.includes('nightball-v184-pitch-guide'));
+assert(swCode.includes('nightball-v185-pitch-flight'));
 assert(swCode.includes('./stadium-premium.js?v=57'));
 assert(swCode.includes('./menu-polish.css?v=58'));
 
-assert(swCode.includes('./stadium-fx.js?v=74'));
+assert(swCode.includes('./stadium-fx.js?v=75'));
 assert(swCode.includes('./venue-vision.js?v=74'));
 assert(swCode.includes('./open-air-parks.js?v=74'));
 assert(!swCode.includes('assets/stadiums/'));

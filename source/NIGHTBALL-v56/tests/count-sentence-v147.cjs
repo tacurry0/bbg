@@ -55,9 +55,9 @@ assert(app.includes("[['B',g.balls,3,'b'],['S',g.strikes,2,'s'],['O',g.outs,3,'o
   'scoreboard still renders the B/S/O lamp groups from the live count');
 
 // ---------- v147 version pins ----------
-assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins move to v147');
-assert(sw.includes('nightball-v184-pitch-guide'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=184') && sw.includes('./app.js?v=184'), 'SW precaches the v147 scripts');
+assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins move to v147');
+assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185'), 'SW precaches the v147 scripts');
 
 // ---------- game level (Node): emitted messages + live count state ----------
 global.window = global;
@@ -168,7 +168,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=79');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__countTest = { game, renderer: this };

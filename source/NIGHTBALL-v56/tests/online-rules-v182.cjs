@@ -42,8 +42,8 @@ const app = fs.readFileSync(__dirname + '/../dist/app.js', 'utf8');
   assert(app.includes('id="online-starter-select"'), 'lobby offers a starting-pitcher select');
   const index = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
   const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-  assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins at v182');
-  assert(sw.includes("'nightball-v184-pitch-guide'"), 'service worker cache at v182');
+  assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v182');
+  assert(sw.includes("'nightball-v185-pitch-flight'"), 'service worker cache at v182');
 }
 
 // ---------- engine gates ----------
@@ -178,7 +178,7 @@ const app = fs.readFileSync(__dirname + '/../dist/app.js', 'utf8');
   `;
   const captureGame = `
     (async () => {
-      const mod = await import('./stadium3d.js?v=79');
+      const mod = await import('./stadium3d.js?v=80');
       const proto = mod.StadiumRenderer.prototype;
       if (!proto.__v182hooked) {
         const orig = proto.render;

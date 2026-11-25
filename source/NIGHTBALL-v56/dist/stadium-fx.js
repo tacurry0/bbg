@@ -497,7 +497,7 @@ export class StadiumVFX {
     const scene = renderer.scene;
     this.particleTex = createParticleTexture();
 
-    // 1. Tapered 3D camera-facing ball ribbon trail (works for both pitches and batted/thrown balls)
+    // 1. Tapered 3D camera-facing ribbon for batted and fielded balls
     const ribbonGeo = new T.BufferGeometry();
     this.ribbonPos = new Float32Array(RIBBON_POINTS * 2 * 3);
     this.ribbonCol = new Float32Array(RIBBON_POINTS * 2 * 4);
@@ -861,29 +861,8 @@ export class StadiumVFX {
           this.burstFirework(fx, fy, fz, palettes[Math.floor(Math.random() * palettes.length)]);
         }
       }
-    } else if (g && ['pitch', 'miss'].includes(g.phase) && g.pitch) {
-      this.lastField = null;
-      const uEnd = Math.min(1.24, g.pitch.progress + (g.phase === 'miss' ? g.phaseTime / g.pitch.duration : 0));
-      if (uEnd > 0.05) {
-        const pts = [];
-        const span = 0.24, steps = 10;
-        for (let i = 0; i <= steps; i++) {
-          const u = Math.max(0, uEnd - span * (1 - i / steps));
-          const p = g.pitchAt(u);
-          pts.push({ x: p.x * 0.68, y: 2.10 - 0.85 * u - p.y * 0.62, z: 17.2 * (1 - u) + 0.6 });
-        }
-        const fast = (g.pitch.speed || 145) >= 149 || g.pitch.id === 'fast';
-        this.updateRibbonFromPoints(
-          pts,
-          fast ? 0.088 : 0.072,
-          0xffffff,
-          fast ? 0xffd97d : 0x7fd8ff,
-          fast ? 0.68 : 0.52
-        );
-      } else {
-        this.ribbon.visible = false;
-      }
     } else {
+      this.lastField = null;
       this.ribbon.visible = false;
     }
 

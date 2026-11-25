@@ -56,9 +56,9 @@ assert(index.includes('<button id="umpire-strike" type="button">ストライク<
   'umpire STRIKE button label is unchanged (operation label, not banner text)');
 
 // ---------- version pins (v147 since count-sentence-remove) ----------
-assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins move to v147');
-assert(sw.includes('nightball-v184-pitch-guide'), 'SW cache renamed for v147');
-assert(sw.includes('./game.js?v=184') && sw.includes('./app.js?v=184'), 'SW precaches the v146 scripts');
+assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins move to v147');
+assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v147');
+assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185'), 'SW precaches the v146 scripts');
 
 // ---------- game level (Node): emitted messages ----------
 global.window = global;
@@ -155,7 +155,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=79');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__callTest = { game, renderer: this };

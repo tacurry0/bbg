@@ -117,7 +117,7 @@ const near = (a, b, tol = .15) => Math.abs(a - b) <= tol;
 {
   const index = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
   const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-  assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins at v183');
-  assert(sw.includes("const CACHE='nightball-v184-pitch-guide'"), 'SW cache renamed for v183');
+  assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v183');
+  assert(sw.includes("const CACHE='nightball-v185-pitch-flight'"), 'SW cache renamed for v183');
 }
 console.log('pitch-feel-v183: all assertions passed');

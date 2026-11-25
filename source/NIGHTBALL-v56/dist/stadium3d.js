@@ -17,9 +17,10 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=74';
+} from './stadium-fx.js?v=75';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
+const BALL_RADIUS=.078;
 const FENCE_SEGMENTS=96;
 const FLOODLIGHT_ANGLES=[-1.08,-.72,-.24,.24,.72,1.08];
 const GRASS_PALETTES={
@@ -71,8 +72,17 @@ export class StadiumRenderer {
   this.players=[this.pitcher,this.batter,this.catcher,...this.fielders,...this.runners];
   for(const player of this.players)decorateChibiPlayer(this,player);
   this.loadUniforms();
-  this.ball=new T.Group();this.ball.userData.dynamic=true;const leather=this.mesh(new T.SphereGeometry(.078,20,14),this.mat('ball',0xfffdf2,.42,.02),this.ball);leather.castShadow=true;
-  for(const turn of [0,Math.PI]){const ps=[];for(let i=0;i<=28;i++){const a=-1.3+i/28*2.6;ps.push(new T.Vector3(Math.cos(a)*.057,Math.sin(a)*.066,.042).applyAxisAngle(Y,turn));}this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(ps),28,.0032,4,false),this.mat('seam',0xc94232,.65),this.ball);}
+  this.ball=new T.Group();this.ball.userData.dynamic=true;
+  const leather=this.mesh(new T.SphereGeometry(BALL_RADIUS,20,14),this.mat('ball',0xfffdf7,.42,.02),this.ball);leather.castShadow=true;
+  for(const turn of [0,Math.PI]){
+   const points=[];
+   for(let i=0;i<=28;i++){
+    const a=-1.3+i/28*2.6;
+    points.push(new T.Vector3(Math.cos(a)*.057,Math.sin(a)*.066,.042).setLength(BALL_RADIUS+.001).applyAxisAngle(Y,turn));
+   }
+   this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(points),28,.0032,4,false),this.mat('seam',0xb33631,.65),this.ball);
+  }
+  this.pitchSpinAxis=new T.Vector3();
   this.scene.add(this.ball);
   this.ballHalo=new T.Sprite(new T.SpriteMaterial({map:this.glowTexture(),color:0xffffda,transparent:true,opacity:.38,depthWrite:false,blending:T.AdditiveBlending,fog:false}));this.ballHalo.scale.set(.48,.48,1);this.ballHalo.userData.dynamic=true;this.scene.add(this.ballHalo);
   this.ballShadow=this.contactShadowTex
@@ -870,6 +880,27 @@ export class StadiumRenderer {
   return .85+(throwing?4.5:5.8)*focalPixels/(focalPixels+depth*12)*prominence;
  }
  aimPoint(x,y){return this.project(x*.68,1.25-y*.62,.6);}
+ drawPitchGuide(g){
+  const guide=g.pitchGuidePoint();
+  const point=this.aimPoint(guide.x,guide.y);
+  const edge=this.aimPoint(guide.x+BALL_RADIUS*1.25/.68,guide.y);
+  const radius=clamp(Math.abs(edge.x-point.x),4.5,9);
+  const c=this.ctx;
+  c.save();
+  c.translate(point.x,point.y);
+  c.globalAlpha=.82*clamp(g.pitch.progress/.075,0,1);
+  c.beginPath();c.arc(0,0,radius,0,Math.PI*2);
+  c.fillStyle='#fff6ea';c.fill();
+  c.lineWidth=1;c.strokeStyle='#563737';c.stroke();
+  c.rotate(-.38);
+  c.beginPath();
+  for(const side of [-1,1]){
+   c.moveTo(side*radius*.37,-radius*.82);
+   c.quadraticCurveTo(side*radius*.84,0,side*radius*.37,radius*.82);
+  }
+  c.lineWidth=Math.max(1,radius*.17);c.strokeStyle='#b73e3a';c.stroke();
+  c.restore();
+ }
  drawHUD(g){
   const c=this.ctx,d=this.hud.width/this.width;c.setTransform(d,0,0,d,0,0);c.clearRect(0,0,this.width,this.height);if(!g||this.overviewMode)return;if(this.fieldMode){
    const field=g.field,b=field.ball,th=field.throw;
@@ -970,7 +1001,7 @@ export class StadiumRenderer {
   c.moveTo(center.x,center.y+2);c.lineTo(center.x,center.y+6);
   c.stroke();c.restore();
   if(g.touch){const tx=g.touch.x/480*this.width,ty=g.touch.y/540*this.height;c.strokeStyle='#efffd74d';c.lineWidth=1;c.setLineDash([2,5]);c.beginPath();c.moveTo(tx-3,ty-3);c.lineTo(center.x+5,center.y+5);c.stroke();c.setLineDash([]);c.fillStyle='#efffd72b';c.beginPath();c.arc(tx,ty,12,0,Math.PI*2);c.fill();}
-  if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false){const u=g.pitch.progress;if(u>.48){const gp=g.pitchGuidePoint?g.pitchGuidePoint():{x:g.pitch.targetX-g.pitch.bx,y:g.pitch.targetY-g.pitch.by},p=this.aimPoint(gp.x,gp.y),just=u>=.92&&u<=1.09,r=8+Math.max(0,1-u)*68;c.strokeStyle=just?'#d9ff8c':'#ffe1a3bb';c.lineWidth=just?3:1.5;c.shadowColor=c.strokeStyle;c.shadowBlur=just?13:0;c.beginPath();c.arc(p.x,p.y,r,0,Math.PI*2);c.stroke();c.shadowBlur=0;c.strokeStyle='#ffffff66';c.lineWidth=1;c.beginPath();c.arc(p.x,p.y,8,0,Math.PI*2);c.stroke();}}
+  if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
   this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);}}
@@ -1022,6 +1053,7 @@ export class StadiumRenderer {
    const showBall=!(g.phase==='result'&&f.outcome==='hr'&&!g.derby);
    const ballSize=NightGame.ballVisualScale(f.ball.z,Math.hypot(f.ball.x,f.ball.y));
    this.ball.position.set(f.ball.x,f.ball.z+.08,f.ball.y);this.ball.scale.setScalar(ballSize);
+   this.ball.rotation.set(0,0,time*.009);
    this.ball.visible=showBall;this.ballHalo.visible=showBall;
    this.ballHalo.scale.set(.40*ballSize,.40*ballSize,1);
    this.ballShadow.position.set(f.ball.x,.05,f.ball.y);this.ballShadow.visible=showBall&&f.ball.z<20;this.ballShadow.scale.setScalar(1+f.ball.z*.020);
@@ -1045,10 +1077,14 @@ export class StadiumRenderer {
    if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side]);this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
    this.ball.visible=false;this.ballHalo.visible=false;this.ballShadow.visible=false;this.trail.visible=false;this.landing.visible=false;this.landingInner.visible=false;
    if(g&&['pitch','miss'].includes(g.phase)&&g.pitch){
-    const u=Math.min(1.24,g.pitch.progress+(g.phase==='miss'?g.phaseTime/g.pitch.duration:0)),p=g.pitchAt(u);
+    const pitch=g.pitch;
+    const u=Math.min(1.24,pitch.progress+(g.phase==='miss'?g.phaseTime/pitch.duration:0)),p=g.pitchAt(u);
     this.ball.position.set(p.x*.68,2.10-.85*u-p.y*.62,17.2*(1-u)+.6);
-    this.ball.scale.setScalar(1);this.ballHalo.scale.set(.48,.48,1);
-    this.ball.visible=true;this.ballHalo.visible=true;
+    this.ball.scale.setScalar(1+.34*Math.min(1,u)**2);
+    const spin=(pitch.spinRpm??2000)*u*pitch.duration/60000;
+    this.pitchSpinAxis.set(1,pitch.bx*.5,pitch.throwHand==='L'?-.75:.75).normalize();
+    this.ball.quaternion.setFromAxisAngle(this.pitchSpinAxis,spin*Math.PI*.56);
+    this.ball.visible=true;
     this.ballShadow.position.set(this.ball.position.x,.05,this.ball.position.z);
     this.ballShadow.scale.setScalar(.88);this.ballShadow.visible=true;
    }
@@ -1059,6 +1095,6 @@ export class StadiumRenderer {
    const pulse=hrShow&&time>0?.50+.22*Math.sin(time*.018):.48;
    for(const lg of this.lightGlows)lg.material.opacity=pulse;
   }
-  this.ball.rotation.z=time*.009;this.ballHalo.position.copy(this.ball.position);this.gl.render(this.scene,this.camera);if(this.hero)this.heroRendered=true;if(this.hud)this.drawHUD(g);
+  this.ballHalo.position.copy(this.ball.position);this.gl.render(this.scene,this.camera);if(this.hero)this.heroRendered=true;if(this.hud)this.drawHUD(g);
  }
 }

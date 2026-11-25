@@ -57,9 +57,9 @@ assert(index.includes('id="stage-message"'), 'the one stage banner element remai
 assert(!app.includes('stage-message-2') && !index.includes('result-banner'), 'no second result banner component was added');
 
 // ---------- version pins (v159) ----------
-assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins at v159');
-assert(sw.includes('nightball-v184-pitch-guide'), 'SW cache renamed for v159');
-assert(sw.includes('./game.js?v=184') && sw.includes('./app.js?v=184'), 'SW precaches the v159 scripts');
+assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v159');
+assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v159');
+assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185'), 'SW precaches the v159 scripts');
 
 // ---------- browser behaviour (393x852) ----------
 const { createServer } = require('node:http');
@@ -92,7 +92,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=79');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) {
         if (game) window.__bannerTest = { game, renderer: this };

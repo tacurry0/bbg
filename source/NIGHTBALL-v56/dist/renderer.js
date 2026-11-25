@@ -83,13 +83,13 @@ window.NightRenderer=class NightRenderer{
     if(sw<250){c.strokeStyle=`rgba(213,243,106,${.4*(1-sw/250)})`;c.lineWidth=13;c.beginPath();c.arc(hx,hy,76,-1.3,1.1);c.stroke();}
     c.restore();
   }
-  drawBall(c,x,y,r,t,glow=false){
-    c.save();c.translate(x,y);c.rotate(t*.006);if(glow){c.shadowColor='#f9e49a';c.shadowBlur=15;}this.ellipse(c,0,0,r,r,'#fffbdf');c.shadowBlur=0;
+  drawBall(c,x,y,r,rotation,glow=false){
+    c.save();c.translate(x,y);c.rotate(rotation);if(glow){c.shadowColor='#f9e49a';c.shadowBlur=15;}this.ellipse(c,0,0,r,r,'#fffbdf');c.shadowBlur=0;
     if(r>3){c.strokeStyle='#c16f59';c.lineWidth=Math.max(.6,r*.11);c.beginPath();c.arc(-r*.5,0,r*.7,-1,1);c.stroke();c.beginPath();c.arc(r*.5,0,r*.7,2.14,4.14);c.stroke();}c.restore();
   }
-  pitchPoint(p,u){
-    const k=Math.pow(Math.max(0,u),1.65),late=Math.pow(Math.max(0,u),4.4);
-    return{x:240+(p.throwHand==='L'?1:-1)*25*(1-Math.min(1,u))+(25+p.targetX*75)*k+p.bx*75*(late-k),y:293+(107+p.targetY*64)*k+p.by*64*(late-k)};
+  pitchPoint(g,u){
+    const ball=g.pitchAt(u),depth=Math.min(1,u),approach=u**1.65;
+    return {x:240+25*approach+ball.x*(22.4+52.6*depth),y:294+106*approach+ball.y*(22+42*depth)};
   }
   person(c,x,y,scale,team,running,t,label='',action='',pace=1){
     c.save();c.translate(x,y);c.scale(scale*2,scale*2);this.ellipse(c,0,2,14,5,'#001a1480');
@@ -144,7 +144,7 @@ window.NightRenderer=class NightRenderer{
     const shadow=project(b.x,b.y),bp=project(b.x,b.y,b.z);this.ellipse(c,shadow.x,shadow.y,3+Math.min(5,b.z*.12),1.8,'#00150f99');
     c.strokeStyle='#eff9b52e';c.setLineDash([2,4]);c.beginPath();c.moveTo(shadow.x,shadow.y);c.lineTo(bp.x,bp.y);c.stroke();c.setLineDash([]);
     if(!(g.phase==='result'&&f.outcome==='hr'&&!g.derby)){
-     this.drawBall(c,bp.x,bp.y,4*NightGame.ballVisualScale(b.z,Math.hypot(b.x,b.y)),t,g.hit?.kind==='hr');
+     this.drawBall(c,bp.x,bp.y,4*NightGame.ballVisualScale(b.z,Math.hypot(b.x,b.y)),t*.006,g.hit?.kind==='hr');
     }
     if(!g.replayView){
      const chaser=f.fielders[f.chaser];c.fillStyle='#d5e5c0';c.textAlign='left';c.font='bold 8px Arial';c.fillText(f.throw?'THROW TO BASE':f.resolved?'PLAY COMPLETE':'LIVE BALL',20,70);c.font='8px Arial';c.fillStyle='#a9bd9f';c.fillText(f.throw?'捕球 → 送球':`${chaser?.player||''}${chaser?' / '+chaser.name:''}`,20,84);
@@ -158,7 +158,7 @@ window.NightRenderer=class NightRenderer{
     c.drawImage(this.art,0,0,480,540);
     for(const [x,y]of [[104,288],[375,288],[240,245],[148,326],[329,326],[186,290],[292,290]])this.person(c,x,y,.30,g?.defending?'home':'away',false,t);
     this.pitcher(c,g);this.batter(c,g,t);
-    if(this.hero){const u=(t%5500)/5500;if(u>.6){const p=(u-.6)/.4;this.drawBall(c,244+110*p,405-330*p+120*p*p,5*(1-p)+1,t,true);}c.restore();return;}
+    if(this.hero){const u=(t%5500)/5500;if(u>.6){const p=(u-.6)/.4;this.drawBall(c,244+110*p,405-330*p+120*p*p,5*(1-p)+1,t*.006,true);}c.restore();return;}
     if(g){
       // Umpire mode: same rule as the 3D HUD — no zone frame while a pitch
       // is live; the zone appears only in the post-call reveal window.
@@ -182,12 +182,19 @@ window.NightRenderer=class NightRenderer{
           c.lineWidth=.7;this.ellipse(c,cx,cy,Math.max(2,rx-4),Math.max(2,ry-4),null,g.power?'#ffdcaa55':'#e3ffc255');
           this.ellipse(c,cx,cy,2,2,'#f4ffe2');c.strokeStyle='#f4ffe2';c.lineWidth=1;c.beginPath();c.moveTo(cx-5,cy);c.lineTo(cx+5,cy);c.moveTo(cx,cy-5);c.lineTo(cx,cy+5);c.stroke();
         }else{c.shadowColor='#ffce8b';c.shadowBlur=5;c.lineWidth=1.5;this.ellipse(c,cx,cy,10,10,'#ffce8b1c','#ffce8b');c.shadowBlur=0;c.strokeStyle='#ffe5bb';c.lineWidth=1;c.beginPath();c.moveTo(cx-16,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+16,cy);c.moveTo(cx,cy-16);c.lineTo(cx,cy-6);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);c.stroke();}
-        if(window.nightSettings?.assist&&g.pitch&&!g.defending){const gp=g.pitchGuidePoint?g.pitchGuidePoint():{x:g.pitch.targetX-g.pitch.bx,y:g.pitch.targetY-g.pitch.by},tx=x+gp.x*75,ty=y+gp.y*64;this.ellipse(c,tx,ty,5,5,null,'#eef6bd65');}
+        if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&(window.nightSettings?.timingGuide!==false||window.nightSettings?.assist)){
+          const guide=g.pitchGuidePoint();
+          c.globalAlpha=.82*Math.min(1,g.pitch.progress/.075);
+          this.drawBall(c,x+guide.x*75,y+guide.y*64,7,-.38);
+          c.globalAlpha=1;
+        }
         }
       }
-      if(g.phase==='pitch'||g.phase==='miss'){
+      if(g.pitch&&(g.phase==='pitch'||g.phase==='miss')){
         const p=g.pitch,u=Math.min(1.24,p.progress+(g.phase==='miss'?g.phaseTime/p.duration:0));
-        for(let i=5;i>=1;i--){const v=Math.max(0,u-i*.023),pos=this.pitchPoint(p,v);c.globalAlpha=.05+(5-i)*.03;this.drawBall(c,pos.x,pos.y,1.7+Math.pow(v,3)*8,t);}c.globalAlpha=1;const pos=this.pitchPoint(p,u);this.drawBall(c,pos.x,pos.y,1.7+Math.pow(u,3)*8,t);
+        const pos=this.pitchPoint(g,u),radius=8/(1+3.4*(1-Math.min(1,u)));
+        const turns=(p.spinRpm??2000)*u*p.duration/60000;
+        this.drawBall(c,pos.x,pos.y,radius,turns*Math.PI*.56);
       }
       if(g.phase==='aim'){
         c.fillStyle='#e6f0cf';c.textAlign='center';c.font='bold 9px Arial';c.fillText('球種とコースを選んで投球',265,333);

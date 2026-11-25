@@ -82,9 +82,9 @@ assert(app.includes("if(b.dataset.handicap){"), 'handicap clicks are handled');
 assert(app.includes('handicap:mode===\'match\'&&!challengeId') && app.includes('userRuns:settings.handicapUserRuns'), 'match start passes the handicap with the challenge-mode gates');
 
 // ---------- version pins (v173) ----------
-assert(index.includes('./game.js?v=184') && index.includes('./app.js?v=184'), 'index pins at v173');
-assert(sw.includes('nightball-v184-pitch-guide'), 'SW cache renamed for v173');
-assert(sw.includes('./game.js?v=184') && sw.includes('./app.js?v=184'), 'SW precaches the v173 assets');
+assert(index.includes('./game.js?v=185') && index.includes('./app.js?v=185'), 'index pins at v173');
+assert(sw.includes('nightball-v185-pitch-flight'), 'SW cache renamed for v173');
+assert(sw.includes('./game.js?v=185') && sw.includes('./app.js?v=185'), 'SW precaches the v173 assets');
 
 console.log('handicap-v173: engine + static assertions passed');
 
@@ -120,7 +120,7 @@ const { resolve, extname, sep } = require('node:path');
     page.on('pageerror', e => errors.push(e.message));
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.evaluate(async () => {
-      const { StadiumRenderer } = await import('./stadium3d.js?v=79');
+      const { StadiumRenderer } = await import('./stadium3d.js?v=80');
       const render = StadiumRenderer.prototype.render;
       StadiumRenderer.prototype.render = function (game, time) { if (game) window.__hcTest = { game }; return render.call(this, game, time); };
     });
