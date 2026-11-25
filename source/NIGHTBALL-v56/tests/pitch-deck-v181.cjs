@@ -182,7 +182,13 @@ const { resolve, extname, sep } = require('node:path');
     // Mockup placement: the ball sits at about 37% of the stage
     // width and 35% of its height (upper-centre cluster).
     assert(ball.cx >= 138 && ball.cx <= 154, `ball sits near the mockup x (got ${ball.cx.toFixed(1)})`);
-    assert(ball.cy >= 290 && ball.cy <= 310, `ball sits near the mockup y (got ${ball.cy.toFixed(1)})`);
+    // v187: with the changeup's break corrected to the arm side, the
+    // default repertoire's curve and changeup crowd the same
+    // down-left quadrant and cannot both stay truthful (pills within
+    // 35 degrees of their true break angle) inside the 204px deck,
+    // so the deck uses its designed taller layout (232px) and the
+    // ball sits ~14px lower than the original mockup position.
+    assert(ball.cy >= 290 && ball.cy <= 320, `ball sits near the mockup y (got ${ball.cy.toFixed(1)})`);
     assert(slider.cx > ball.cx + 50, `slider pill sits right of the ball (slider ${slider.cx.toFixed(1)} vs ball ${ball.cx.toFixed(1)})`);
     assert(curve.cx < ball.cx - 20 && curve.cy > ball.cy + 40, 'curve pill sits down-left of the ball');
     assert(change.cy > ball.cy + 40, 'change pill sits below the ball');

@@ -3163,6 +3163,24 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   const angOf=b=>b.id==='fast'?-Math.PI/2:Math.atan2(b.dy,b.dx);
   const layout=H=>{
    const CY=H/2+8;
+   // v187: relaxation may spread markers/pills around the ball, but
+   // never rotate one far from its true break angle — with the
+   // changeup corrected to the arm side it sits ~5 degrees from the
+   // curve, and the unconstrained relaxation used to shove the curve
+   // pill to nearly pure-left (and, in the sinker repertoire, the
+   // sinker pill above the ball), i.e. the deck itself started lying
+   // about directions. Clamp every point's angular drift from its
+   // true angle to 35 degrees at its current radius. The pill
+   // Pill separation pushes along the line between the two centres
+   // (separating-axis style): for two pills stacked near the bottom
+   // that line is mostly horizontal, so a crowded pair escapes
+   // sideways instead of one pill being shoved up toward horizontal.
+   const trueAng=new Map(items.map(b=>[b.id,angOf(b)]));
+   const clampDrift=(p,maxDrift)=>{
+    const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(!d)return;
+    let diff=Math.atan2(dy,dx)-trueAng.get(p.id);diff=((diff+Math.PI*3)%(Math.PI*2))-Math.PI;
+    if(Math.abs(diff)>maxDrift){const a=trueAng.get(p.id)+Math.sign(diff)*maxDrift;p.x=CX+Math.cos(a)*d;p.y=CY+Math.sin(a)*d;}
+   };
    const arrows=new Map();
    for(const b of items){const a=angOf(b);arrows.set(b.id,{x:CX+Math.cos(a)*41,y:CY+Math.sin(a)*41});}
    const apts=items.map(b=>({id:b.id,...arrows.get(b.id)}));
@@ -3172,7 +3190,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      const a=apts[i],c=apts[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
      if(d<29){if(d<.01){dx=0;dy=1;d=1;}const ux=dx/d,uy=dy/d,push=(29-d)/2;a.x-=ux*push;a.y-=uy*push;c.x+=ux*push;c.y+=uy*push;moved=true;}
     }
-    for(const p of apts){const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,r=Math.max(35,Math.min(62,d));p.x=CX+dx/d*r;p.y=CY+dy/d*r;p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));}
+    for(const p of apts){const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy)||1,r=Math.max(35,Math.min(62,d));p.x=CX+dx/d*r;p.y=CY+dy/d*r;p.x=Math.max(14,Math.min(W-14,p.x));p.y=Math.max(14,Math.min(H-14,p.y));clampDrift(p,.61);}
     if(!moved)break;
    }
    for(const p of apts)arrows.set(p.id,{x:p.x,y:p.y});
@@ -3182,12 +3200,39 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    for(let it=0;it<300;it++){
     let moved=false;
     for(let i=0;i<ppts.length;i++)for(let j=i+1;j<ppts.length;j++){
-     const a=ppts[i],c=ppts[j];const dx=c.x-a.x,dy=c.y-a.y,ox=PW+18-Math.abs(dx),oy=PH+18-Math.abs(dy);
-     if(ox>0&&oy>0){if(ox<oy){const push=ox/2*(dx<0?-1:1);a.x-=push;c.x+=push;}else{const push=oy/2*(dy<0?-1:1);a.y-=push;c.y+=push;}moved=true;}
+     const a=ppts[i],c=ppts[j];let dx=c.x-a.x,dy=c.y-a.y,d=Math.hypot(dx,dy);
+     if(d<.01){dx=0;dy=1;d=1;}
+     const ux=dx/d,uy=dy/d,need=(PW+18)*Math.abs(ux)+(PH+18)*Math.abs(uy);
+     if(d<need){const push=(need-d)/2;a.x-=ux*push;a.y-=uy*push;c.x+=ux*push;c.y+=uy*push;moved=true;}
     }
     for(const p of ppts){p.x=Math.max(PW/2,Math.min(W-PW/2,p.x));p.y=Math.max(PH/2,Math.min(H-PH/2,p.y));
-     const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(d<76&&d>0){const r=76/d;p.x=CX+dx*r;p.y=CY+dy*r;}}
+     const dx=p.x-CX,dy=p.y-CY,d=Math.hypot(dx,dy);if(d<76&&d>0){const r=76/d;p.x=CX+dx*r;p.y=CY+dy*r;}else if(d>100){const r=100/d;p.x=CX+dx*r;p.y=CY+dy*r;}clampDrift(p,.61);}
     if(!moved)break;
+   }
+   // Repair pass: if the relaxation still leaves a pair overlapping
+   // (three arm-side pills can crowd one quadrant past what pushes
+   // can settle), scan a grid around the crowded pill's true
+   // direction for the nearest clearing spot — first with a gap
+   // wide enough to keep the v152 tap expansions from colliding,
+   // then with a minimal gap, and only as a last resort anywhere
+   // around the ball (the arrow beside the ball keeps pointing in
+   // the true direction regardless; the pill carries the name).
+   const clears=(x,y,self,mx,my)=>ppts.every(q=>q===self||Math.abs(q.x-x)>=PW+mx||Math.abs(q.y-y)>=PH+my);
+   for(const p of ppts){
+    if(clears(p.x,p.y,p,1,1))continue;
+    const ta=trueAng.get(p.id);let bx=0,by=0,bcost=Infinity;
+    const scan=(a0,a1,mx,my,flipPenalty)=>{
+     for(let da=a0;da<=a1;da+=.035)for(let r=70;r<=100;r+=4){
+      const x=CX+Math.cos(ta+da)*r,y=CY+Math.sin(ta+da)*r;
+      if(x<PW/2||x>W-PW/2||y<PH/2||y>H-PH/2||!clears(x,y,p,mx,my))continue;
+      const cost=Math.abs(((da+Math.PI*3)%(Math.PI*2))-Math.PI)*57.3+Math.abs(r-80)*.5+(Math.sign(Math.sin(ta+da))!==Math.sign(Math.sin(ta))?flipPenalty:0);
+      if(cost<bcost){bcost=cost;bx=x;by=y;}
+     }
+    };
+    scan(-.61,.611,7,7,0);
+    if(bcost===Infinity)scan(-.61,.611,1,1,0);
+    if(bcost===Infinity)scan(-Math.PI,Math.PI,1,1,25);
+    if(bcost<Infinity){p.x=bx;p.y=by;}
    }
    for(const p of ppts)pills.set(p.id,{x:p.x,y:p.y});
    let worst=Infinity;
