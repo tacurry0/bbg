@@ -19,9 +19,9 @@ assert(app.includes('Math.abs(dx)<Math.abs(dy)*1.6'), 'vertical-dominant drags a
 assert(app.includes('buttons[next].click()'), 'swipe activates the adjacent tab button');
 
 // ---------- version pins (v171) ----------
-assert(index.includes('./game.js?v=179') && index.includes('./app.js?v=179'), 'index pins at v171');
-assert(sw.includes('nightball-v179-powerpro-picker'), 'SW cache renamed for v171');
-assert(sw.includes('./game.js?v=179') && sw.includes('./app.js?v=179'), 'SW precaches the v171 assets');
+assert(index.includes('./game.js?v=180') && index.includes('./app.js?v=180'), 'index pins at v171');
+assert(sw.includes('nightball-v180-low-rebound-bat'), 'SW cache renamed for v171');
+assert(sw.includes('./game.js?v=180') && sw.includes('./app.js?v=180'), 'SW precaches the v171 assets');
 
 console.log('tab-swipe-v171: static assertions passed');
 

@@ -161,12 +161,16 @@ window.NightGame=class NightGame{
  // other mode (pennant / career / online / umpire / practice / derby),
  // or a game built without the option, gets every rule OFF, so the
  // engine below only ever checks this.variantRules flags.
- static VARIANT_RULE_KEYS=['fullCount','metalBat','noBreaking','twoOuts'];
+ static VARIANT_RULE_KEYS=['fullCount','metalBat','noBreaking','twoOuts','lowReboundBat'];
  static normalizeVariantRules(mode,options={}){
   const out={};for(const k of NightGame.VARIANT_RULE_KEYS)out[k]=false;
   if(mode!=='match'||options.umpire||options.remoteSide||options.career)return out;
   const src=options.variantRules||{};
   for(const k of NightGame.VARIANT_RULE_KEYS)out[k]=src[k]===true;
+  // The two bat rules are opposites and mutually exclusive (v180):
+  // if a caller passes both, the metal bat wins and the low-rebound
+  // bat drops, so a game can never carry both multipliers.
+  if(out.metalBat&&out.lowReboundBat)out.lowReboundBat=false;
   return out;
  }
  // Handicap matches (v173, checker item "handicap-match"): regular versus
@@ -351,7 +355,7 @@ window.NightGame=class NightGame{
   }
   if(g.pitch){g.pitch.throwHand ??= g.pitcher.hand==='L'?'L':'R';g.pitch.releaseX ??= (g.pitch.throwHand==='L'?1:-1)*.76/.68;}
   if(g.phase==='change'&&!g.halfBreak)g.halfBreak={inning:g.half==='bottom'?g.inning:Math.max(1,g.inning-1),half:g.half==='bottom'?'top':'bottom',nextInning:g.inning,nextHalf:g.half};g.autoDefense ??= false;g.autoBatting??=false;g.fastForward??=false;g.spectate??=false;g.umpireMode??=false;g.umpirePending??=null;g.umpireReveal??=null;g.umpireStats??={calls:0,correct:0,score:0,playCalls:0,playCorrect:0,lastCall:null,lastPlay:null,last:null};g.defenseSpeed=g.defenseSpeed===2?2:1;g.park=NightPlayers.parks.find(p=>p.id===g.park?.id)||NightPlayers.parks[0];
-  g.basePitcherIds ||= [null,null,null];g.variantRules??={fullCount:false,metalBat:false,noBreaking:false,twoOuts:false};g.hardcore??=false;g.outsNeeded=g.variantRules.twoOuts?2:3;g.handicap??=null;if(g.handicap)g.outsNeeded=g.side===g.userSide?g.handicap.userOuts:g.handicap.cpuOuts;g.timeAttack??=null;g.survival??=null;g.atBatPitches??=[];g.atBatRisp??=false;g.playEvents ||= [];g.leadDecision ??= null;g.manualRunning ??= false;if((g.runningRevision??0)<23&&g.field?.manual){g.field.manual.userControlled=g.manualRunning&&!g.defending;for(const r of g.field.runners){const at=Math.abs(r.progress-Math.round(r.progress))<.000001;r.command=at?Math.round(r.progress):(r.target??r.start)<r.progress?Math.floor(r.progress):Math.ceil(r.progress);r.target=r.command;r.waiting=at;r.touchedAt ||= {[r.base??r.start]:0};}}if((g.runningRevision??0)<41&&g.phase==='field'&&g.field?.manual)g.startForcedRunners();
+  g.basePitcherIds ||= [null,null,null];g.variantRules??={fullCount:false,metalBat:false,noBreaking:false,twoOuts:false,lowReboundBat:false};g.hardcore??=false;g.outsNeeded=g.variantRules.twoOuts?2:3;g.handicap??=null;if(g.handicap)g.outsNeeded=g.side===g.userSide?g.handicap.userOuts:g.handicap.cpuOuts;g.timeAttack??=null;g.survival??=null;g.atBatPitches??=[];g.atBatRisp??=false;g.playEvents ||= [];g.leadDecision ??= null;g.manualRunning ??= false;if((g.runningRevision??0)<23&&g.field?.manual){g.field.manual.userControlled=g.manualRunning&&!g.defending;for(const r of g.field.runners){const at=Math.abs(r.progress-Math.round(r.progress))<.000001;r.command=at?Math.round(r.progress):(r.target??r.start)<r.progress?Math.floor(r.progress):Math.ceil(r.progress);r.target=r.command;r.waiting=at;r.touchedAt ||= {[r.base??r.start]:0};}}if((g.runningRevision??0)<41&&g.phase==='field'&&g.field?.manual)g.startForcedRunners();
   if(career){
    if(!career.continuous&&g.mode==='career-bat'&&(career.runnerTurn||g.next==='career-run')){
     if(career.runnerTurn&&g.phase==='field'){
@@ -1259,6 +1263,14 @@ window.NightGame=class NightGame{
   // untouched. Paired fixed-seed probe (tests/variant-rules-v133.cjs):
   // mean carry of a squared-up fly gains +5.6 m (N=120).
   if(this.variantRules?.metalBat&&!this.derby)speed*=1.03;
+  // Low-rebound bat (v180 variant rule): the metal bat's mirror —
+  // a flat -3% exit velocity, applied at the same single point so
+  // the spin/carry model is untouched. Paired fixed-seed probe
+  // (tests/low-rebound-v180.cjs): the reference fly loses 5.42 m
+  // of mean carry (metal gains 5.59 m on the same probe), and a
+  // mixed-swing probe loses 5.02 m — perceptible, not extreme.
+  // normalizeVariantRules guarantees the two never combine.
+  if(this.variantRules?.lowReboundBat&&!this.derby)speed*=.97;
   this.playEvents=[];const a=launch*Math.PI/180,flat=speed*Math.cos(a);
   const fly=clamp((launch-12)/30,0,1),flightLift=1-.28*fly;
   // Batted-ball spin (v107 physics). Backspin grows with fly-ball shape and

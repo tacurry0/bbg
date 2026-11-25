@@ -25,9 +25,9 @@ for(const file of ['ratings-data.js','players.js','pro-parks.js','stadium-editor
  vm.runInThisContext(fs.readFileSync(__dirname+'/../dist/'+file,'utf8'),{filename:file});
 const P=global.NightMatchPresets;
 assert(P,'NightMatchPresets module loads');
-const KEYS=['randomRoster','variantFullCount','variantMetalBat','variantNoBreaking','variantTwoOuts'];
-assert.deepEqual(P.OPTIONAL_BOOL_KEYS,KEYS,'the five post-v130 toggles are the optional boolean keys');
-assert.deepEqual(P.VARIANT_KEYS,KEYS.slice(1),'the four variant-rule keys are exposed');
+const KEYS=['randomRoster','variantFullCount','variantMetalBat','variantLowReboundBat','variantNoBreaking','variantTwoOuts'];
+assert.deepEqual(P.OPTIONAL_BOOL_KEYS,KEYS,'the six post-v130 toggles are the optional boolean keys');
+assert.deepEqual(P.VARIANT_KEYS,KEYS.slice(1),'the five variant-rule keys are exposed (v180 adds the low-rebound bat)');
 for(const k of KEYS)assert(P.FIELDS.includes(k),`FIELDS includes ${k}`);
 
 function memStorage(){const m=new Map();return{getItem:k=>m.has(k)?m.get(k):null,setItem:(k,v)=>m.set(k,String(v)),removeItem:k=>m.delete(k),_map:m};}
@@ -36,19 +36,19 @@ const base={matchTeam:'npb-g',matchOpponent:'owls',matchUserHome:false,innings:9
 
 // ---------- save -> change -> apply restores all five keys ----------
 const storage=memStorage();
-const onSettings={...base,randomRoster:true,variantFullCount:true,variantMetalBat:true,variantNoBreaking:true,variantTwoOuts:true};
+const onSettings={...base,randomRoster:true,variantFullCount:true,variantMetalBat:true,variantLowReboundBat:true,variantNoBreaking:true,variantTwoOuts:true};
 const saved=P.add('変則フルセット',P.snapshot(onSettings,1),storage);
 for(const k of KEYS)assert.equal(saved.values[k],true,`snapshot captures ${k}`);
 const rawStored=JSON.parse(storage.getItem(P.KEY));
 for(const k of KEYS)assert.equal(rawStored[0].values[k],true,`stored JSON carries ${k}`);
 // The live settings move on after saving…
-const live={...base,innings:3,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false};
+const live={...base,innings:3,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false};
 // …and applying the preset (the app's Object.assign path) restores them.
 Object.assign(live,P.sanitizeValues(P.get(saved.id,storage).values,ctx()));
 for(const k of KEYS)assert.equal(live[k],true,`apply restores ${k}`);
 assert.equal(live.innings,9,'apply still restores the classic fields');
 // Explicit OFF values are stored as OFF, not dropped.
-const offSaved=P.add('変則なし',P.snapshot({...base,randomRoster:false,variantFullCount:false,variantMetalBat:true,variantNoBreaking:false,variantTwoOuts:false},0),storage);
+const offSaved=P.add('変則なし',P.snapshot({...base,randomRoster:false,variantFullCount:false,variantMetalBat:true,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false},0),storage);
 const offLoaded=P.get(offSaved.id,storage);
 for(const k of KEYS)assert(k in offLoaded.values,`explicit value for ${k} survives the storage round trip`);
 assert.equal(offLoaded.values.variantMetalBat,true);
@@ -66,9 +66,9 @@ oldStorage.setItem(P.KEY,JSON.stringify([{id:'preset-old',name:'旧形式',value
 const oldLoaded=P.load(oldStorage);
 assert.equal(oldLoaded.length,1,'old-format preset still loads');
 for(const k of KEYS)assert(!(k in oldLoaded[0].values),`old preset values omit ${k} instead of inventing a value`);
-const liveOld={...base,randomRoster:true,variantFullCount:true,variantMetalBat:false,variantNoBreaking:true,variantTwoOuts:false};
+const liveOld={...base,randomRoster:true,variantFullCount:true,variantMetalBat:false,variantLowReboundBat:true,variantNoBreaking:true,variantTwoOuts:false};
 assert.doesNotThrow(()=>Object.assign(liveOld,P.sanitizeValues(oldLoaded[0].values,ctx())),'applying an old preset does not throw');
-for(const k of KEYS)assert.equal(liveOld[k],{randomRoster:true,variantFullCount:true,variantMetalBat:false,variantNoBreaking:true,variantTwoOuts:false}[k],`old preset preserves the live ${k}`);
+for(const k of KEYS)assert.equal(liveOld[k],{randomRoster:true,variantFullCount:true,variantMetalBat:false,variantLowReboundBat:true,variantNoBreaking:true,variantTwoOuts:false}[k],`old preset preserves the live ${k}`);
 assert.equal(liveOld.innings,3,'old preset still applies the fields it does carry');
 // Present-but-malformed optional values fall back to false (not preserved, not kept raw).
 const malformed=P.cleanValues({randomRoster:'yes',variantFullCount:1,variantMetalBat:null});
@@ -92,14 +92,20 @@ for(const k of KEYS.slice(1))assert(setupBody.includes(`'${k}'`),'setup screen r
 assert(setupBody.includes("settings[v]?'on':''"),'variant toggles render their on state from the live settings');
 const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
 const sw=fs.readFileSync(__dirname+'/../dist/sw.js','utf8');
-assert(html.includes('./match-presets.js?v=2'),'page loads the v153 presets module');
-assert(sw.includes('./match-presets.js?v=2'),'service worker precaches the v153 presets module');
-assert(html.includes('./game.js?v=179')&&html.includes('./app.js?v=179'),'index pins at v153');
-assert(sw.includes('nightball-v179-powerpro-picker'),'SW cache renamed for v153');
-assert(sw.includes('./game.js?v=179')&&sw.includes('./app.js?v=179'),'SW precaches the v153 scripts');
+assert(html.includes('./match-presets.js?v=3'),'page loads the v153 presets module');
+assert(sw.includes('./match-presets.js?v=3'),'service worker precaches the v153 presets module');
+assert(html.includes('./game.js?v=180')&&html.includes('./app.js?v=180'),'index pins at v153');
+assert(sw.includes('nightball-v180-low-rebound-bat'),'SW cache renamed for v153');
+assert(sw.includes('./game.js?v=180')&&sw.includes('./app.js?v=180'),'SW precaches the v153 scripts');
 
 console.log('preset-variant-v153: module + static assertions passed');
 
+// The browser flow drives the five toggles that can be ON at the
+// same time. The sixth key, variantLowReboundBat, is exclusive
+// with the metal bat by design (v180): clicking it ON turns the
+// metal bat OFF, so it cannot join an all-ON flow; its own
+// preset round trip is covered by low-rebound-v180.cjs.
+const E2E_KEYS=KEYS.filter(k=>k!=='variantLowReboundBat');
 /* ---------- browser E2E (393x852): save, change, apply, old format ---------- */
 const { createServer } = require('node:http');
 const { readFile } = require('node:fs/promises');
@@ -141,30 +147,30 @@ const { resolve, extname, sep } = require('node:path');
         out[k] = el ? { on: el.classList.contains('on'), checked: el.getAttribute('aria-checked') } : null;
       }
       return out;
-    }, KEYS);
+    }, E2E_KEYS);
     const savedSettings = () => page.evaluate(() => JSON.parse(localStorage.getItem('nightball.settings') || '{}'));
 
     await page.goto('http://127.0.0.1:' + port + '/', { waitUntil: 'domcontentloaded', timeout: 30000 });
     await openSetup();
-    // Turn all five toggles ON and save them as a preset.
-    for (const k of KEYS) await page.locator(`[data-toggle="${k}"]`).click();
+    // Turn the five co-existable toggles ON and save them as a preset.
+    for (const k of E2E_KEYS) await page.locator(`[data-toggle="${k}"]`).click();
     let states = await toggleStates();
-    for (const k of KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `${k} toggle shows ON before saving`);
+    for (const k of E2E_KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `${k} toggle shows ON before saving`);
     await page.locator('#match-preset-name').fill('変則テスト');
     await page.locator('[data-action="match-preset-save"]').click();
     await page.locator('[data-match-preset]').first().waitFor({ state: 'visible' });
     const storedPresets = await page.evaluate(() => JSON.parse(localStorage.getItem('nightball.matchPresets') || '[]'));
     assert.equal(storedPresets.length, 1, 'one preset was stored');
-    for (const k of KEYS) assert.equal(storedPresets[0].values[k], true, `stored preset carries ${k}=true`);
+    for (const k of E2E_KEYS) assert.equal(storedPresets[0].values[k], true, `stored preset carries ${k}=true`);
     // Change every toggle back OFF, then apply the preset.
-    for (const k of KEYS) await page.locator(`[data-toggle="${k}"]`).click();
+    for (const k of E2E_KEYS) await page.locator(`[data-toggle="${k}"]`).click();
     states = await toggleStates();
-    for (const k of KEYS) assert.deepEqual(states[k], { on: false, checked: 'false' }, `${k} toggle shows OFF after changing`);
+    for (const k of E2E_KEYS) assert.deepEqual(states[k], { on: false, checked: 'false' }, `${k} toggle shows OFF after changing`);
     await page.locator('[data-match-preset]').first().click();
     states = await toggleStates();
-    for (const k of KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `applying the preset restores the ${k} toggle display`);
+    for (const k of E2E_KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `applying the preset restores the ${k} toggle display`);
     let settings = await savedSettings();
-    for (const k of KEYS) assert.equal(settings[k], true, `applying the preset restores settings.${k}`);
+    for (const k of E2E_KEYS) assert.equal(settings[k], true, `applying the preset restores settings.${k}`);
 
     // Old-format preset (values without the five keys), written straight
     // into storage as a pre-v153 build would have left it. After a reload
@@ -177,12 +183,12 @@ const { resolve, extname, sep } = require('node:path');
     await openSetup();
     await page.locator('[data-match-preset]').first().click();
     states = await toggleStates();
-    for (const k of KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `old-format preset preserves the ${k} toggle display`);
+    for (const k of E2E_KEYS) assert.deepEqual(states[k], { on: true, checked: 'true' }, `old-format preset preserves the ${k} toggle display`);
     settings = await savedSettings();
-    for (const k of KEYS) assert.equal(settings[k], true, `old-format preset preserves settings.${k}`);
+    for (const k of E2E_KEYS) assert.equal(settings[k], true, `old-format preset preserves settings.${k}`);
     assert.equal(settings.innings, 3, 'old-format preset still applies its own fields (innings)');
     assert.deepEqual(errors, [], 'no page errors during the whole preset flow');
-    console.log('preset-variant-v153: browser E2E passed (save/change/apply restores all five toggles and their display; old-format preset preserves live values)');
+    console.log('preset-variant-v153: browser E2E passed (save/change/apply restores the preset toggles and their display; old-format preset preserves live values)');
   } finally {
     await browser.close();
     server.close();

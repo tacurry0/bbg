@@ -9,7 +9,9 @@
    arrived after v130: the random roster toggle (v132, settings key
    randomRoster) and the four variant rules (v133, settings keys
    variantFullCount / variantMetalBat / variantNoBreaking /
-   variantTwoOuts). Applying a preset only writes those values back into
+   variantTwoOuts). v180 adds the fifth variant rule, the low-rebound
+   bat (settings key variantLowReboundBat), to the same optional set.
+   Applying a preset only writes those values back into
    the live settings — it never starts a match by itself.
    sanitizeValues() is the safety net for stale presets: any entry whose
    referent no longer exists (a deleted custom park, a removed club, an
@@ -29,10 +31,10 @@ const DIFFICULTIES=['casual','standard','pro'];
 const LIGHTING=['auto','day','night'];
 const INNINGS=[3,5,9];
 const CD_KEYS=['bat','pitch','field','run'];
-const VARIANT_KEYS=['variantFullCount','variantMetalBat','variantNoBreaking','variantTwoOuts'];
+const VARIANT_KEYS=['variantFullCount','variantMetalBat','variantLowReboundBat','variantNoBreaking','variantTwoOuts'];
 const OPTIONAL_BOOL_KEYS=['randomRoster',...VARIANT_KEYS];
 const FIELDS=['matchTeam','matchOpponent','matchUserHome','innings','park','gameLighting','pitcher','difficulty','customDifficulty','defenseSpeed','fieldSpeed','manualRunning','battingAssist','tiebreak',...OPTIONAL_BOOL_KEYS];
-const FALLBACKS={matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,innings:5,park:'night',gameLighting:'auto',pitcher:0,difficulty:'standard',defenseSpeed:1,fieldSpeed:1,manualRunning:true,battingAssist:true,tiebreak:false,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantNoBreaking:false,variantTwoOuts:false};
+const FALLBACKS={matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,innings:5,park:'night',gameLighting:'auto',pitcher:0,difficulty:'standard',defenseSpeed:1,fieldSpeed:1,manualRunning:true,battingAssist:true,tiebreak:false,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false};
 function cleanName(name){
  const clean=String(name??'').replace(/[<>&"']/g,'').trim().slice(0,24);
  return clean||'プリセット';

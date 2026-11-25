@@ -1,5 +1,8 @@
 // v133: variant-rules matches (checker item "variant-rules-match").
-// Regular versus matches gain four independent, combinable rule toggles:
+// Regular versus matches gain four independent, combinable rule toggles
+// (v180 adds a fifth, the low-rebound bat, which is exclusive with the
+// metal bat — covered by low-rebound-v180.cjs, so ALL below keeps it
+// off):
 //   fullCount  - every at-bat starts at 2 balls / 2 strikes
 //   metalBat   - +3% exit velocity in startField (v108 spin model untouched)
 //   noBreaking - both pitchers throw fastballs only (CPU plan, the user's
@@ -19,8 +22,8 @@ for(const file of ['ratings-data.js','players.js','pennant.js','game.js'])
  vm.runInThisContext(fs.readFileSync(__dirname+'/../dist/'+file,'utf8'),{filename:file});
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
 function seeded(seed){const orig=Math.random;Math.random=mulberry32(seed);return()=>{Math.random=orig;};}
-const ALL={fullCount:true,metalBat:true,noBreaking:true,twoOuts:true};
-const NONE={fullCount:false,metalBat:false,noBreaking:false,twoOuts:false};
+const ALL={fullCount:true,metalBat:true,noBreaking:true,twoOuts:true,lowReboundBat:false};
+const NONE={fullCount:false,metalBat:false,noBreaking:false,twoOuts:false,lowReboundBat:false};
 function matchGame(rules,extra={}){return new NightGame('match','standard',()=>{},{userHome:true,innings:3,...(rules?{variantRules:rules}:{}),...extra});}
 function playOut(g){
  g.autoBatting=true;g.autoDefense=true;
@@ -33,7 +36,7 @@ function playOut(g){
 }
 
 // ---------- scope gates: only regular versus matches ----------
-assert.deepEqual(matchGame(ALL).variantRules,ALL,'versus match accepts all four rules');
+assert.deepEqual(matchGame(ALL).variantRules,ALL,'versus match accepts the v133 rules (low-rebound off: exclusive with metal)');
 assert.deepEqual(matchGame().variantRules,NONE,'no option means every rule OFF');
 assert.deepEqual(new NightGame('pennant','standard',()=>{},{variantRules:ALL}).variantRules,NONE,'pennant never gets variant rules');
 assert.deepEqual(new NightGame('match','standard',()=>{},{variantRules:ALL,umpire:true}).variantRules,NONE,'umpire mode never gets variant rules');
@@ -145,7 +148,7 @@ function carry(seed,metal){
  const g=matchGame({fullCount:true,twoOuts:true});
  const restored=NightGame.restore(JSON.parse(JSON.stringify(g.snapshot())),()=>{});
  assert(restored,'variant match restores from a snapshot');
- assert.deepEqual(restored.variantRules,{fullCount:true,metalBat:false,noBreaking:false,twoOuts:true},'rules survive restore');
+ assert.deepEqual(restored.variantRules,{fullCount:true,metalBat:false,noBreaking:false,twoOuts:true,lowReboundBat:false},'rules survive restore');
  assert.equal(restored.outsNeeded,2,'outsNeeded survives restore');
  restored.resetCount();assert.equal(restored.balls,2);assert.equal(restored.strikes,2,'restored game still starts at-bats 2-2');
 }
@@ -172,7 +175,7 @@ assert(app.includes('変則ルール（通常対戦のみ・組み合わせ可�
 assert(app.includes("variantRules:mode==='match'&&!challengeId&&!pendingUmpire"),'the app passes rules only for regular versus matches');
 assert(app.includes('fullCount:!!settings.variantFullCount'),'settings map into the game options');
 assert(app.includes('g.variantRules.noBreaking'),'pitch-type buttons are disabled under noBreaking');
-assert(index.includes('./game.js?v=179')&&index.includes('./app.js?v=179'),'index pins move to v133');
-assert(sw.includes('nightball-v179-powerpro-picker'),'SW cache renamed for v133');
-assert(sw.includes('./game.js?v=179')&&sw.includes('./app.js?v=179'),'SW precaches the v133 scripts');
+assert(index.includes('./game.js?v=180')&&index.includes('./app.js?v=180'),'index pins move to v133');
+assert(sw.includes('nightball-v180-low-rebound-bat'),'SW cache renamed for v133');
+assert(sw.includes('./game.js?v=180')&&sw.includes('./app.js?v=180'),'SW precaches the v133 scripts');
 console.log('PASS: full-count 2-2 starts (walk/strikeout/foul), no-breaking on CPU plan + user throws + UI gate, metal-bat paired carry probe, two-out halves, scope gates, OFF identical, restore, combined game completion, app wiring + v133 pins.');
