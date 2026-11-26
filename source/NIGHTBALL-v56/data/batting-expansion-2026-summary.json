@@ -1,0 +1,221 @@
+{
+  "season": 2026,
+  "counts": {
+    "npb": 147,
+    "cpbl": 96,
+    "kbo": 40
+  },
+  "actual": {
+    "npb": 371,
+    "cpbl": 192,
+    "kbo": 200
+  },
+  "unverifiedBattingHand": {
+    "npb": 147,
+    "cpbl": 15,
+    "kbo": 40
+  },
+  "unverifiedPosition": {
+    "npb": 26,
+    "cpbl": 0,
+    "kbo": 40
+  },
+  "skipped": [
+    [
+      "npb-g",
+      "井上 温大",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-g",
+      "竹丸 和幸",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-g",
+      "ウィットリー",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-g",
+      "田中 将大",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-g",
+      "小笠原 慎之介",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-g",
+      "戸郷 翔征",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-db",
+      "東 克樹",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-db",
+      "石田 裕太郎",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-db",
+      "平良 拳太郎",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-db",
+      "篠木 健太郎",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-db",
+      "深沢 鳳介",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-t",
+      "村上 頌樹",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-t",
+      "髙橋 遥人",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-t",
+      "才木 浩人",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-t",
+      "大竹 耕太郎",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-c",
+      "床田 寛樹",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-c",
+      "栗林 良吏",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-c",
+      "森下 暢仁",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-c",
+      "森 翔平",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-c",
+      "岡本 駿",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "金丸 夢斗",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "柳 裕也",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "大野 雄大",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "髙橋 宏斗",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "マラー",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-d",
+      "涌井 秀章",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "山野 太一",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "奥川 恭伸",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "吉村 貢司郎",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "松本 健吾",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "高梨 裕稔",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-s",
+      "高橋 奎二",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-h",
+      "尾形 崇斗",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-f",
+      "進藤 勇也",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-f",
+      "矢澤 宏太",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "npb-f",
+      "柴田 獅子",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "owls",
+      "江忠城",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "owls",
+      "陳琥",
+      "pitcher or already listed as pitcher"
+    ],
+    [
+      "mariners",
+      "劉俊豪",
+      "pitcher or already listed as pitcher"
+    ]
+  ],
+  "notes": "Existing players and starting orders unchanged. Included available 2026 first-team batting records only; KBO source snapshot has 20 batters per club, NPB independent farm clubs unchanged. Missing identity/position fields use marked game fallbacks; unknown actual stats stay null. Abilities are estimated from statistics with small-sample shrinkage."
+}

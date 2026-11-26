@@ -28,7 +28,7 @@
     ratingsBasedOnStats:true,
     ratingsProvisional:false};
   };
-  const batters=raw.batters.map(p=>make(p,'b'));
+  const batters=[...raw.batters,...(window.NightBatterExpansion2026?.additions?.[raw.id]||[])].map(p=>make(p,'b'));
   const pitchers=raw.pitchers.map(p=>make(NightPlayers.applyPitching2026(p,'npb'),'p'));
   pitchers.push(...NightPlayers.extraPitchers2026(raw.id,pitchers,'npb').map(p=>make(p,'p')));
   const selected=new Set(raw.startingOrder);

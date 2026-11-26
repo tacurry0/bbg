@@ -96,6 +96,7 @@ function extraPitchers2026(club,existing,league){
 for(const [club,identity]of Object.entries(data.identities)){
  const prefix=club==='owls'?'o':club==='foxes'?'f':null;
  const batters=identity.batters.map(([name,no,pos,hand],i)=>({id:prefix?prefix+(i+1):club+'-b'+(i+1),name,no,pos,hand,season:2026,...data.players[club][name]}));
+ batters.push(...(window.NightBatterExpansion2026?.additions?.[club]||[]));
  const pitchers=identity.pitchers.map(([name,no,hand],i)=>mergeBulkPitching2026(applyPitching2026({id:prefix?prefix+'p'+(i+1):club+'-p'+(i+1),name,no,hand,pos:'P',season:2026,...data.players[club][name]},'cpbl'),'cpbl',club));
  pitchers.push(...extraPitchers2026(club,pitchers,'cpbl').map(p=>mergeBulkPitching2026(p,'cpbl',club)));
  rosters[club]={batters,pitchers,startingOrder:batters.slice(0,9).map(p=>p.id),lineupDate:identity.date,rosterNote:identity.rosterNote};
