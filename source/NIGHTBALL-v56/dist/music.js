@@ -12,6 +12,8 @@ const brass=[
 ];
 const NPB_TAIKO='preset:npb-taiko';
 const BROTHERS_HIT='preset:ctbc-brothers-hit';
+// Keep the tail of a hit cheer audible but well below the next plate appearance.
+const HIT_DUCK_GAIN=.10,HIT_DUCK_TIME=.25;
 const recordings={ [NPB_TAIKO]:'npb-taiko.mp3',[BROTHERS_HIT]:'ctbc-brothers-hit.mp3' };
 export const PRESETS=[{id:NPB_TAIKO,name:'NPB 太鼓応援'},{id:BROTHERS_HIT,name:'我們兄弟（安打）'},...brass.map(({id,name})=>({id:'preset:'+id,name}))];
 export const DEFAULT_CAREER_CHEER='preset:stadium';
@@ -140,10 +142,10 @@ export class BallparkMusic{
   this.game=null;this.atBat=null;this.atBatSide=null;this.pageActive=false;this.cheerTrack=null;
   this.stop('home');this.stop('away');
  }
- async start(slot,id,loop=false,atBat=null){
+ async start(slot,id,loop=false,atBat=null,resultKind=null){
   this.stop(slot);
   if(!id||!this.audio.context)return false;
-  const request={id,loop,atBat};this.slots[slot]=request;
+  const request={id,loop,atBat,resultKind};this.slots[slot]=request;
   const buffer=await this.buffer(id);
   if(this.slots[slot]!==request)return false;
   if(!buffer){request.missing=true;return false;}
@@ -163,12 +165,14 @@ export class BallparkMusic{
   const s=this.settings;if(!s)return;
   const audible=this.enabled&&this.pageActive,now=this.audio.context?.currentTime;
   for(const [side,request] of Object.entries(this.slots)){
+   const overlap=this.atBat&&side!==this.atBatSide&&request.atBat!==this.atBat?s.overlap/100:1;
+   const ducked=side!=='preview'&&request.resultKind==='hit'&&request.ducked;
    const level=side==='preview'?
     (this.enabled?s[battingMusic(this.previewKind)?'cheer':'results']/100*(this.previewQuiet?s.overlap/100:1):0):
-    audible?s[request.loop?'cheer':'results']/100*(this.atBat&&side!==this.atBatSide&&request.atBat!==this.atBat?s.overlap/100:1):0;
+    audible?s[request.loop?'cheer':'results']/100*(ducked?Math.min(overlap,HIT_DUCK_GAIN):overlap):0;
    const gain=level*request.factor;
    if(!request.gain||request.volume===gain)continue;
-   request.volume=gain;request.gain.gain.setTargetAtTime(gain,now,.055);
+   request.volume=gain;request.gain.gain.setTargetAtTime(gain,now,ducked&&audible?HIT_DUCK_TIME:.055);
   }
  }
  update(game,settings,enabled,active){
@@ -177,6 +181,12 @@ export class BallparkMusic{
   const newPlate=game&&!game.batFinished&&['aim','windup','pitch','miss','field'].includes(game.phase)&&game.outs<3;
   if(newPlate){
    const side=game.side,key=[game.inning,game.half,game.battingIndex[side],game.batter.id,game.box?.[game.batter.id]?.pa,game.derby?.turn].join('/');
+   // Once the next batter is up, latch the quieter volume even if no
+   // batting song is assigned. Do not bring the old hit cue back up later.
+   for(const slot of ['home','away']){
+    const previous=this.slots[slot];
+    if(previous?.resultKind==='hit'&&previous.atBat!==key)previous.ducked=true;
+   }
    const chance=game.bases?.[1]||game.bases?.[2];
    const fallback=defaultTeamCheer(game.teams[side]?.id,chance)||(game.worldMusic&&side===game.userSide?DEFAULT_CAREER_CHEER:null);
    const track=trackForEvent(settings,chance?['chance','cheer']:['cheer'],gameMusicKeys(game,side,game.batter.id),fallback);
@@ -199,7 +209,7 @@ export class BallparkMusic{
   const id=trackForEvent(this.settings,thirdOut?['thirdOut',kind]:[kind],gameMusicKeys(game,side,player),defaultTeamResult(game.teams[side]?.id,kind));
   if(!id)return;
   // A later cue replaces the previous sound only for the team that owns it.
-  this.start(side,id,false,this.atBat);
+  this.start(side,id,false,this.atBat,kind);
  }
  preview(id,slot,quiet=false){
   this.previewKind=slot;this.previewQuiet=quiet;
