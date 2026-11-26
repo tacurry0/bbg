@@ -20,14 +20,15 @@ const assert = require('node:assert/strict');
   const port = server.address().port;
   const CHAN = 'nightball-v217-test-' + Math.random().toString(36).slice(2, 9);
   const initScript = `
-    window.__bcLog = [];
+    window.__bcLog = []; window.__delay = {};
+    Object.defineProperty(document,'hidden',{get:()=>false});
     const CHAN = ${JSON.stringify(CHAN)};
     let connSeq = 0;
     class FakeConn {
       constructor(localPeer, remoteId, cid) { this.localPeer = localPeer; this.remoteId = remoteId; this.cid = cid; this._h = {}; }
       on(ev, fn) { (this._h[ev] ??= []).push(fn); return this; }
       _emit(ev, ...args) { for (const f of this._h[ev] || []) f(...args); }
-      send(data) { window.__bcLog.push(data); this.localPeer._post({ kind: 'data', cid: this.cid, to: this.remoteId, data }); }
+      send(data) { window.__bcLog.push(data); const send=()=>this.localPeer._post({ kind: 'data', cid: this.cid, to: this.remoteId, data }); const delay=window.__delay[data.t]||0; if(delay)setTimeout(send,delay);else send(); }
       close() { this._emit('close'); this.localPeer._post({ kind: 'conn-close', cid: this.cid, to: this.remoteId }); }
     }
     class FakePeer {
@@ -152,7 +153,56 @@ const assert = require('node:assert/strict');
       const state=await p.evaluate(()=>{const g=window.__game;return {home:g.userHome,seed:g.conditionSeed,forms:Object.fromEntries(g.teams[g.userSide].batters.map(b=>[b.id,g.conditionFor(b)])),own:g.lineups[g.userSide].map(b=>b.id),other:g.lineups[g.opponentSide].map(b=>b.id),fielding:Object.fromEntries(g.lineups[g.userSide].map(b=>[b.fieldPos,b.id])),pitcher:g.homePitcherIndex,oppPitcher:g.awayPitcherIndex,metal:g.variantRules.metalBat,score:g.awayScore};});
       assert.equal(state.home,i===1);assert.equal(state.seed,wire.conditionSeed);assert.deepEqual(state.forms,edited[i].forms);assert.deepEqual(state.own,edited[i].order);assert.deepEqual(state.other,edited[1-i].order);assert.deepEqual(state.fielding,edited[i].fielding);assert.equal(state.pitcher,edited[i].pitcher);assert.equal(state.oppPitcher,edited[1-i].pitcher);assert.equal(state.metal,true);assert.equal(state.score,2);
     }
+    // v218: two browser clients share a pause/bench/replay lock.
+    const gameWait=(p,fn)=>p.waitForFunction(fn,null,{timeout:30000});
+    const click=(p,s)=>p.evaluate(sel=>document.querySelector(sel).click(),s);
+    await gameWait(host,()=>window.__game?.phase==='aim');
+    await gameWait(guest,()=>window.__game?.phase==='aim');
+    await click(host,'#pause');await kind(host,'pause');await kind(guest,'online-hold');
+    const phaseTime=await host.evaluate(()=>window.__game.phaseTime);
+    await guest.evaluate(()=>{const g=window.__game;g.mirrorSend({t:'pitch-decision',pitchType:'fast',aim:{x:0,y:0}});});
+    await host.waitForTimeout(350);
+    assert.equal(await host.evaluate(()=>window.__game.phaseTime),phaseTime);
+    await click(host,'#modal-content [data-action="close"]');
+    for(const p of [host,guest])await gameWait(p,()=>!window.__game.paused&&document.querySelector('#modal').hidden);
+    await click(guest,'#pause');await kind(guest,'pause');await kind(host,'online-hold');
+    await click(guest,'#modal-content [data-action="bench"]');await kind(guest,'bench');
+    await click(guest,'[data-bench-tab="pitch"]');
+    const replacement=await guest.locator('[data-bench-pitch]:not([disabled])').first().getAttribute('data-bench-pitch');
+    await click(guest,'[data-bench-pitch="'+replacement+'"]');
+    await gameWait(guest,()=>window.__game.substitutions.some(s=>s.type==='pitch'));
+    await guest.locator('[data-bench-pitch="'+replacement+'"].chosen').waitFor({state:'visible'});
+    assert.equal(await guest.evaluate(()=>window.__game.homePitcherIndex),Number(replacement));
+    assert.equal(await host.evaluate(()=>window.__game.awayPitcherIndex),Number(replacement));
+    await click(guest,'#modal-content [data-action="close"]');
+    for(const p of [host,guest])await gameWait(p,()=>!window.__game.paused&&document.querySelector('#modal').hidden);
+    // Put a genuine pitch into the guest-eligible ABS call state, then
+    // delay the challenge packet past the old host-side countdown.
+    await host.evaluate(()=>{
+      const g=window.__game;g.remoteThrowPitch();
+      if(!g.pitch)throw Error('expected pitch');
+      g.pitch.targetX=1.2;g.pitch.targetY=0;g.pitch.isStrike=false;g.pitch.progress=1.24;
+      g.absCall={...NightGame.absLocation(1.2,0),strike:false,umpireStrike:false,cpu:true,remote:true};
+      g.setPhase('abs-call');g.notify();
+    });
+    await guest.locator('#abs-challenge').waitFor({state:'visible'});
+    await guest.evaluate(()=>{window.__delay['abs-challenge']=2000;});
+    await guest.waitForTimeout(1750);
+    assert(await guest.locator('#abs-challenge').isVisible(),'guest receives full window');
+    await click(guest,'#abs-challenge');
+    await gameWait(host,()=>window.__game.phase==='abs-review');
+    await gameWait(guest,()=>window.__game.phase==='abs-review');
+    await gameWait(host,()=>window.__game.phase==='aim');
+    // Canonical pitch replay, with the host skipping first. Neither game
+    // resumes until the other endpoint completes the replay.
+    await host.evaluate(()=>{const g=window.__game;g.remoteThrowPitch();g.setPhase('result');g.emit('scoring-walk');});
+    await guest.locator('#replay-skip').waitFor({state:'visible'});
+    await host.locator('#replay-skip').waitFor({state:'visible'});
+    await click(host,'#replay-skip');await kind(host,'online-hold');
+    assert(await guest.evaluate(()=>window.__game.paused));
+    await click(guest,'#replay-skip');
+    for(const p of [host,guest])await gameWait(p,()=>!window.__game.paused&&document.querySelector('#modal').hidden);
     assert.deepEqual(errors,[]);
-    console.log('PASS: online pregame layout, same-club sides, both lineups, form, pitchers, readiness, rules and game sync');
+    console.log('PASS: online pregame layout, same-club sides, both lineups, form, pitchers, readiness, rules, synchronized pause/bench/replay and delayed ABS');
   }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);process.exit(1);});
