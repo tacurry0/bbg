@@ -1,0 +1,33 @@
+name: Collect NPB 2026 pitch aggregates
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'source/NIGHTBALL-v56/scripts/collect-npb-pitching.py'
+permissions:
+  contents: write
+concurrency:
+  group: npb-pitch-collection
+  cancel-in-progress: false
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - name: Fetch public pitch archive (no raw files committed)
+        run: |
+          git clone --depth=1 --filter=blob:none --sparse https://github.com/wocchi09/npb-data.git "$RUNNER_TEMP/npb-data"
+          git -C "$RUNNER_TEMP/npb-data" sparse-checkout set data/2026
+      - name: Aggregate observations
+        run: python3 source/NIGHTBALL-v56/scripts/collect-npb-pitching.py "$RUNNER_TEMP/npb-data"
+      - name: Save generated aggregate
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add source/NIGHTBALL-v56/data/npb-pitch-tracking-2026.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Collect 2026 NPB pitch type and speed aggregates"
+          git pull --rebase origin main
+          git push origin HEAD:main
