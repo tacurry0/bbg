@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="./career-world.css?v=90">
   <link rel="stylesheet" href="./game-hud.css?v=86">
   <link rel="stylesheet" href="./menu-polish.css?v=58">
-  <link rel="stylesheet" href="./home-menu.css?v=1">
+  <link rel="stylesheet" href="./home-menu.css?v=2">
   <link rel="stylesheet" href="./pwa-update.css?v=1">
   <link rel="stylesheet" href="./abs.css?v=9">
   <title>NIGHTBALL — ポケット野球</title>
@@ -102,9 +102,11 @@
       <section class="menu-notices" aria-label="お知らせ">
         <button type="button" class="notice-step" data-notice-step="-1" aria-label="前のお知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chevron-left"></use></svg></button>
         <button type="button" class="notice-card" id="notice-card">
-          <span class="notice-label">お知らせ</span>
-          <strong id="notice-title">APBCモード</strong>
-          <small id="notice-detail">日本・台湾・韓国・豪州が参戦</small>
+          <span class="notice-card-copy">
+            <span class="notice-label">お知らせ</span>
+            <strong id="notice-title">APBCモード</strong>
+            <small id="notice-detail">日本・台湾・韓国・豪州が参戦</small>
+          </span>
         </button>
         <button type="button" class="notice-step" data-notice-step="1" aria-label="次のお知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chevron-right"></use></svg></button>
         <div class="notice-pages" aria-label="表示するお知らせ">
@@ -226,7 +228,7 @@
 <script defer src="./matchup-data.js?v=56"></script>
 <script defer src="./audio.js?v=58"></script>
 <script defer src="./derby.js?v=56"></script>
-<script defer src="./game.js?v=191"></script>
+<script defer src="./game.js?v=192"></script>
 <script defer src="./career-leagues.js?v=56"></script>
 <script defer src="./career-development.js?v=57"></script>
 <script defer src="./career-life.js?v=56"></script>
@@ -248,6 +250,6 @@
 <script defer src="./pwa-update.js?v=2"></script>
 <script defer src="./online.js?v=2"></script>
 <script defer src="./online-derby.js?v=1"></script>
-<script type="module" src="./app.js?v=191"></script>
+<script type="module" src="./app.js?v=192"></script>
 </body>
 </html>

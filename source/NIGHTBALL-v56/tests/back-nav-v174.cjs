@@ -14,11 +14,11 @@ const sw = fs.readFileSync(path.join(root, 'dist', 'sw.js'), 'utf8');
 // ---------- static ----------
 assert(app.includes("let screenStack=['home'],navPop=false"), 'screen stack state exists');
 assert(app.includes('function trackScreen(next)') && app.includes('function backToPreviousScreen()'), 'navigation helpers exist');
-assert(app.includes("function showLeagueScreen(){trackScreen('pennant');"), 'pennant entry is tracked');
+assert(app.includes("function showLeagueScreen(view){\n  trackScreen('pennant');"), 'pennant entry is tracked');
 assert(app.includes("worldActive=true;trackScreen('career');"), 'career-world entry is tracked');
 assert(app.includes("worldActive=false;trackScreen('career');"), 'classic career entry is tracked');
 assert(app.includes("trackScreen('apbc-cup');"), 'APBC cup entry is tracked');
-assert(app.includes("trackHome();screen='home'"), 'home() resets the stack');
+assert(app.includes("trackHome();\n  const y=changeScreen('home')"), 'home() resets the stack');
 const popStart = app.indexOf("window.addEventListener('popstate'");
 const popBody = app.slice(popStart, popStart + 2400);
 assert(popBody.includes('backToPreviousScreen()'), 'popstate walks the screen stack outside matches');
@@ -27,9 +27,9 @@ assert(popBody.indexOf('history.pushState') < popBody.indexOf('pause()'), 'v167:
 assert(popBody.includes('戻る操作がありました。試合を中断してホームに戻りますか？'), 'v167: fallback confirmation intact');
 
 // ---------- version pins (v174) ----------
-assert(index.includes('./game.js?v=191') && index.includes('./app.js?v=191'), 'index pins at v174');
-assert(sw.includes('nightball-v191-home-menu'), 'SW cache renamed for v174');
-assert(sw.includes('./game.js?v=191') && sw.includes('./app.js?v=191'), 'SW precaches the v174 assets');
+assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins at v174');
+assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache renamed for v174');
+assert(sw.includes('./game.js?v=192') && sw.includes('./app.js?v=192'), 'SW precaches the v174 assets');
 
 console.log('back-nav-v174: static assertions passed');
 

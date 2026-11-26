@@ -66,6 +66,22 @@ try{
  assert(menu.fits,'home menu fits the mobile viewport');
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({timeout:90000,path:'tests/screenshots/premium-home.png'});
+ const originalViewport=page.viewportSize();
+ await page.setViewportSize({...originalViewport,height:640});
+ const bottomScroll=await page.evaluate(()=>{
+  window.scrollTo(0,document.documentElement.scrollHeight);
+  return window.scrollY;
+ });
+ assert(bottomScroll>0,'short mobile viewport has a scrollable home menu');
+ await page.locator('#menu-home').tap();
+ await page.waitForTimeout(400);
+ assert.equal(await page.evaluate(()=>window.scrollY),bottomScroll,'home tab does not move the active screen');
+ const noticeBefore=await page.locator('#notice-title').textContent();
+ await page.locator('[data-notice-step="1"]').tap();
+ assert.notEqual(await page.locator('#notice-title').textContent(),noticeBefore);
+ assert.equal(await page.evaluate(()=>window.scrollY),bottomScroll,'notice change preserves the page position');
+ await page.setViewportSize(originalViewport);
+ await page.evaluate(()=>window.scrollTo(0,0));
  await page.evaluate(async()=>{
   const {StadiumRenderer}=await import('./stadium3d.js?v=81');
   const original=StadiumRenderer.prototype.render;

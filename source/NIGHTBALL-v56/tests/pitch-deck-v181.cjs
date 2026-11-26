@@ -36,9 +36,9 @@ assert(hud.includes('clip-path:polygon(0 24%,52% 24%'), 'the arrow marker is a c
 assert(app.includes('pt-arrow-mark') && app.includes('pt-arrow-num') && app.includes('pitch-ball'), 'picker markup carries ball, arrow markers and numbers');
 assert(app.includes('pt-name') && app.includes('${b.p.name}'), 'pills show the full pitch name');
 assert(!app.includes('pitch-chart-guides') && !app.includes('pd-arrow') && !app.includes('pt-label'), 'the v177/v178 badge chart markup is gone');
-assert(index.includes('./game.js?v=191') && index.includes('./app.js?v=191'), 'index pins at v181');
+assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins at v181');
 assert(index.includes('./game-hud.css?v=86'), 'game-hud pin bumped for the redesign');
-assert(sw.includes('nightball-v191-home-menu'), 'SW cache renamed for v181');
+assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache renamed for v181');
 
 console.log('pitch-deck-v181: static assertions passed');
 

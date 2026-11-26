@@ -35,10 +35,10 @@ assert(
 );
 
 // ---------- v142 version pins ----------
-assert(index.includes('./game.js?v=191') && index.includes('./app.js?v=191'), 'index pins move to v142');
-assert(sw.includes('nightball-v191-home-menu'), 'SW cache renamed for v142');
-assert(sw.includes('./game.js?v=191') && sw.includes('./app.js?v=191'), 'SW precaches the v142 scripts');
-assert(index.includes('./home-menu.css?v=1'), 'index loads the home menu stylesheet');
-assert(sw.includes('./home-menu.css?v=1'), 'SW precaches the home menu stylesheet');
+assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins move to v142');
+assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache renamed for v142');
+assert(sw.includes('./game.js?v=192') && sw.includes('./app.js?v=192'), 'SW precaches the v142 scripts');
+assert(index.includes('./home-menu.css?v=2'), 'index loads the home menu stylesheet');
+assert(sw.includes('./home-menu.css?v=2'), 'SW precaches the home menu stylesheet');
 
 console.log('settings-entry-v142: all assertions passed');

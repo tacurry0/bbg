@@ -1,4 +1,13 @@
 /* The home screen uses the stadium artwork and arcade colors of NIGHTBALL. */
+html {
+  overscroll-behavior-y: none;
+}
+
+.modal-backdrop,
+.modal {
+  overscroll-behavior-y: contain;
+}
+
 body:has(.stadium-menu:not([hidden])) {
   padding-top: 0;
   padding-bottom: 0;
@@ -69,7 +78,7 @@ body:has(.stadium-menu:not([hidden])) {
 .app .stadium-menu {
   display: flex;
   flex-direction: column;
-  min-height: calc(100dvh - var(--home-header) - env(safe-area-inset-top));
+  min-height: calc(100svh - var(--home-header) - env(safe-area-inset-top));
   padding: 0;
   background:
     radial-gradient(ellipse at 10% 23%, #8cf5ff9e, transparent 32%),
@@ -80,7 +89,7 @@ body:has(.stadium-menu:not([hidden])) {
 
 .app .stadium-menu .menu-hero {
   position: relative;
-  height: clamp(106px, max(27vw, 14.5vh), 173px);
+  height: clamp(106px, max(27vw, 14.5svh), 173px);
   min-height: 0;
   flex: none;
   background: #06264b;
@@ -404,7 +413,7 @@ body:has(.stadium-menu:not([hidden])) {
   flex-direction: column;
   justify-content: center;
   padding: 4px 1px;
-  height: clamp(47px, max(13.5vw, 6.3vh), 79px);
+  height: clamp(47px, max(13.5vw, 6.3svh), 79px);
   min-height: 0;
   gap: clamp(2px, .66vw, 4px);
   color: #0b3965;
@@ -469,7 +478,7 @@ body:has(.stadium-menu:not([hidden])) {
 }
 
 .app .stadium-menu .menu-other-grid .menu-mini {
-  height: clamp(44px, max(11.8vw, 5.7vh), 65px);
+  height: clamp(44px, max(11.8vw, 5.7svh), 65px);
 }
 
 .app .stadium-menu .menu-apbc-small {
@@ -483,6 +492,7 @@ body:has(.stadium-menu:not([hidden])) {
   grid-template-rows: minmax(45px, auto) 19px;
   gap: 0 3px;
   align-items: stretch;
+  overflow-anchor: none;
 }
 
 .app .stadium-menu :is(.notice-step, .notice-pages button) {
@@ -506,6 +516,23 @@ body:has(.stadium-menu:not([hidden])) {
   color: #0a365f;
   box-shadow: 0 2px 3px #045e9659;
   text-align: left;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+
+.app .stadium-menu .notice-card-copy {
+  display: grid;
+  gap: 1px;
+  justify-items: start;
+  width: 100%;
+  min-width: 0;
+}
+
+.app .stadium-menu .notice-card-copy :is(strong,small) {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .app .stadium-menu .notice-label {
