@@ -492,6 +492,7 @@ export class StadiumRenderer {
    return;
   }
   const c=this.boardCanvas.getContext('2d'),w=1024;
+  const label=value=>globalThis.NightI18n?.text(value)??value;
   const bg=c.createLinearGradient(0,0,0,448);
   bg.addColorStop(0,'#071320');bg.addColorStop(1,'#040b14');
   c.fillStyle=bg;c.fillRect(0,0,w,448);
@@ -500,7 +501,7 @@ export class StadiumRenderer {
   c.fillStyle=hdr;c.fillRect(0,0,w,70);
   c.fillStyle='#53b8f2';c.fillRect(0,68,w,3);
   c.fillStyle='#f3fbff';c.font='italic 900 46px Arial';c.textAlign='left';c.fillText('NIGHTBALL',42,50);
-  c.font='bold 25px Arial';c.textAlign='right';c.fillStyle='#bfe2f7';c.fillText((g?.park?.name||'STADIUM').toUpperCase(),984,47);
+  c.font='bold 25px Arial';c.textAlign='right';c.fillStyle='#bfe2f7';c.fillText(label(g?.park?.name||'STADIUM').toUpperCase(),984,47,740);
   const home=g?.teams.home,away=g?.teams.away;
   c.textAlign='center';
   if(g?.inMatch){
@@ -541,15 +542,15 @@ export class StadiumRenderer {
    }
   }else{
    const call=g?.derby?'HOME RUN DERBY':g?.mode==='pitching'?'PITCHING PRACTICE':'BATTING PRACTICE';
-   c.fillStyle='#ffe89c';c.font='italic 900 70px Arial';c.fillText(call,512,252,950);
+   c.fillStyle='#ffe89c';c.font='italic 900 70px Arial';c.fillText(label(call),512,252,950);
   }
   c.fillStyle='#3c8bc2';c.fillRect(28,382,968,2);
   const call=g?.phase==='result'?{hr:'HOME RUN!',single:'BASE HIT',double:'DOUBLE!',triple:'TRIPLE!'}[g.hit?.kind]:null;
   if(call){
    const exit=g?.hit?.exitKmh?`  •  ${Math.round(g.hit.exitKmh)} km/h`:'';
-   c.fillStyle=g?.hit?.kind==='hr'?'#ffd866':'#9ee8ff';c.font='italic 900 31px Arial';c.fillText(call+exit,512,424);
+   c.fillStyle=g?.hit?.kind==='hr'?'#ffd866':'#9ee8ff';c.font='italic 900 31px Arial';c.fillText(label(call)+exit,512,424);
   }else if(g?.pitch?.speed&&['pitch','miss','result','field'].includes(g.phase)){
-   c.fillStyle='#9ec7df';c.font='bold 25px Arial';c.fillText(`${g.pitch.name||'PITCH'}  ${Math.round(g.pitch.speed)} km/h`,512,422);
+   c.fillStyle='#9ec7df';c.font='bold 25px Arial';c.fillText(`${label(g.pitch.name||'PITCH')}  ${Math.round(g.pitch.speed)} km/h`,512,422);
   }
   // Subtle LED matrix scanline texture
   c.fillStyle='rgba(0, 6, 14, 0.17)';
@@ -1012,7 +1013,10 @@ export class StadiumRenderer {
    ...((g.park.pro||VENUE_VISION_PARKS.has(g.park.id))?[g.balls,g.strikes,g.outs,g.batter.id,g.pitcher.id,
     g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
   const boardCall=g?.phase==='result'?g?.hit?.kind:g?.pitch?.speed?Math.round(g.pitch.speed):null;
-  if(this.boardKey!==boardKey||this.boardCall!==boardCall){this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;}
+  const language=globalThis.NightI18n?.language;
+  if(this.boardKey!==boardKey||this.boardCall!==boardCall||this.boardLanguage!==language){
+   this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
+  }
   this.overviewMode=g?.phase==='intro'&&(g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
   const cameraView=this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;

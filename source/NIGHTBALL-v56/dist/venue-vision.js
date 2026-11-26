@@ -20,7 +20,9 @@ const colors={
 function rect(c,color,x,y,w,h){c.fillStyle=color;c.fillRect(x,y,w,h);}
 function text(c,value,x,y,size,color='#fff',max=0,align='center'){
  c.font='900 '+size+'px system-ui,sans-serif';c.fillStyle=color;c.textAlign=align;
- if(max)c.fillText(String(value??''),x,y,max);else c.fillText(String(value??''),x,y);
+ const label=String(value??'');
+ const rendered=globalThis.NightI18n?.text(label)??label;
+ if(max)c.fillText(rendered,x,y,max);else c.fillText(rendered,x,y);
 }
 function gradient(c,x,y,w,h,from,to){
  const fill=c.createLinearGradient(x,y,x+w,y+h);

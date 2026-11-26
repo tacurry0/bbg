@@ -11,6 +11,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
 (()=>{
  'use strict';
  const $=id=>document.getElementById(id);
+ const {text: localize, setLanguage}=NightI18n;
  const icons={
  sound:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>',
  mute:'<path d="M11 5 6 9H3v6h3l5 4V5Z"/><path d="m16 9 6 6m0-6-6 6"/>',
@@ -56,6 +57,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  // migrate to manual once. The marker is set here so the migration runs
  // only once, and any later explicit choice (including auto) is kept.
  if(!settings.runningModeChosen){settings.manualRunning=true;settings.runningModeChosen=true;}
+ settings.language=setLanguage(settings.language);
  window.nightSettings=settings;
  // v120: saved uniform colour overrides recolour the shared club objects.
  let uniformOverrides=NightUniforms.load(),uniformClub='owls';
@@ -554,7 +556,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    return;
   }
   if(b.dataset.pennantSlot){const n=Number(b.dataset.pennantSlot);if(game?.mode==='pennant')game=null;loadLeague(selectedLeague,n);leaguePicker();return;}
-  if(b.dataset.slotDelete){const n=Number(b.dataset.slotDelete);if(!confirm(`スロット${n}のペナントを削除しますか？この操作は取り消せません。`))return;NightPennantSlots.remove(localStorage,selectedLeague,n);if(n===leagueSlot){league=null;game=null;}toast(`スロット${n}を削除しました`);leaguePicker();return;}
+  if(b.dataset.slotDelete){const n=Number(b.dataset.slotDelete);if(!confirm(localize(`スロット${n}のペナントを削除しますか？この操作は取り消せません。`)))return;NightPennantSlots.remove(localStorage,selectedLeague,n);if(n===leagueSlot){league=null;game=null;}toast(`スロット${n}を削除しました`);leaguePicker();return;}
   if(b.dataset.leagueGames){selectedGamesPerOpponent=Number(b.dataset.leagueGames);settings.pennantGamesPerOpponent=selectedGamesPerOpponent;save();leaguePicker();return;}
   if(b.dataset.clubChoice){selectedClub=b.dataset.clubChoice;leaguePicker();return;}
   if(b.dataset.leagueDraftClub&&leagueDraft){captureLeagueDraftName();const id=b.dataset.leagueDraftClub;leagueDraft.clubIds=leagueDraft.clubIds.includes(id)?leagueDraft.clubIds.filter(c=>c!==id):[...leagueDraft.clubIds,id];renderLeagueEditor();return;}
@@ -752,7 +754,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    'draft-apply':()=>w.draftApply(true),'draft-next':()=>w.draftReveal(false),'draft-all':()=>w.draftReveal(true),
    'draft-sign':()=>w.signDraft(),amateur:()=>w.amateur(v),request:()=>w.openMarket(true),
    refuse:()=>w.refuse(),negotiate:()=>w.negotiate(+v),accept:()=>w.accept(+v),stay:()=>w.stay(),
-   retire:()=>{if(!window.confirm('この選手は現役を引退します。続けますか？'))return false;return w.retire();},
+   retire:()=>{if(!window.confirm(localize('この選手は現役を引退します。続けますか？')))return false;return w.retire();},
    new:()=>{
     worldAlumni=[{name:w.name,country:w.country,games:w.lifetime.g},...worldAlumni].slice(0,16);
     try{localStorage.setItem(NightCareerWorld.alumniKey,JSON.stringify(worldAlumni));}
@@ -1794,7 +1796,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  async function removeSong(slot){
   const {key}=musicTarget(),id=settings.music.assignments[key]?.[slot];
   if(!id?.startsWith('user:'))return;
-  if(!window.confirm('この音源を端末から削除しますか？ 他の選手やチームで使っている設定からも外れます。'))return;
+  if(!window.confirm(localize('この音源を端末から削除しますか？ 他の選手やチームで使っている設定からも外れます。')))return;
   try{
    await songVault.remove(id);ballparkMusic.stop('preview');ballparkMusic.buffers.delete(id);
    for(const entry of Object.values(settings.music.assignments))for(const type of Object.keys(MUSIC_SLOTS))if(entry[type]===id)delete entry[type];
@@ -1808,7 +1810,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const scaleOptions=[['hudScale','スコア・選手情報'],['controlsScale','操作ボタン']].map(([id,label])=>`
    <div class="setting-slider"><label for="${id}">${label} <output id="${id}-output">${settings[id]}%</output></label>
     <input id="${id}" data-ui-scale="${id}" type="range" min="75" max="120" step="5" value="${settings[id]}"></div>`).join('');
-  modal(`${modalTitle('THUMB CONTROLS','親指の操作・ゲーム設定')}${settingsSection('controls','操作',`<section class="hud-settings">
+  modal(`${modalTitle('THUMB CONTROLS','親指の操作・ゲーム設定')}<div class="setup-section">
+   <label for="game-language">表示言語</label>
+   <select id="game-language" class="field-select" data-no-localize>
+    ${[['ja','日本語'],['zh-TW','台灣華語（繁體中文）'],['ko','한국어']].map(([code,label])=>`<option value="${code}" lang="${code}"${settings.language===code?' selected':''}>${label}</option>`).join('')}
+   </select></div>${settingsSection('controls','操作',`<section class="hud-settings">
    <h3 class="setting-label">試合画面のサイズ</h3>${scaleOptions}
    <p class="modal-note">端末幅に合わせた標準サイズを基準に調整できます。${activeCareer?'':'試合中に設定を開くと、その場で反映を確認できます。'}</p></section><div id="thumb-preview-wrap">${thumbPreview()}</div><div class="setting-slider"><label for="cursor-shift">指から横への距離 <output id="shift-output">${settings.cursorShift}px</output></label><input id="cursor-shift" type="range" min="0" max="140" step="4" value="${settings.cursorShift}"></div><div class="setting-slider"><label for="cursor-lift">指から上への距離 <output id="lift-output">${settings.cursorLift}px</output></label><input id="cursor-lift" type="range" min="0" max="160" step="4" value="${settings.cursorLift}"></div><p class="modal-note">球場を押したまま親指を動かし、離して打撃・投球。照準は指の左上に表示されます。</p>${[['timingGuide','タイミングリング','リングが小さい円に重なったら離す'],['battingAssist','打撃アシスト','手前のボールを少しゆっくりにする'],['leftHanded','左親指で操作','照準を指の右上に変更'],['assist','到達位置のガイド','変化しなかった場合の到達位置を表示（練習用）'],['showTrace','前の投球位置を表示','次の投球前に確認']].map(([v,l,d])=>`<div class="setting-row"><div><strong>${l}</strong><small>${d}</small></div><button class="toggle ${settings[v]?'on':''}" data-toggle="${v}" role="switch" aria-checked="${!!settings[v]}" aria-label="${l}"></button></div>`).join('')}`)}${settingsSection('sound','サウンド',`${[['sound','サウンド','録音の打球・捕球音と観客の歓声'],['timingSound','離すタイミングの合図','音と対応端末の短い振動'],['vibration','振動','ミートした手応え'],['tts','実況の音声読み上げ','打席の結果を端末の音声合成で読み上げる'],['audioCues','音響ガイド','判定（ストライク／ボール）と打球結果を音の高さとパターンで知らせる。審判モードでは自分のコール後にだけ鳴る']].map(([v,l,d])=>`<div class="setting-row"><div><strong>${l}</strong><small>${d}</small></div><button class="toggle ${settings[v]?'on':''}" data-toggle="${v}" role="switch" aria-checked="${!!settings[v]}" aria-label="${l}"></button></div>`).join('')}<div class="audio-settings"><div class="setting-label">球場のサウンド</div><p class="modal-note">打球・グラブの録音と、プレーに反応する歓声。</p><div class="setting-slider"><label for="sound-volume">全体音量 <output id="sound-volume-output">${settings.soundVolume}%</output></label><input id="sound-volume" type="range" min="0" max="100" step="1" value="${settings.soundVolume}"></div><div class="setting-slider"><label for="crowd-volume">観客・歓声 <output id="crowd-volume-output">${settings.crowdVolume}%</output></label><input id="crowd-volume" type="range" min="0" max="100" step="1" value="${settings.crowdVolume}"></div><button class="secondary-button" data-action="music-settings">応援歌・アウト／三振の曲</button><div class="audio-preview-buttons"><button data-audio-test="perfect">打球音を試す</button><button data-audio-test="catch">捕球音を試す</button><button data-audio-test="homer">歓声を試す</button></div><details class="audio-credits"><summary>サウンド素材</summary><p>録音：martinimeniscus（打球・捕球）、eeease（球場環境）、benfree（歓声）、soundpost（スイッシュ）。CC0 1.0。編集・音量調整済み。</p><a href="./assets/audio/credits.json" target="_blank" rel="noopener">素材の出典・ライセンス一覧 ↗</a></details></div>`)}${settingsSection('match','試合',`${lightingField()}${[['tiebreak','延長タイブレーク','同点の延長は無死二塁から（最大3回まで）']].map(([v,l,d])=>`<div class="setting-row"><div><strong>${l}</strong><small>${d}</small></div><button class="toggle ${settings[v]?'on':''}" data-toggle="${v}" role="switch" aria-checked="${!!settings[v]}" aria-label="${l}"></button></div>`).join('')}<div class="setting-label">${activeCareer?'キャリアの走塁':'走塁モード'}</div><div class="segmented">${[[false,"自動","状況に合わせて進塁"],[true,"手動",activeCareer?'自分の走者を操作':'走者を塁方向へスワイプ']].map(([manual,label,sub])=>`<button data-running-mode="${manual?"manual":"auto"}" class="${(activeCareer?(game?.career?game.manualRunning:career.manualRunning):(game?.manualRunning??settings.manualRunning))===manual?"active":""}">${label}<small>${sub}</small></button>`).join("")}</div><p class="modal-note">${activeCareer?'手動では、自分が打った直後の打者走者に進塁・帰塁を指示します。味方走者は自動です。':'手動では走者を塁方向へスワイプします。'} 打者走者はまず一塁へ。プレー中の切り替えは次の投球前に行えます。</p><div class="setting-label">打球後の速度</div><div class="segmented">${[1,2].map(n=>`<button data-field-speed="${n}" class="${settings.fieldSpeed===n?'active':''}">×${n}<small>${n===1?'通常':'2倍速'}</small></button>`).join('')}</div><div class="setting-label">難易度（次のプレイから）</div><div class="segmented">${[['casual','カジュアル'],['standard','標準'],['pro','プロ']].map(([v,l])=>`<button data-difficulty="${v}" class="${settings.difficulty===v?'active':''}">${l}</button>`).join('')}</div><div class="setting-label">CPUの強さ（カスタム）</div>${[['bat','CPU打撃','打者の読みとタイミング'],['pitch','CPU投球','球速と変化のキレ'],['field','CPU守備','守備範囲と送球'],['run','CPU走塁','進塁の積極性と盗塁']].map(([k,l,d])=>`<div class="setting-slider"><label for="cd-${k}">${l}（${d}） <output id="cd-${k}-output">${settings.customDifficulty[k]>0?'+':''}${settings.customDifficulty[k]}</output></label><input id="cd-${k}" data-custom-diff="${k}" type="range" min="-10" max="10" step="1" value="${settings.customDifficulty[k]}"></div>`).join('')}<p class="modal-note">難易度プリセットに上乗せされます。0で無効、+でCPUが強く、−で弱くなります。</p><div class="setting-label">ペナントの故障発生</div><div class="segmented">${[['off','なし','故障は発生しない'],['low','少なめ','たまに離脱'],['normal','ふつう','現実的な頻度']].map(([v,l,d])=>`<button data-injury-rate="${v}" class="${(settings.injuries||'normal')===v?'active':''}">${l}<small>${d}</small></button>`).join('')}</div>`)}${settingsSection('edit','エディット／カスタム',`<button class="secondary-button" data-action="stadium-editor">球場エディタ（カスタム球場を作成・編集）</button><button class="secondary-button" data-action="league-editor-open">カスタムリーグを作成・編集</button><button class="secondary-button" data-action="uniform-editor">ユニフォームカラーを編集</button><p class="modal-note">作った球場は試合設定の球場リスト、リーグはペナント設定で選べます。球場とリーグの共有コード（発行・読み込み）は各エディタの中にあります。</p>`)}${settingsSection('data','データ',`<div class="setting-label">セーブデータ</div><button class="secondary-button" data-action="backup-export">データを書き出す（JSON）</button><button class="secondary-button" data-action="backup-import">データを読み込む</button><p class="modal-note">記録・ペナント・キャリアなど、この端末に保存された全データを1ファイルにまとめます。読み込むと現在のデータに上書きされます。</p><button class="secondary-button" data-action="fullscreen">全画面でプレイ</button><button class="secondary-button" data-action="install">ホーム画面への追加方法</button>`)}<button class="primary-button" data-action="close">OK</button>`,'settings');
  }
@@ -2338,9 +2344,9 @@ function start(mode,challengeId=null,fixedPark=null){
    // Display text (data.ja/data.sub) and spoken text are separate since
    // v146: pitch-call banners no longer show the katakana call words, but
    // TTS keeps reading them from data.speech when a message carries one.
-   const text=data.speech||(data.ja?(data.ja+(data.sub?'。'+data.sub:'')):'');
+   const text=data.speech?localize(data.speech):[data.ja,data.sub].filter(Boolean).map(value=>localize(value)).join(NightI18n.language==='ko'?'. ':'。');
    if(!speakable||!text)return;
-   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang='ja-JP';u.rate=1.05;speechSynthesis.speak(u);}catch{}
+   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang=NightI18n.language==='ja'?'ja-JP':NightI18n.language;u.rate=1.05;speechSynthesis.speak(u);}catch{}
  }
  // v159 (result-banner-once): a play result is announced exactly once, in
  // the one stage-banner design. The engine emits each result once, but the
@@ -3703,7 +3709,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      case'survival-next':save();pendingSurvival=true;start('match');break;
      case'draft':draftSetup();break;
      case'conquest':conquestSetup();break;
-     case'conquest-reset':if(conquestUser&&window.confirm('この球団の全球団制覇の進行をリセットしますか？')){NightConquest.clearProgress(conquestUser);toast('進行をリセットしました');conquestSetup();}break;
+     case'conquest-reset':if(conquestUser&&window.confirm(localize('この球団の全球団制覇の進行をリセットしますか？'))){NightConquest.clearProgress(conquestUser);toast('進行をリセットしました');conquestSetup();}break;
      case'draft-start':startDraftBattle();break;
      case'draft-auto':if(draftState){NightDraftBattle.autoComplete(draftState);draftRender();}break;
      case'draft-finish':if(draftState&&NightDraftBattle.isComplete(draftState)){pendingDraft=true;save();start('match');}break;
@@ -3745,7 +3751,11 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
  });
  $('modal-content').addEventListener('change',e=>{
   const t=e.target;
-  if(t.id==='music-club'){musicSelection.club=t.value;musicSelection.person='';ballparkMusic.stop('preview');drawMusicMenu(t.id);}
+  if(t.id==='game-language'){
+   settings.language=setLanguage(t.value);
+   save();
+  }
+  else if(t.id==='music-club'){musicSelection.club=t.value;musicSelection.person='';ballparkMusic.stop('preview');drawMusicMenu(t.id);}
   else if(t.id==='music-person'){musicSelection.person=t.value;ballparkMusic.stop('preview');drawMusicMenu(t.id);}
   else if(t.dataset.songSlot){setSongChoice(musicTarget().key,t.dataset.songSlot,t.value);ballparkMusic.stop('preview');drawMusicMenu(t.id);}
   else if(t.dataset.musicUpload&&t.files[0])importSong(t.dataset.musicUpload,t.files[0]);

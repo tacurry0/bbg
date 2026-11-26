@@ -147,7 +147,7 @@ window.NightRenderer=class NightRenderer{
      this.drawBall(c,bp.x,bp.y,4*NightGame.ballVisualScale(b.z,Math.hypot(b.x,b.y)),t*.006,g.hit?.kind==='hr');
     }
     if(!g.replayView){
-     const chaser=f.fielders[f.chaser];c.fillStyle='#d5e5c0';c.textAlign='left';c.font='bold 8px Arial';c.fillText(f.throw?'THROW TO BASE':f.resolved?'PLAY COMPLETE':'LIVE BALL',20,70);c.font='8px Arial';c.fillStyle='#a9bd9f';c.fillText(f.throw?'捕球 → 送球':`${chaser?.player||''}${chaser?' / '+chaser.name:''}`,20,84);
+     const chaser=f.fielders[f.chaser];c.fillStyle='#d5e5c0';c.textAlign='left';c.font='bold 8px Arial';const label=f.throw?'THROW TO BASE':f.resolved?'PLAY COMPLETE':'LIVE BALL';c.fillText(window.NightI18n?.text(label)??label,20,70);c.font='8px Arial';c.fillStyle='#a9bd9f';c.fillText(f.throw?'捕球 → 送球':`${chaser?.player||''}${chaser?' / '+chaser.name:''}`,20,84);
      c.textAlign='right';c.fillText(`${Math.round(f.maxTravel)} m`,460,70);
     }
     if(g.hit?.kind==='hr')for(let i=0;i<40;i++){const age=g.phaseTime/2000,d=age*(40+i*3);c.globalAlpha=Math.max(0,1-age);c.fillStyle=i%2?'#d5f36a':'#ffc58c';c.fillRect(240+Math.cos(i*2.4)*d,210+Math.sin(i*2.4)*d*.6+age*50,3,2);}c.globalAlpha=1;
@@ -198,7 +198,7 @@ window.NightRenderer=class NightRenderer{
         this.drawBall(c,pos.x,pos.y,radius,turns*Math.PI*.56);
       }
       if(g.phase==='aim'){
-        c.fillStyle='#e6f0cf';c.textAlign='center';c.font='bold 9px Arial';c.fillText('球種とコースを選んで投球',265,333);
+        c.fillStyle='#e6f0cf';c.textAlign='center';c.font='bold 9px Arial';c.fillText(window.NightI18n?.text('球種とコースを選んで投球')??'球種とコースを選んで投球',265,333);
       }
     }
     const bottom=c.createLinearGradient(0,490,0,540);bottom.addColorStop(0,'#0b1b1000');bottom.addColorStop(1,'#0b1b10c0');c.fillStyle=bottom;c.fillRect(0,490,480,50);c.restore();
