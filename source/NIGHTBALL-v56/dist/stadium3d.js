@@ -690,12 +690,23 @@ export class StadiumRenderer {
   if(p.role==='pitcher'){
    const side=p.throwHand==='L'?-1:1,arm=side===1?1:0,glove=1-arm,lead=glove;
    if(p.glove.parent!==p.hands[glove])p.hands[glove].add(p.glove);
-   const wind=pose,lift=Math.sin(wind*Math.PI),reach=clamp((wind-.7)/.3,0,1),follow=p.releaseProgress==null?0:clamp(p.releaseProgress/.26,0,1),release=p.releaseProgress!=null;
+   const form=window.NightGame?.PITCH_FORMS?.[p.pitchForm]||window.NightGame?.PITCH_FORMS?.overhand||{x:.76,h:2.10,lift:.48,cockX:.38,cockY:1.35,lean:.03};
+   const wind=clamp(pose,0,1),lift=Math.sin(wind*Math.PI),reach=clamp((wind-.58)/.42,0,1),follow=p.releaseProgress==null?0:clamp(p.releaseProgress/.26,0,1),release=p.releaseProgress!=null;
+   const mix=(a,b,t)=>a+(b-a)*t,quick=p.fromSet?.42:1;
+   const step=release?.30:reach*.30;
    if(wind===0&&!release&&time>0)p.body.position.y=idle*.011;
-   p.feet[lead].position.y=.12+lift*.48;p.feet[lead].position.z=-lift*.18+(release?.30*follow:reach*.30);this.poseLeg(p,lead,[side*-.15,.46,0],p.feet[lead].position.toArray());
-   const throwing=[side*(release?.38-.23*follow:.38),release?1.05-.44*follow:.7+lift*.65+reach*.35,release?.30+.18*follow:-lift*.27+reach*.30];
+   p.feet[lead].position.y=.12+lift*form.lift*quick;p.feet[lead].position.z=-lift*.18*quick+step;this.poseLeg(p,lead,[side*-.15,.46,0],p.feet[lead].position.toArray());
+   // At release (root scale 2), the hand matches the flight's initial
+   // x/height/z; the remaining motion is a continuous follow-through.
+   const handX=release?mix(form.x/2,-.12,follow):mix(mix(p.fromSet?.22:.36,form.cockX,lift),form.x/2,reach);
+   const handY=release?mix(form.h/2,.60,follow):mix(mix(p.fromSet?.87:.70,form.cockY,lift),form.h/2,reach);
+   const handZ=release?mix(.30,.46,follow):mix(.08-lift*.35,.30,reach);
+   const throwing=[side*handX,handY,handZ];
    p.hands[arm].position.set(...throwing);this.poseArm(p,arm,[side*.245,.94,0],throwing);
-   p.hands[glove].position.set(-side*.22,.88+lift*.08+(wind===0&&!release&&time>0?idle*.012:0),.30);this.poseArm(p,glove,[-side*.245,.94,0],p.hands[glove].position.toArray());p.body.rotation.y=side*(release?-.18*follow:lift*.25);
+   p.hands[glove].position.set(-side*.22,.88+lift*.08,.30);this.poseArm(p,glove,[-side*.245,.94,0],p.hands[glove].position.toArray());
+   p.body.rotation.y=side*(release?-.25*follow:lift*.30);
+   p.body.rotation.z=side*(release?-form.lean*follow:form.lean*lift);
+   p.body.rotation.x=release?.20*follow:0;
   }
   if(p.role==='batter'){
    const side=p.batHand==='L'?-1:1,swing=Math.min(pose*2,1),sw=swing>0;
@@ -1075,7 +1086,9 @@ export class StadiumRenderer {
   }else{
    const left=(g?.battingHand||g?.batter.hand)==='L',swing=g&&g.swingAge<380?g.swingAge/760:0;
    this.pitcher.throwHand=g?.pitch?.throwHand||g?.pitcher.hand||'R';this.pitcher.releaseProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:null;
-   this.animatePlayer(this.pitcher,0,18.4,Math.PI,time,false,g?.phase==='windup'?Math.min(1,g.phaseTime/(g.derby?270:700)):0);
+   this.pitcher.pitchForm=g?.pitch?.form||(g?.pitch?'overhand':g?.derby?'overhand':window.NightGame?.pitchingForm(g?.pitcher))||'overhand';
+   this.pitcher.fromSet=g?.pitch?.fromSet??!!(g?.inMatch&&g?.bases?.some(Boolean));
+   this.animatePlayer(this.pitcher,0,18.4,Math.PI,time,false,g?.phase==='windup'?Math.min(1,g.phaseTime/(g.pitch?.windupMs??(g.derby?270:700))):0);
    this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g?.pitch?.progress??0;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);if(g?.bunt){this.batter.bat.position.set(left?-.05:.05,.82,.42);this.batter.bat.rotation.set(0,0,left?Math.PI/2:-Math.PI/2);}
    this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
    const positions=g?.derby?[]:(window.NightGame?.positions(g?.park)||[]);positions.forEach(([name,x,z],i)=>{if(i<2)return;this.animatePlayer(this.fielders[i],x,z,Math.PI,time);});

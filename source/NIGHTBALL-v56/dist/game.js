@@ -113,6 +113,26 @@ window.NightGame=class NightGame{
   return 1.22/(1+Math.max(0,height-1)*.032+Math.max(0,distance-12)*.003);
  }
  static conditionInfo(level=0){return conditions[clamp(Math.round(Number(level)||0),-2,2)+2];}
+ // v200: visual/gameplay delivery presets. Unverified roster entries use
+ // deterministic simulated forms, not assertions about real athletes.
+ static PITCH_FORMS=Object.freeze({
+  overhand:Object.freeze({x:.76,h:2.10,lift:.48,cockX:.38,cockY:1.35,lean:.03}),
+  threequarter:Object.freeze({x:.96,h:1.86,lift:.42,cockX:.48,cockY:1.18,lean:.10}),
+  sidearm:Object.freeze({x:1.34,h:1.45,lift:.34,cockX:.67,cockY:.90,lean:.22}),
+  submarine:Object.freeze({x:1.16,h:.62,lift:.30,cockX:.58,cockY:.50,lean:.34})
+ });
+ static pitchingForm(pitcher){
+  const supplied=pitcher?.pitchingForm;
+  if(typeof supplied==='string'&&Object.hasOwn(NightGame.PITCH_FORMS,supplied))return supplied;
+  if(!pitcher?.id)return 'overhand';
+  let h=2166136261;for(const ch of String(pitcher.id))h=Math.imul(h^ch.charCodeAt(0),16777619);
+  const n=(h>>>0)%100;
+  return n<62?'overhand':n<87?'threequarter':n<98?'sidearm':'submarine';
+ }
+ static delivery(pitcher,fromSet=false,derby=false){
+  const form=derby?'overhand':NightGame.pitchingForm(pitcher),preset=NightGame.PITCH_FORMS[form];
+  return {form,fromSet:!derby&&!!fromSet,windupMs:derby?270:fromSet?490:700,releaseX:(pitcher?.hand==='L'?1:-1)*preset.x/.68,releaseY:(2.10-preset.h)/.62};
+ }
  static TYPES=TYPES;
  static POS=POS;
  static BASES=BASES;
@@ -658,7 +678,7 @@ window.NightGame=class NightGame{
   }
   else if(this.phase==='play-review'&&this.phaseTime>=1400)this.resolvePlayCall(true);
   else if(this.phase==='aim'&&(this.autoDefense||this.umpireMode)&&this.defending&&this.phaseTime>480)this.autoPitch();
-  else if(this.phase==='windup'&&this.phaseTime>(derby?270:700)){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
+  else if(this.phase==='windup'&&this.phaseTime>(this.pitch?.windupMs??(derby?270:700))){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
   else if(this.phase==='pitch'){
    this.pitch.progress=this.phaseTime/this.pitch.duration;
    if((this.defending||this.autoBatting||this.umpireMode)&&!this.pitch.cpuActed&&this.pitch.progress>=this.pitch.cpuTime){this.pitch.cpuActed=true;this.cpuBat();}
@@ -1047,7 +1067,7 @@ window.NightGame=class NightGame{
   // Preserve the previous perceptual pace without inflating radar readings.
   const flightSpeed=this.derby?150:NightGame.stretchPitchSpeed(velocity);
   const flightPace=1+Math.max(0,flightSpeed-135)*.016;
-  this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(flightSpeed*flightPace),progress:0,swung:false,cpuActed:false};
+  this.pitch={...spec,...NightGame.delivery(pitcher,this.inMatch&&this.bases.some(Boolean),!!this.derby),throwHand:pitcher.hand==='L'?'L':'R',bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(flightSpeed*flightPace),progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){
    this.pitch.bx*=1+pitcherPerks.closer*.12;
@@ -1305,7 +1325,7 @@ window.NightGame=class NightGame{
  }
  pitchAt(u){
   const p=this.pitch,k=Math.pow(clamp(u,0,1.3),1.65),late=Math.pow(clamp(u,0,1.3),4.4);
-  const flutter=p.id==='knuckle'?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX??((p.throwHand||this.pitcher.hand)==='L'?1:-1)*.76/.68)*(1-Math.min(1,Math.max(0,u)))+p.targetX*k+p.bx*(late-k)+flutter,y:p.targetY*k+p.by*(late-k)+flutter*.6};
+  const flutter=p.id==='knuckle'?Math.sin(u*31)*Math.sin(Math.min(1,u)*Math.PI)*.23:0;return{x:(p.releaseX??((p.throwHand||this.pitcher.hand)==='L'?1:-1)*.76/.68)*(1-Math.min(1,Math.max(0,u)))+p.targetX*k+p.bx*(late-k)+flutter,y:(p.releaseY??0)*(1-Math.min(1,Math.max(0,u)))+p.targetY*k+p.by*(late-k)+flutter*.6};
  }
  // Start at the no-break point on the plate plane, then follow the
  // developing break so the guide and live ball meet at the plate.
