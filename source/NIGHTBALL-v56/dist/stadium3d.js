@@ -709,20 +709,34 @@ export class StadiumRenderer {
    p.body.rotation.x=release?.20*follow:0;
   }
   if(p.role==='batter'){
-   const side=p.batHand==='L'?-1:1,swing=Math.min(pose*2,1),sw=swing>0;
-   const load=sw?0:clamp(((p.pitchProgress??0)-.45)/.44,0,1);
-   const step=sw?Math.sin(swing*Math.PI*.76):0,front=side===1?0:1;
-   const wag=!sw&&load===0&&time>0?Math.sin(time*.0056):0,wagC=!sw&&load===0&&time>0?Math.cos(time*.0056):0;
-   if(!sw&&load===0&&time>0)p.body.position.y=-.011+Math.abs(wag)*.011;
-   const foot=p.feet[front];
-   foot.position.z+=step*.28-load*.08;
-   foot.position.x-=side*step*.10;
-   foot.position.y+=load*.09;
-   this.poseLeg(p,front,[(front?1:-1)*.15,.46,0],foot.position.toArray());
-   p.bat.position.set(side*(sw?.20:.34),.87+wag*.012,.27);
-   p.bat.rotation.set(.12+wag*.085,sw?-side*swing*3.5:0,side*(sw?-.95-swing*.5:-.18+wagC*.075));
-   p.body.rotation.y=sw?-side*swing*.65:side*load*.17;
-   p.hands[0].position.set(side*.22,.89+wag*.012,.28);p.hands[1].position.set(side*.33,.85+wag*.012,.26);
+   const side=p.batHand==='L'?-1:1,front=side===1?0:1;
+   const sw=!!p.swingActive||pose>0,swing=clamp(pose*2,0,1);
+   const m=window.NightGame.battingMotion(p.batForm,p.pitchProgress??0,swing,sw);
+   const wag=!sw&&m.load===0&&time>0?Math.sin(time*.0056):0,wagC=!sw&&m.load===0&&time>0?Math.cos(time*.0056):0;
+   p.body.position.y=-m.crouch+(sw?-.025*m.step:-.011+Math.abs(wag)*.011);
+   p.body.rotation.y=side*(m.stance*(1-swing)+(sw?-m.turn*swing:m.load*.17));
+   p.body.rotation.x=m.crouch*.9;
+   for(let i=0;i<2;i++){
+    const foot=p.feet[i],sign=i?1:-1,isFront=i===front;
+    foot.position.x=sign*.17*m.width-(isFront?side*m.step*.10:0);
+    foot.position.z=.10+(isFront?m.stance*.34+m.step*m.stride-m.load*.08:-m.stance*.12);
+    foot.position.y=.12+(isFront?m.lift:0);
+    this.poseLeg(p,i,[sign*.15,.46,0],[foot.position.x,foot.position.y+.035,foot.position.z]);
+   }
+   // All styles share the same swing clock. Only the visible stance, load,
+   // stride and finish vary; the ball contact judgment stays in game.js.
+   const startTilt=m.batTilt+wagC*.075;
+   p.bat.position.set(side*(sw?.34-.14*swing:.34),m.batHeight+wag*.012-(sw?.10*swing:0),.27+(sw?.10*swing:0));
+   p.bat.rotation.set(.12+wag*.085,sw?-side*swing*3.5:0,side*(sw?startTilt+(-m.finish-startTilt)*swing:startTilt));
+   if(p.bunting){
+    p.bat.position.set(-side*.05,.82,.42);p.bat.rotation.set(0,0,side*Math.PI/2);
+   }
+   // Attach both hands to the grip rather than leaving them in a fixed pose.
+   const grip=new T.Vector3(0,1,0).applyEuler(p.bat.rotation);
+   for(let i=0;i<2;i++){
+    const offset=(i===front?.015:-.135);
+    p.hands[i].position.copy(p.bat.position).addScaledVector(grip,offset);
+   }
    const elbows=[0,1].map(i=>this.poseArm(p,i,[i?.245:-.245,.94,0],p.hands[i].position.toArray()));
    if(p.elbowGuard){
     const leadElbow=elbows[front];
@@ -1049,7 +1063,7 @@ export class StadiumRenderer {
     this.poseFielder(actor,i,f,elapsed);actor.lastX=p.x;actor.lastZ=p.y;
    });
    if(contact){
-    const left=g.battingHand==='L';this.batter.batHand=g.battingHand;this.batter.pitchProgress=0;
+    const left=g.battingHand==='L';this.batter.batHand=g.battingHand;this.batter.pitchProgress=0;this.batter.batForm=window.NightGame.battingForm(g.batter);this.batter.swingActive=true;this.batter.bunting=!!g.bunt;
     this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,.12+f.elapsed);
    }
    if(!f.foul)f.runners.forEach((r,i)=>{
@@ -1089,7 +1103,7 @@ export class StadiumRenderer {
    this.pitcher.pitchForm=g?.pitch?.form||(g?.pitch?'overhand':g?.derby?'overhand':window.NightGame?.pitchingForm(g?.pitcher))||'overhand';
    this.pitcher.fromSet=g?.pitch?.fromSet??!!(g?.inMatch&&g?.bases?.some(Boolean));
    this.animatePlayer(this.pitcher,0,18.4,Math.PI,time,false,g?.phase==='windup'?Math.min(1,g.phaseTime/(g.pitch?.windupMs??(g.derby?270:700))):0);
-   this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g?.pitch?.progress??0;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);if(g?.bunt){this.batter.bat.position.set(left?-.05:.05,.82,.42);this.batter.bat.rotation.set(0,0,left?Math.PI/2:-Math.PI/2);}
+   this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:0;this.batter.batForm=window.NightGame.battingForm(g?.batter);this.batter.swingActive=!!g&&g.swingAge<380;this.batter.bunting=!!g?.bunt;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);
    this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
    const positions=g?.derby?[]:(window.NightGame?.positions(g?.park)||[]);positions.forEach(([name,x,z],i)=>{if(i<2)return;this.animatePlayer(this.fielders[i],x,z,Math.PI,time);});
    if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side]);this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});

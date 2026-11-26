@@ -133,6 +133,29 @@ window.NightGame=class NightGame{
   const form=derby?'overhand':NightGame.pitchingForm(pitcher),preset=NightGame.PITCH_FORMS[form];
   return {form,fromSet:!derby&&!!fromSet,windupMs:derby?270:fromSet?490:700,releaseX:(pitcher?.hand==='L'?1:-1)*preset.x/.68,releaseY:(2.10-preset.h)/.62};
  }
+ // v202: animation-only batting styles; ratings and swing judgment are unchanged.
+ // Explicit battingForm is authoritative. The stable ID fallback is fictional.
+ static BAT_FORMS=Object.freeze({
+  standard:Object.freeze({stance:0,width:1,lift:.09,loadStart:.45,stride:.28,batTilt:-.18,batHeight:.87,crouch:0,turn:.65,finish:1.45}),
+  open:Object.freeze({stance:-.34,width:1.18,lift:.13,loadStart:.39,stride:.32,batTilt:-.30,batHeight:.91,crouch:.015,turn:.87,finish:1.52}),
+  closed:Object.freeze({stance:.27,width:1.05,lift:.08,loadStart:.42,stride:.23,batTilt:.06,batHeight:.91,crouch:.025,turn:.74,finish:1.36}),
+  legkick:Object.freeze({stance:0,width:.90,lift:.31,loadStart:.24,stride:.39,batTilt:-.08,batHeight:1.00,crouch:0,turn:.82,finish:1.58}),
+  nostride:Object.freeze({stance:-.08,width:1.38,lift:.018,loadStart:.58,stride:.065,batTilt:-.45,batHeight:.79,crouch:.085,turn:.58,finish:1.28}),
+  upright:Object.freeze({stance:.08,width:.87,lift:.12,loadStart:.37,stride:.25,batTilt:.14,batHeight:1.03,crouch:0,turn:.70,finish:1.40})
+ });
+ static battingForm(batter){
+  if(typeof batter?.battingForm==='string'&&Object.hasOwn(NightGame.BAT_FORMS,batter.battingForm))return batter.battingForm;
+  if(!batter?.id)return 'standard';
+  let h=2166136261;for(const c of 'bat/'+String(batter.id))h=Math.imul(h^c.charCodeAt(0),16777619);
+  const n=(h>>>0)%100;
+  return n<34?'standard':n<52?'open':n<63?'closed':n<80?'legkick':n<92?'nostride':'upright';
+ }
+ static battingMotion(form,progress=0,swing=0,active=false){
+  const f=NightGame.BAT_FORMS[form]||NightGame.BAT_FORMS.standard;
+  const load=clamp((progress-f.loadStart)/Math.max(.1,.89-f.loadStart),0,1);
+  const u=clamp(swing,0,1),step=active?Math.sin(u*Math.PI*.76):0;
+  return {load:active?0:load,step,u,stance:f.stance,width:f.width,lift:f.lift*(active?Math.max(0,1-u*5)*load:Math.sin(load*Math.PI*.82)),stride:f.stride,batTilt:f.batTilt,batHeight:f.batHeight,crouch:f.crouch,turn:f.turn,finish:f.finish};
+ }
  static TYPES=TYPES;
  static POS=POS;
  static BASES=BASES;
