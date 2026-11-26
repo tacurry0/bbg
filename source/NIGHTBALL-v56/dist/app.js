@@ -200,12 +200,18 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.phase!=='ended')stadiumAudio.stopEffects();
   if(kind!=='music-settings')ballparkMusic.stop('preview');
   modalKind=kind;content.dataset.kind=kind;
+  // Never leave a transform animation attached to the fixed-size pregame shell.
+  if(!same)content.getAnimations?.().forEach(animation=>animation.cancel());
   content.innerHTML=html;
   content.classList.toggle('preflight',!!content.querySelector(':scope > .pf-header'));
   backdrop.classList.toggle('preflight-backdrop',content.classList.contains('preflight'));
   if(same)content.querySelectorAll('details[data-ui-section]').forEach(d=>d.open=openDetails.has(d.dataset.uiSection));
   backdrop.hidden=false;document.body.style.overflow='hidden';
-  if(!same&&!matchMedia('(prefers-reduced-motion: reduce)').matches)content.animate?.([{opacity:.55,transform:'translateY(10px) scale(.99)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:160,easing:'ease-out'});
+  if(!same&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
+   const body=content.querySelector('.pf-body');
+   if(body)body.animate?.([{opacity:.65},{opacity:1}],{duration:140,easing:'ease-out'});
+   else content.animate?.([{opacity:.55,transform:'translateY(10px) scale(.99)'},{opacity:1,transform:'translateY(0) scale(1)'}],{duration:160,easing:'ease-out'});
+  }
   (content.querySelector('.pf-body')||content).scrollTop=scroll;
   if(!same){
    const button=content.querySelector('button');
