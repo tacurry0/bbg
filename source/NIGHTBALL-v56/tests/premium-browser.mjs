@@ -51,6 +51,19 @@ try{
  assert(await page.locator('link[href="./menu-polish.css?v=58"]').count());
  const hero=await page.locator('.menu-hero').boundingBox();
  assert(hero&&hero.height>=100&&hero.height<=190,'classic arcade hero must be visible');
+ const menu=await page.evaluate(()=>{
+  const order=selector=>Array.from(document.querySelectorAll(selector),button=>button.dataset.mode||button.id);
+  return {
+   featured:order('.menu-modes > button'),
+   other:order('.menu-other-grid > button'),
+   training:order('.menu-training [data-mode]'),
+   fits:document.documentElement.scrollWidth<=window.innerWidth,
+  };
+ });
+ assert.deepEqual(menu.featured,['match','pennant-mode','online','career']);
+ assert.deepEqual(menu.other.slice(0,4),['tournament','apbc','timeattack','survival']);
+ assert.deepEqual(menu.training,['practice','derby','pitching','bullpen']);
+ assert(menu.fits,'home menu fits the mobile viewport');
  mkdirSync('tests/screenshots',{recursive:true});
  await page.screenshot({timeout:90000,path:'tests/screenshots/premium-home.png'});
  await page.evaluate(async()=>{

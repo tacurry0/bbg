@@ -146,10 +146,10 @@ const near = (a, b, tol = 1e-9) => Math.abs(a - b) <= tol;
 {
   const index = fs.readFileSync(__dirname + '/../dist/index.html', 'utf8');
   const sw = fs.readFileSync(__dirname + '/../dist/sw.js', 'utf8');
-  assert(index.includes('./game.js?v=190') && index.includes('./app.js?v=190'), 'index pins at v184');
+  assert(index.includes('./game.js?v=191') && index.includes('./app.js?v=191'), 'index pins at v184');
   assert(index.includes('./renderer.js?v=64'), 'the changed renderer module pin moved in index');
   assert(fs.readFileSync(__dirname + '/../dist/app.js', 'utf8').includes('stadium3d.js?v=81'), 'the changed stadium module pin moved in app.js');
-  assert(sw.includes("const CACHE='nightball-v190-batting-direction'"), 'SW cache renamed for v184');
-  assert(sw.includes('./game.js?v=190') && sw.includes('./renderer.js?v=64') && sw.includes('./stadium3d.js?v=81'), 'SW precaches the v184 assets');
+  assert(sw.includes("const CACHE='nightball-v191-home-menu'"), 'SW cache renamed for v184');
+  assert(sw.includes('./game.js?v=191') && sw.includes('./renderer.js?v=64') && sw.includes('./stadium3d.js?v=81'), 'SW precaches the v184 assets');
 }
 console.log('pitch-guide-v184: all assertions passed');

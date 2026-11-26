@@ -48,10 +48,10 @@ assert(app.includes('detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?\'\':
 assert(app.includes('stageResultShown'), 'v159 result-banner dedup machinery is still present (untouched by v161)');
 
 // ---------- version pins (v161) ----------
-assert(index.includes('./game.js?v=190') && index.includes('./app.js?v=190'), 'index pins at v161');
+assert(index.includes('./game.js?v=191') && index.includes('./app.js?v=191'), 'index pins at v161');
 assert(index.includes('./abs.css?v=9'), 'abs.css pin bumped for the v161 CSS change');
-assert(sw.includes('nightball-v190-batting-direction'), 'SW cache renamed for v161');
-assert(sw.includes('./game.js?v=190') && sw.includes('./app.js?v=190') && sw.includes('./abs.css?v=9'),
+assert(sw.includes('nightball-v191-home-menu'), 'SW cache renamed for v161');
+assert(sw.includes('./game.js?v=191') && sw.includes('./app.js?v=191') && sw.includes('./abs.css?v=9'),
   'SW precaches the v161 assets');
 
 // ---------- browser behaviour (393x852) ----------

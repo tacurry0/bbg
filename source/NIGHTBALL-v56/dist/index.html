@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="./career-world.css?v=90">
   <link rel="stylesheet" href="./game-hud.css?v=86">
   <link rel="stylesheet" href="./menu-polish.css?v=58">
+  <link rel="stylesheet" href="./home-menu.css?v=1">
   <link rel="stylesheet" href="./pwa-update.css?v=1">
   <link rel="stylesheet" href="./abs.css?v=9">
   <title>NIGHTBALL — ポケット野球</title>
@@ -25,47 +26,99 @@
 <div class="app" id="app">
   <header class="topbar">
     <button class="wordmark" id="brand" aria-label="ホーム">NIGHTBALL<span class="brand-dot"></span><svg class="broadcast-brand-ball" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="11.7" fill="#eff9ff" stroke="#8fc4f4"/><path fill="none" stroke="#da4650" stroke-width="1.5" d="M5.8 4.6a10.5 10.5 0 0 1 0 16.8M20.2 4.6a10.5 10.5 0 0 0 0 16.8"/></svg></button>
-    <div class="top-actions"><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
+    <div class="top-actions"><button class="icon-button" id="menu-notices" type="button" data-unread="true" aria-label="お知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bell"></use></svg></button><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
   </header>
   <div class="react-panel" id="react-panel" hidden></div>
 
-  <main id="home" class="home-screen">
-    <section class="menu-hero" aria-label="NIGHTBALL メインメニュー">
-      <img class="menu-key-art" src="./assets/menu/clubhouse-v18.webp" width="1774" height="887" alt="黄色いユニフォームの打者と、えんじ色の投手が立つナイターの球場" fetchpriority="high" decoding="async">
-      <div class="menu-hero-shade"></div><h1>メインメニュー</h1>
+  <svg class="home-icon-defs" aria-hidden="true" width="0" height="0" focusable="false">
+    <symbol id="home-bell" viewBox="0 0 24 24"><path d="M18 9a6 6 0 0 0-12 0c0 6-2 6-2 8h16c0-2-2-2-2-8m-8 12a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="home-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="home-chevron-left" viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></symbol>
+    <symbol id="home-chevron-right" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="home-home" viewBox="0 0 24 24"><path d="m2 11 10-8 10 8m-17 0v10h5v-6h4v6h5V11"/></symbol>
+    <symbol id="home-shirt" viewBox="0 0 24 24"><path d="m8 3-5 3 2 5 3-1v11h8V10l3 1 2-5-5-3c-1 3-7 3-8 0Z"/></symbol>
+    <symbol id="home-chart" viewBox="0 0 24 24"><path d="M4 20v-5h2v5zm7 0V9h2v11zm7 0V4h2v16z" fill="currentColor" stroke="none"/><path d="M3 21h19"/></symbol>
+    <symbol id="home-trophy" viewBox="0 0 24 24"><path d="M7 3h10v6c0 6-10 6-10 0V3Zm0 2H3v3c0 3 2 4 5 4m9-7h4v3c0 3-2 4-5 4m-4 2v5m-4 2h8"/></symbol>
+    <symbol id="home-gear" viewBox="0 0 24 24"><path d="m9 3-.6 2.2-2 .9L4.3 5.5 2.5 8.6 4 10.3v2.3l-1.5 1.8 1.8 3.1 2.1-.6 2 .9L9 20h3.6l.6-2.2 2-.9 2.2.6 1.8-3.1-1.6-1.8v-2.3l1.6-1.7-1.8-3.1-2.2.6-2-.9-.6-2.2H9Z"/><circle cx="10.8" cy="11.5" r="3"/></symbol>
+    <symbol id="home-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="3"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/></symbol>
+    <symbol id="home-bat" viewBox="0 0 24 24"><path d="M4 19 15.5 5a3 3 0 0 1 4.3 0l.2.2a3 3 0 0 1 0 4.3L6 21m-3-2 3 3m3-8 2 2"/></symbol>
+    <symbol id="home-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path class="menu-ball-seam" d="M6 5a12 12 0 0 1 0 14M18 5a12 12 0 0 0 0 14"/></symbol>
+    <symbol id="home-bullseye" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="5"/></symbol>
+    <symbol id="home-online" viewBox="0 0 24 24"><path d="M3 7h17m-5-5 5 5-5 5M21 17H4m5-5-5 5 5 5"/></symbol>
+    <symbol id="home-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5.5 7.5h13m-13 9h13"/></symbol>
+    <symbol id="home-clock" viewBox="0 0 24 24"><circle cx="12" cy="14" r="7"/><path d="M10 3h4m-2 0v4m6 1 2-2m-8 8 3-3"/></symbol>
+    <symbol id="home-flag" viewBox="0 0 24 24"><path d="m3 21 6-8 4 3 3-5 5 10ZM15 12V3l6 2-6 3"/></symbol>
+    <symbol id="home-cap" viewBox="0 0 24 24"><path d="M4 15a8 8 0 0 1 16 0v3l-4-1h-4l-5 3c-5 2-7-1-3-4l5-3m3-7 1 2 2 .4-1.5 1.4.4 2.2-1.9-1-1.9 1 .4-2.2L9 8.4l2-.4Z"/></symbol>
+    <symbol id="home-people" viewBox="0 0 24 24"><path d="M7 21v-3a5 5 0 0 1 10 0v3Zm-5 0v-2a4 4 0 0 1 4-4m16 6v-2a4 4 0 0 0-4-4"/><circle cx="12" cy="8" r="3"/><path d="M5 11a2 2 0 1 1 2-2m12 2a2 2 0 1 0-2-2"/></symbol>
+    <symbol id="home-red-ball" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="#f43955" stroke="#fbfafc"/></symbol>
+    <symbol id="home-sliders" viewBox="0 0 24 24"><path d="M3 5h18M3 12h18M3 19h18"/><circle cx="8" cy="5" r="2" fill="#d9faff"/><circle cx="16" cy="12" r="2" fill="#d9faff"/><circle cx="10" cy="19" r="2" fill="#d9faff"/></symbol>
+  </svg>
+
+  <main id="home" class="home-screen stadium-menu">
+    <section class="menu-hero" aria-label="NIGHTBALL">
+      <img class="menu-key-art" src="./assets/menu/clubhouse-v18.webp" width="1774" height="887" alt="" fetchpriority="high" decoding="async">
+      <div class="menu-hero-shade"></div>
+      <h1>NIGHTBALL</h1>
     </section>
     <div class="menu-content">
-      <button id="resume-game" class="menu-resume" hidden><span class="resume-play" aria-hidden="true">▶</span><span><b>つづきから</b><small id="resume-label"></small></span><span class="menu-chevron" aria-hidden="true">↗</span></button>
-      <nav class="menu-modes" aria-label="ゲームモード">
-        <button id="pennant-mode" class="menu-card menu-season" aria-label="ペナント">
-          <span class="menu-season-copy"><small class="menu-mode-tag">CPBL / NPB / KBO</small><strong>ペナント</strong><span class="menu-club-logos" id="menu-club-logos" aria-hidden="true"></span></span>
-          <img class="menu-trophy" src="./assets/menu/trophy.svg" width="210" height="200" alt="" aria-hidden="true"><span class="menu-chevron" aria-hidden="true">↗</span>
+      <button id="resume-game" class="menu-resume" type="button" hidden><span class="resume-play" aria-hidden="true"></span><b>つづきから</b><small id="resume-label"></small><span class="menu-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-arrow"></use></svg></span></button>
+      <nav class="menu-modes" aria-label="メインモード">
+        <button class="menu-card menu-match" type="button" data-mode="match">
+          <strong>対戦</strong><span class="menu-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-arrow"></use></svg></span>
         </button>
-        <button class="menu-card menu-match" data-mode="match" aria-label="5イニング対戦">
-          <span class="menu-match-copy"><small class="menu-mode-tag">5イニング</small><strong>対戦</strong></span><span class="menu-matchup" id="menu-matchup" aria-hidden="true"></span><span id="match-icon" hidden></span><span class="menu-chevron" aria-hidden="true">↗</span>
+        <button id="pennant-mode" class="menu-card menu-season" type="button">
+          <strong>ペナント</strong>
+          <img class="menu-trophy" src="./assets/menu/trophy.svg" width="210" height="200" alt="">
+          <span class="menu-club-logos" id="menu-club-logos" aria-hidden="true"></span><span class="menu-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-arrow"></use></svg></span>
         </button>
-        <button class="menu-card menu-apbc" data-mode="apbc" aria-label="APBC 2026"><span class="menu-match-copy"><small class="menu-mode-tag">2026 代表大会</small><strong>APBC</strong></span><span class="apbc-menu-badges" aria-hidden="true"><img src="./assets/nations/taipei.svg" alt=""><img src="./assets/nations/korea.svg" alt=""><img src="./assets/nations/japan.svg" alt=""></span><span class="menu-chevron" aria-hidden="true">↗</span></button>
-        <button class="menu-card menu-career" data-mode="career"><span><small class="menu-mode-tag">高校からプロへ</small><strong>選手キャリア</strong></span><span class="menu-chevron" aria-hidden="true">↗</span></button>
-        <div class="menu-training">
-          <button class="menu-mini menu-derby" data-mode="derby" aria-label="ホームランダービー"><span class="menu-mini-art"><i class="mode-icon" id="derby-icon" aria-hidden="true"></i><i class="menu-spark" aria-hidden="true"></i></span><strong>HR競争</strong></button>
-          <button class="menu-mini menu-batting" data-mode="practice" aria-label="打撃練習"><span class="menu-mini-art"><i class="mode-icon" id="practice-icon" aria-hidden="true"></i></span><strong>打撃練習</strong></button>
-          <button class="menu-mini menu-pitch" data-mode="pitching" aria-label="投球練習"><span class="menu-mini-art"><i class="mode-icon" id="pitching-icon" aria-hidden="true"></i></span><strong>投球練習</strong></button>
-          <button class="menu-mini menu-bullpen" data-mode="bullpen" aria-label="ブルペン投球練習"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">◎</i></span><strong>ブルペン</strong></button>
-          <button class="menu-mini menu-tournament" data-mode="tournament" aria-label="勝ち抜きトーナメント"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">♜</i></span><strong>トーナメント</strong></button>
-          <button class="menu-mini menu-online" data-mode="online" aria-label="オンライン対戦"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">⇄</i></span><strong>オンライン対戦</strong></button>
-          <button class="menu-mini menu-umpire" data-mode="umpire" aria-label="審判モード"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">⚖</i></span><strong>審判</strong></button>
-          <button class="menu-mini menu-timeattack" data-mode="timeattack" aria-label="タイムアタック"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">⏱</i></span><strong>タイムアタック</strong></button>
-          <button class="menu-mini menu-survival" data-mode="survival" aria-label="勝ち抜きサバイバル"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">♠</i></span><strong>サバイバル</strong></button>
-          <button class="menu-mini menu-draft" data-mode="draft" aria-label="ドラフト対決"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">♞</i></span><strong>ドラフト対決</strong></button>
-          <button class="menu-mini menu-conquest" data-mode="conquest" aria-label="全球団制覇"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">🏆</i></span><strong>全球団制覇</strong></button>
-          <button class="menu-mini menu-scrimmage" data-mode="scrimmage" aria-label="紅白戦"><span class="menu-mini-art"><i class="mode-icon" aria-hidden="true">🔴</i></span><strong>紅白戦</strong></button>
-        </div>
+        <button class="menu-card menu-online" type="button" data-mode="online">
+          <span class="menu-online-art" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-online"></use></svg></span>
+          <strong>オンライン対戦</strong><span class="menu-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-arrow"></use></svg></span>
+        </button>
+        <button class="menu-card menu-career" type="button" data-mode="career">
+          <strong>選手キャリア</strong><span class="menu-chevron" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-arrow"></use></svg></span>
+        </button>
       </nav>
-      <nav class="menu-utilities" aria-label="選手・記録・遊び方・設定">
-        <button id="clubhouse"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3-5 3 2 5 3-1v11h8V10l3 1 2-5-5-3c-1 3-7 3-8 0Z"/><path d="M12 6v15m-3-6h1m4 0h1"/></svg><span>選手</span></button>
-        <button id="records"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v6c0 6-10 6-10 0V3Zm0 2H3v3c0 3 2 4 5 4m9-7h4v3c0 3-2 4-5 4m-4 2v5m-4 2h8"/></svg><span>記録</span><small><b id="home-best">0</b>m</small></button>
-        <button id="howto"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 8a3 3 0 0 1 6 0c0 2-3 2-3 5m0 3v1"/></svg><span>遊び方</span></button>
-        <button id="menu-settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 3-.6 2.2-2 .9L4.3 5.5 2.5 8.6 4 10.3v2.3l-1.5 1.8 1.8 3.1 2.1-.6 2 .9L9 20h3.6l.6-2.2 2-.9 2.2.6 1.8-3.1-1.6-1.8v-2.3l1.6-1.7-1.8-3.1-2.2.6-2-.9-.6-2.2H9Z"/><circle cx="10.8" cy="11.5" r="3"/></svg><span>設定</span></button>
+      <nav class="menu-training" aria-label="練習・カスタム">
+        <button id="menu-training-more" class="menu-training-label" type="button" aria-haspopup="dialog">練習・<br>カスタム</button>
+          <button type="button" class="menu-mini menu-batting" data-mode="practice"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-target"></use></svg><strong>打撃練習</strong></button>
+          <button type="button" class="menu-mini menu-derby" data-mode="derby"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bat"></use></svg><strong>HR競争</strong></button>
+          <button type="button" class="menu-mini menu-pitch" data-mode="pitching"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-ball"></use></svg><strong>投球練習</strong></button>
+          <button type="button" class="menu-mini menu-bullpen" data-mode="bullpen"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bullseye"></use></svg><strong>ブルペン</strong></button>
+      </nav>
+      <section class="menu-other" aria-labelledby="menu-other-title">
+        <h2 id="menu-other-title">その他のモード</h2>
+        <nav class="menu-other-grid" aria-labelledby="menu-other-title">
+          <button type="button" class="menu-mini" data-mode="tournament"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-trophy"></use></svg><strong>トーナメント</strong></button>
+          <button type="button" class="menu-mini menu-apbc-small" data-mode="apbc"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-globe"></use></svg><strong>APBC</strong></button>
+          <button type="button" class="menu-mini" data-mode="timeattack"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-clock"></use></svg><strong>タイムアタック</strong></button>
+          <button type="button" class="menu-mini" data-mode="survival"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-flag"></use></svg><strong>サバイバル</strong></button>
+          <button type="button" class="menu-mini" data-mode="draft"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-cap"></use></svg><strong>ドラフト対決</strong></button>
+          <button type="button" class="menu-mini" data-mode="conquest"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-people"></use></svg><strong>全球団制覇</strong></button>
+          <button type="button" class="menu-mini" data-mode="scrimmage"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-red-ball"></use></svg><strong>紅白戦</strong></button>
+          <button id="menu-team-edit" type="button" class="menu-mini"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-sliders"></use></svg><strong>チーム編集</strong></button>
+        </nav>
+      </section>
+      <section class="menu-notices" aria-label="お知らせ">
+        <button type="button" class="notice-step" data-notice-step="-1" aria-label="前のお知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chevron-left"></use></svg></button>
+        <button type="button" class="notice-card" id="notice-card">
+          <span class="notice-label">お知らせ</span>
+          <strong id="notice-title">APBCモード</strong>
+          <small id="notice-detail">日本・台湾・韓国・豪州が参戦</small>
+        </button>
+        <button type="button" class="notice-step" data-notice-step="1" aria-label="次のお知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chevron-right"></use></svg></button>
+        <div class="notice-pages" aria-label="表示するお知らせ">
+          <button type="button" data-notice-index="0" aria-label="お知らせ 1" aria-current="true"></button>
+          <button type="button" data-notice-index="1" aria-label="お知らせ 2" aria-current="false"></button>
+          <button type="button" data-notice-index="2" aria-label="お知らせ 3" aria-current="false"></button>
+        </div>
+      </section>
+      <nav class="menu-utilities" aria-label="ホームナビゲーション">
+        <button id="menu-home" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-home"></use></svg><span>ホーム</span></button>
+        <button id="clubhouse" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-shirt"></use></svg><span>選手</span></button>
+        <button id="records" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chart"></use></svg><span>記録</span></button>
+        <button id="menu-trophies" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-trophy"></use></svg><span>トロフィー</span></button>
+        <button id="menu-settings" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-gear"></use></svg><span>設定</span></button>
       </nav>
     </div>
   </main>
@@ -173,7 +226,7 @@
 <script defer src="./matchup-data.js?v=56"></script>
 <script defer src="./audio.js?v=58"></script>
 <script defer src="./derby.js?v=56"></script>
-<script defer src="./game.js?v=190"></script>
+<script defer src="./game.js?v=191"></script>
 <script defer src="./career-leagues.js?v=56"></script>
 <script defer src="./career-development.js?v=57"></script>
 <script defer src="./career-life.js?v=56"></script>
@@ -195,6 +248,6 @@
 <script defer src="./pwa-update.js?v=2"></script>
 <script defer src="./online.js?v=2"></script>
 <script defer src="./online-derby.js?v=1"></script>
-<script type="module" src="./app.js?v=190"></script>
+<script type="module" src="./app.js?v=191"></script>
 </body>
 </html>
