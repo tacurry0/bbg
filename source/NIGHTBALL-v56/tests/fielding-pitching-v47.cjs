@@ -60,6 +60,31 @@ try{
   assert(fresh.pitch.speed<=reference.speed-type.gap+1,type.id);
   assert(fresh.pitch.duration>reference.duration,type.id);
  }
+ const batterView=pitcherMatch(false,80);
+ const rawSpeed=speed=>124+(speed-124)/1.22;
+ const travelAt=(speed,type=fast)=>{
+  batterView.pitchingStaff.away[0].pitchDetails={
+   fast:{speed:rawSpeed(type===fast?speed:speed+15)},
+   [type.id]:{speed:rawSpeed(speed)}
+  };
+  batterView.createPitch(type,{x:0,y:0});
+  assert.equal(batterView.pitch.speed,speed);
+  const {duration}=batterView.pitch;
+  batterView.setPhase('pitch');
+  let elapsed=0;
+  while(batterView.pitch.progress<1&&elapsed<1800){batterView.update(1);elapsed++;}
+  assert(batterView.pitch.progress>=1,'the ball reaches the plate');
+  return {duration,elapsed};
+ };
+ const travel125=travelAt(125),travel135=travelAt(135),travel136=travelAt(136);
+ const travel145=travelAt(145),travel150=travelAt(150),travel155=travelAt(155);
+ for(const [speed,travel] of [[125,travel125],[135,travel135]]){
+  assert.equal(travel.duration,900*148/speed);
+ }
+ assert(travel136.duration<900*148/136&&travel136.duration>travel135.duration*.97);
+ assert(travel155.elapsed<travel150.elapsed&&travel150.elapsed<travel145.elapsed&&travel145.elapsed<travel136.elapsed);
+ assert(travel150.duration<900*148/150*.86,'150 km/h arrives at least 14% earlier');
+ assert.equal(travelAt(150,NightGame.TYPES.find(type=>type.id==='cutter')).duration,travel150.duration);
  const smart=play(96,48).field.fielders[7],slow=play(47,48).field.fielders[7],quick=play(47,92).field.fielders[7];
  assert(smart.reaction<slow.reaction);assert(smart.speed>slow.speed);assert(quick.speed>slow.speed);
  const jump=nearCatch(96,2.52,0);

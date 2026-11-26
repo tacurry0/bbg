@@ -82,9 +82,9 @@ assert(app.includes("if(b.dataset.handicap){"), 'handicap clicks are handled');
 assert(app.includes('handicap:mode===\'match\'&&!challengeId') && app.includes('userRuns:settings.handicapUserRuns'), 'match start passes the handicap with the challenge-mode gates');
 
 // ---------- version pins (v173) ----------
-assert(index.includes('./game.js?v=188') && index.includes('./app.js?v=188'), 'index pins at v173');
-assert(sw.includes('nightball-v188-batting-timing'), 'SW cache renamed for v173');
-assert(sw.includes('./game.js?v=188') && sw.includes('./app.js?v=188'), 'SW precaches the v173 assets');
+assert(index.includes('./game.js?v=189') && index.includes('./app.js?v=189'), 'index pins at v173');
+assert(sw.includes('nightball-v189-fast-pitches'), 'SW cache renamed for v173');
+assert(sw.includes('./game.js?v=189') && sw.includes('./app.js?v=189'), 'SW precaches the v173 assets');
 
 console.log('handicap-v173: engine + static assertions passed');
 

@@ -113,9 +113,9 @@ console.log('settings-edit-hub-v149: static assertions passed (worst head contra
   Math.min(...gradStops.map(s => ratio(hex('103e71'), s))).toFixed(2) + ':1)');
 
 // ---------- v149 version pins ----------
-assert(index.includes('./game.js?v=188') && index.includes('./app.js?v=188'), 'index pins at v149');
-assert(sw.includes('nightball-v188-batting-timing'), 'SW cache renamed for v149');
-assert(sw.includes('./game.js?v=188') && sw.includes('./app.js?v=188'), 'SW precaches the v149 assets');
+assert(index.includes('./game.js?v=189') && index.includes('./app.js?v=189'), 'index pins at v149');
+assert(sw.includes('nightball-v189-fast-pitches'), 'SW cache renamed for v149');
+assert(sw.includes('./game.js?v=189') && sw.includes('./app.js?v=189'), 'SW precaches the v149 assets');
 
 // ---------- browser behaviour (393px) ----------
 const { createServer } = require('node:http');

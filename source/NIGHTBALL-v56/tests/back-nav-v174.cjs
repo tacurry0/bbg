@@ -27,9 +27,9 @@ assert(popBody.indexOf('history.pushState') < popBody.indexOf('pause()'), 'v167:
 assert(popBody.includes('戻る操作がありました。試合を中断してホームに戻りますか？'), 'v167: fallback confirmation intact');
 
 // ---------- version pins (v174) ----------
-assert(index.includes('./game.js?v=188') && index.includes('./app.js?v=188'), 'index pins at v174');
-assert(sw.includes('nightball-v188-batting-timing'), 'SW cache renamed for v174');
-assert(sw.includes('./game.js?v=188') && sw.includes('./app.js?v=188'), 'SW precaches the v174 assets');
+assert(index.includes('./game.js?v=189') && index.includes('./app.js?v=189'), 'index pins at v174');
+assert(sw.includes('nightball-v189-fast-pitches'), 'SW cache renamed for v174');
+assert(sw.includes('./game.js?v=189') && sw.includes('./app.js?v=189'), 'SW precaches the v174 assets');
 
 console.log('back-nav-v174: static assertions passed');
 
