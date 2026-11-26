@@ -64,7 +64,7 @@ for (const [source, locales] of Object.entries(messages)) {
     assert.deepEqual(slots(translated), slots(source), source);
   }
 }
-for (const file of ['i18n-catalog.js?v=1', 'i18n.js?v=1']) {
+for (const file of ['i18n-catalog.js?v=2', 'i18n.js?v=1']) {
   assert(read('index.html').includes(file));
   assert(read('sw.js').includes(file));
 }
