@@ -24,6 +24,9 @@ try{
   await page.setViewportSize({width,height});
   await page.waitForTimeout(350);
   const fit=await page.evaluate(()=>{const p=document.querySelector('#modal-content'),b=p.querySelector('.pf-body'),f=p.querySelector('.pf-footer'),r=f.getBoundingClientRect(),v=window.visualViewport;return {width:b.scrollWidth<=b.clientWidth+1,footer:r.bottom<=Math.min(innerHeight,v?.height??innerHeight)+1&&r.top>=0,scroll:p.scrollHeight<=p.clientHeight+1,innerHeight,visualHeight:v?.height,footerRect:r.toJSON(),modalRect:p.getBoundingClientRect().toJSON(),backdropRect:document.querySelector('#modal').getBoundingClientRect().toJSON()};});
+  const preview=await page.locator('.pf-order-preview').isVisible();
+  assert.equal(preview,width>=360&&height>=780,'adaptive starting-nine preview');
+  if(preview)assert.equal(await page.locator('.pf-order-preview>span').count(),9);
   await page.screenshot({path:'tests/screenshots/pregame-'+width+'.png'});
   assert(fit.width&&fit.footer&&fit.scroll,JSON.stringify({width,height,fit}));
  }
