@@ -156,6 +156,17 @@ window.NightGame=class NightGame{
   const u=clamp(swing,0,1),step=active?Math.sin(u*Math.PI*.76):0;
   return {load:active?0:load,step,u,stance:f.stance,width:f.width,lift:f.lift*(active?Math.max(0,1-u*5)*load:Math.sin(load*Math.PI*.82)),stride:f.stride,batTilt:f.batTilt,batHeight:f.batHeight,crouch:f.crouch,turn:f.turn,finish:f.finish};
  }
+ // v203: presentation only. A player's stable ID gives a distinct gait,
+ // while ratings shape the animation without changing simulated speed.
+ static movementStyle(player){
+  let h=2166136261;for(const c of String(player?.id??player?.name??player?.no??'default'))h=Math.imul(h^c.charCodeAt(0),16777619);
+  const n=(h>>>0),kind=n%3,run=clamp(Number(player?.run)||65,0,100),field=clamp(Number(player?.field)||65,0,100);
+  return {cadence:[1.15,1,.89][kind],stride:[.86,1,1.14][kind],arm:[1.16,1,.87][kind],lean:.12+run*.001,ready:.035+field*.001,phase:(n%97)/97*Math.PI*2,slide:(n>>>5)%2?'head':'feet',celebration:['fist','point','clap','quiet'][(n>>>8)%4]};
+ }
+ static actionEnvelope(age,duration){
+  if(!Number.isFinite(age)||age<0||age>=duration||duration<=0)return 0;
+  return Math.sin(Math.PI*age/duration);
+ }
  static TYPES=TYPES;
  static POS=POS;
  static BASES=BASES;

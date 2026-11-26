@@ -6,7 +6,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=84';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer } from './stadium3d.js?v=202';
+import { StadiumRenderer } from './stadium3d.js?v=203';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';

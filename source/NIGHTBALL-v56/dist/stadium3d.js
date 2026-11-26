@@ -668,10 +668,10 @@ export class StadiumRenderer {
   this.moveLimb(player.socks[index],sockTop,foot,.083);
  }
  animatePlayer(p,x,z,angle,time,running=false,pose=0,pace=1){
-  p.root.position.set(x,running?Math.abs(Math.sin(time*.017*pace))*.06*pace:0,z);p.root.rotation.y=angle;p.root.visible=true;p.shadow.visible=true;p.shadow.position.set(x,.04,z);
-  const cycle=time*.012*(.74+.26*pace)+(p.no%7)*.65,sprint=running?Math.sin(cycle)*pace:0;
+  const m=p.motionStyle||window.NightGame.movementStyle({no:p.no}),cycle=time*.012*(.74+.26*pace)*m.cadence+m.phase,sprint=running?Math.sin(cycle)*pace:0;
+  p.root.position.set(x,running?Math.abs(Math.sin(cycle))*.065*pace:0,z);p.root.rotation.y=angle;p.root.visible=true;p.shadow.visible=true;p.shadow.position.set(x,.04,z);
   const idle=!running&&time>0?Math.sin(time*.0034+p.no*1.1):0;
-  p.body.rotation.set(running?.17*pace:0,running?sprint*.12:0,running?sprint*.09:0);
+  p.body.rotation.set(running?m.lean*pace:0,running?sprint*.12*m.arm:0,running?sprint*.09:0);
   p.body.position.y=running?-.045-Math.abs(sprint)*.025:(p.role!=='pitcher'&&p.role!=='batter'&&time>0?-.010+idle*.010:0);
   p.head.rotation.y=0;
   if(p.eyes){
@@ -681,11 +681,15 @@ export class StadiumRenderer {
   }
   for(let i=0;i<2;i++){
    const side=i?1:-1,foot=p.feet[i],hand=p.hands[i],kick=running?Math.max(0,Math.cos(cycle)*side)*pace:0;
-   foot.position.set(side*.17,.12+kick*.13,.10+side*sprint*.30);
+   foot.position.set(side*.17,.12+kick*.15,.10+side*sprint*.30*m.stride);
    foot.rotation.x=running?-side*sprint*.30:0;
    this.poseLeg(p,i,[side*.15,.46,0],[foot.position.x,foot.position.y+.035,foot.position.z]);
-   hand.position.set(side*(running?.27:.4),.67+(running?.15-side*sprint*.12:0),.10-side*sprint*.26);
+   hand.position.set(side*(running?.27:.4),.67+(running?.15-side*sprint*.12*m.arm:0),.10-side*sprint*.26*m.arm);
    this.poseArm(p,i,[side*.245,.94,0],hand.position.toArray());
+  }
+  if(p.role==='fielder'&&!running){
+   p.body.rotation.x=.14;p.body.position.y=-m.ready;
+   for(let i=0;i<2;i++){const side=i?1:-1;p.feet[i].position.x=side*.23;this.poseLeg(p,i,[side*.15,.46,0],[side*.23,.155,.10]);p.hands[i].position.set(side*.27,.57,.31);this.poseArm(p,i,[side*.245,.94,0],p.hands[i].position.toArray());}
   }
   if(p.role==='pitcher'){
    const side=p.throwHand==='L'?-1:1,arm=side===1?1:0,glove=1-arm,lead=glove;
@@ -744,20 +748,34 @@ export class StadiumRenderer {
    }
   }
  }
- poseRunner(player,runner,elapsed,ball){
-  const slideAge=elapsed-(runner.slide?.time??-1);
+ poseRunner(player,runner,elapsed,ball,homeRun=false){
+  const m=player.motionStyle||window.NightGame.movementStyle({no:player.no});
+  const slideAge=runner.slide?elapsed-runner.slide.time:-1;
   if(slideAge>=0&&slideAge<.48){
-   const slide=Math.sin(Math.PI*clamp(slideAge/.48,0,1));
-   player.body.rotation.x=-1.02*slide;
+   const slide=window.NightGame.actionEnvelope(slideAge,.48),head=m.slide==='head';
+   player.body.rotation.x=(head?1.23:-1.02)*slide;
    player.body.position.y=-.37*slide;
-   player.feet[0].position.z=.56*slide;player.feet[1].position.z=.40*slide;
-   for(let i=0;i<2;i++)this.poseLeg(player,i,[i?.15:-.15,.46,0],player.feet[i].position.toArray());
+   for(let i=0;i<2;i++){
+    const sign=i?1:-1;player.feet[i].position.z=(head?-.44:(i?.39:.62))*slide;
+    this.poseLeg(player,i,[sign*.15,.46,0],player.feet[i].position.toArray());
+    player.hands[i].position.set(sign*.27,.70+slide*(head?.27:.18),.15+(head?.55:-.20)*slide);
+    this.poseArm(player,i,[sign*.245,.94,0],player.hands[i].position.toArray());
+   }
+  }else if(homeRun&&runner.batter&&runner.progress>=1&&runner.progress<3.999){
+   const wave=window.NightGame.actionEnvelope(runner.progress%1,1);
+   const kind=m.celebration;
+   if(kind==='quiet')return;
+   const indices=kind==='clap'?[0,1]:[1];
+   for(const i of indices){
+    const side=i?1:-1;
+    const hand=kind==='clap'?[side*(.12+.09*Math.abs(Math.sin(elapsed*9))),1.01,.35]:[side*.31,.85+wave*(kind==='point'?.57:.36),.20+wave*.15];
+    player.hands[i].position.set(...hand);this.poseArm(player,i,[side*.245,.94,0],hand);
+   }
   }else if(runner.readingFly||runner.needsTag){
    const facing=Math.atan2(ball.x-runner.x,ball.y-runner.y)-player.root.rotation.y;
    player.head.rotation.y=clamp(Math.atan2(Math.sin(facing),Math.cos(facing)),-.75,.75);
    if(!runner.running){
-    player.body.rotation.x=.10;
-    player.body.position.y=-.07;
+    player.body.rotation.x=.10;player.body.position.y=-.07;
    }
   }
  }
@@ -767,16 +785,18 @@ export class StadiumRenderer {
   const holding=th?.fromIndex===index||m?.secured&&m.holder===index;
   const chasing=!th&&!m?.secured&&f.chaser===index;
   const distance=Math.hypot(player.root.position.x-b.x,player.root.position.z-b.y);
-  const action=f.fielders[index].action,age=elapsed-(action?.time??-1),glove=player.hands[0];
+  const action=f.fielders[index].action,age=action?elapsed-action.time:-1,glove=player.hands[0];
+  const motion=player.motionStyle||window.NightGame.movementStyle({no:player.no});
   if(action&&age>=0&&age<.43&&['jump','dive','bobble'].includes(action.type)){
-   const extension=1-age/.43;
+   const extension=window.NightGame.actionEnvelope(age,.43);
    if(action.type==='jump'){
-    player.root.position.y+=.68*Math.sin(Math.PI*(.42+.58*age/.43));
+    player.root.position.y+=.68*extension;
     glove.position.set(-.26,1+.62*extension,.33);
    }else{
     player.body.rotation.x=(action.type==='dive'?1.25:.62)*extension;
     player.body.position.y=-.40*extension;
     glove.position.set(-.28,.46,.40+.45*extension);
+    const support=player.hands[1];support.position.set(.34,.53,.28+.35*extension);this.poseArm(player,1,[.245,.94,0],support.toArray());
    }
    this.poseArm(player,0,[-.245,.94,0],glove.position.toArray());
    return;
@@ -786,19 +806,20 @@ export class StadiumRenderer {
   const ready=receiving?clamp(1-(th.duration-th.t)*2.5,0,1):0;
   if(holding&&th&&release<1){
    const hand=player.hands[1],plant=player.feet[0],weight=Math.sin(release*Math.PI);
-   hand.position.set(.27,.81+weight*.41,.05+release*.48);
+   hand.position.set(.27+.10*weight*motion.arm,.81+weight*.41,.05+release*.48);
    player.body.rotation.y=release*.72-.38;
    plant.position.z+=weight*.24;player.body.position.y-=weight*.07;
    this.poseLeg(player,0,[-.15,.46,0],plant.position.toArray());
    this.poseArm(player,1,[.245,.94,0],hand.position.toArray());
   }
-  if(chasing&&b.z<1.05){
-   const reach=clamp(1-distance/3,0,1);
+  if((chasing&&b.z<1.05)||(action?.type==='pickup'&&age>=0&&age<.30)){
+   const reach=Math.max(clamp(1-distance/3,0,1),action?.type==='pickup'?window.NightGame.actionEnvelope(age,.30):0);
    player.body.rotation.x=.22+reach*.37;
    player.body.position.y=-.23*reach;
    glove.position.set(-.32,.55-.34*reach,.31+.15*reach);
   }else if(ready||holding||action?.type==='catch'){
-   glove.position.set(-.27,.79+ready*.26,.34);
+   const catchBeat=action?.type==='catch'?window.NightGame.actionEnvelope(age,.30):0;
+   glove.position.set(-.27,.79+ready*.26+catchBeat*.22,.34+catchBeat*.10);
   }
   this.poseArm(player,0,[-.245,.94,0],glove.position.toArray());
  }
@@ -1031,7 +1052,7 @@ export class StadiumRenderer {
   if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
-  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);}}
+  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
@@ -1068,15 +1089,15 @@ export class StadiumRenderer {
    }
    if(!f.foul)f.runners.forEach((r,i)=>{
     const actor=this.runners[i],profile=g.lineups[g.side].find(b=>b.id===(r.id||(r.batter?g.batter.id:g.baseIds[r.start-1])));
-    this.stylePlayer(actor,g.side,profile?.no||g.batter.no,g.teams[g.side]);
+    this.stylePlayer(actor,g.side,profile?.no||g.batter.no,g.teams[g.side]);actor.motionStyle=window.NightGame.movementStyle(profile||{id:r.id,no:actor.no});
     if(contact&&r.batter)return;
     const dx=r.x-actor.lastX,dz=r.y-actor.lastZ,facing=Math.hypot(dx,dz)>.002?Math.atan2(dx,dz):actor.root.rotation.y;
     const target=r.target??r.progress,distance=Math.abs(target-r.progress)*27.44;
     const brake=target===1&&r.batter?1:clamp(.42+distance/4, .42,1);
     const pace=brake*clamp(r.speed/7.45,.62,1.18);
     this.animatePlayer(actor,r.x,r.y,facing,time,!!r.running,0,pace);
-    this.poseRunner(actor,r,elapsed,f.ball);
-    const sliding=r.slide&&elapsed-r.slide.time<.48;
+    this.poseRunner(actor,r,elapsed,f.ball,g.phase==='result'&&f.outcome==='hr'&&!g.derby);
+    const sliding=r.slide&&elapsed-r.slide.time>=0&&elapsed-r.slide.time<.48;
     if((r.out||r.progress>=3.999)&&!sliding){actor.root.visible=false;actor.shadow.visible=false;}
     actor.lastX=r.x;actor.lastZ=r.y;
    });
@@ -1106,7 +1127,7 @@ export class StadiumRenderer {
    this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:0;this.batter.batForm=window.NightGame.battingForm(g?.batter);this.batter.swingActive=!!g&&g.swingAge<380;this.batter.bunting=!!g?.bunt;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);
    this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
    const positions=g?.derby?[]:(window.NightGame?.positions(g?.park)||[]);positions.forEach(([name,x,z],i)=>{if(i<2)return;this.animatePlayer(this.fielders[i],x,z,Math.PI,time);});
-   if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side]);this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
+   if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side]);p.motionStyle=window.NightGame.movementStyle(profile||{no:p.no});this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
    this.ball.visible=false;this.ballHalo.visible=false;this.ballShadow.visible=false;this.trail.visible=false;this.landing.visible=false;this.landingInner.visible=false;
    if(g&&['pitch','miss'].includes(g.phase)&&g.pitch){
     const pitch=g.pitch;
