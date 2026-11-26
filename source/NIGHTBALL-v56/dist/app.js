@@ -1,7 +1,7 @@
 import { AbsReview, absActorBounds } from './abs-review.js?v=3';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=77';
-import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML} from './results.js?v=77';
+import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML} from './results.js?v=208';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=205';
@@ -3266,6 +3266,14 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    modal(`${modalTitle('ONLINE HR DERBY','結果')}<p class="career-status-line">${draw?'引き分け':mine?'あなたの勝利！':'あなたの敗戦'}</p>${onlineDerbyScoreHTML()}<p class="modal-note">勝敗は本数 → 最長飛距離の順で決まります。</p>${offer?`<p class="career-status-line">ホストから再戦の申し込みが届きました</p><button class="primary-button" data-action="rematch-accept">再戦する</button><button class="secondary-button" data-action="rematch-decline">見送る</button>`:hostButtons+'<button class="secondary-button" data-action="online-exit">ホームへ戻る</button>'}`,'online-derby-result');
  }
  function hideOnlineGuest(){const v=$('online-view');if(v)v.hidden=true;}
+ let finalResultState=null;
+ function showFinalResult(){
+  const s=finalResultState;if(!s||s.g!==game)return;
+  const {g,report,title,newDistance,tab}=s;
+  const tabs=[['summary','試合結果'],['away',g.teams.away.short],['home',g.teams.home.short]];
+  const body=tab==='summary'?resultHighlightsHTML(report):playerBoxHTML(report,tab);
+  modal(`${modalTitle('','試合終了',false)}${finalScoreCard(report,g.userSide)}<div class="segmented ui-result-tabs" role="group">${tabs.map(([key,label])=>`<button data-final-tab="${key}" aria-pressed="${tab===key}" class="${tab===key?'active':''}">${label}</button>`).join('')}</div><div class="ui-result-body">${body}</div>${g.umpireMode?umpireResultHTML(g):''}${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}${g.onlineGame&&online?.role==='host'?onlineRematchButtons():''}<div class="ui-action-dock"><button class="secondary-button" data-action="home">ホームへ戻る</button><button class="primary-button" data-action="${g.umpireMode?'umpire-restart':'restart'}">${g.umpireMode?'もう一度審判する':'もう一度プレイ'}</button></div>`,'result');
+ }
  function finish(g){
    if(g.mode==='match'||g.mode==='pennant'||g.apbcFixtureId)foldCareerTotals(g);
    if(g.timeAttack){finishTimeAttackResult(g);return;}
@@ -3287,8 +3295,9 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    if(match&&win)sound('win');
    const stats=pitching?[[g.session.ks,'奪三振'],[g.session.thrown,'投球数'],[g.session.allowed,'失点']]:[[g.session.hits,'安打'],[g.session.hr,'本塁打'],[g.session.maxDistance+' m','最長飛距離']];
    const report=match?buildMatchReport(g):null;
-   modal(`${modalTitle('',title,false)}${match?`<div class="result-hero"><div class="league-versus final-versus"><div>${clubBadge(g.teams.away.id)}<b>${g.teams.away.name}</b></div><strong class="final-score"><b>${g.awayScore}</b><span>−</span><b>${g.homeScore}</b></strong><div>${clubBadge(g.teams.home.id)}<b>${g.teams.home.name}</b></div></div></div>${resultReportHTML(report)+heroInterviewHTML(report)}`:`<div class="result-stats">${stats.map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>`}
-   ${g.umpireMode?umpireResultHTML(g):''}${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}${g.umpireMode?'<button class="primary-button" data-action="umpire-restart">もう一度審判する</button>':'<button class="primary-button" data-action="restart">もう一度プレイ</button>'}${g.onlineGame&&online?.role==='host'?onlineRematchButtons():''}${match?'<button class="secondary-button" data-action="box-score">選手別の成績を見る</button>':''}<button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
+   if(match){finalResultState={g,report,title,newDistance,tab:'summary'};showFinalResult();return;}
+   modal(`${modalTitle('',title,false)}<div class="result-stats">${stats.map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>${g.umpireMode?umpireResultHTML(g):''}${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}<button class="primary-button" data-action="${g.umpireMode?'umpire-restart':'restart'}">${g.umpireMode?'もう一度審判する':'もう一度プレイ'}</button><button class="secondary-button" data-action="home">ホームへ戻る</button>`,'result');
+
  }
  function home(){
   try{speechSynthesis.cancel();}catch{}
@@ -3299,7 +3308,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   }
   review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();queuedBench=false;stadiumAudio.stopEffects();
   if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}
-  closeModal(false);game=null;onEvent('clear');trackHome();
+  closeModal(false);game=null;finalResultState=null;onEvent('clear');trackHome();
   const y=changeScreen('home');matchContext='match';
   for(const id of ['career','apbc-cup','pennant','game','pause','sub','react','react-panel'])$(id).hidden=true;
   $('home').hidden=false;$('settings').hidden=false;
@@ -3575,6 +3584,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    const b=e.target.closest('button');if(!b)return;unlockAudio();
    if(b.dataset.openNotice!==undefined){openHomeNotice(Number(b.dataset.openNotice));return;}
    if(b.dataset.settingsSection){toggleSettingsSection(b);return;}
+   if(b.dataset.finalTab&&finalResultState&&['summary','away','home'].includes(b.dataset.finalTab)){finalResultState.tab=b.dataset.finalTab;showFinalResult();return;}
    if(b.dataset.boxSide){boxModal(b.dataset.boxSide);return;}
    if(b.dataset.apbcDraftTeam){apbcDraftTeam=b.dataset.apbcDraftTeam;apbcDraft();return;}
    if(b.dataset.apbcDraftInnings){apbcDraftInnings=Number(b.dataset.apbcDraftInnings);apbcDraft();return;}

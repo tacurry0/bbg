@@ -78,3 +78,18 @@ export function playerBoxHTML(report,side){
  const t=report.teams[side];
  return `<div class="box-team-heading">${t.logo?`<img src="${escape(reportLogo(t.logo))}" alt="">`:''}<b>${escape(t.name)}</b></div><div class="box-scroll"><table class="box-table detailed-box"><caption>打撃成績</caption><thead><tr><th>選手</th><th>打数</th><th>安打</th><th>得点</th><th>打点</th><th>HR</th><th>四球</th><th>三振</th></tr></thead><tbody>${t.batters.map(p=>`<tr><th>${escape(p.name)}${p.removed?'<small>交代</small>':''}</th>${['ab','h','r','rbi','hr','bb','k'].map(k=>`<td>${p[k]||0}</td>`).join('')}</tr>`).join('')}</tbody></table></div><div class="box-scroll"><table class="box-table detailed-box"><caption>投手成績</caption><thead><tr><th>投手</th><th>回</th><th>球数</th><th>被安打</th><th>奪三振</th><th>四球</th><th>失点</th></tr></thead><tbody>${t.pitchers.map(p=>`<tr><th>${escape(p.name)}</th><td>${ip(p.outs)}</td>${['pitches','h','k','bb','runs'].map(k=>`<td>${p[k]||0}</td>`).join('')}</tr>`).join('')}</tbody></table></div><p class="modal-note">失点は走者を出した投手へ記録。自責点とは異なります。旧セーブの未記録項目は再開後から集計します。</p>`;
 }
+
+ // v208: result presentation. Uses the recorded report, never recomputes the score.
+ export function finalScoreCard(report,userSide='home'){
+  const {teams}=report,draw=teams.home.score===teams.away.score,winner=draw?null:teams.home.score>teams.away.score?'home':'away';
+  const team=side=>{const t=teams[side];return `<div class="ui-final-team ${winner===side?'is-winner':''}">${t.logo?`<img src="${escape(reportLogo(t.logo))}" alt="">`:''}<strong>${escape(t.name)}</strong><small>${side==='away'?'先攻':'後攻'}</small></div>`;};
+  return `<section class="ui-final-card" data-outcome="${draw?'draw':winner===userSide?'win':'loss'}"><div class="ui-final-status">${draw?'引き分け':winner===userSide?'勝利':'敗戦'}</div><div class="ui-final-grid">${team('away')}<div class="ui-final-score"><b class="${winner==='away'?'is-winner':''}">${teams.away.score}</b><i>–</i><b class="${winner==='home'?'is-winner':''}">${teams.home.score}</b></div>${team('home')}</div><div class="ui-final-hits"><span>${teams.away.hits??'—'}</span><small>安打</small><span>${teams.home.hits??'—'}</span></div></section>`;
+ }
+ export function resultHighlightsHTML(report){
+  const d=report.decision,heroes=report.heroes||[];
+  const homers=['away','home'].flatMap(side=>(report.teams[side].batters||[]).filter(b=>b.hr>0).map(b=>({name:b.name,hr:b.hr,logo:report.teams[side].logo})));
+  const decisions=`<div class="pitcher-decisions"><div><small>勝利投手</small><strong>${escape(d?.winner?.name||'—')}</strong></div><div><small>敗戦投手</small><strong>${escape(d?.loser?.name||'—')}</strong></div></div>`;
+  const homerHTML=`<section class="ui-result-section"><h3>本塁打</h3>${homers.length?homers.map(h=>`<div class="ui-homer-row">${h.logo?`<img src="${escape(reportLogo(h.logo))}" alt="">`:''}<b>${escape(h.name)}</b><strong>${h.hr}本</strong></div>`).join(''):'<p class="modal-note">なし</p>'}</section>`;
+  const heroHTML=heroes.length?`<section class="ui-result-section"><h3>活躍した選手</h3><div class="hero-players">${heroes.map(({player:p,bat:b,pitch:q},i)=>`<div><span class="hero-team"><img src="${escape(reportLogo(report.teams[p.side]?.logo))}" alt=""></span><div><strong>${escape(p.name)}</strong><small>${b?`${b.ab||0}打数 ${b.h||0}安打 ${b.rbi||0}打点`:q?`${ip(q.outs)}回 ${q.k||0}奪三振 ${q.runs||0}失点`:''}</small></div>${i===0?'<span class="ui-star">★</span>':''}</div>`).join('')}</div></section>`:'';
+  return lineScoreHTML(report)+decisions+homerHTML+heroHTML+heroInterviewHTML(report)+'<small class="record-basis">勝敗投手は短縮試合用のゲーム内記録。決勝のリードと走者の責任投手から算出。</small>';
+ }
