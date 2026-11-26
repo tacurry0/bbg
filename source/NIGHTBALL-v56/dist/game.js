@@ -113,6 +113,17 @@ window.NightGame=class NightGame{
   return 1.22/(1+Math.max(0,height-1)*.032+Math.max(0,distance-12)*.003);
  }
  static conditionInfo(level=0){return conditions[clamp(Math.round(Number(level)||0),-2,2)+2];}
+ // Shared by the pregame lineup and the live game. The original odds
+ // and explicit player.gameCondition override are deliberately unchanged.
+ static conditionForSeed(seed,player){
+  if(Number.isFinite(player?.gameCondition))return player.gameCondition;
+  if(!player?.id||seed==null)return 0;
+  const key=seed+'/'+player.id;
+  let hash=2166136261;
+  for(let i=0;i<key.length;i++)hash=Math.imul(hash^key.charCodeAt(i),16777619);
+  const roll=(hash>>>0)%100;
+  return roll<7?-2:roll<25?-1:roll<75?0:roll<93?1:2;
+ }
  // v200: visual/gameplay delivery presets. Unverified roster entries use
  // deterministic simulated forms, not assertions about real athletes.
  static PITCH_FORMS=Object.freeze({
@@ -424,7 +435,7 @@ window.NightGame=class NightGame{
  }
 
  constructor(mode,difficulty,emit,options={}){
-  this.conditionSeed=options.career?.fixtureId ? options.career.teamSeed+"/"+options.career.fixtureId : Date.now()+"/"+(++conditionGameSerial);
+  this.conditionSeed=options.career?.fixtureId ? options.career.teamSeed+"/"+options.career.fixtureId : (typeof options.conditionSeed==='string'&&options.conditionSeed?options.conditionSeed:Date.now()+"/"+(++conditionGameSerial));
   this.runningRevision=41;this.competition=options.competition||null;this.apbcFixtureId=options.apbcFixtureId||null;this.apbcRoster=options.apbcRoster||null;this.apbcFinal=options.apbcFinal===true;this.mode=mode;this.career=options.career||null;this.arcadeRoster=options.arcadeRoster===true;this.difficulty=difficulty;this.emit=emit;this.phase='intro';this.phaseTime=0;this.time=0;this.paused=false;
   this.inning=1;this.half=this.career?.continuous||['match','pennant','pitching','career-pitch'].includes(mode)?'top':'bottom';this.outs=0;this.balls=0;this.strikes=0;this.bases=[false,false,false];
   this.npbPostseason=mode==='pennant'&&options.npbPostseason===true;
@@ -569,16 +580,7 @@ window.NightGame=class NightGame{
   const rate=s.rbi/s.pa;return rate>=.155?1:rate<=.085?-1:0;
  }
  conditionFor(player){
-  let base;
-  if(Number.isFinite(player?.gameCondition))base=player.gameCondition;
-  else if(!player?.id||!this.isFixture&&!this.career)base=0;
-  else{
-   const key=this.conditionSeed+'/'+player.id;
-   let hash=2166136261;
-   for(let i=0;i<key.length;i++)hash=Math.imul(hash^key.charCodeAt(i),16777619);
-   const roll=(hash>>>0)%100;
-   base=roll<7?-2:roll<25?-1:roll<75?0:roll<93?1:2;
-  }
+  const base=NightGame.conditionForSeed(this.isFixture||this.career?this.conditionSeed:null,player);
   // Survival ladder: the opponent plays above/below its base ratings
   // by the stage boost, and the user's players carry fatigue over
   // from previous games of the run. Both fold into the condition so

@@ -97,24 +97,14 @@
 .preflight .pf-advanced .setup-section{margin:14px 0}
 .preflight .pf-advanced .match-presets{margin:10px 0}
 .preflight[data-kind="lineup"] .pf-body{padding:10px 9px}
-.preflight[data-kind="lineup"] .editor-toolbar{position:static;background:white;border:1px solid var(--pf-line);border-radius:9px;padding:6px 8px;box-shadow:none}
 .preflight[data-kind="lineup"] .editor-toolbar .arcade-go{display:none}
-.preflight[data-kind="lineup"] .editor-hint{font-size:11px;margin:9px 0;color:#51738d}
 .preflight[data-kind="lineup"] .squad-board{gap:6px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
-.preflight[data-kind="lineup"] .squad-column{border:1px solid #c4dbe9;background:#fff;box-shadow:none;border-radius:9px;padding:5px 3px}
-.preflight[data-kind="lineup"] .squad-column h3{font-size:12px}
-.preflight[data-kind="lineup"] .squad-list{max-height:47dvh}
 .preflight[data-kind="lineup"] .squad-starter-row{display:grid;grid-template-columns:17px 18px minmax(0,1fr) 28px;gap:2px;align-items:center}
-.preflight[data-kind="lineup"] .squad-position{width:28px;min-width:0;padding:2px}
-.preflight[data-kind="lineup"] .squad-player{min-height:40px;border-radius:7px;box-shadow:none;border:1px solid #bad5e6}
-.preflight[data-kind="lineup"] .squad-player.chosen{outline:2px solid #087abc;outline-offset:-2px}
 .preflight[data-kind="lineup"] .ui-drag-handle{touch-action:none}
-.preflight[data-kind="lineup"] .editor-preview{border-radius:9px}
-.preflight[data-kind="lineup"] .editor-actions button{border-radius:8px;min-height:42px}
 .preflight :is(button,input,select,summary):focus-visible{outline:3px solid #f2bc3b;outline-offset:2px}
 @media(max-width:520px){.app #modal-content.preflight{width:100%;height:100dvh;border-radius:0}}
 @media(min-width:410px){.preflight .pf-team-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.preflight .pf-body{padding:15px 18px 18px}}
-@media(max-width:350px){.preflight .pf-body{padding:9px}.preflight .pf-footer{padding-inline:9px}.preflight .pf-team{min-height:128px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:46px;height:46px}.preflight .pf-team>b{font-size:13px}.preflight .pf-venue-main{grid-template-columns:76px minmax(0,1fr) 15px;gap:7px}.preflight .pf-link{grid-template-columns:minmax(0,1fr) 12px}.preflight .pf-link-icon{display:none}.preflight .pf-team-grid{gap:5px}.preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:13px 14px minmax(0,1fr) 24px}.preflight[data-kind="lineup"] .squad-position{width:24px}.preflight .pf-choice button{font-size:11px}}
+@media(max-width:350px){.preflight .pf-body{padding:9px}.preflight .pf-footer{padding-inline:9px}.preflight .pf-team{min-height:128px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:46px;height:46px}.preflight .pf-team>b{font-size:13px}.preflight .pf-venue-main{grid-template-columns:76px minmax(0,1fr) 15px;gap:7px}.preflight .pf-link{grid-template-columns:minmax(0,1fr) 12px}.preflight .pf-link-icon{display:none}.preflight .pf-team-grid{gap:5px}.preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:13px 14px minmax(0,1fr) 24px}.preflight .pf-choice button{font-size:11px}}
 @media(max-height:690px){.preflight .pf-team{min-height:122px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:47px;height:47px}.preflight .pf-body{padding-block:9px}.preflight .pf-matchup{margin-bottom:8px}.preflight .pf-conditions{margin:8px 0}.preflight .pf-roster{margin:6px 0}}
 @media(prefers-reduced-motion:no-preference){.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary,.pf-choice button){transition:filter .12s,background .12s}.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary):active{filter:brightness(.91)}}
 
@@ -132,33 +122,6 @@
 .preflight .pf-pitcher-grade{font-size:17px;display:grid;place-items:center;border-radius:6px;min-height:28px;background:#183a59}
 .preflight .pf-order-preview{display:none}
 .preflight[data-kind="setup"] .pf-team{background:linear-gradient(150deg,#0c253bc0,#0a1f35e0 82%),var(--team-color)}
-.preflight[data-kind="lineup"] .squad-column h3{background:#173e60;border:0;border-radius:6px;padding:8px 2px;margin:0 0 5px;color:white!important;box-shadow:none;text-shadow:none}
-.preflight[data-kind="lineup"] .squad-column h3 small{color:#d5e5f2}
-.preflight[data-kind="lineup"] .squad-list{gap:4px;padding:2px 1px 4px}
-.preflight[data-kind="lineup"] .squad-player{background:#f7fbfd!important;border:1px solid #ccdce8;border-left:3px solid var(--position-color,#93b4cd);color:#18374c;gap:3px;min-height:43px;padding:5px 3px;box-shadow:none;text-shadow:none}
-.preflight[data-kind="lineup"] .squad-player:before{display:none}
-.preflight[data-kind="lineup"] .tone-infield{--position-color:#cf9e25}
-.preflight[data-kind="lineup"] .tone-outfield{--position-color:#39a064}
-.preflight[data-kind="lineup"] .tone-catcher{--position-color:#2b9ac4}
-.preflight[data-kind="lineup"] .tone-pitcher{--position-color:#d16b90}
-.preflight[data-kind="lineup"] .tone-dh{--position-color:#9173c2}
-.preflight[data-kind="lineup"] .squad-rank{background:#173e60;border:0;border-radius:4px;box-shadow:none;text-shadow:none;font-size:15px;font-style:normal;width:20px;height:23px}
-.preflight[data-kind="lineup"] .squad-name{font-size:13px;color:#173e60;font-weight:850;letter-spacing:-.1px;text-shadow:none}
-.preflight[data-kind="lineup"] .squad-number{color:#657e91;font-size:9px}
-.preflight[data-kind="lineup"] .squad-position{background:#f2f7fb!important;border:1px solid #c9dce8;border-bottom:3px solid var(--position-color,#93b4cd);border-radius:6px;box-shadow:none;color:#244c68;font-size:14px;height:41px}
-.preflight[data-kind="lineup"] .squad-slot{color:#2d5876;font-weight:900;font-size:15px;font-style:normal}
-.preflight[data-kind="lineup"] .squad-player.chosen{outline:2px solid #187bb9;outline-offset:-2px;background:#e1f1fc!important;box-shadow:none;filter:none}
-.preflight[data-kind="lineup"] .squad-player.chosen::after{content:"✓";position:absolute;top:1px;right:1px;color:#176fae;background:transparent;padding:0;box-shadow:none;font-size:10px}
-.preflight[data-kind="lineup"] .editor-preview{background:#fff;border:1px solid #c9dce8;box-shadow:none;padding:9px 8px}
-.preflight[data-kind="lineup"] .editor-preview strong{color:#173e60}
-.preflight[data-kind="lineup"] .editor-preview .rank-tile{border:1px solid #d1e1ed;border-radius:6px;background:#f0f6fa;padding:4px;grid-template-rows:11px 20px}
-.preflight[data-kind="lineup"] .editor-preview .rank-tile small{color:#54758a!important}
-.preflight[data-kind="lineup"] .editor-preview .rank-tile b{background:#173e60;border-radius:4px;text-shadow:none;display:grid;place-items:center;padding:1px;font-size:16px}
-.preflight[data-kind="lineup"] .editor-preview .rank-tile em{color:#254e6d;font-weight:800}
-.preflight[data-kind="lineup"] .editor-actions{gap:7px;margin:9px 0}
-.preflight[data-kind="lineup"] .editor-actions button,.preflight[data-kind="lineup"] .editor-actions button:last-child{border:1px solid #b8d0e1;border-radius:9px;box-shadow:none;background:#fff;color:#265575;font-size:13px;text-shadow:none;min-height:43px}
-.preflight[data-kind="lineup"] .editor-actions button:first-child{background:#e3f3ff;border-color:#8abbdc;color:#155e92}
-.preflight[data-kind="lineup"] :is(.editor-pitchers,.editor-player-detail){background:white;border:1px solid #c9dce8;border-radius:9px;box-shadow:none;margin:8px 0}
 @media(min-width:360px) and (min-height:780px){
  .preflight[data-kind="setup"] .pf-team{min-height:170px;padding-block:12px}
  .preflight[data-kind="setup"] .pf-team-logo{width:72px;height:72px}
@@ -176,3 +139,45 @@
  .preflight[data-kind="setup"] .pf-order-preview small{font-size:10px;color:#51788e}
 }
 @media(min-width:390px) and (min-height:870px){.preflight[data-kind="setup"] .pf-team{min-height:186px}.preflight[data-kind="setup"] .pf-order-preview>span{padding:6px 0}.preflight[data-kind="setup"] .pf-venue-main{min-height:91px;grid-template-columns:111px minmax(0,1fr) 18px}}
+
+/* v216: original PowerPro-like roster palette, refined in place. */
+.preflight[data-kind="lineup"] .pf-body{background:linear-gradient(135deg,#eafaff,#d5f2ff);padding:10px 8px}
+.preflight[data-kind="lineup"] .editor-toolbar{position:static;background:transparent;box-shadow:none;backdrop-filter:none;padding:3px 2px 5px}
+.preflight[data-kind="lineup"] .editor-hint{font-size:11px;margin:5px 0 8px;color:#185c87}
+.preflight[data-kind="lineup"] .squad-board{gap:7px;grid-template-columns:minmax(0,1.23fr) minmax(0,1fr)}
+.preflight[data-kind="lineup"] .squad-column{padding:4px 3px}
+.preflight[data-kind="lineup"] .squad-column h3{font-size:12px}
+.preflight[data-kind="lineup"] .squad-list{max-height:47dvh;gap:5px}
+.preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:15px 14px minmax(0,1fr) 26px;gap:2px}
+.preflight[data-kind="lineup"] .squad-position{width:26px;min-width:0;height:40px}
+.preflight[data-kind="lineup"] .squad-player{min-height:40px;padding:4px 3px;gap:3px}
+.preflight[data-kind="lineup"] .squad-name{font-size:13px}
+.preflight[data-kind="lineup"] .squad-rank{width:20px;height:24px;font-size:17px}
+.modal[data-kind="lineup"] .lineup-condition-face{display:block;width:17px;height:17px;flex:none;position:relative}
+.modal[data-kind="lineup"] .squad-player:has(.lineup-condition-face) .squad-number{display:none}
+.modal[data-kind="lineup"] .lineup-pitcher-name{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;min-width:0}
+.modal[data-kind="lineup"] .lineup-pitcher-name .squad-name{flex:1;min-width:0}
+.preflight[data-kind="lineup"] .ui-bench-row{grid-template-columns:15px minmax(0,1fr);gap:3px}
+.preflight[data-kind="lineup"] .ui-drag-handle{width:100%;font-size:16px}
+.preflight .lineup-preview-fixed{flex:none;background:#e1f6ff;padding:7px 9px 8px;border-bottom:1px solid #90cbe9;z-index:4}
+.modal[data-kind="lineup"] .lineup-live-preview{margin:6px 0 9px;padding:7px 8px;min-width:0}
+.preflight[data-kind="lineup"] .lineup-live-preview{margin:0}
+.modal[data-kind="lineup"] .lineup-preview-heading{display:flex;align-items:center;justify-content:space-between;gap:5px;margin-bottom:5px}
+.modal[data-kind="lineup"] .lineup-preview-identity{display:flex;align-items:center;gap:5px;min-width:0;flex:1}
+.modal[data-kind="lineup"] .lineup-preview-identity .lineup-condition-face{width:21px;height:21px}
+.modal[data-kind="lineup"] .lineup-preview-identity strong{min-width:0;flex:1;max-width:100%;font-size:14px}
+.modal[data-kind="lineup"] .lineup-condition-label{white-space:nowrap;color:#174e78;font-weight:800;font-size:10px}
+.modal[data-kind="lineup"] .lineup-live-preview .rating-tiles{gap:4px}
+.modal[data-kind="lineup"] .lineup-live-preview .rank-tile{grid-template-rows:11px 19px;min-width:0;padding:3px 4px}
+.modal[data-kind="lineup"] .lineup-live-preview .rank-tile b{font-size:18px}
+@media(max-width:350px){
+ .preflight[data-kind="lineup"] .pf-body{padding:8px 5px}
+ .preflight[data-kind="lineup"] .squad-board{gap:5px;grid-template-columns:minmax(0,1.24fr) minmax(0,1fr)}
+ .preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:12px 12px minmax(0,1fr) 22px}
+ .preflight[data-kind="lineup"] .squad-position{width:22px;font-size:14px}
+ .preflight[data-kind="lineup"] .squad-player{padding:4px 2px;gap:2px}
+ .preflight[data-kind="lineup"] .squad-rank{width:17px;font-size:15px}
+ .modal[data-kind="lineup"] .lineup-condition-face{width:14px;height:14px}
+ .modal[data-kind="lineup"] .lineup-live-preview .rank-tile{padding:3px 2px}
+ .modal[data-kind="lineup"] .lineup-live-preview .rank-tile b{font-size:16px}
+}

@@ -46,10 +46,25 @@ try{
  await tap('[data-ui-pitcher="'+pitcher+'"]');await kind('setup');assert.equal((await state()).matchLineups[club].pitcher,Number(pitcher));
  await tap('[data-action="match-lineup"]');await kind('lineup');
  const before=await page.locator('.squad-starter-row [data-editor-player]').evaluateAll(xs=>xs.map(x=>x.dataset.editorPlayer));
- await tap('.squad-starter-row [data-editor-player]');await page.locator('.squad-starter-row [data-editor-player]').nth(1).tap();
+ const getForms=()=>page.locator('[data-editor-player]').evaluateAll(xs=>Object.fromEntries(xs.map(x=>[x.dataset.editorPlayer,Number(x.querySelector('.lineup-condition-face')?.dataset.condition)])));
+ const forms=await getForms();
+ assert(Object.keys(forms).length>=9&&Object.values(forms).every(n=>Number.isInteger(n)&&n>=-2&&n<=2));
+ assert.equal(await page.locator('.lineup-preview-fixed .rating-tiles .rank-tile').count(),5);
+ for(const [width,height] of [[320,568],[390,844],[412,915]]){
+  await page.setViewportSize({width,height});
+  const bounds=await page.evaluate(()=>{const panel=document.querySelector('.lineup-preview-fixed'),body=document.querySelector('.pf-body'),footer=document.querySelector('.pf-footer');const r=panel.getBoundingClientRect(),f=footer.getBoundingClientRect();return {fits:body.scrollWidth<=body.clientWidth+1,pinned:r.top>=0&&r.bottom<=f.top,footer:f.bottom<=innerHeight+1};});
+  assert(bounds.fits&&bounds.pinned&&bounds.footer,JSON.stringify({width,height,bounds}));
+ }
+ const colors=await page.locator('.squad-player.tone-infield').first().evaluate(e=>getComputedStyle(e).backgroundImage);
+ assert(colors.includes('gradient'),'restore the original position-colored roster cards');
+ await tap('.squad-starter-row [data-editor-player]');assert.equal(await page.locator('.lineup-live-preview').getAttribute('data-preview-player'),before[0]);await page.locator('.squad-starter-row [data-editor-player]').nth(1).tap();
  const after=await page.locator('.squad-starter-row [data-editor-player]').evaluateAll(xs=>xs.map(x=>x.dataset.editorPlayer));
  assert.equal(after[0],before[1]);assert.equal(after[1],before[0]);
+ assert.deepEqual(await getForms(),forms,'form must not reroll after swapping players');
+ assert.equal(await page.locator('.lineup-live-preview').getAttribute('data-preview-player'),before[1]);
  await page.screenshot({path:'tests/screenshots/pregame-lineup.png'});
+ await tap('.pf-footer [data-action="ui-lineup-done"]');await kind('setup');
+ await tap('[data-action="match-lineup"]');await kind('lineup');assert.deepEqual(await getForms(),forms,'form must not reroll upon reopening');
  await tap('.pf-footer [data-action="ui-lineup-done"]');await kind('setup');
  await tap('[data-action="ui-options-open"]');await kind('match-options');await tap('[data-toggle="variantFullCount"]');await kind('match-options');assert.equal((await state()).variantFullCount,true);
  await tap('.pf-footer [data-action="ui-park-back"]');await kind('setup');
@@ -57,7 +72,9 @@ try{
  await page.locator('#match-preset-name').fill('Test');await tap('[data-action="match-preset-save"]');await kind('match-presets');
  assert((await page.locator('[data-match-preset]').count())>0);
  await tap('.pf-header [data-action="ui-park-back"]');await kind('setup');
+ await page.evaluate(()=>{const old=NightGame.prototype.conditionFor;NightGame.prototype.conditionFor=function(p){if(this.isFixture&&this.teams?.[this.userSide])window.__lineupActualForms=Object.fromEntries(this.teams[this.userSide].batters.map(b=>[b.id,old.call(this,b)]));return old.call(this,p);};});
  await tap('[data-action="ui-match-start"]');await page.locator('#game').waitFor({state:'visible',timeout:30000});
+ await page.waitForFunction(()=>!!window.__lineupActualForms);assert.deepEqual(await page.evaluate(()=>window.__lineupActualForms),forms,'actual match form must match preview');
  assert.deepEqual(errors,[]);
  console.log('PASS: pregame flow, 320/390/412px layout, persistence, roster swap, settings, presets and launch');
 }finally{await browser.close();await new Promise(r=>server.close(r));}
