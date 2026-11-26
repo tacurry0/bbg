@@ -141,3 +141,63 @@
 .modal .ui-picker-current .club-badge{width:34px;height:34px;flex:none}
 .modal .ui-picker-back{display:flex;justify-content:flex-end;margin:5px 0}
 @media(max-width:350px){.modal[data-kind="setup"]{padding:8px}.modal .ui-pregame-club{min-height:98px}.ui-pregame-club .club-badge{width:41px;height:41px}.modal .ui-pregame-park{grid-template-columns:63px minmax(0,1fr) 12px}.modal .ui-pregame-options{gap:5px}.modal .ui-pregame-row{padding:5px 7px}}
+
+/* v211: broadcast-style pregame hero with original club colors, flat controls
+   and one visual hierarchy. Do not affect the home screen or live HUD. */
+.app .modal[data-kind="setup"],.app .modal[data-kind="match-teams"],.app .modal[data-kind="park-picker"]{
+ border:1px solid #6ca4ca;border-radius:18px;background:#edf6fc;color:#102f50;box-shadow:0 14px 48px #04192e60;max-width:480px;padding:13px;
+}
+.app .modal[data-kind="setup"] .modal-top,.app .modal[data-kind="match-teams"] .modal-top,.app .modal[data-kind="park-picker"] .modal-top{min-height:37px;margin:0 0 10px;gap:8px}
+.app .modal:is([data-kind="setup"],[data-kind="match-teams"],[data-kind="park-picker"]) h2#modal-title{
+ border:0;border-radius:0;box-shadow:none;background:none;color:#12395e;text-shadow:none;min-height:34px;padding:0 2px;justify-content:flex-start;font-size:21px;font-weight:900;letter-spacing:.03em;text-align:left;
+}
+.app .modal[data-kind="setup"] .close-button{background:#e0eef7;color:#235476;border:1px solid #b9d6e8;box-shadow:none;border-radius:10px;min-width:36px;min-height:36px}
+.modal .ui-pregame-versus{position:relative;isolation:isolate;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0;margin:4px 0 12px;border-radius:15px;overflow:hidden;box-shadow:0 4px 10px #062b4b26;background:#0b2542}
+.modal .ui-pregame-club{min-height:141px;position:relative;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;padding:10px 8px 11px;border:0;border-radius:0;color:white;background:linear-gradient(140deg,#0d2745eb,#132b45ba),linear-gradient(150deg,var(--team-color),#0a1b30);overflow:hidden}
+.modal .ui-pregame-club::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(135deg,transparent 0 22px,#ffffff08 23px 24px,transparent 25px 43px);pointer-events:none}
+.modal .ui-pregame-club::after{content:"";position:absolute;inset:auto 0 0;height:4px;background:var(--team-color);pointer-events:none}
+.modal .ui-pregame-club:first-child{border-right:1px solid #ffffff28}
+.modal .ui-club-role{position:relative;color:#d9e9f6;font-size:10px;letter-spacing:.07em;font-weight:800}
+.ui-crest{position:relative;display:grid;place-items:center;width:64px;height:64px;border-radius:16px;background:#fff;border:1px solid #fff;box-shadow:0 3px 9px #0003}
+.modal .ui-crest .club-badge{width:56px;height:56px;background:none;border:0;box-shadow:none;border-radius:0}
+.modal .ui-pregame-club>b{position:relative;color:white;font-size:15px;line-height:1.2;max-width:100%;overflow-wrap:anywhere;text-shadow:0 2px 3px #0003}
+.modal .ui-pregame-club .ui-team-order{position:relative;display:inline-block;color:#deedf7;background:#ffffff19;border:1px solid #ffffff30;border-radius:4px;padding:2px 9px;font-size:10px;font-weight:800}
+.ui-team-edit{position:absolute;right:7px;top:8px;width:24px;height:24px;border-radius:6px;display:grid;place-items:center;background:#ffffff12;color:#dbeaf7}
+.ui-team-edit svg,.ui-pregame-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.modal .ui-vs-mark{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);display:grid;place-items:center;width:31px;height:31px;border-radius:50%;background:#e8f6ff;border:2px solid #80bcdf;color:#12375e;font-size:11px;font-weight:950;box-shadow:0 2px 6px #0005;pointer-events:none}
+.modal .ui-pregame-options{gap:10px;margin:10px 0}
+.modal .ui-pregame-options label,.modal .ui-pregame-light label{font-size:11px;color:#315674;font-weight:800;display:block;margin:0 0 5px}
+.modal :is(.ui-pregame-options,.ui-pregame-light) .segmented,.modal .ui-league-tabs{display:flex;padding:3px;gap:3px;border:1px solid #bdd5e5;border-radius:9px;background:#dceaf4;margin:0}
+.modal :is(.ui-pregame-options,.ui-pregame-light) .segmented button,.modal .ui-league-tabs button{flex:1;min-width:0;min-height:36px;padding:5px 3px;background:transparent;border:0;box-shadow:none;color:#315674;border-radius:6px;font-size:12px;text-shadow:none}
+.modal :is(.ui-pregame-options,.ui-pregame-light) .segmented button.active,.modal .ui-league-tabs button.active{background:#1265a4;color:#fff;box-shadow:0 1px 3px #163b5b30}
+.modal .ui-pregame-list{background:white;border:1px solid #c2d8e7;border-radius:12px;margin:10px 0 8px}
+.modal .ui-pregame-park{padding:8px;grid-template-columns:93px minmax(0,1fr) 15px;gap:9px;min-height:73px}
+.modal .ui-pregame-park .ui-park-mini{border-radius:8px}
+.modal .ui-pregame-park b{font-size:15px;font-weight:850;color:#143b60}
+.modal .ui-pregame-park small{font-size:11px}
+.modal .ui-pregame-light{display:grid;grid-template-columns:55px minmax(0,1fr);gap:7px;align-items:center;border-top:1px solid #e0ecf4;padding:8px}
+.modal .ui-pregame-light label{margin:0}
+.modal .ui-pregame-light .segmented button{min-height:34px;font-size:11px;white-space:normal;line-height:1.15}
+.modal .ui-pregame-roster{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);gap:7px;margin:8px 0 10px}
+.ui-pregame-pitcher,.modal .ui-pregame-order{display:grid;grid-template-columns:25px minmax(0,1fr);gap:6px;align-items:center;min-width:0;border:1px solid #c2d8e7;border-radius:10px;background:#fff;color:#153e61;min-height:63px;padding:7px;text-align:left}
+.ui-pregame-pitcher>div{min-width:0}
+.ui-pregame-pitcher label,.ui-pregame-order b{display:block;font-size:11px;font-weight:800;color:#315674}
+.modal .ui-pregame-pitcher select{border:0;background:#f0f6fb;color:#12395e;min-height:29px;width:100%;padding:4px 0;font-size:12px;margin:3px 0 0;box-shadow:none;min-width:0}
+.ui-pregame-icon{width:25px;height:25px;border-radius:7px;background:#e5f1fa;color:#1c649b;display:grid;place-items:center}
+.modal .ui-pregame-order{grid-template-columns:25px minmax(0,1fr) 12px}
+.ui-pregame-order small{font-size:11px;color:#57788e;display:block;margin-top:4px}
+.ui-pregame-order i{font-style:normal;color:#417a9f;font-size:18px}
+.modal .ui-pregame-detail{background:#f7fbfe;border-color:#d3e3ee;border-radius:8px;padding:3px 8px;margin:5px 0}
+.modal .ui-pregame-detail summary{min-height:30px;color:#355b79;font-size:12px}
+.modal .ui-pregame-dock{background:#edf6fcf5;border:0;gap:8px;bottom:-13px;padding:10px 0 max(6px,env(safe-area-inset-bottom));grid-template-columns:1fr 2fr}
+.modal .ui-pregame-dock .primary-button{border:1px solid #054777;border-radius:10px;background:linear-gradient(110deg,#1274bd,#085186);color:#fff;box-shadow:0 3px 0 #073b65;font-size:17px;text-shadow:none}
+.modal .ui-pregame-dock .secondary-button{border:1px solid #aecbdf;border-radius:10px;background:white;color:#1f5074;box-shadow:none;text-shadow:none}
+.modal .ui-picker-current{border:1px solid #bfd9e9;border-left:4px solid var(--team-color,#1265a4);border-radius:10px;padding:8px;background:white}
+.modal .ui-premium-team-grid>button{position:relative;border:1px solid #c4d9e8;background:white;border-radius:10px;min-height:88px;overflow:hidden;box-shadow:0 2px 3px #143f6210}
+.modal .ui-premium-team-grid>button::after{content:"";position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--team-color)}
+.modal .ui-premium-team-grid>button.selected{border:2px solid #1678b8;background:#e8f5ff;box-shadow:none}
+.ui-picked-check{position:absolute;top:4px;right:5px;border-radius:50%;background:#1265a4;color:white;width:18px;height:18px;display:grid;place-items:center;font-size:10px}
+.modal .ui-park-grid>button{border-color:#c4d9e8;border-radius:10px;box-shadow:0 2px 3px #143f6210}
+.modal .ui-park-grid>button.selected{border:2px solid #1678b8;background:#e8f5ff;box-shadow:none}
+@media(max-width:350px){.app .modal[data-kind="setup"]{padding:9px}.modal .ui-pregame-club{min-height:123px}.ui-crest{width:54px;height:54px}.modal .ui-crest .club-badge{width:47px;height:47px}.modal .ui-pregame-park{grid-template-columns:72px minmax(0,1fr) 12px}.ui-pregame-pitcher,.modal .ui-pregame-order{grid-template-columns:minmax(0,1fr);padding:7px 5px}.ui-pregame-roster .ui-pregame-icon,.ui-pregame-order i{display:none}}
+@media(prefers-reduced-motion:no-preference){.modal :is(.ui-pregame-club,.ui-pregame-dock button,.ui-premium-team-grid>button,.ui-park-grid>button){transition:filter .12s,transform .12s}.modal :is(.ui-pregame-club,.ui-pregame-dock button,.ui-premium-team-grid>button,.ui-park-grid>button):active{filter:brightness(.92);transform:scale(.985)}}
