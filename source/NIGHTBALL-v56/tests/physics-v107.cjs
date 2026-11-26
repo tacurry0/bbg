@@ -54,14 +54,15 @@ function resolve(g){
    assert(onTime.hit.perfect);
    for(const timing of [-1,1]){
     const side=-timing*pull;
-    const fair=swingAt(hand,timing*.077);
-    assert(!fair.field.foul && fair.hit.sprayAngle*side>20);
+    const fair=swingAt(hand,timing*.055);
+    assert(!fair.field.foul && fair.hit.sprayAngle*side>21);
     assert(!fair.hit.perfect);
     const foul=swingAt(hand,timing*.145,{strikes:2});
     assert(foul.field.foul && foul.hit.sprayAngle*side>45);
     assert.equal(resolve(foul),'foul');
     assert.equal(foul.strikes,2);
-    assert.equal(swingAt(hand,timing*.16).phase,'miss');
+    assert(swingAt(hand,timing*.16).field.foul);
+    assert.equal(swingAt(hand,timing*.18).phase,'miss');
    }
    assert(swingAt(hand,0,{course:.9*pull}).hit.sprayAngle*pull>4);
    assert(swingAt(hand,0,{course:-.9*pull}).hit.sprayAngle*pull<-4);

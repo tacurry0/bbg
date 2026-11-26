@@ -83,7 +83,7 @@ try{
  }
  assert(travel136.duration<900*148/136&&travel136.duration>travel135.duration*.97);
  assert(travel155.elapsed<travel150.elapsed&&travel150.elapsed<travel145.elapsed&&travel145.elapsed<travel136.elapsed);
- assert(travel150.duration<900*148/150*.86,'150 km/h arrives at least 14% earlier');
+ assert(travel150.duration<900*148/150*.81,'150 km/h arrives at least 19% earlier');
  assert.equal(travelAt(150,NightGame.TYPES.find(type=>type.id==='cutter')).duration,travel150.duration);
  const smart=play(96,48).field.fielders[7],slow=play(47,48).field.fielders[7],quick=play(47,92).field.fielders[7];
  assert(smart.reaction<slow.reaction);assert(smart.speed>slow.speed);assert(quick.speed>slow.speed);

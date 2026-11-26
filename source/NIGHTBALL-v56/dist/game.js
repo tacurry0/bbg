@@ -1029,8 +1029,8 @@ window.NightGame=class NightGame{
  createPitch(type,target){
   if(this.bases[1]||this.bases[2])this.atBatRisp=true;
   const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0,ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax?NightGame.stretchPitchSpeed(pitcher.velocityEvidence.fastMax):spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj),velocity=Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
-  // Increase the pace above 135 km/h by 1.2% per additional km/h.
-  const flightPace=1+Math.max(0,velocity-135)*.012;
+  // Increase the pace above 135 km/h by 1.6% per additional km/h.
+  const flightPace=1+Math.max(0,velocity-135)*.016;
   this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(velocity*flightPace),progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){
@@ -1317,15 +1317,15 @@ window.NightGame=class NightGame{
   const penalty=(!cpu&&p.id!=='fast'&&this.batter.careerWeakness>=2?.018:0)+(form==='legkick'?.024:0);
   const baseWindow=(cpu?{casual:.24,standard:.21,pro:.18}:{casual:.22,standard:.185,pro:.16})[this.difficulty]-(tight?.027:0)-penalty
    +(!cpu&&this.career?.scouted?.012:0)+(form==='compact'?.009:0);
-  const timeWindow=cpu?baseWindow:baseWindow*.84;
+  const timeWindow=cpu?baseWindow:baseWindow*.93;
   if(Math.abs(delta)>timeWindow||contactError>1.07){if(!cpu)this.emit('timing',{text:contactError>1.07?'カーソルが合っていない':delta<0?'振り出しが早い':'振り遅れ'});this.setPhase('miss');this.notify();return;}
   const timingOffset=delta/timeWindow;
   const core=clamp(1-contactError,0,1),timing=1-Math.abs(timingOffset),quality=core*.82+timing*.18;
   const perfect=core>.82&&(cpu||timing>.7);
   if(!cpu){this.session.contacts++;if(perfect)this.session.perfect++;this.emit('timing',{text:perfect?'芯で捉えた！':core>.45?'ナイスミート':'バットの端に当たった'});}
-  // Early contact pulls and late contact goes the other way. At the
-  // edges of the timing window the angle grows enough to cross a foul line.
-  const timingSpray=cpu?delta*3:delta*5.4+.18*timingOffset**3;
+  // Give small timing offsets more directional effect, tapering that
+  // extra sensitivity near the edges of the contact window.
+  const timingSpray=cpu?delta*3:delta*(5.4+2.6*timing)+.18*timingOffset**3;
   const courseSpray=cpu?0:clamp(p.targetX,-1,1)*.14;
   const handed=this.battingHand==='L'?-1:1;
   const spray=clamp(timingSpray*handed+courseSpray+(p.targetX-aim.x)*.43+rnd(-.04,.04)+(cpu?rnd(-.24,.24):0),-1.35,1.35);
