@@ -121,24 +121,24 @@
 .preflight .pf-pitcher-row{border-color:#c9dbe9}
 .preflight .pf-pitcher-grade{font-size:17px;display:grid;place-items:center;border-radius:6px;min-height:28px;background:#183a59}
 .preflight .pf-order-preview{display:none}
-.preflight[data-kind="setup"] .pf-team{background:linear-gradient(150deg,#0c253bc0,#0a1f35e0 82%),var(--team-color)}
+.preflight:is([data-kind="setup"],[data-kind="online"]) .pf-team{background:linear-gradient(150deg,#0c253bc0,#0a1f35e0 82%),var(--team-color)}
 @media(min-width:360px) and (min-height:780px){
- .preflight[data-kind="setup"] .pf-team{min-height:170px;padding-block:12px}
- .preflight[data-kind="setup"] .pf-team-logo{width:72px;height:72px}
- .preflight[data-kind="setup"] .pf-team-logo .club-badge{width:62px;height:62px}
- .preflight[data-kind="setup"] .pf-roster{grid-template-columns:1fr;gap:7px}
- .preflight[data-kind="setup"] .pf-link{min-height:52px;padding:8px 10px;grid-template-columns:29px minmax(0,1fr) 17px}
- .preflight[data-kind="setup"] .pf-link-copy{display:flex;align-items:center;gap:8px;justify-content:space-between}
- .preflight[data-kind="setup"] .pf-link-copy>small{font-size:11px;white-space:nowrap}
- .preflight[data-kind="setup"] .pf-link-copy>b{font-size:14px;text-align:right}
- .preflight[data-kind="setup"] .pf-inline-stat{display:inline-block;margin-left:4px}
- .preflight[data-kind="setup"] .pf-order-preview{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 6px;border-top:1px solid #e1ebf2;padding-top:8px;margin-top:2px}
- .preflight[data-kind="setup"] .pf-order-preview>span{display:grid;grid-template-columns:11px minmax(0,1fr) 12px;align-items:center;gap:2px;min-width:0;padding:4px 0;color:#234861;line-height:1.15}
- .preflight[data-kind="setup"] .pf-order-preview i{font-size:10px;font-style:normal;color:#66869c}
- .preflight[data-kind="setup"] .pf-order-preview b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:750}
- .preflight[data-kind="setup"] .pf-order-preview small{font-size:10px;color:#51788e}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-team{min-height:170px;padding-block:12px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-team-logo{width:72px;height:72px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-team-logo .club-badge{width:62px;height:62px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-roster{grid-template-columns:1fr;gap:7px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-link{min-height:52px;padding:8px 10px;grid-template-columns:29px minmax(0,1fr) 17px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-link-copy{display:flex;align-items:center;gap:8px;justify-content:space-between}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-link-copy>small{font-size:11px;white-space:nowrap}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-link-copy>b{font-size:14px;text-align:right}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-inline-stat{display:inline-block;margin-left:4px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px 6px;border-top:1px solid #e1ebf2;padding-top:8px;margin-top:2px}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview>span{display:grid;grid-template-columns:11px minmax(0,1fr) 12px;align-items:center;gap:2px;min-width:0;padding:4px 0;color:#234861;line-height:1.15}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview i{font-size:10px;font-style:normal;color:#66869c}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview b{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:750}
+ .preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview small{font-size:10px;color:#51788e}
 }
-@media(min-width:390px) and (min-height:870px){.preflight[data-kind="setup"] .pf-team{min-height:186px}.preflight[data-kind="setup"] .pf-order-preview>span{padding:6px 0}.preflight[data-kind="setup"] .pf-venue-main{min-height:91px;grid-template-columns:111px minmax(0,1fr) 18px}}
+@media(min-width:390px) and (min-height:870px){.preflight:is([data-kind="setup"],[data-kind="online"]) .pf-team{min-height:186px}.preflight:is([data-kind="setup"],[data-kind="online"]) .pf-order-preview>span{padding:6px 0}.preflight:is([data-kind="setup"],[data-kind="online"]) .pf-venue-main{min-height:91px;grid-template-columns:111px minmax(0,1fr) 18px}}
 
 /* v216: original PowerPro-like roster palette, refined in place. */
 .preflight[data-kind="lineup"] .pf-body{background:linear-gradient(135deg,#eafaff,#d5f2ff);padding:10px 8px}
@@ -181,3 +181,19 @@
  .modal[data-kind="lineup"] .lineup-live-preview .rank-tile{padding:3px 2px}
  .modal[data-kind="lineup"] .lineup-live-preview .rank-tile b{font-size:16px}
 }
+
+/* Online: compact room controls above the same pregame hub. */
+.preflight .pf-online-room{display:grid;grid-template-columns:auto minmax(0,1fr);gap:7px 10px;align-items:center;padding:9px 10px;margin-bottom:9px;border:1px solid var(--pf-line);border-radius:12px;background:#fff}
+.preflight .pf-online-room>div:first-child{display:grid;gap:3px}
+.preflight .pf-online-room small{font-size:10px;font-weight:800;color:var(--pf-muted)}
+.preflight .pf-online-room .online-code{font-size:20px;letter-spacing:.09em;line-height:1.1;padding:0;margin:0;background:none;border:0;color:var(--pf-ink);text-shadow:none;box-shadow:none}
+.preflight .pf-online-share{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.preflight .pf-online-share button{min-height:34px;padding:5px 8px;font-size:11px}
+.preflight .pf-online-status{grid-column:1/-1;margin:0;font-size:11px;line-height:1.4;color:var(--pf-muted);overflow-wrap:anywhere}
+.preflight[data-kind="online"] .pf-matchup{margin-top:10px}
+.preflight .pf-team:disabled,.preflight .pf-venue-main:disabled{opacity:1;cursor:default}
+.preflight .pf-primary:disabled{background:#69859a;border-color:#587385;color:#f1f5f9;box-shadow:none;opacity:1;font-size:12px;cursor:default}
+.preflight .pf-online-unknown{font-size:31px;color:#93aabb;font-weight:900}
+.preflight .pf-online-mode{font-size:11px;font-weight:800;color:var(--pf-muted);margin:0}
+.preflight[data-kind="online"] .pf-conditions>div>b{display:block;padding:11px;background:#fff;border:1px solid var(--pf-line);border-radius:8px;text-align:center}
+@media(max-width:350px){.preflight .pf-online-room{padding:7px;gap:6px}.preflight .pf-online-share button{padding:4px 5px;font-size:10px}.preflight[data-kind="online"] .pf-launch{gap:5px}.preflight[data-kind="online"] .pf-footer .pf-secondary{font-size:12px;padding:5px}}

@@ -5,6 +5,7 @@ on:
     paths:
       - 'source/NIGHTBALL-v56/dist/**'
       - 'source/NIGHTBALL-v56/tests/pregame-v212.mjs'
+      - 'source/NIGHTBALL-v56/tests/online-pregame-v217.cjs'
       - '.github/workflows/pregame-ui.yml'
   workflow_dispatch:
 permissions:
@@ -27,6 +28,8 @@ jobs:
         run: sudo apt-get update -qq && sudo apt-get install -y fonts-noto-cjk
       - run: npx playwright install chromium
       - run: node tests/pregame-v212.mjs
+      - run: node tests/online-pregame-v217.cjs
+        if: always()
       - uses: actions/upload-artifact@v4
         if: always()
         with:
