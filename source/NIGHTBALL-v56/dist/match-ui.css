@@ -102,3 +102,42 @@
 .modal .ui-drop-target{outline:3px solid #0d80bb;outline-offset:-3px;background:#d1f2ff!important}
 .ui-editor-ghost{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;max-width:130px;padding:8px 12px;background:#075c96;color:white;border-radius:9px;font-size:12px;font-weight:800;box-shadow:0 4px 12px #0004}
 @media(max-width:350px){.modal[data-kind="lineup"] .squad-starter-row{grid-template-columns:14px 14px minmax(0,1fr) auto;gap:2px}.ui-drag-handle{font-size:16px}}
+
+/* v210: one compact pregame launch hub, optional editors only when requested. */
+.modal[data-kind="setup"]{--ui-border:#b9dce9;--ui-ink:#143d60;max-width:480px;padding:12px 12px 10px}
+.modal[data-kind="setup"] .modal-top{margin-bottom:9px}
+.modal .ui-pregame-versus{display:grid;grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr);align-items:center;gap:5px;margin:5px 0 10px}
+.ui-pregame-versus>span{text-align:center;font-size:13px;font-weight:900;color:#447795}
+.modal .ui-pregame-club{position:relative;min-width:0;min-height:112px;display:grid;grid-template-columns:1fr;justify-items:center;align-content:center;gap:3px;border:1px solid #b5d9e9;background:#fff;border-radius:12px;color:#143d60;padding:7px 5px}
+.ui-pregame-club .club-badge{width:47px;height:47px}
+.ui-pregame-club>small{font-size:10px;font-weight:700;color:#4d7491}
+.ui-pregame-club>b{font-size:14px;overflow-wrap:anywhere;line-height:1.15}
+.ui-team-order{font-size:10px;color:#116d9b;line-height:1.2}
+.ui-team-order i,.ui-pregame-link i,.ui-pregame-park i{font-style:normal;font-size:17px;font-weight:700;color:#477b9b}
+.modal .ui-pregame-options{display:grid;grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr);gap:9px;margin:9px 0}
+.ui-pregame-options>div{min-width:0}
+.ui-pregame-options label{display:block;font-size:11px;font-weight:800;color:#426b89;margin:0 0 4px}
+.modal .ui-pregame-options .segmented{display:flex;gap:3px;margin:0}
+.modal .ui-pregame-options .segmented button{flex:1;min-width:0;min-height:40px;font-size:12px;padding:5px 2px;white-space:nowrap}
+.modal .ui-pregame-list{border:1px solid #b5d9e9;border-radius:12px;overflow:hidden;background:white;margin:10px 0}
+.modal .ui-pregame-park{display:grid;grid-template-columns:78px minmax(0,1fr) 13px;gap:8px;align-items:center;width:100%;text-align:left;background:transparent;border:0;color:#123f66;padding:8px 10px}
+.ui-pregame-park>span{display:grid;gap:3px;min-width:0}
+.ui-pregame-park b{font-size:14px;overflow-wrap:anywhere;line-height:1.2}
+.ui-pregame-park small{font-size:10px;color:#54758d;line-height:1.25}
+.modal .ui-pregame-row{display:grid;grid-template-columns:minmax(62px,.65fr) minmax(0,1.35fr);align-items:center;gap:6px;min-height:44px;padding:5px 10px;border:0;border-top:1px solid #deedf4;color:#123f66;font-size:12px}
+.ui-pregame-row label,.ui-pregame-row>span:first-child{font-weight:800}
+.modal .ui-pregame-row select{min-height:34px;font-size:13px;padding:4px 5px;margin:0;min-width:0;border:0;background:#f0f8fc;color:#123f66}
+.modal .ui-pregame-link{width:100%;background:transparent;text-align:left}
+.ui-pregame-link>span:last-child{text-align:right;color:#4e7390}
+.modal .ui-pregame-detail{margin:5px 0;padding:5px 8px;background:#f9fdff;border:1px solid #d0e4ee}
+.modal .ui-pregame-detail summary{font-size:12px;padding:5px 2px;min-height:30px;line-height:20px}
+.ui-rule-count{display:inline-grid;place-items:center;border-radius:50%;min-width:19px;height:19px;background:#0a78b5;color:white;font-size:10px;vertical-align:middle}
+.modal .ui-pregame-warning{font-size:11px;margin:6px 0;color:#82491e}
+.modal .ui-pregame-dock{grid-template-columns:minmax(75px,.68fr) minmax(0,1.55fr);bottom:-10px;padding:8px 0 max(6px,env(safe-area-inset-bottom));margin:4px 0 0}
+.modal .ui-pregame-dock .primary-button{font-size:17px;min-height:49px;font-weight:900}
+.modal .ui-pregame-dock .primary-button span{font-size:12px;margin-left:5px}
+.modal .ui-picker-current{display:flex;align-items:center;gap:7px;padding:6px 8px;border:1px solid #b5d9e9;border-radius:10px;background:#fff;margin:8px 0}
+.modal .ui-picker-current>b{flex:1;min-width:0;font-size:14px;overflow-wrap:anywhere}
+.modal .ui-picker-current .club-badge{width:34px;height:34px;flex:none}
+.modal .ui-picker-back{display:flex;justify-content:flex-end;margin:5px 0}
+@media(max-width:350px){.modal[data-kind="setup"]{padding:8px}.modal .ui-pregame-club{min-height:98px}.ui-pregame-club .club-badge{width:41px;height:41px}.modal .ui-pregame-park{grid-template-columns:63px minmax(0,1fr) 12px}.modal .ui-pregame-options{gap:5px}.modal .ui-pregame-row{padding:5px 7px}}
