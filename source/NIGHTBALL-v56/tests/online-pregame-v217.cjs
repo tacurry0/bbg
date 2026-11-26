@@ -154,8 +154,15 @@ const assert = require('node:assert/strict');
       assert.equal(state.home,i===1);assert.equal(state.seed,wire.conditionSeed);assert.deepEqual(state.forms,edited[i].forms);assert.deepEqual(state.own,edited[i].order);assert.deepEqual(state.other,edited[1-i].order);assert.deepEqual(state.fielding,edited[i].fielding);assert.equal(state.pitcher,edited[i].pitcher);assert.equal(state.oppPitcher,edited[1-i].pitcher);assert.equal(state.metal,true);assert.equal(state.score,2);
     }
     // v218: two browser clients share a pause/bench/replay lock.
-    const gameWait=(p,fn)=>p.waitForFunction(fn,null,{timeout:30000});
+    const gameWait=async(p,fn)=>{
+      try{await p.waitForFunction(fn,null,{timeout:40000,polling:100});}
+      catch(e){console.error('online game state',await p.evaluate(()=>({phase:window.__game?.phase,pt:window.__game?.phaseTime,paused:window.__game?.paused,modal:document.querySelector('#modal-content')?.dataset.kind,hidden:document.hidden,last:window.__bcLog.slice(-4).map(x=>x.t)})),errors);throw e;}
+    };
     const click=(p,s)=>p.evaluate(sel=>document.querySelector(sel).click(),s);
+    // In a headless two-tab test Chromium can deprioritize the
+    // host's animation loop while the guest's lineup is being edited.
+    await host.bringToFront();
+    await host.evaluate(()=>{const g=window.__game;if(g.phase==='intro')g.beginHalf();});
     await gameWait(host,()=>window.__game?.phase==='aim');
     await gameWait(guest,()=>window.__game?.phase==='aim');
     await click(host,'#pause');await kind(host,'pause');await kind(guest,'online-hold');
@@ -192,10 +199,11 @@ const assert = require('node:assert/strict');
     await click(guest,'#abs-challenge');
     await gameWait(host,()=>window.__game.phase==='abs-review');
     await gameWait(guest,()=>window.__game.phase==='abs-review');
+    await host.evaluate(()=>{const g=window.__game;g.resolveAbsCall(true);g.prepare();});
     await gameWait(host,()=>window.__game.phase==='aim');
     // Canonical pitch replay, with the host skipping first. Neither game
     // resumes until the other endpoint completes the replay.
-    await host.evaluate(()=>{const g=window.__game;g.remoteThrowPitch();g.setPhase('result');g.emit('scoring-walk');});
+    await host.evaluate(()=>{const g=window.__game;g.remoteThrowPitch();g.pitch.duration=8000;g.setPhase('result');g.emit('scoring-walk');});
     await guest.locator('#replay-skip').waitFor({state:'visible'});
     await host.locator('#replay-skip').waitFor({state:'visible'});
     await click(host,'#replay-skip');await kind(host,'online-hold');

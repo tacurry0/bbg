@@ -103,7 +103,7 @@ function calledPitch({defending=false,x=1.08,roll=0,userRemaining=2,cpuRemaining
  assert(html.includes('id="abs-challenge-label"')&&html.includes('id="abs-challenge-count"'),'label and remaining-count badge exist');
  assert(!html.includes('abs-challenge-fill'),'timer bar removed from the button (v127 spec change)');
  assert(app.includes("$('abs-challenge').addEventListener('click'"),'button has a click handler');
- assert(app.includes("if(game?.requestAbsChallenge())sound('tap');"),'button and keyboard tap share requestAbsChallenge');
+ assert(app.includes("if(onlineDecisionVisible('abs')&&game?.requestAbsChallenge())sound('tap');"),'button and keyboard tap share requestAbsChallenge after checking the display window');
  assert(app.includes("absBtn.hidden=!interactive||!!g.umpireMode"),'visibility follows the challenge window and excludes umpire mode');
  assert(app.includes("$('abs-challenge-count').textContent='残り'+g.absRemaining"),'count badge shows the remaining challenges');
  assert(!app.includes('abs-challenge-fill'),'no timer-bar fill is driven anymore (v127 spec change)');
