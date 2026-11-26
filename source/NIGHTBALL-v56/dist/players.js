@@ -11,7 +11,7 @@ const bulkPitching2026={"npb":{"npb-g-p1":{"source":"https://github.com/wocchi09
 const cpblTeamByClub={"owls":"中信兄弟","foxes":"味全龍","falcons":"統一7-ELEVEn獅","mariners":"富邦悍將","wolves":"樂天桃猿","comets":"台鋼雄鷹"};
 function mergeBulkPitching2026(player,league,club){
  const key=league==='cpbl'?cpblTeamByClub[club]+'/'+player.name.normalize('NFKC').replace(/\s/g,'').replace(/髙/g,'高').replace(/﨑/g,'崎'):player.id;
- const e=bulkPitching2026[league]?.[key];
+ const e=bulkPitching2026[league]?.[key]||window.NightPitchExpansion2026?.evidence?.[league]?.[key];
  if(!e||e.name!==player.name)return player;
  const p={...player,pitches:[...player.pitches],pitchDetails:{...player.pitchDetails},velocityEvidence:{...player.velocityEvidence},estimates:[...(player.estimates||[])]};
  const d=e.details,old=p.pitchDetails;
@@ -90,7 +90,7 @@ function applyPitching2026(player,league){
 function extraPitchers2026(club,existing,league){
  const current=new Set(existing.map(p=>p.id));
  const names=new Set(existing.map(p=>p.name.replace(/\s/g,'')));
- return (pitching2026.additions[club]||[]).filter(p=>!current.has(p.id)&&!names.has(p.name.replace(/\s/g,''))).map(p=>applyPitching2026(p,league));
+ return [...(pitching2026.additions[club]||[]),...(window.NightPitchExpansion2026?.additions?.[club]||[])].filter(p=>!current.has(p.id)&&!names.has(p.name.replace(/\s/g,''))).map(p=>applyPitching2026(p,league));
 }
 
 for(const [club,identity]of Object.entries(data.identities)){

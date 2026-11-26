@@ -340,7 +340,7 @@
    const keys=type==='b'?['contact','power','run','field','arm']:['velocity','control','movement','stamina'];
    if(!p.id||ids.has(p.id)||keys.some(k=>!Number.isFinite(p[k])))
     throw new Error('Invalid KBO player or ability '+raw.id+': '+p.name);
-   if(!p.sourceUrl||!p.identityUrl||!p.stats||!p.statsLevel||!p.ratingsBasedOnStats)
+   if(!p.sourceUrl||!p.identityUrl||!p.stats||!p.statsLevel)
     throw new Error('Unattributed KBO result '+raw.id+': '+p.name);
    ids.add(p.id);
    const playerCode=p.id.split('-').at(-1);
@@ -349,6 +349,7 @@
      lineupDate:raw.lineupDate||'2026',positions:p.positions?.length?p.positions:[p.pos]};
   };
   const batters=raw.batters.map(p=>make(p,'b')),pitchers=raw.pitchers.map(p=>make(NightPlayers.applyPitching2026(p,'kbo'),'p'));
+  pitchers.push(...NightPlayers.extraPitchers2026(raw.id,pitchers,'kbo').map(p=>make(p,'p')));
   const start=new Set(raw.startingOrder);
   if(start.size!==9||[...start].some(id=>!batters.some(p=>p.id===id)))
    throw new Error('Invalid starting nine for KBO '+raw.id);

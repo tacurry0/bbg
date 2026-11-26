@@ -1,0 +1,56 @@
+{
+  "season": 2026,
+  "counts": {
+    "npb": 230,
+    "cpbl": 101,
+    "kbo": 60
+  },
+  "missingHands": {
+    "npb": 1,
+    "cpbl": 20,
+    "kbo": 60
+  },
+  "skipped": [
+    [
+      "npb-s",
+      "オスナ",
+      "already a batter"
+    ],
+    [
+      "owls",
+      "宋晟睿",
+      "already a batter"
+    ],
+    [
+      "falcons",
+      "陳鏞基",
+      "already a batter"
+    ],
+    [
+      "falcons",
+      "林祖傑",
+      "already a batter"
+    ],
+    [
+      "wolves",
+      "余德龍",
+      "already a batter"
+    ],
+    [
+      "wolves",
+      "林子偉",
+      "already a batter"
+    ],
+    [
+      "comets",
+      "曾昱磬",
+      "already a batter"
+    ]
+  ],
+  "withNewEvidence": {
+    "npb": 229,
+    "cpbl": 69,
+    "kbo": 0
+  },
+  "notes": "Existing IDs/order preserved; first-team appearances/tracking; unknown actual stats null; unverified hands use flagged R fallback; unmeasured ratings/pitches are game estimates."
+}

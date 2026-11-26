@@ -183,7 +183,8 @@ window.NightGame=class NightGame{
   const type=TYPES.find(t=>t.id===id)||TYPES[0],detail=pitcher.pitchDetails?.[id]||{},scale=(pitcher.movement/82)*(detail.breakScale||1);
   const rawSpeed=detail.speed||pitcher.velocity*type.speed/148;
   const fastSpeed=pitcher.pitchDetails?.fast?.speed||pitcher.velocity;
-  const speed=NightGame.stretchPitchSpeed(type.gap&&!Number.isFinite(detail.measuredAverage)?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed);
+  // Physical km/h; the feel transform is used only for duration.
+  const speed=Math.max(50,type.gap&&!Number.isFinite(detail.measuredAverage)?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed);
   // Spin rate (rpm): the pitch type's baseline spin, scaled by the pitcher's
   // movement quality. The existing bx/by break is read as the Magnus break
   // that spin produces, with a small spin-driven correction on top (a few
@@ -1040,11 +1041,13 @@ window.NightGame=class NightGame{
   if(this.derby)type=TYPES[0];
   const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0;
   const observedMax=pitcher.pitchDetails?.[type.id]?.measuredMax??(type.id==='fast'?pitcher.velocityEvidence?.fastMax:undefined);
-  const ceiling=(Number.isFinite(observedMax)?NightGame.stretchPitchSpeed(observedMax):spec.speed+(type.id==='fast'?3:2))+Math.max(0,pitchAdj);
-  const velocity=this.derby?150:Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
-  // Increase the pace above 135 km/h by 1.6% per additional km/h.
-  const flightPace=1+Math.max(0,velocity-135)*.016;
-  this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(velocity*flightPace),progress:0,swung:false,cpuActed:false};
+  const boost=clamp(pitchAdj*.35,-3,2);
+  const ceiling=Math.min(165,Number.isFinite(observedMax)?observedMax:spec.speed+(type.id==='fast'?3:2)+Math.max(0,boost));
+  const velocity=this.derby?150:Math.round(Math.max(50,Math.min(ceiling,spec.speed+boost+rnd(-1.6,1.6)-Math.round(Math.pow(this.pitchFatigue(),2)*6))));
+  // Preserve the previous perceptual pace without inflating radar readings.
+  const flightSpeed=this.derby?150:NightGame.stretchPitchSpeed(velocity);
+  const flightPace=1+Math.max(0,flightSpeed-135)*.016;
+  this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(flightSpeed*flightPace),progress:0,swung:false,cpuActed:false};
   const pitcherPerks=pitcher.careerPerks||{};
   if(this.career&&this.defending&&this.strikes===2&&type.id!=='fast'&&pitcherPerks.closer){
    this.pitch.bx*=1+pitcherPerks.closer*.12;
