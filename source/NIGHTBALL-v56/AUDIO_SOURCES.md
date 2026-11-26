@@ -18,3 +18,7 @@ Validation: `node tests/audio-v14.cjs`, existing pennant / season / runner check
 ## NPB batting cheers (v223)
 
 `dist/assets/audio/npb-taiko.mp3` is the user-supplied recording `taiko_20261126_215628.mp3` (2026-11-26), copied without modification. It is the default loop for NPB batting and scoring-position cheers in `dist/music.js`. The other league presets, custom assignments, and sound effects are unchanged.
+
+## CTBC Brothers hit cheer (v230)
+
+`dist/assets/audio/ctbc-brothers-hit.mp3` is the user-supplied recording `我們兄弟（安打）.mp3` (2026-11-26), copied unchanged. It is the default non-looping hit cue for CTBC Brothers (team ID `owls`), available in the song editor. Per-player and per-team custom settings, including explicit mute, retain priority. Other teams and result cues are unchanged.

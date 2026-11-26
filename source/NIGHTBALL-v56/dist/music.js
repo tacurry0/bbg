@@ -11,7 +11,9 @@ const brass=[
  {id:'japan-rally',name:'日本風チャンス',bpm:136,notes:[60,64,67,67,0,67,69,67,65,64,62,65,67,0,67,0]}
 ];
 const NPB_TAIKO='preset:npb-taiko';
-export const PRESETS=[{id:NPB_TAIKO,name:'NPB 太鼓応援'},...brass.map(({id,name})=>({id:'preset:'+id,name}))];
+const BROTHERS_HIT='preset:ctbc-brothers-hit';
+const recordings={ [NPB_TAIKO]:'npb-taiko.mp3',[BROTHERS_HIT]:'ctbc-brothers-hit.mp3' };
+export const PRESETS=[{id:NPB_TAIKO,name:'NPB 太鼓応援'},{id:BROTHERS_HIT,name:'我們兄弟（安打）'},...brass.map(({id,name})=>({id:'preset:'+id,name}))];
 export const DEFAULT_CAREER_CHEER='preset:stadium';
 export function defaultTeamCheer(id,chance=false){
  if(!id)return null;
@@ -20,6 +22,9 @@ export function defaultTeamCheer(id,chance=false){
  if(id.startsWith('kbo-')||id==='apbc-korea')return chance?'preset:korea-rally':'preset:clap';
  if(['brothers','dragons','lions','guardians','monkeys','hawks','apbc-taipei'].includes(id))return chance?'preset:taiwan-rally':'preset:clap';
  return null;
+}
+export function defaultTeamResult(id,kind){
+ return kind==='hit'&&['owls','brothers'].includes(id)?BROTHERS_HIT:null;
 }
 export function musicSettings(saved){
  const s=saved&&typeof saved==='object'?saved:{};
@@ -110,9 +115,9 @@ export class BallparkMusic{
   const c=this.audio.context;if(!c)return null;
   if(!this.buffers.has(id)){
    const task=(async()=>{
-    if(id===NPB_TAIKO){
-     const response=await fetch(new URL('./assets/audio/npb-taiko.mp3',import.meta.url));
-     if(!response.ok)throw new Error('NPB cheer audio unavailable');
+    if(Object.hasOwn(recordings,id)){
+     const response=await fetch(new URL('./assets/audio/'+recordings[id],import.meta.url));
+     if(!response.ok)throw new Error('Team cheer audio unavailable');
      return c.decodeAudioData(await response.arrayBuffer());
     }
     if(id.startsWith('preset:'))return presetBuffer(c,id);
@@ -191,7 +196,7 @@ export class BallparkMusic{
  }
  result(game,kind,player,side=kind==='hit'?game.side:game.side==='home'?'away':'home',thirdOut=false){
   if(!this.enabled||!this.pageActive||game!==this.game||!this.audio.context)return;
-  const id=trackForEvent(this.settings,thirdOut?['thirdOut',kind]:[kind],gameMusicKeys(game,side,player));
+  const id=trackForEvent(this.settings,thirdOut?['thirdOut',kind]:[kind],gameMusicKeys(game,side,player),defaultTeamResult(game.teams[side]?.id,kind));
   if(!id)return;
   // A later cue replaces the previous sound only for the team that owns it.
   this.start(side,id,false,this.atBat);

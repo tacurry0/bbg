@@ -5,7 +5,7 @@ import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
-import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=223';
+import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=230';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
 import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=229';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
@@ -1955,7 +1955,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   return {key,keys:person?[key,teamKey]:[key]};
  }
  function musicTrack(slot,keys){
-  const fallback=['cheer','chance'].includes(slot)?(musicSelection.club==='world-career'?DEFAULT_CAREER_CHEER:defaultTeamCheer(musicSelection.club,slot==='chance')):null;
+  const fallback=['cheer','chance'].includes(slot)?(musicSelection.club==='world-career'?DEFAULT_CAREER_CHEER:defaultTeamCheer(musicSelection.club,slot==='chance')):defaultTeamResult(keys.find(key=>key.startsWith('team:'))?.slice(5)||musicSelection.club,slot);
   return trackForEvent(settings.music,musicSlots(slot),keys,fallback);
  }
  function musicControls(){
@@ -1970,7 +1970,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(value&&value!=='off'&&!tracks.some(t=>t.id===value))tracks.push({id:value,name:'保存済みの音源'});
    const resolved=musicTrack(slot,keys);
    const inherited=person?'チームの設定を使う':slot==='chance'?'通常の応援歌を使う':slot==='thirdOut'?'通常の判定曲を使う':
-    club==='world-career'?(slot==='cheer'?'所属チームまたは標準の応援歌を使う':'所属チームの設定を使う'):club.startsWith('npb-')&&slot==='cheer'?'標準の太鼓応援を使う':'曲なし';
+    club==='world-career'?(slot==='cheer'?'所属チームまたは標準の応援歌を使う':'所属チームの設定を使う'):club.startsWith('npb-')&&slot==='cheer'?'標準の太鼓応援を使う':defaultTeamResult(club,slot)?'我們兄弟（安打）':'曲なし';
    const choices=option('',inherited,value==='')+option('off','曲を流さない',value==='off')+
     tracks.map(t=>option(t.id,t.name,t.id===value)).join('');
    return `<div class="music-row"><label for="song-${slot}">${label}</label><select id="song-${slot}" class="field-select" data-song-slot="${slot}">${choices}</select>
