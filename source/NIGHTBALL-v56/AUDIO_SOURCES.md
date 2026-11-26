@@ -14,3 +14,7 @@ The bat and mitt effects use field recordings rather than the previous oscillato
 Game events now fire a single bat crack at contact, mitt pops on pitch reception / field catches / completed throws, and short dirt impacts on the first bounces. Hit result announcements trigger crowd reactions instead of a duplicate bat crack. The timing guide retains a quiet tactile-style click. No commentary voice or music is included.
 
 Validation: `node tests/audio-v14.cjs`, existing pennant / season / runner checks, MP3 decode/peak checks, and browser AudioContext decode/output verification. Browser QA confirms audio output; physical smartphone speaker quality has not been assessed.
+
+## NPB batting cheers (v223)
+
+`dist/assets/audio/npb-taiko.mp3` is the user-supplied recording `taiko_20261126_215628.mp3` (2026-11-26), copied without modification. It is the default loop for NPB batting and scoring-position cheers in `dist/music.js`. The other league presets, custom assignments, and sound effects are unchanged.

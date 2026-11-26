@@ -10,11 +10,13 @@ const brass=[
  {id:'korea-rally',name:'韓国風チャンス',bpm:142,notes:[60,0,65,65,67,0,72,67,65,67,0,72,74,72,67,0]},
  {id:'japan-rally',name:'日本風チャンス',bpm:136,notes:[60,64,67,67,0,67,69,67,65,64,62,65,67,0,67,0]}
 ];
-export const PRESETS=brass.map(({id,name})=>({id:'preset:'+id,name}));
+const NPB_TAIKO='preset:npb-taiko';
+export const PRESETS=[{id:NPB_TAIKO,name:'NPB 太鼓応援'},...brass.map(({id,name})=>({id:'preset:'+id,name}))];
 export const DEFAULT_CAREER_CHEER='preset:stadium';
 export function defaultTeamCheer(id,chance=false){
  if(!id)return null;
- if(id.startsWith('npb-')||id==='apbc-japan')return chance?'preset:japan-rally':'preset:stadium';
+ if(id.startsWith('npb-'))return NPB_TAIKO;
+ if(id==='apbc-japan')return chance?'preset:japan-rally':'preset:stadium';
  if(id.startsWith('kbo-')||id==='apbc-korea')return chance?'preset:korea-rally':'preset:clap';
  if(['brothers','dragons','lions','guardians','monkeys','hawks','apbc-taipei'].includes(id))return chance?'preset:taiwan-rally':'preset:clap';
  return null;
@@ -108,6 +110,11 @@ export class BallparkMusic{
   const c=this.audio.context;if(!c)return null;
   if(!this.buffers.has(id)){
    const task=(async()=>{
+    if(id===NPB_TAIKO){
+     const response=await fetch(new URL('./assets/audio/npb-taiko.mp3',import.meta.url));
+     if(!response.ok)throw new Error('NPB cheer audio unavailable');
+     return c.decodeAudioData(await response.arrayBuffer());
+    }
     if(id.startsWith('preset:'))return presetBuffer(c,id);
     const track=await this.vault.get(id);
     return track?await c.decodeAudioData(await track.file.arrayBuffer()):null;

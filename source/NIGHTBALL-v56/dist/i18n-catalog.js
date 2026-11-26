@@ -1,5 +1,7 @@
 // NIGHTBALL display messages. Entries use [Traditional Chinese (Taiwan), Korean].
 globalThis.NightballMessages = {
+  "NPB 太鼓応援": ["NPB 太鼓應援", "NPB 북 응원"],
+  "標準の太鼓応援を使う": ["使用預設太鼓應援", "기본 북 응원 사용"],
   "#{0} 本職 {1} / {2}打": ["#{0}專業{1}/{2}", "#{0} 본직 {1} / {2}타"],
   "%。次の試合に向けて気分を整えた。": ["%。我已經準備好參加下一場比賽了。", "%. 다음 경기를 향해 기분을 정돈했다."],
   "/ 最長": ["/ 最長", "/ 최장"],
