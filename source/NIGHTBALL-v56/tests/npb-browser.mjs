@@ -35,7 +35,7 @@ try{
   number:NightNPB.teams.length,players:NightNPB.teams.reduce((n,t)=>n+t.batters.length+t.pitchers.length,0),
   cpbl:NightTeams.all.length,apbc:NightTeams.get('apbc-japan').id
  }));
- assert.deepEqual(data,{number:14,players:420,cpbl:6,apbc:'apbc-japan'});
+ assert.deepEqual(data,{number:14,players:422,cpbl:6,apbc:'apbc-japan'});
  await page.locator('[data-mode="match"]').click();
  await page.locator('[data-match-group="npb"]').click();
  assert.equal(await page.locator('[data-match-club^="npb-"]').count(),14);

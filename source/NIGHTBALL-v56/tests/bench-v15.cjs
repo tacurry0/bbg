@@ -1,7 +1,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');global.window=global;for(const f of ['ratings-data','players','pennant','game'])vm.runInThisContext(fs.readFileSync('dist/'+f+'.js','utf8'));
-assert.equal(new Set(NightTeams.all.flatMap(c=>[...c.batters,...c.pitchers].map(p=>p.id))).size,180);
+assert.equal(new Set(NightTeams.all.flatMap(c=>[...c.batters,...c.pitchers].map(p=>p.id))).size,181);
 for(const club of NightTeams.all){
- assert.equal(club.batters.length,16);assert.equal(club.pitchers.length,14);assert.equal(club.startingOrder.length,9);
+ assert.equal(club.batters.length,16);assert.equal(club.pitchers.length,club.id==='owls'?15:14);assert.equal(club.startingOrder.length,9);
  for(const userHome of [true,false]){
   const opts={homeTeamId:userHome?club.id:'foxes',awayTeamId:userHome?'foxes':club.id,userHome},g=new NightGame('pennant','standard',()=>{},opts);g.half=userHome?'bottom':'top';g.beginHalf();g.paused=true;g.balls=2;g.strikes=1;const out=g.batter,bench=g.bench()[0],bases=g.baseIds.slice();assert(g.substitute(bench.id));assert.equal(g.batter.id,bench.id);assert.equal(g.batter.fieldPos,out.fieldPos);assert.deepEqual(g.baseIds,bases);assert.equal(g.balls,2);assert.equal(g.strikes,1);assert(!g.substitute(out.id));
   for(let base=0;base<3;base++){const old=g.baseIds[base],slot=g.lineups[g.userSide].findIndex(p=>p.id===old),reserve=g.bench()[0];assert(g.substitute(reserve.id,{type:'run',base}));assert.equal(g.baseIds[base],reserve.id);assert.equal(g.lineups[g.userSide][slot].id,reserve.id);assert(!g.substitute(old,{type:'run',base}));}

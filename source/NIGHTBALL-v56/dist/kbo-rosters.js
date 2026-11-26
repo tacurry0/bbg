@@ -348,7 +348,7 @@
    return {...p,romanizedName:p.name,name,teamId:raw.id,club:raw.name,competition:'kbo2026',
      lineupDate:raw.lineupDate||'2026',positions:p.positions?.length?p.positions:[p.pos]};
   };
-  const batters=raw.batters.map(p=>make(p,'b')),pitchers=raw.pitchers.map(p=>make(p,'p'));
+  const batters=raw.batters.map(p=>make(p,'b')),pitchers=raw.pitchers.map(p=>make(NightPlayers.applyPitching2026(p,'kbo'),'p'));
   const start=new Set(raw.startingOrder);
   if(start.size!==9||[...start].some(id=>!batters.some(p=>p.id===id)))
    throw new Error('Invalid starting nine for KBO '+raw.id);

@@ -22,7 +22,7 @@ const names=[],ids=new Set(),values=new Set();
 for(const club of NightNPB.teams){
  assert(club.id.startsWith('npb-'));
  assert.equal(club.batters.length,16,club.id+' batters');
- assert.equal(club.pitchers.length,14,club.id+' pitchers');
+ assert.equal(club.pitchers.length,['npb-h','npb-m'].includes(club.id)?15:14,club.id+' pitchers');
  assert.equal(club.startingOrder.length,9);
  assert.equal(new Set(club.startingOrder).size,9);
  assert.equal(club.startingOrder.filter(id=>club.batters.some(p=>p.id===id)).length,9);
@@ -53,8 +53,15 @@ for(const club of NightNPB.teams){
   assert(p.sourceUrl.includes('npb.jp/bis/2026/stats/'));
   assert(p.stats.ip>0&&p.stats.k>=0&&p.stats.bb>=0);
   assert(p.ratingsBasedOnStats&&!p.ratingsProvisional);
-  assert(p.speedEstimated,'ballpark fastball radar is not measured');
-  assert(p.estimates.includes('velocity')&&p.estimates.includes('pitchRepertoire'),'estimates are disclosed');
+  if(p.pitchingEvidence2026&&Number.isFinite(p.pitchingEvidence2026.avg?.fast)){
+   assert.equal(p.speedEstimated,false);
+   assert.equal(p.pitchDetails.fast.speed,p.pitchingEvidence2026.avg.fast);
+   assert(p.pitchingEvidence2026.source);
+  }else{
+   assert(p.speedEstimated);
+   assert(p.estimates.includes('velocity'));
+  }
+  assert(p.estimates.includes('pitchMovement'));
   assert(p.pitches.length>=2);
   for(const key of ['control','movement','stamina'])
    assert(Number.isInteger(p[key])&&p[key]>=35&&p[key]<=98,club.short+'/'+p.name+': '+key+' '+p[key]);
@@ -69,7 +76,7 @@ for(const club of NightNPB.teams){
  assert(g.field&&g.field.landing.time>0,'real match starts and computes live ball');
  g.update(16);
 }
-assert.equal(ids.size,420);
+assert.equal(ids.size,422);
 assert(values.size>300,'most players have distinguishable ability profiles');
 const cpbl=new NightPennant('owls',4);
 assert.equal(cpbl.schedule.length,20);

@@ -29,7 +29,8 @@
     ratingsProvisional:false};
   };
   const batters=raw.batters.map(p=>make(p,'b'));
-  const pitchers=raw.pitchers.map(p=>make(p,'p'));
+  const pitchers=raw.pitchers.map(p=>make(NightPlayers.applyPitching2026(p,'npb'),'p'));
+  pitchers.push(...NightPlayers.extraPitchers2026(raw.id,pitchers,'npb').map(p=>make(p,'p')));
   const selected=new Set(raw.startingOrder);
   if(selected.size!==9||[...selected].some(id=>!batters.some(p=>p.id===id)))
    throw new Error('Invalid NPB starting lineup '+raw.id);

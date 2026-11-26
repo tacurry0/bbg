@@ -174,7 +174,7 @@ window.NightGame=class NightGame{
   const type=TYPES.find(t=>t.id===id)||TYPES[0],detail=pitcher.pitchDetails?.[id]||{},scale=(pitcher.movement/82)*(detail.breakScale||1);
   const rawSpeed=detail.speed||pitcher.velocity*type.speed/148;
   const fastSpeed=pitcher.pitchDetails?.fast?.speed||pitcher.velocity;
-  const speed=NightGame.stretchPitchSpeed(type.gap?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed);
+  const speed=NightGame.stretchPitchSpeed(type.gap&&!Number.isFinite(detail.measuredAverage)?Math.min(rawSpeed,fastSpeed-type.gap):rawSpeed);
   // Spin rate (rpm): the pitch type's baseline spin, scaled by the pitcher's
   // movement quality. The existing bx/by break is read as the Magnus break
   // that spin produces, with a small spin-driven correction on top (a few
@@ -1030,7 +1030,8 @@ window.NightGame=class NightGame{
   if(this.bases[1]||this.bases[2])this.atBatRisp=true;
   if(this.derby)type=TYPES[0];
   const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0;
-  const ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax?NightGame.stretchPitchSpeed(pitcher.velocityEvidence.fastMax):spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj);
+  const observedMax=pitcher.pitchDetails?.[type.id]?.measuredMax??(type.id==='fast'?pitcher.velocityEvidence?.fastMax:undefined);
+  const ceiling=(Number.isFinite(observedMax)?NightGame.stretchPitchSpeed(observedMax):spec.speed+(type.id==='fast'?3:2))+Math.max(0,pitchAdj);
   const velocity=this.derby?150:Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
   // Increase the pace above 135 km/h by 1.6% per additional km/h.
   const flightPace=1+Math.max(0,velocity-135)*.016;

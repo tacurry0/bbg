@@ -64,8 +64,15 @@ for(const t of NightTeams.kbo){
   assert(p.identityUrl.includes('pcode='));
   assert(p.stats.ip>0&&p.stats.bb>=0&&p.stats.k>=0);
   assert.equal(p.ratingsBasedOnStats,true);
-  assert.equal(p.speedEstimated,true,'KBO velocity cannot masquerade as verified');
-  assert(p.estimates.includes('velocity')&&p.estimates.includes('pitchRepertoire'));
+  if(p.pitchingEvidence2026&&Number.isFinite(p.pitchingEvidence2026.avg?.fast)){
+   assert.equal(p.speedEstimated,false);
+   assert.equal(p.pitchDetails.fast.speed,p.pitchingEvidence2026.avg.fast);
+   assert(p.pitchingEvidence2026.source);
+  }else{
+   assert(p.speedEstimated);
+   assert(p.estimates.includes('velocity'));
+  }
+  assert(p.estimates.includes('pitchMovement'));
   if(p.identityEvidence){matchedProfiles++;
     assert(!p.throwHandEstimated,'historical profile supports pitcher throwing hand');
   }else assert(p.throwHandEstimated,'unknown pitcher throwing hand disclosed');

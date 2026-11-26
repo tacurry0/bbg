@@ -1,0 +1,430 @@
+{
+  "season": 2026,
+  "checked": "2026-11-26",
+  "coverage": "Partial reconstruction from report and public pages; unknown values are omitted. CPBL aggregate breaking-ball data is not per-pitch data. Historical repertoire for Pena is explicitly not 2026 measured.",
+  "pitchers": {
+    "npb-l-p2": {
+      "name": "平良 海馬",
+      "source": "https://baseball-data-store.com/player/%E5%B9%B3%E8%89%AF%20%E6%B5%B7%E9%A6%AC/pitch_by_pitch",
+      "avg": {
+        "fast": 153.9,
+        "slider": 132.7,
+        "cutter": 146.5,
+        "sinker": 150.8,
+        "fork": 136.34
+      },
+      "max": {
+        "fast": 160,
+        "sinker": 155,
+        "fork": 146
+      },
+      "labels": {
+        "sinker": "ツーシーム"
+      }
+    },
+    "npb-b-p2": {
+      "name": "エスピノーザ",
+      "source": "https://baseball-data-store.com/player/%E3%82%A8%E3%82%B9%E3%83%94%E3%83%8E%E3%83%BC%E3%82%B6/pitch_by_pitch",
+      "avg": {
+        "fast": 149.18,
+        "sinker": 149.9,
+        "curve": 130.6,
+        "slider": 133.6,
+        "change": 139.6
+      },
+      "max": {
+        "fast": 153,
+        "sinker": 157,
+        "curve": 137,
+        "change": 144
+      },
+      "labels": {
+        "sinker": "ツーシーム"
+      }
+    },
+    "npb-f-p5": {
+      "name": "有原 航平",
+      "source": "https://baseball-data-store.com/player/%E6%9C%89%E5%8E%9F%20%E8%88%AA%E5%B9%B3/pitch_by_pitch",
+      "avg": {
+        "fast": 146.1,
+        "change": 132.1,
+        "cutter": 142.2,
+        "sinker": 145.1
+      },
+      "max": {
+        "fast": 151
+      },
+      "observed": [
+        "fork"
+      ],
+      "labels": {
+        "sinker": "ツーシーム"
+      }
+    },
+    "npb-e-p6": {
+      "name": "藤平 尚真",
+      "source": "https://baseball-data-store.com/player/%E8%97%A4%E5%B9%B3%20%E5%B0%9A%E7%9C%9F/pitch_by_pitch",
+      "avg": {
+        "fast": 152,
+        "slider": 141,
+        "fork": 141.4
+      },
+      "max": {
+        "fast": 157
+      }
+    },
+    "npb-h-p-moinelo-2026": {
+      "name": "モイネロ",
+      "source": "https://baseball-data-store.com/player/%E3%83%A2%E3%82%A4%E3%83%8D%E3%83%AD/pitch_by_pitch",
+      "avg": {
+        "fast": 148.2,
+        "cutter": 142.3,
+        "slider": 131,
+        "curve": 121.6
+      },
+      "max": {
+        "fast": 153,
+        "curve": 130
+      }
+    },
+    "npb-m-p-taneichi-2026": {
+      "name": "種市 篤暉",
+      "source": "https://baseball-data-store.com/player/%E7%A8%AE%E5%B8%82%20%E7%AF%A4%E6%9A%89/pitch_by_pitch",
+      "avg": {
+        "fast": 149.9,
+        "fork": 141.6,
+        "slider": 136.1,
+        "curve": 122.5
+      },
+      "max": {
+        "fast": 154,
+        "curve": 123
+      }
+    },
+    "kbo-ob-p-68220": {
+      "name": "GWAK Been",
+      "source": "https://www.yagoonara.com/players/1292",
+      "avg": {
+        "fast": 151.4,
+        "cutter": 146.1,
+        "slider": 136.3,
+        "change": 133.6
+      }
+    },
+    "kbo-wo-p-68341": {
+      "name": "AN Woo Jin",
+      "source": "https://www.yagoonara.com/players/1302/season",
+      "avg": {
+        "fast": 151.2,
+        "slider": 140.6,
+        "curve": 126.5,
+        "change": 134.3
+      }
+    },
+    "kbo-lg-p-56146": {
+      "name": "RIOS Yacksel",
+      "source": "https://www.koreabaseball.com/MediaNews/News/KboPhoto/View.aspx?bdSe=538341",
+      "max": {
+        "fast": 161.7
+      }
+    },
+    "cpbl:羅戈": {
+      "name": "羅戈",
+      "source": "https://stats.cpbl.com.tw/players/0000005151",
+      "avg": {
+        "fast": 147.9
+      },
+      "max": {
+        "fast": 154.1
+      },
+      "aggregate": {
+        "breakingAvg": 133.3,
+        "breakingMax": 144.8
+      },
+      "scope": "CPBL公式計測サンプル"
+    },
+    "cpbl:鄭浩均": {
+      "name": "鄭浩均",
+      "source": "https://stats.cpbl.com.tw/players/0000002345",
+      "avg": {
+        "fast": 146
+      },
+      "max": {
+        "fast": 154.3
+      },
+      "aggregate": {
+        "breakingAvg": 128.9
+      },
+      "scope": "既存のCPBL公式2026年計測記録"
+    },
+    "cpbl:張奕": {
+      "name": "張奕",
+      "source": "https://stats.cpbl.com.tw/players/0000005790",
+      "avg": {
+        "fast": 149.7
+      },
+      "max": {
+        "fast": 155.3
+      },
+      "aggregate": {
+        "breakingAvg": 137.5,
+        "breakingMax": 149.5,
+        "fastSamples": 203
+      },
+      "scope": "CPBL公式一軍計測サンプル（8月10日時点）"
+    },
+    "cpbl:菲力士": {
+      "name": "菲力士",
+      "source": "https://stats.cpbl.com.tw/players/0000007560",
+      "avg": {
+        "fast": 144.5
+      },
+      "max": {
+        "fast": 148.5
+      },
+      "aggregate": {
+        "breakingAvg": 132.5,
+        "breakingMax": 140.2,
+        "fastSamples": 155
+      },
+      "scope": "CPBL公式二軍計測サンプル（8月10日時点）",
+      "historical": [
+        "sinker",
+        "slider",
+        "change"
+      ],
+      "historicalSource": "https://baseballsavant.mlb.com/savant-player/felix-pena-570240?playerType=pitcher"
+    }
+  },
+  "additions": {
+    "npb-h": [
+      {
+        "id": "npb-h-p-moinelo-2026",
+        "name": "モイネロ",
+        "no": "35",
+        "hand": "L",
+        "throwHand": "L",
+        "pos": "P",
+        "season": 2026,
+        "stats": {
+          "games": 7,
+          "gs": 7,
+          "era": 0.76,
+          "h": 22,
+          "hr": 3,
+          "bb": 11,
+          "ibb": 0,
+          "hbp": 2,
+          "k": 34,
+          "er": 4,
+          "bf": 175,
+          "saves": 0,
+          "holds": 0,
+          "ipText": "47.1",
+          "ip": 47.333333333333336,
+          "k9": 6.464788732394366,
+          "bb9": 2.091549295774648,
+          "hr9": 0.5704225352112676
+        },
+        "control": 76,
+        "movement": 65,
+        "stamina": 89,
+        "velocity": 148,
+        "role": "SP",
+        "roleEstimated": false,
+        "pitchingEstimated": true,
+        "speedEstimated": true,
+        "pitches": [
+          "fast"
+        ],
+        "pitchDetails": {
+          "fast": {
+            "speed": 148.2,
+            "breakScale": 1
+          }
+        },
+        "velocityEvidence": {
+          "fastAvg": 148.2,
+          "fastAvgEstimated": true
+        },
+        "trait": "先発型",
+        "statsLevel": "NPB一軍",
+        "sourceUrl": "https://npb.jp/bis/2026/stats/idp1_h.html",
+        "identityUrl": "https://npb.jp/bis/players/63965134.html",
+        "statsPeriod": [
+          "2026-03",
+          "2026-10"
+        ],
+        "ratingsBasedOnStats": true,
+        "ratingsProvisional": false,
+        "confidence": 0.612,
+        "estimates": [
+          "pitchMovement",
+          "pitchRepertoire",
+          "velocity",
+          "ratingsFromSelectedRosterReference"
+        ],
+        "roleSource": "2026年先発登板",
+        "ratingNote": "既存一軍選出投手の成績分布を参照したゲーム能力推定"
+      }
+    ],
+    "npb-m": [
+      {
+        "id": "npb-m-p-taneichi-2026",
+        "name": "種市 篤暉",
+        "no": "16",
+        "hand": "R",
+        "throwHand": "R",
+        "pos": "P",
+        "season": 2026,
+        "stats": {
+          "games": 2,
+          "gs": 2,
+          "era": 0,
+          "h": 6,
+          "hr": 0,
+          "bb": 0,
+          "ibb": 0,
+          "hbp": 0,
+          "k": 7,
+          "er": 0,
+          "bf": 28,
+          "saves": 0,
+          "holds": 0,
+          "ipText": "7.2",
+          "ip": 7.666666666666667,
+          "k9": 8.217391304347826,
+          "bb9": 0,
+          "hr9": 0
+        },
+        "control": 83,
+        "movement": 70,
+        "stamina": 61,
+        "velocity": 150,
+        "role": "SP",
+        "roleEstimated": false,
+        "pitchingEstimated": true,
+        "speedEstimated": true,
+        "pitches": [
+          "fast"
+        ],
+        "pitchDetails": {
+          "fast": {
+            "speed": 149.9,
+            "breakScale": 1
+          }
+        },
+        "velocityEvidence": {
+          "fastAvg": 149.9,
+          "fastAvgEstimated": true
+        },
+        "trait": "先発型",
+        "statsLevel": "NPB一軍",
+        "sourceUrl": "https://npb.jp/bis/2026/stats/idp1_m.html",
+        "identityUrl": "https://npb.jp/bis/players/71275134.html",
+        "statsPeriod": [
+          "2026-03",
+          "2026-10"
+        ],
+        "ratingsBasedOnStats": true,
+        "ratingsProvisional": false,
+        "confidence": 0.204,
+        "estimates": [
+          "pitchMovement",
+          "pitchRepertoire",
+          "velocity",
+          "ratingsFromSelectedRosterReference"
+        ],
+        "roleSource": "2026年先発登板",
+        "ratingNote": "既存一軍選出投手の成績分布を参照したゲーム能力推定"
+      }
+    ],
+    "owls": [
+      {
+        "id": "owls-p-pena-2026",
+        "name": "菲力士",
+        "no": 34,
+        "hand": "R",
+        "throwHand": "R",
+        "pos": "P",
+        "season": 2026,
+        "stats": {
+          "games": 12,
+          "gs": 12,
+          "era": 3.56,
+          "whip": 1.45,
+          "h": 67,
+          "hr": 3,
+          "bb": 32,
+          "ibb": 0,
+          "hbp": 0,
+          "k": 56,
+          "er": 27,
+          "totalPitches": 1158,
+          "bf": 299,
+          "saves": 0,
+          "holds": 0,
+          "ip": 68.33333333333333,
+          "ipText": "68 1/3",
+          "k9": 7.375609756097561,
+          "bb9": 4.214634146341464,
+          "hr9": 0.3951219512195122
+        },
+        "control": 43,
+        "movement": 78,
+        "stamina": 81,
+        "velocity": 145,
+        "role": "SP",
+        "roleEstimated": true,
+        "roleSource": "2026年の先発数から分類",
+        "trait": "先発型",
+        "pitches": [
+          "fast",
+          "sinker",
+          "slider",
+          "change"
+        ],
+        "pitchDetails": {
+          "fast": {
+            "speed": 144.5,
+            "breakScale": 1
+          },
+          "sinker": {
+            "speed": 138.7,
+            "breakScale": 1,
+            "speedBasis": "ゲーム用推定"
+          },
+          "slider": {
+            "speed": 130.1,
+            "breakScale": 1,
+            "speedBasis": "ゲーム用推定"
+          },
+          "change": {
+            "speed": 130.1,
+            "breakScale": 1,
+            "speedBasis": "ゲーム用推定"
+          }
+        },
+        "velocityEvidence": {
+          "fastAvg": 144.5,
+          "fastAvgEstimated": true,
+          "repertoireEstimated": true
+        },
+        "sourceUrl": "https://bbm3.joybomb.tw/LiveTrend/trends?t=b",
+        "ratingsBasedOnStats": true,
+        "ratingsProvisional": false,
+        "confidence": 0.695,
+        "estimates": [
+          "pitchMovement",
+          "individualPitchSpeed",
+          "pitchRepertoire",
+          "velocity"
+        ],
+        "identityEvidence": {
+          "source": "https://stats.cpbl.com.tw/players/0000007560",
+          "primaryPosition": "投手"
+        }
+      }
+    ]
+  }
+}
