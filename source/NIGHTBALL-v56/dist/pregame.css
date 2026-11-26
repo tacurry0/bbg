@@ -1,0 +1,119 @@
+/* v212: dedicated pregame screens. These rules are isolated from gameplay. */
+.app #modal.preflight-backdrop{padding:0;background:#051a31e8;align-items:center;justify-content:center;overflow:hidden;backdrop-filter:none}
+.app #modal-content.preflight{--pf-ink:#15334d;--pf-muted:#5a7186;--pf-line:#d5e2ed;--pf-accent:#1468a9;--pf-bg:#eef4f9;display:flex;flex-direction:column;width:min(100%,500px);height:min(100dvh,860px);max-height:100dvh;max-width:500px;padding:0;border:0;border-radius:16px;overflow:hidden;background:var(--pf-bg);color:var(--pf-ink);box-shadow:0 15px 60px #0005;font-size:14px;overscroll-behavior:none}
+.app #modal-content.preflight *{box-sizing:border-box}
+.preflight button{touch-action:manipulation}
+.preflight .pf-header{flex:none;display:grid;grid-template-columns:44px minmax(0,1fr) 44px;align-items:center;gap:8px;padding:calc(7px + env(safe-area-inset-top)) 12px 7px;background:linear-gradient(115deg,#124e80,#0b3157);color:white;border-bottom:2px solid #4cbae5}
+.app #modal-content.preflight #modal-title{display:block;text-align:center;line-height:1.3;font-size:19px;letter-spacing:.03em;font-weight:900;min-height:0;margin:0;padding:0;color:#fff;background:none;border:0;border-radius:0;box-shadow:none;text-shadow:none}
+.preflight .pf-back{border:1px solid #ffffff33;border-radius:9px;width:44px;height:44px;display:grid;place-items:center;background:#ffffff10;color:#fff;padding:0;box-shadow:none}
+.preflight .pf-header-mark{display:grid;place-items:center;opacity:.75}
+.preflight svg{display:block;flex:none}
+.preflight :is(.pf-back,.pf-header-mark,.pf-link-icon,.pf-chevron,.pf-check,.pf-team-edit,.pf-pitcher-check,.pf-aux button,.pf-primary) svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.preflight .pf-body{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;display:block;padding:12px 14px 16px}
+.preflight .pf-footer{flex:none;padding:10px 14px max(10px,env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--pf-line)}
+.preflight .pf-matchup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);position:relative;isolation:isolate;overflow:hidden;border-radius:14px;background:#0e2945;box-shadow:0 5px 12px #0a2e491a;margin-bottom:13px}
+.preflight .pf-team{position:relative;display:flex;min-width:0;min-height:151px;flex-direction:column;align-items:center;justify-content:center;gap:5px;padding:10px 6px 13px;border:0;border-radius:0;box-shadow:none;overflow:hidden;color:white;background:linear-gradient(155deg,#0b2037c7,#071a2de8 80%),var(--team-color);text-shadow:none}
+.preflight .pf-team::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(135deg,transparent 46%,#ffffff16 46% 47%,transparent 47% 52%,#ffffff09 52% 60%,transparent 60%),radial-gradient(ellipse at 50% 24%,#ffffff25,transparent 65%);border-bottom:4px solid var(--team-color)}
+.preflight .pf-team:first-child{border-right:1px solid #ffffff33}
+.preflight .pf-team>*{position:relative}
+.preflight .pf-team-label{font-size:11px;font-weight:800;letter-spacing:.04em;color:#e4f2ff}
+.preflight .pf-team-logo{display:grid;place-items:center;width:65px;height:65px;border-radius:15px;background:#fff;box-shadow:0 3px 9px #0003}
+.preflight .pf-team-logo .club-badge{width:56px;height:56px;padding:3px;border:0;box-shadow:none;background:transparent;border-radius:0}
+.preflight .pf-team-logo .club-badge img{width:100%;height:100%;object-fit:contain}
+.preflight .pf-team>b{font-size:15px;font-weight:900;line-height:1.15;overflow-wrap:anywhere;max-width:100%}
+.preflight .pf-team-side{font-size:10px;color:#d9e9f8;padding:2px 8px;border-radius:4px;border:1px solid #ffffff30;background:#ffffff12;font-weight:750}
+.preflight .pf-team-edit{position:absolute;right:7px;top:8px;width:23px;height:23px;display:grid;place-items:center;color:#cbe6fb;background:#ffffff12;border-radius:5px}
+.preflight .pf-team-edit svg{width:15px;height:15px}
+.preflight .pf-vs{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%) rotate(-8deg);padding:5px 6px;background:#e8f5ff;border:1px solid #93c7e8;border-radius:5px;color:#173f63;font-size:13px;font-weight:950;font-style:italic;box-shadow:0 2px 6px #0004;pointer-events:none}
+.preflight .pf-conditions{display:grid;grid-template-columns:minmax(0,.86fr) minmax(0,1.14fr);gap:9px;margin:10px 0 13px}
+.preflight .pf-conditions>div{min-width:0}
+.preflight :is(.pf-conditions,.pf-light) label{display:block;font-size:11px;font-weight:800;color:var(--pf-muted);margin:0 0 5px}
+.preflight .pf-choice{display:flex;gap:3px;padding:3px;border:1px solid #c9dbe8;background:#dfeaf3;border-radius:10px;min-width:0}
+.preflight .pf-choice>button{flex:1;min-width:0;min-height:39px;border:0;border-radius:7px;background:transparent;box-shadow:none;padding:5px 2px;color:#385b76;font-size:12px;font-weight:800;line-height:1.15;text-shadow:none;white-space:normal}
+.preflight .pf-choice>button.active{color:white;background:#176fae;box-shadow:0 1px 4px #143a5f2a}
+.preflight .pf-venue{background:#fff;border:1px solid var(--pf-line);border-radius:13px;overflow:hidden;margin-bottom:9px}
+.preflight .pf-venue-main{width:100%;display:grid;grid-template-columns:99px minmax(0,1fr) 18px;align-items:center;gap:10px;min-height:81px;background:transparent;border:0;text-align:left;color:var(--pf-ink);padding:8px;box-shadow:none}
+.preflight .pf-venue-main>span:nth-child(2){display:grid;gap:5px;min-width:0}
+.preflight .pf-venue-main b{font-size:15px;line-height:1.18;overflow-wrap:anywhere}
+.preflight .pf-venue-main small{font-size:11px;color:var(--pf-muted);line-height:1.3}
+.preflight .pf-venue .ui-park-mini{width:100%;height:auto;border-radius:8px}
+.preflight .pf-chevron{display:grid;place-items:center;color:#5d89a8}
+.preflight .pf-chevron svg{width:17px;height:17px}
+.preflight .pf-light{border-top:1px solid #e2ebf3;display:grid;grid-template-columns:47px minmax(0,1fr);gap:6px;align-items:center;padding:7px 8px}
+.preflight .pf-light label{margin:0}
+.preflight .pf-light .pf-choice button{min-height:34px;font-size:11px}
+.preflight .pf-roster{display:grid;grid-template-columns:minmax(0,1.16fr) minmax(0,.84fr);gap:7px;margin:9px 0}
+.preflight .pf-link{display:grid;grid-template-columns:29px minmax(0,1fr) 14px;align-items:center;gap:6px;min-width:0;min-height:64px;background:#fff;border:1px solid var(--pf-line);border-radius:11px;box-shadow:none;padding:8px 6px;color:var(--pf-ink);text-align:left}
+.preflight .pf-link-icon{width:29px;height:29px;background:#e3eef7;border-radius:8px;display:grid;place-items:center;color:#286897}
+.preflight .pf-link-icon svg{width:18px;height:18px}
+.preflight .pf-link-copy{display:grid;gap:4px;min-width:0}
+.preflight .pf-link-copy>small{font-size:10px;color:var(--pf-muted);font-weight:750}
+.preflight .pf-link-copy>b{font-size:13px;font-weight:850;line-height:1.2;overflow-wrap:anywhere}
+.preflight .pf-inline-stat{font-size:10px;color:#52758d;display:block;margin-top:2px;font-weight:650}
+.preflight .pf-aux{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px}
+.preflight .pf-aux button{display:flex;align-items:center;justify-content:flex-start;gap:5px;min-height:43px;min-width:0;background:transparent;border:1px solid #d3e1ec;border-radius:9px;color:#3c607c;font-weight:800;font-size:11px;padding:7px;box-shadow:none}
+.preflight .pf-aux button svg{width:16px;height:16px;flex:none}
+.preflight .pf-aux button span{flex:1;text-align:left;overflow-wrap:anywhere}
+.preflight .pf-count{background:#1468a9;color:white;font-size:10px;border-radius:9px;padding:2px 5px}
+.preflight .pf-launch{display:grid;grid-template-columns:minmax(0,.7fr) minmax(0,1.7fr);gap:9px}
+.preflight :is(.pf-primary,.pf-secondary){min-height:48px;border-radius:11px;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px;line-height:1.2;box-shadow:none;text-shadow:none;cursor:pointer}
+.preflight .pf-primary{background:linear-gradient(120deg,#167dbb,#0a5e98);border:1px solid #075388;color:#fff;box-shadow:0 2px 0 #063e66;font-size:17px}
+.preflight .pf-secondary{background:#fff;border:1px solid #afcbdc;color:#285777}
+.preflight .pf-wide{width:100%}
+.preflight .pf-warning{font-size:11px;color:#864b1a;padding:0;margin:0 0 7px;line-height:1.3}
+.preflight .pf-current{display:flex;align-items:center;gap:9px;border:1px solid var(--pf-line);border-radius:10px;background:white;padding:8px;margin:9px 0;color:var(--pf-ink);font-size:13px}
+.preflight .pf-current .club-badge{width:34px;height:34px;flex:none}
+.preflight .pf-current b{min-width:0;overflow-wrap:anywhere}
+.preflight .pf-sticky-filter{position:sticky;top:-12px;z-index:3;background:var(--pf-bg);padding:5px 0 9px;margin-bottom:5px}
+.preflight .pf-team-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.preflight .pf-team-tile{position:relative;overflow:hidden;min-width:0;min-height:99px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;padding:8px 4px 11px;background:#fff;border:1px solid var(--pf-line);border-radius:10px;color:var(--pf-ink);box-shadow:none}
+.preflight .pf-team-tile::after{content:"";height:3px;position:absolute;bottom:0;left:0;right:0;background:var(--team-color)}
+.preflight .pf-team-tile .club-badge{width:49px;height:49px;flex:none}
+.preflight .pf-team-tile b{font-size:12px;line-height:1.2;overflow-wrap:anywhere;text-align:center}
+.preflight :is(.pf-team-tile,.pf-park-tile,.pf-pitcher-row).selected{border:2px solid #187ab6;background:#e8f5ff}
+.preflight .pf-check{position:absolute;right:5px;top:5px;display:grid;place-items:center;width:21px;height:21px;background:#1468a9;color:white;border-radius:50%}
+.preflight .pf-check svg{width:14px;height:14px}
+.preflight .pf-source{font-size:12px;color:#53718a;padding:10px 2px}
+.preflight .pf-source summary{cursor:pointer}
+.preflight .pf-park-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-bottom:12px}
+.preflight .pf-park-tile{position:relative;display:flex;flex-direction:column;align-items:stretch;min-width:0;gap:7px;padding:6px;border:1px solid var(--pf-line);border-radius:11px;background:white;color:var(--pf-ink);box-shadow:none;text-align:left}
+.preflight .pf-park-tile .ui-park-mini{width:100%;height:auto}
+.preflight .pf-park-tile>span:not(.pf-check){display:grid;gap:4px;padding:1px 4px 4px}
+.preflight .pf-park-tile b{font-size:13px;line-height:1.25;overflow-wrap:anywhere}
+.preflight .pf-park-tile small{font-size:10px;color:var(--pf-muted)}
+.preflight .pf-section-label{font-size:12px;font-weight:850;color:var(--pf-muted);margin:14px 0 6px}
+.preflight .pf-pitcher-list{display:grid;gap:5px}
+.preflight .pf-pitcher-row{min-height:54px;display:grid;grid-template-columns:26px minmax(0,1fr) 48px 27px 18px;gap:6px;align-items:center;width:100%;padding:7px 8px;border:1px solid var(--pf-line);border-radius:9px;background:#fff;text-align:left;color:var(--pf-ink);box-shadow:none}
+.preflight .pf-pitcher-no{font-size:14px;color:#4b7a9b;font-weight:850;text-align:center}
+.preflight .pf-pitcher-name,.preflight .pf-pitcher-speed{display:grid;gap:3px;min-width:0}
+.preflight .pf-pitcher-name b{font-size:14px;overflow-wrap:anywhere;line-height:1.2}
+.preflight .pf-pitcher-name small,.preflight .pf-pitcher-speed small{font-size:10px;color:var(--pf-muted)}
+.preflight .pf-pitcher-speed{text-align:right}
+.preflight .pf-pitcher-speed b{font-size:16px;font-variant-numeric:tabular-nums}
+.preflight .pf-pitcher-grade{font-size:20px;font-weight:950;text-align:center}
+.preflight .pf-pitcher-check{color:#176fae}
+.preflight .pf-pitcher-check svg{width:16px;height:16px}
+.preflight .pf-advanced{background:white;border:1px solid var(--pf-line);border-radius:12px;padding:4px 10px 12px}
+.preflight .pf-advanced .setup-section{margin:14px 0}
+.preflight .pf-advanced .match-presets{margin:10px 0}
+.preflight[data-kind="lineup"] .pf-body{padding:10px 9px}
+.preflight[data-kind="lineup"] .editor-toolbar{position:static;background:white;border:1px solid var(--pf-line);border-radius:9px;padding:6px 8px;box-shadow:none}
+.preflight[data-kind="lineup"] .editor-toolbar .arcade-go{display:none}
+.preflight[data-kind="lineup"] .editor-hint{font-size:11px;margin:9px 0;color:#51738d}
+.preflight[data-kind="lineup"] .squad-board{gap:6px;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr)}
+.preflight[data-kind="lineup"] .squad-column{border:1px solid #c4dbe9;background:#fff;box-shadow:none;border-radius:9px;padding:5px 3px}
+.preflight[data-kind="lineup"] .squad-column h3{font-size:12px}
+.preflight[data-kind="lineup"] .squad-list{max-height:47dvh}
+.preflight[data-kind="lineup"] .squad-starter-row{display:grid;grid-template-columns:17px 18px minmax(0,1fr) 28px;gap:2px;align-items:center}
+.preflight[data-kind="lineup"] .squad-position{width:28px;min-width:0;padding:2px}
+.preflight[data-kind="lineup"] .squad-player{min-height:40px;border-radius:7px;box-shadow:none;border:1px solid #bad5e6}
+.preflight[data-kind="lineup"] .squad-player.chosen{outline:2px solid #087abc;outline-offset:-2px}
+.preflight[data-kind="lineup"] .ui-drag-handle{touch-action:none}
+.preflight[data-kind="lineup"] .editor-preview{border-radius:9px}
+.preflight[data-kind="lineup"] .editor-actions button{border-radius:8px;min-height:42px}
+.preflight :is(button,input,select,summary):focus-visible{outline:3px solid #f2bc3b;outline-offset:2px}
+@media(max-width:520px){.app #modal-content.preflight{width:100%;height:100dvh;border-radius:0}}
+@media(min-width:410px){.preflight .pf-team-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.preflight .pf-body{padding:15px 18px 18px}}
+@media(max-width:350px){.preflight .pf-body{padding:9px}.preflight .pf-footer{padding-inline:9px}.preflight .pf-team{min-height:128px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:46px;height:46px}.preflight .pf-team>b{font-size:13px}.preflight .pf-venue-main{grid-template-columns:76px minmax(0,1fr) 15px;gap:7px}.preflight .pf-link{grid-template-columns:minmax(0,1fr) 12px}.preflight .pf-link-icon{display:none}.preflight .pf-team-grid{gap:5px}.preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:13px 14px minmax(0,1fr) 24px}.preflight[data-kind="lineup"] .squad-position{width:24px}.preflight .pf-choice button{font-size:11px}}
+@media(max-height:690px){.preflight .pf-team{min-height:122px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:47px;height:47px}.preflight .pf-body{padding-block:9px}.preflight .pf-matchup{margin-bottom:8px}.preflight .pf-conditions{margin:8px 0}.preflight .pf-roster{margin:6px 0}}
+@media(prefers-reduced-motion:no-preference){.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary,.pf-choice button){transition:filter .12s,background .12s}.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary):active{filter:brightness(.91)}}
