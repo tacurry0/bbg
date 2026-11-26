@@ -36,10 +36,10 @@ assert(stadium.includes('!g.defending&&!g.hardcore&&window.nightSettings?.timing
 assert(renderer2d.includes('showTrace&&!g.hardcore&&last'), 'previous-pitch marker is suppressed in hardcore');
 
 // ---------- version pins (v172) ----------
-assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins at v172');
+assert(index.includes('./game.js?v=193') && index.includes('./app.js?v=193'), 'index pins at v172');
 assert(app.includes('./stadium3d.js?v=81'), 'stadium3d pin bumped for the ring gate');
-assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache renamed for v172');
-assert(sw.includes('./game.js?v=192') && sw.includes('./app.js?v=192') && sw.includes('./stadium3d.js?v=81') && sw.includes('./renderer.js?v=64'), 'SW precaches the v172 assets');
+assert(sw.includes('nightball-v193-derby-bracket'), 'SW cache renamed for v172');
+assert(sw.includes('./game.js?v=193') && sw.includes('./app.js?v=193') && sw.includes('./stadium3d.js?v=81') && sw.includes('./renderer.js?v=64'), 'SW precaches the v172 assets');
 
 console.log('hardcore-v172: engine + static assertions passed');
 

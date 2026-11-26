@@ -39,8 +39,8 @@ const popDrift = fly(5, 25, 60) - fly(0, 25, 60);
 assert(popDrift > 1 && popDrift < 10, `weak pop-up drift out of band: ${popDrift.toFixed(1)}m`);
 
 // --- version pins ---
-assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins not at v168');
-assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache not renamed for v168');
-assert(sw.includes('./game.js?v=192') && sw.includes('./app.js?v=192'), 'SW does not precache the v168 scripts');
+assert(index.includes('./game.js?v=193') && index.includes('./app.js?v=193'), 'index pins not at v168');
+assert(sw.includes('nightball-v193-derby-bracket'), 'SW cache not renamed for v168');
+assert(sw.includes('./game.js?v=193') && sw.includes('./app.js?v=193'), 'SW does not precache the v168 scripts');
 
 console.log(`PASS: wind acts through relative air velocity (calm ${calm.toFixed(1)}m, +5 ${plus5 >= 0 ? '+' : ''}${plus5.toFixed(1)}m, -5 ${minus5.toFixed(1)}m, pop-up drift ${popDrift.toFixed(1)}m); v168 pins verified.`);

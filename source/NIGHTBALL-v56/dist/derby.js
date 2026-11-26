@@ -3,6 +3,7 @@
  const ROUND_NAMES=['準々決勝','準決勝','決勝'];
  const numberOfHomers=p=>p.stats?.hr??0;
  const pairOrder=[0,7,3,4,1,6,2,5];
+ const drawFirst=()=>Math.random()<.5?0:1;
  window.NightDerby=class NightDerby{
   constructor(club,batter,park){
    this.park=park;
@@ -18,16 +19,23 @@
    this.round=0;this.matchup=null;this.over=false;
    this.advance();
   }
-  match(round,a,b){return {round,entrants:[a,b],normal:[null,null],extra:[null,null],winner:null,complete:false,reason:null};}
+  match(round,a,b){
+   return {round,entrants:[a,b],first:drawFirst(),extraFirst:null,normal:[null,null],extra:[null,null],winner:null,complete:false,reason:null};
+  }
   get label(){return ROUND_NAMES[this.matchup?.round??this.round];}
   get opponent(){return this.matchup.entrants[1-this.userIndex];}
   get userIndex(){return this.matchup.entrants.findIndex(p=>p.user);}
   get score(){return this.extra?this.matchup.extra:this.matchup.normal;}
-  cpuScore(entry,extra){
+  get userBatsSecond(){return (this.extra?this.matchup.extraFirst:this.matchup.first)!==this.userIndex;}
+  get clinched(){
+   const opponentScore=this.score[1-this.userIndex];
+   return this.userBatsSecond&&Number.isFinite(opponentScore)&&this.turnHR>opponentScore;
+  }
+  cpuScore(entry,extra,scoreToBeat=Infinity){
    const size=(this.park.leftCenter+this.park.rightCenter)/2;
    const chance=Math.max(.1,Math.min(.52,.24+(entry.player.power-70)*.009-(size-112)*.012-((this.park.wallHeight||2.8)-2.8)*.028));
    let homeRuns=0;
-   for(let i=0;i<(extra?10:20);i++)if(Math.random()<chance)homeRuns++;
+   for(let i=0;i<(extra?10:20)&&homeRuns<=scoreToBeat;i++)if(Math.random()<chance)homeRuns++;
    return homeRuns;
   }
   resolve(match){
@@ -38,9 +46,18 @@
    else{match.winner=match.entrants[match.entrants[0].seed<match.entrants[1].seed?0:1];match.reason='同数・シード順';}
    match.complete=true;
   }
+  simulatePair(match,extra){
+   const first=extra?match.extraFirst:match.first,second=1-first;
+   const scores=extra?match.extra:match.normal;
+   scores[first]=this.cpuScore(match.entrants[first],extra);
+   scores[second]=this.cpuScore(match.entrants[second],extra,scores[first]);
+  }
   simulate(match){
-   match.normal=match.entrants.map(p=>this.cpuScore(p,false));
-   if(match.normal[0]===match.normal[1])match.extra=match.entrants.map(p=>this.cpuScore(p,true));
+   this.simulatePair(match,false);
+   if(match.normal[0]===match.normal[1]){
+    match.extraFirst=drawFirst();
+    this.simulatePair(match,true);
+   }
    this.resolve(match);
   }
   advance(){
@@ -57,10 +74,12 @@
   prepareTurn(){
    this.remaining=this.extra?60000:120000;
    this.turnHR=0;
-   this.score[1-this.userIndex]=this.cpuScore(this.opponent,this.extra);
+   if(this.userBatsSecond)this.score[1-this.userIndex]=this.cpuScore(this.opponent,this.extra);
   }
   finishTurn(){
    this.score[this.userIndex]=this.turnHR;
+   const opponentIndex=1-this.userIndex;
+   if(this.score[opponentIndex]===null)this.score[opponentIndex]=this.cpuScore(this.opponent,this.extra,this.turnHR);
    if(!this.extra&&this.score[0]===this.score[1])return 'extra';
    this.resolve(this.matchup);
    if(this.matchup.winner?.user&&this.round<2)return 'round';
@@ -70,7 +89,7 @@
    return 'finish';
   }
   continue(kind){
-   if(kind==='extra'){this.extra=true;this.prepareTurn();}
+   if(kind==='extra'){this.extra=true;this.matchup.extraFirst=drawFirst();this.prepareTurn();}
    else if(kind==='round')this.advance();
   }
  };

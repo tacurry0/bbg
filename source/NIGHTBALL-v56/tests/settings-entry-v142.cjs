@@ -35,9 +35,9 @@ assert(
 );
 
 // ---------- v142 version pins ----------
-assert(index.includes('./game.js?v=192') && index.includes('./app.js?v=192'), 'index pins move to v142');
-assert(sw.includes('nightball-v192-menu-scroll'), 'SW cache renamed for v142');
-assert(sw.includes('./game.js?v=192') && sw.includes('./app.js?v=192'), 'SW precaches the v142 scripts');
+assert(index.includes('./game.js?v=193') && index.includes('./app.js?v=193'), 'index pins move to v142');
+assert(sw.includes('nightball-v193-derby-bracket'), 'SW cache renamed for v142');
+assert(sw.includes('./game.js?v=193') && sw.includes('./app.js?v=193'), 'SW precaches the v142 scripts');
 assert(index.includes('./home-menu.css?v=2'), 'index loads the home menu stylesheet');
 assert(sw.includes('./home-menu.css?v=2'), 'SW precaches the home menu stylesheet');
 

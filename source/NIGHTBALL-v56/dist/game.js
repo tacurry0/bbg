@@ -1028,7 +1028,10 @@ window.NightGame=class NightGame{
 
  createPitch(type,target){
   if(this.bases[1]||this.bases[2])this.atBatRisp=true;
-  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0,ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax?NightGame.stretchPitchSpeed(pitcher.velocityEvidence.fastMax):spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj),velocity=Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
+  if(this.derby)type=TYPES[0];
+  const base={casual:1150,standard:900,pro:760}[this.difficulty],pitcher=this.pitcher,spec=NightGame.pitchSpec(pitcher,type.id),pitchAdj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0;
+  const ceiling=(type.id==='fast'?(pitcher.velocityEvidence?.fastMax?NightGame.stretchPitchSpeed(pitcher.velocityEvidence.fastMax):spec.speed+3):spec.speed+2)+Math.max(0,pitchAdj);
+  const velocity=this.derby?150:Math.round(Math.min(ceiling,spec.speed+pitchAdj*.6+rnd(-2,2)+(Math.random()<.25?rnd(-2,1):0)-Math.round(Math.pow(this.pitchFatigue(),2)*6)));
   // Increase the pace above 135 km/h by 1.6% per additional km/h.
   const flightPace=1+Math.max(0,velocity-135)*.016;
   this.pitch={...spec,throwHand:pitcher.hand==='L'?'L':'R',releaseX:(pitcher.hand==='L'?1:-1)*.76/.68,bx:spec.bx*(pitcher.hand==='L'?-1:1)*(1+pitchAdj*.015),by:spec.by*(1+pitchAdj*.015),spinRpm:Math.round((spec.spinRpm||0)*(1+pitchAdj*.01)),targetX:target.x,targetY:target.y,isStrike:Math.abs(target.x)<=1.06&&Math.abs(target.y)<=1.06,speed:velocity,duration:base*148/(velocity*flightPace),progress:0,swung:false,cpuActed:false};
@@ -2166,7 +2169,11 @@ window.NightGame=class NightGame{
    this.session.maxDistance=Math.max(this.session.maxDistance,this.hit.distance);
    this.message('HOME RUN','ホームラン！',this.hit.distance+' m','homer');this.emit('sound','homer');
   }else if(f.foul)this.emit('sound','foul');
-  this.setPhase('result');this.emit('hit',this.hit);this.notify();
+  this.setPhase('result');this.emit('hit',this.hit);
+  if(homeRun&&!this.onlineDerby&&this.derby.clinched){
+   this.derby.matchup.walkOff=true;this.finishDerbyTurn();return;
+  }
+  this.notify();
  }
  finishDerbyTurn(){
   const d=this.derby;

@@ -1428,7 +1428,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    ${lightingField()}
    <div class="setup-section"><label for="derby-club">打者の所属</label><select id="derby-club" class="field-select">${arcadeClubOptions(club.id)}${alumniClub()?`<option value="career-alumni" ${club.id==='career-alumni'?'selected':''}>キャリアOB</option>`:''}</select></div>
    <div class="player-select-grid">${(club.alumni||club.batters).map(p=>playerTile(p,{club,selected:p.id===batter.id,attrs:`data-derby-batter="${p.id}"`})).join('')}</div>
-   <details class="editor-player-detail"><summary>ルール</summary><p>同数は1分延長。延長も同数ならゲーム内のシード順で決定。決勝が延長後も0本同士なら引き分け。</p></details>`,'derby-setup');
+   <details class="editor-player-detail"><summary>ルール</summary><p>投球は150 km/hのストレート。先攻・後攻は抽選で決まり、後攻が先攻の本数を超えた時点で勝利。同数なら1分延長し、延長も同数ならシード順で決定します。決勝が延長後も0本同士なら引き分けです。</p></details>`,'derby-setup');
  }
  function derbyScoreText(m,i){
   const normal=m.normal[i],extra=m.extra[i];
@@ -1436,7 +1436,36 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function derbyBracket(g){
   const d=g.derby;
-  return `<div class="derby-bracket">${d.rounds.map((round,i)=>`<section><h3>${['準々決勝','準決勝','決勝'][i]}</h3>${round.length?round.map(m=>`<div class="derby-pair ${m===d.matchup?'current':''}">${m.entrants.map((p,j)=>`<div class="${p===m.winner?'winner':''}">${clubBadge(p.club.id)}<span>${p.player.name}${p.user?'<small>あなた</small>':''}</span><b>${derbyScoreText(m,j)}</b></div>`).join('')}${m.reason?`<small class="derby-decision">${m.reason}</small>`:''}</div>`).join(''):'<p>対戦未定</p>'}</section>`).join('')}</div>`;
+  const entry=(p,score,winner)=>{
+   if(!p)return '<div class="derby-entry pending"><span>未定</span><b>—</b></div>';
+   return `<div class="derby-entry${p.user?' user':''}${winner?' winner':''}">
+    <span class="derby-entry-name">${clubBadge(p.club.id,true)}${fittedName(p.player.name,'span','derby-player')}</span>
+    <b>${score}</b>${p.user?'<small class="derby-you">自分</small>':''}${winner?'<small class="derby-winner">勝ち</small>':''}
+   </div>`;
+  };
+  return `<div class="derby-bracket" role="region" aria-label="トーナメント表" tabindex="0"><div class="derby-tree">
+   ${['準々決勝','準決勝','決勝'].map((name,round)=>`<section class="derby-tree-round">
+    <h3>${name}</h3><div class="derby-round-fixtures">${Array.from({length:4>>round},(_,slot)=>{
+     const match=d.rounds[round][slot];
+     const projected=round?[d.rounds[round-1][slot*2]?.winner,d.rounds[round-1][slot*2+1]?.winner]:[];
+     const entries=match?.entrants??projected;
+     const reason=match?.reason;
+     return `<div class="derby-pair${match&&match===d.matchup?' current':''}"${reason?' title="'+reason+'"':''}>
+      ${[0,1].map(i=>entry(entries[i],match?derbyScoreText(match,i):'—',!!entries[i]&&entries[i]===match?.winner)).join('')}
+     </div>`;
+    }).join('')}</div>
+   </section>`).join('')}
+  </div></div>`;
+ }
+ function derbyRoundPreview(g){
+  const d=g.derby;
+  const turn=d.userBatsSecond?`後攻 · ${d.opponent.player.name}の${d.score[1-d.userIndex]}本を上回れば勝利`:'先攻 · 2分間で本数を伸ばそう';
+  g.paused=true;
+  modal(`${modalTitle('','ホームラン競走',false)}
+   <p class="career-status-line">${d.label} · ${turn}</p>
+   ${derbyBracket(g)}
+   <button class="primary-button" data-action="close">対戦開始</button>
+   <button class="secondary-button" data-action="home">ホームへ戻る</button>`,'derby-bracket');
  }
  function derbyTurnResult(g){
   const d=g.derby,action=g.derbyTransition,finished=action==='finish';
@@ -1445,6 +1474,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const match=d.matchup,index=d.userIndex;
   modal(`${modalTitle('',title,false)}
    <div class="derby-result-summary"><strong>${g.batter.name}</strong><div><b>${derbyScoreText(match,index)}</b><span>–</span><b>${derbyScoreText(match,1-index)}</b></div><strong>${d.opponent.player.name}</strong></div>
+   ${match.walkOff?'<p class="career-status-line">後攻で先攻の本数を超え、勝利しました。</p>':''}
    ${finished?`<div class="derby-record"><span>大会通算 <b>${g.session.hr} 本</b></span><span>最長 <b>${g.session.maxDistance||'—'} m</b></span></div>`:''}
    <button class="primary-button" data-action="${finished?'restart':'derby-next'}">${finished?'もう一度':action==='extra'?'1分間の延長へ':'次のラウンドへ'}</button>
    ${derbyBracket(g)}${finished?'<button class="secondary-button" data-action="home">ホームへ戻る</button>':''}`,'derby-result');
@@ -2055,7 +2085,7 @@ function start(mode,challengeId=null,fixedPark=null){
    game.practicePitch='fast';
   }
   activateGame();updateStyle();updateUI();
-  if(mode==='derby')onEvent('clear');
+  if(mode==='derby'){onEvent('clear');derbyRoundPreview(game);}
   updateChallenge();
  }
  const DOME_SCENES={
@@ -2466,7 +2496,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>オンラインHRダービー</span><strong>${turn===online.derbyMyIndex?'あなたの番':'相手の番'}</strong></div><div class="derby-names">${c.players.map(p=>`<span>${p.name}<b>${p.hr} 本 · ${p.maxDistance||0} m</b></span>`).join('')}</div></div>`;
    }else if(g.derby){
      const d=g.derby;
-     $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>${d.label}${d.extra?' · 延長':''}</span><strong id="derby-clock"></strong></div><div class="derby-names"><span>${g.batter.name}<b>${d.turnHR}</b></span><span>${d.opponent.player.name}<b>${d.score[1-d.userIndex]}</b></span></div></div>`;
+     $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>${d.label}${d.extra?' · 延長':''} · ${d.userBatsSecond?'後攻':'先攻'}</span><strong id="derby-clock"></strong></div><div class="derby-names"><span>${g.batter.name}<b>${d.turnHR}</b></span><span>${d.opponent.player.name}<b>${d.score[1-d.userIndex]??'未打撃'}</b></span></div></div>`;
      updateDerbyClock(g);
    }else{
      const pitching=g.mode==='pitching';

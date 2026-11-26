@@ -57,18 +57,53 @@ body{background:radial-gradient(ellipse at 20% 10%,#b3f9ff75,transparent 25%),li
 .derby-result-summary>div{display:flex;gap:8px;align-items:baseline;font-size:.85rem;white-space:nowrap}
 .derby-result-summary b{font-size:1.55rem}
 .derby-record{display:flex;justify-content:space-evenly;gap:10px;margin-bottom:10px;color:#214b70}
-.derby-bracket{display:grid;gap:10px;margin-block:14px;color:#173f60}
-.derby-bracket section{padding:8px;background:#eaf8ff;border:1px solid #a0d9ec;border-radius:10px}
-.derby-bracket h3{font-size:.9rem;margin:0 0 6px}
-.derby-bracket p{margin:0;color:#4f6c80;font-size:.8rem}
-.derby-pair{border:1px solid #b9d7e6;border-radius:8px;overflow:hidden;background:white;margin-bottom:4px}
-.derby-pair.current{border-color:#227bb2}
-.derby-pair>div{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:2px 8px;font-size:.8rem;min-height:31px}
-.derby-pair>div+div{border-top:1px solid #d4e8f1}
-.derby-pair>div.winner{background:#e0f5be}
-.derby-pair img{width:24px;height:24px;object-fit:contain}
-.derby-pair span small{margin-left:6px;color:#27567a}
-.derby-decision{display:block;padding:2px 8px;color:#375974}
+/* Three aligned rounds; connector bends are half the gap between match centers. */
+.modal:is([data-kind="derby-bracket"],[data-kind="derby-result"]){max-width:620px}
+.derby-bracket{margin-block:14px;overflow-x:auto;overscroll-behavior-x:contain;color:#173f60}
+.derby-tree{
+ --bracket-row:35px;
+ --bracket-gap:14px;
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--bracket-gap);
+ min-width:265px;padding:7px 4px;border:1px solid #a0d9ec;border-radius:12px;
+ background:linear-gradient(155deg,#edfaff,#e2f2fc)
+}
+.derby-tree h3{margin:0 0 4px;text-align:center;font-size:clamp(10px,3vw,14px);white-space:nowrap}
+.derby-round-fixtures{display:grid;grid-template-rows:repeat(8,var(--bracket-row))}
+.derby-tree-round:first-child{--rows:2;--connector-height:var(--bracket-row)}
+.derby-tree-round:nth-child(2){--rows:4;--connector-height:calc(2 * var(--bracket-row))}
+.derby-tree-round:last-child{--rows:8}
+.derby-pair{
+ position:relative;grid-row:span var(--rows);align-self:center;min-width:0;border:1px solid #b9d7e6;
+ border-radius:7px;background:white;box-shadow:0 1px 3px #0f50851a
+}
+.derby-pair.current{border-color:#288fca;box-shadow:0 0 0 1px #5cbef188}
+.derby-tree-round:not(:last-child) .derby-pair::after{
+ content:"";position:absolute;left:100%;width:calc(var(--bracket-gap) / 2 + 1px);height:var(--connector-height);
+ border-right:1px solid #76a7c8;pointer-events:none
+}
+.derby-tree-round:not(:last-child) .derby-pair:nth-child(odd)::after{top:50%;border-top:1px solid #76a7c8}
+.derby-tree-round:not(:last-child) .derby-pair:nth-child(even)::after{bottom:50%;border-bottom:1px solid #76a7c8}
+.derby-tree-round:not(:first-child) .derby-pair::before{
+ content:"";position:absolute;right:100%;top:50%;width:calc(var(--bracket-gap) / 2 + 1px);border-top:1px solid #76a7c8
+}
+.derby-entry{
+ display:grid;grid-template-columns:minmax(0,1fr) auto;gap:1px 3px;align-content:center;
+ min-height:28px;padding:2px 3px;font-size:clamp(9px,2.65vw,13px);line-height:1.15
+}
+.derby-entry+ .derby-entry{border-top:1px solid #d4e8f1}
+.derby-entry:first-child{border-radius:6px 6px 0 0}
+.derby-entry:last-child{border-radius:0 0 6px 6px}
+.derby-entry.user{background:#daf2ff;color:#084c83;box-shadow:inset 2px 0 #2783c4}
+.derby-entry.winner{background:#e2f8d5;color:#245319}
+.derby-entry.pending{background:#f7fbfe;color:#668397}
+.derby-entry-name{display:flex;align-items:center;gap:2px;min-width:0}
+.derby-entry-name .club-badge{flex:none;width:13px;height:13px;margin:0;padding:0;border:0;background:none;box-shadow:none}
+.derby-entry-name .club-badge img{width:100%;height:100%;object-fit:contain}
+.derby-player{flex:1;min-width:0;font-weight:800}
+.derby-entry b{align-self:center;white-space:nowrap;font-variant-numeric:tabular-nums}
+.derby-entry small{font-size:.73em;font-weight:800;white-space:nowrap}
+.derby-you{color:#0a60a2}
+.derby-winner{grid-column:2;color:#2d6a20}
 
 /* APBC registration and tournament results. */
 .apbc-country-line{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;justify-items:center;margin:15px 0}
