@@ -3454,13 +3454,31 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    if(screen==='game'&&e.key==='Escape')pause();
    if(screen==='game'&&game&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();game.setCursor(game.cursor.x+(e.key==='ArrowLeft'?-.1:e.key==='ArrowRight'?.1:0),game.cursor.y+(e.key==='ArrowUp'?-.1:e.key==='ArrowDown'?.1:0));updatePad();}
  });
+ const releases=globalThis.NightballReleases||[];
+ const latestRelease=releases[0];
+ const releaseTitle=r=>'v'+r.version+' '+r.title;
+ const releaseReadKey='nightball.releaseSeen';
+ function markReleaseRead(){
+  if(!latestRelease)return;
+  try{localStorage.setItem(releaseReadKey,String(latestRelease.version));}catch{}
+  delete $('menu-notices').dataset.unread;
+ }
+ function releaseHistory(){
+  markReleaseRead();
+  modal(`${modalTitle('','更新履歴')}${releases.map((r,i)=>`<section class="release-note"><h3>${releaseTitle(r)}</h3><p>${r.detail}</p>${r.items.length?`<ul>${r.items.map(t=>`<li>${t}</li>`).join('')}</ul>`:''}</section>`).join('')}<button class="secondary-button" data-action="home-notices">お知らせ</button>`,'release-history');
+ }
  const homeNotices=[
+  ...(latestRelease?[{title:releaseTitle(latestRelease),detail:latestRelease.detail,open:releaseHistory}]:[]),
   {title:'APBCモード',detail:'日本・台湾・韓国・豪州が参戦',open:apbcHub},
   {title:'オンライン対戦',detail:'ルームを作成・参加',open:onlineModal},
   {title:'選手キャリア',detail:'選手の育成・シーズンの進行',open:worldDashboard},
  ];
  const noticeRegion=document.querySelector('.menu-notices'),noticeCard=$('notice-card');
  const noticeCopy=noticeCard.querySelector('.notice-card-copy');
+ noticeRegion.querySelector('.notice-pages').innerHTML=homeNotices.map((_,i)=>`<button type="button" data-notice-index="${i}" aria-label="お知らせ ${i+1}" aria-current="${i===0}"></button>`).join('');
+ $('notice-title').textContent=homeNotices[0].title;
+ $('notice-detail').textContent=homeNotices[0].detail;
+ try{if(latestRelease&&Number(localStorage.getItem(releaseReadKey)||0)>=latestRelease.version)delete $('menu-notices').dataset.unread;else if(latestRelease)$('menu-notices').dataset.unread='true';}catch{}
  const hoverNotices=matchMedia('(hover: hover)');
  const noticeInterval=6000;
  let homeNoticeIndex=0,noticeAnimation,noticeGesture=null,noticeClickUntil=0;
@@ -3491,11 +3509,10 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
  function openHomeNotice(index){
   const notice=homeNotices[index];
   if(!notice)return;
-  delete $('menu-notices').dataset.unread;
+  if(index===0&&latestRelease)markReleaseRead();
   notice.open();
  }
  function homeNoticesModal(){
-  delete $('menu-notices').dataset.unread;
   modal(`${modalTitle('','お知らせ')}${homeNotices.map(({title},i)=>`<button class="secondary-button" data-open-notice="${i}">${title}</button>`).join('')}<button class="secondary-button" data-action="howto">遊び方</button>`,'home-notices');
  }
  $('bench-button').onclick=requestBench;$('sub').onclick=requestBench;
@@ -3725,6 +3742,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
       pendingUmpire=true;start('match');
       break;
      case'leave':if(game?.worldFixture){checkpoint();worldDashboard();}else if(game?.career){checkpoint();careerDashboard();}else if(game?.apbcFixtureId){checkpoint();game.paused=true;apbcDashboard();}else if(game?.mode==='pennant'){checkpoint();game.paused=true;leagueDashboard();}else if(['practice','pitching'].includes(game?.mode)){closeModal(false);game.paused=false;game.finish();}else home();break;
+     case'home-notices':homeNoticesModal();break;
      case'howto':howto();break;
      case'start-match':start('match');break;
      case'match-teams':setupMatchTeams();break;

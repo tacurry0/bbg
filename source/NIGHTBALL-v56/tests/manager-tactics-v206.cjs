@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');global.window=global;vm.runInThisContext(fs.readFileSync(__dirname+'/../dist/game.js','utf8'));const G=NightGame;
+const [balanced,quick,runner,slugger,steady]=G.MANAGERS;
+const ctx={inning:8,total:9,lead:0,bases:[true,false,false],outs:0,contact:55,power:50,run:85};
+assert(G.managerTactics(runner,ctx).steal>G.managerTactics(balanced,ctx).steal);
+assert(G.managerTactics(steady,ctx).bunt>G.managerTactics(slugger,ctx).bunt);
+assert.equal(G.managerTactics(steady,{...ctx,strikes:2}).bunt,0);
+assert.equal(G.managerTactics(runner,{...ctx,balls:3}).steal,0);
+assert(G.managerTactics(steady,{...ctx,bases:[false,true,false],threat:160,nextThreat:110}).ibb>0);
+assert.equal(G.managerTactics(steady,{...ctx,bases:[true,true,false],threat:160,nextThreat:110}).ibb,0);
+assert(G.reliefDecision(quick,{role:'SP',pitches:35,stamina:70}).change);
+assert(!G.reliefDecision(balanced,{role:'SP',pitches:35,stamina:70}).change);
+assert.equal(G.reliefDecision(balanced,{inning:9,total:9,lead:2,hasCloser:true}).prefer,'CP');
+assert(G.reliefDecision(balanced,{inning:9,total:9,lead:-2,hasCloser:true}).protectCloser);
+console.log('v206 manager tactics passed');
