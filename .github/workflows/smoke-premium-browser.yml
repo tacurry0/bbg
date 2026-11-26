@@ -12,6 +12,8 @@ on:
       - 'source/NIGHTBALL-v56/tests/abs-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/verdict-vision-v220.cjs'
       - 'source/NIGHTBALL-v56/tests/inning-break-v222.cjs'
+      - 'source/NIGHTBALL-v56/tests/settings-edit-hub-v149.cjs'
+      - 'source/NIGHTBALL-v56/tests/settings-mode-v227.cjs'
       - '.github/workflows/smoke-premium-browser.yml'
   workflow_dispatch:
 
@@ -38,6 +40,9 @@ jobs:
       - name: Verify inning transition layout
         working-directory: source/NIGHTBALL-v56
         run: node tests/inning-break-v222.cjs --browser
+      - name: Verify separate settings and edit screens
+        working-directory: source/NIGHTBALL-v56
+        run: node tests/settings-edit-hub-v149.cjs --browser
       - name: Verify home player directory
         working-directory: source/NIGHTBALL-v56
         run: node tests/player-directory-v201.cjs
