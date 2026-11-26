@@ -741,7 +741,7 @@ window.NightGame=class NightGame{
 
  get defending(){return (this.half==='top')===this.userHome;}
  get inMatch(){return this.isFixture||this.mode==='pitching'||!!this.career||!!this.challenge;}
- message(en,ja,sub='',kind='',speech=''){if(this.log){this.log.push({inning:this.inning,half:this.half,en,ja,sub,kind,speech,batter:this.batter?.name||''});if(this.log.length>80)this.log.shift();}this.emit('message',{en,ja,sub,kind,speech});}
+ message(en,ja,sub='',kind='',speech='',homeRunRuns=0){const data={en,ja,sub,kind,speech};if(en==='HOME RUN'&&homeRunRuns>=1&&homeRunRuns<=4)data.homeRunRuns=homeRunRuns;if(this.log){this.log.push({inning:this.inning,half:this.half,...data,batter:this.batter?.name||''});if(this.log.length>80)this.log.shift();}this.emit('message',data);}
  notify(){this.emit('update',this);}
  setPhase(p){if(p!=='result')this.umpireReveal=null;this.phase=p;this.phaseTime=0;}
  get homeRunRunning(){
@@ -2340,7 +2340,7 @@ window.NightGame=class NightGame{
    this.completePitch(kind);
    if(this.inMatch){if(out)this.addOut();else{const before=this.battingScore;this.advance({single:1,double:2,triple:3,hr:4}[kind]);runs=(this.battingScore)-before;if(!this.defending&&runs===4&&kind==='hr')this.session.grandSlam=true;}this.endAtBat(kind,runs);this.resetCount();this.checkEnd();}
    const label={single:['SINGLE','ヒット'],double:f.groundRule?['GROUND-RULE DOUBLE','エンタイトルツーベース']:['DOUBLE','ツーベース'],triple:['TRIPLE','スリーベース'],hr:['HOME RUN','ホームラン！'],flyout:['FLY OUT','フライをキャッチ！'],groundout:['OUT AT FIRST','一塁へ送球、アウト！']}[kind];
-   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${distance} m${runs?' · '+runs+'点':''}${out?' · '+this.outs+'アウト':''}`,kind==='hr'?'homer':out?'out':'hit');
+   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${distance} m${runs?' · '+runs+'点':''}${out?' · '+this.outs+'アウト':''}`,kind==='hr'?'homer':out?'out':'hit','',kind==='hr'?runs:0);
    this.emit('cue',kind==='hr'?'homer':out?'out':'hit');this.emit('sound',kind==='hr'?'homer':out?'out':'safe');
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();

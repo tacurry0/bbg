@@ -2332,9 +2332,10 @@ function start(mode,challengeId=null,fixedPark=null){
  function closeChallengeResult(){if(game?.challenge&&game.field?.resolved&&!game.field.foul)updateChallenge(true);}
  $('challenge-retry').onclick=()=>{if(game?.challenge)start('practice',game.challenge);};
  function updatePlayTools(){
-  const hit=game&&['field','result'].includes(game.phase)?game.hit:null,base=hitReadout(hit);
-  $('hit-readout').textContent=base?(hit.distance?base+' · '+Math.round(hit.distance)+'m':base):'';
-  $('play-tools').hidden=!!review.playback||!$('hit-readout').textContent;
+  // Live play uses only the main verdict. Replay retains the optional
+  // trajectory readout for reviewing the previous play.
+  $('hit-readout').textContent='';
+  $('play-tools').hidden=true;
  }
  const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,umpireLast:null,umpireShownAt:0};
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
@@ -2358,9 +2359,8 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function showPlayCall({verdict,base}){
   const panel=$('umpire-call'),label=verdict==='out'?'OUT':'SAFE';
-  const sub=['','一塁','二塁','三塁','本塁'][base];
   panel.dataset.verdict=verdict;
-  panel.innerHTML=`<strong>${label}</strong>`+(sub?`<small>${sub}</small>`:'');
+  panel.innerHTML=`<strong>${label}</strong>`;
   panel.hidden=false;playFeedback.callTime=verdict==='out'?1800:1500;
   if(typeof panel.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
    panel.getAnimations().forEach(animation=>animation.cancel());
@@ -2569,17 +2569,6 @@ function start(mode,challengeId=null,fixedPark=null){
  // do not end an at-bat (BALL / STRIKE / SWING & MISS / FOUL / TAKE) are
  // not tracked and keep their existing display behaviour.
  const RESULT_NON_RESULTS=['BALL','STRIKE','SWING & MISS','FOUL','TAKE'];
-// v162 (result-banner-compact): Japanese result lines that merely restate
-// the English head (フライアウト for FLY OUT, ヒット for SINGLE, ...) are
-// not rendered in the compact result banner — the same display/TTS split
-// v146 applied to pitch calls. This is display-only: data.ja is left
-// untouched, so speakPlay (which reads data.speech || data.ja) and the
-// history modal (which renders game.log entries) keep the full wording.
-// Japanese lines that add information (タッチアップで生還 on a sacrifice
-// fly, タッチアウト/フォースアウト on OUT, 空振り/見逃し三振 on STRIKEOUT,
-// 一塁へ送球、アウト！ is a pure restatement of OUT AT FIRST so it IS
-// listed) stay visible as the banner's single detail line.
-const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DOUBLE':['ツーベース'],'TRIPLE':['スリーベース'],'GROUND-RULE DOUBLE':['エンタイトルツーベース'],'BUNT HIT':['バントヒット'],'DOUBLE PLAY':['ダブルプレー'],'FORCE OUT':['二塁フォースアウト'],'SACRIFICE BUNT':['送りバント'],'OUT AT FIRST':['一塁へ送球、アウト！'],'OUT':['アウト'],'JUMPING CATCH':['ジャンピングキャッチ'],'DIVING CATCH':['ダイビングキャッチ']};
  // v220: semantic colours for the Stadium Vision verdict display (H).
  // Use raw event labels; the locale layer may translate the rendered text.
  const VISION_CALL_TONES=Object.freeze({
@@ -2588,8 +2577,18 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   'MISPLAY':'error','WILD THROW':'error','WILD PITCH':'error','PASSED BALL':'error',
   'STEAL':'hit','HOME RUN':'homer'
  });
- const VISION_JA_DUP={'SWING & MISS':['空振り'],'FOUL':['ファウル'],'TAKE':['見送り'],
-  'INTENTIONAL WALK':['申告敬遠'],'HIT BY PITCH':['死球'],'WILD PITCH':['暴投'],'PASSED BALL':['捕逸'],'HOME RUN':['ホームラン！']};
+ // v224: display a single verdict, preserving the full engine event for
+ // the history, speech, online relay and duplicate-result detection.
+ function visionLabel(data){
+  if(data.en==='HOME RUN'){
+   // Older saved messages have the scored runs in the detail string.
+   // The new event explicitly carries the number, even before the guest's
+   // next state snapshot arrives. Derby/practice has no scored runs.
+   const runs=data.homeRunRuns??Number((data.sub||'').match(/(?:^| · )([1-4])点(?:$| · )/)?.[1]||0);
+   return ['HOME RUN','SOLO HOME RUN','2-RUN HOME RUN','3-RUN HOME RUN','GRAND SLAM'][runs]||'HOME RUN';
+  }
+  return ({'SWING & MISS':'STRIKE','SINGLE':'HIT','MISPLAY':'ERROR','WILD THROW':'ERROR'})[data.en]||data.en;
+ }
  function visionCallTone(en,kind){
   return Object.hasOwn(VISION_CALL_TONES,en)?VISION_CALL_TONES[en]:
    kind==='hit'?'hit':kind==='out'?'out':kind==='homer'?'homer':'';
@@ -2614,17 +2613,15 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      if(resultSig&&stageResultShown.has(resultSig))return;
      if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
      speakPlay(data);
-     // v221: HOME RUN now uses the same single Stadium Vision banner as other results.
-     const previousCall=$('message-en').textContent;
-     $('message-en').textContent=data.en;$('message-ja').textContent=data.ja;$('message-sub').textContent=data.sub||'';
-     if(data.en==='HOME RUN'&&game?.walkoffWin&&game.next==='finish')$('message-sub').textContent=['サヨナラ！',data.sub].filter(Boolean).join(' · ');
+     const previousCall=$('stage-message').dataset.visionLabel;
      if(game?.challenge&&data.en==='STRIKEOUT')updateChallenge(true);
      const stage=$('stage-message');
      const kind=data.kind||(/^(SINGLE|DOUBLE|TRIPLE|GROUND-RULE DOUBLE|BUNT HIT)$/.test(data.en)?'hit':
       data.en==='HOME RUN'?'homer':/OUT|DOUBLE PLAY/.test(data.en)?'out':'neutral');
      const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
-     const samePitchCall=pitchCall&&previousCall===data.en&&stage.classList.contains('pitch-call');
+     const displayEn=visionLabel(data);
+     const samePitchCall=pitchCall&&previousCall===displayEn&&stage.classList.contains('pitch-call');
      // v162: batted-ball result banners (kind hit/out that are not pitch
      // calls) get the .result-compact one-row layout from style.css, at
      // the same ~50px height as the v145 pitch-call banner instead of
@@ -2639,27 +2636,15 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      playFeedback.resultTime=game?.fastForward?0:finalOut?1500:visionTone==='homer'&&!game?.derby?1800:0;
      stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'')+(visionTone?' vision-call':'');
      stage.dataset.visionTone=visionTone;
-     stage.dataset.visionLong=String(data.en.length>12);
+     stage.dataset.visionLabel=displayEn;
+     stage.dataset.visionLong=String(displayEn.length>12);
      stage.dataset.visionImpact=String(['STRIKEOUT','DOUBLE PLAY','JUMPING CATCH','DIVING CATCH'].includes(data.en)||visionTone==='error'||visionTone==='homer');
-     // Display-only duplicate suppression, including the new vision calls.
-     // Raw event data, TTS and the history log remain untouched.
-     const jaDup=(resultCompact&&(RESULT_JA_DUP[data.en]||[]).includes(data.ja||''))||
-      (!!visionTone&&(VISION_JA_DUP[data.en]||[]).includes(data.ja||''));
-     $('message-ja').hidden=jaDup;
-     // v161: a pitch call whose Japanese detail is entirely empty (BALL /
-     // STRIKE / SWING & MISS since v146/v147) must not render the detail
-     // container at all — left rendered, its panel background and flex
-     // growth painted an empty dark band across the stage beside the head
-     // chip. Details with real text (WALK situation line, STRIKEOUT) and
-     // all non-pitch-call banners keep the detail element visible.
-     // v162: the same no-empty-band rule now covers result banners: when
-     // the ja line is suppressed as a duplicate and sub is empty, the
-     // result detail container is not rendered either.
+     $('message-en').textContent=displayEn;
+     $('message-ja').textContent=visionTone?'':data.ja;
+     $('message-sub').textContent=visionTone?'':data.sub||'';
+     $('message-ja').hidden=!!visionTone;
      const detailEl=stage.querySelector('.stage-call-detail');
-     if(detailEl){
-      detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
-      if(visionTone&&!pitchCall&&!resultCompact)detailEl.hidden=!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
-     }
+     if(detailEl)detailEl.hidden=!!visionTone;
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
@@ -2701,10 +2686,11 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    $('half-break-title').textContent=`${h.inning}回${h.half==='top'?'表':'裏'} 終了`;
    const report=buildMatchReport(g);report.highlight=h.inning;
    $('half-break-score').innerHTML=halfBreakScoreHTML(report,g.teams);
-   $('half-break-next').textContent=`${g.inning}回${g.half==='top'?'表':'裏'} · ${g.umpireMode?'審判として判定':g.defending?'あなたの守備':'あなたの攻撃'}`;
+   $('half-break-next-inning').textContent=`NEXT · ${g.inning}回${g.half==='top'?'表':'裏'}`;
+   $('half-break-next').textContent=g.umpireMode?'UMPIRE':g.defending?'DEFENSE':'ATTACK';
    const next=$('half-continue');next.disabled=!!g.mirror;
-   next.textContent=g.mirror?'相手が次へ進めるのを待っています':'次の回へ';
-   $('half-auto-note').textContent=g.autoDefense?'自動守備 ON · 次の守備回も継続':'';
+   next.textContent=g.mirror?'WAITING':'PLAY';
+   $('half-auto-note').textContent=g.autoDefense?'AUTO DEFENSE ON':'';
   }
  }
  function continueHalf(){

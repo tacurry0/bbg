@@ -1,4 +1,4 @@
-/* v222 — inning transition, Stadium Vision / broadcast scoreboard.
+/* v224 — inning transition, Stadium Vision / broadcast scoreboard.
    Scoped to this dialog so box scores, results and career tables keep their styles. */
 #half-break {
   --half-accent: #a6d9fa;
@@ -191,22 +191,32 @@
   border-left: 1px solid #a1bfce35;
 }
 #half-break .scoreline-table tbody tr:last-child > * { border-bottom: 0; }
-#half-break .half-break-card > strong {
+#half-break .half-break-kicker {
+  color: var(--half-muted);
+  font: 750 10px/1.4 system-ui, sans-serif;
+  letter-spacing: .16em;
+  margin-bottom: 5px;
+}
+#half-break .half-break-upnext {
+  border-top: 1px solid #9cb1c126;
+  margin-top: 15px;
+  padding: 13px 0 12px;
+}
+#half-break .half-break-upnext > strong {
   display: block;
   color: var(--half-accent);
-  font-size: clamp(15px, 4.25vw, 18px);
-  line-height: 1.25;
-  margin: 16px 0 11px;
-  font-weight: 800;
+  font: italic 900 clamp(22px, 6vw, 30px)/1.1 system-ui, sans-serif;
+  letter-spacing: .09em;
 }
-#half-break .half-break-card > small {
-  min-height: 0;
-  margin: -3px 0 12px;
-  color: #b7ccb7;
-  font-size: 11px;
+#half-break .half-break-upnext > small {
+  display: block;
+  color: var(--half-muted);
+  margin-top: 5px;
+  font-size: 10px;
   font-weight: 700;
+  letter-spacing: .07em;
 }
-#half-break .half-break-card > small:empty { display: none; }
+#half-break .half-break-upnext > small:empty { display: none; }
 #half-break #half-continue {
   position: relative;
   width: 100%;
@@ -214,11 +224,12 @@
   min-height: 48px;
   align-items: center;
   justify-content: center;
-  border: 1px solid #d4e9f575;
-  border-radius: 6px;
-  background: var(--half-accent);
-  color: #0b2130;
-  font-size: 16px;
+  border: 1px solid #adc7df40;
+  border-radius: 5px;
+  background: #1e293b;
+  color: #f4f8ff;
+  font-size: 17px;
+  letter-spacing: .15em;
   font-weight: 850;
   text-shadow: none;
   box-shadow: none;
@@ -259,7 +270,9 @@
   #half-break .half-break-totals b { font-size: 40px; }
   #half-break .half-break-team img { width: 37px; height: 37px; }
   #half-break .half-break-team strong { font-size: 11px; }
-  #half-break .half-break-card > strong { margin: 9px 0 7px; font-size: 14px; }
+  #half-break .half-break-upnext { margin-top: 8px; padding: 5px 0 7px; }
+  #half-break .half-break-upnext > strong { font-size: 18px; }
+  #half-break .half-break-kicker { margin-bottom: 2px; }
   #half-break #half-continue { min-height: 36px; padding-block: 6px; font-size: 14px; }
   #half-break .scoreline-table :is(th,td) { height: 27px; padding-block: 3px; }
 }

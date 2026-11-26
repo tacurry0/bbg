@@ -1,4 +1,4 @@
-/* v221 — Stadium Vision (design H), improved contrast and legibility.
+/* v224 — Stadium Vision (design H), improved contrast and legibility.
    Only play verdicts use this treatment, not announcements or review screens.
    Keep the established HUD anchor and compact one-row layout. */
 #stage-message.vision-call {
@@ -110,6 +110,13 @@
 }
 #stage-message.vision-call[data-vision-tone="homer"] #message-en {
   font-size: clamp(25px, 7.6vw, 36px);
+}
+#stage-message.vision-call[data-vision-tone="homer"][data-vision-long="true"] #message-en {
+  font-size: clamp(20px, 6.5vw, 32px);
+  letter-spacing: .035em;
+}
+#stage-message.vision-call[data-vision-tone="homer"] .stage-call {
+  text-shadow: 0 1px 3px #071019, 0 0 13px #ffdc779c;
 }
 #game.replay-active #stage-message.vision-call { visibility: hidden; }
 @media (max-height: 470px) and (orientation: landscape) {

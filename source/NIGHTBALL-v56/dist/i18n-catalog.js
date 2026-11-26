@@ -4323,3 +4323,63 @@ globalThis.NightballTerms = [
   "追加", "送球", "連勝", "連敗", "進塁", "遊撃", "選手", "野手", "野球",
   "長打", "開始", "韓国", "音源", "音量", "飛球", "件", "賞",
 ];
+
+// v224: concise live-game scoreboard and verdict labels.
+Object.assign(globalThis.NightballMessages, {
+  "INNING BREAK": [
+    "半局結束",
+    "이닝 종료"
+  ],
+  "NEXT": [
+    "下個半局",
+    "다음 이닝"
+  ],
+  "ATTACK": [
+    "進攻",
+    "공격"
+  ],
+  "DEFENSE": [
+    "防守",
+    "수비"
+  ],
+  "UMPIRE": [
+    "裁判",
+    "심판"
+  ],
+  "PLAY": [
+    "開始",
+    "시작"
+  ],
+  "WAITING": [
+    "等待對手",
+    "상대 대기 중"
+  ],
+  "AUTO DEFENSE ON": [
+    "自動防守 ON",
+    "자동 수비 ON"
+  ],
+  "HIT": [
+    "安打",
+    "안타"
+  ],
+  "ERROR": [
+    "失誤",
+    "실책"
+  ],
+  "SOLO HOME RUN": [
+    "陽春全壘打",
+    "솔로 홈런"
+  ],
+  "2-RUN HOME RUN": [
+    "兩分全壘打",
+    "투런 홈런"
+  ],
+  "3-RUN HOME RUN": [
+    "三分全壘打",
+    "스리런 홈런"
+  ],
+  "GRAND SLAM": [
+    "滿貫全壘打",
+    "만루 홈런"
+  ]
+});

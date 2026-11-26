@@ -1,4 +1,4 @@
-// v221: Verify Stadium Vision contrast, result readability, semantic colours and timing using the real
+// v224: Verify Stadium Vision contrast, result readability, semantic colours and timing using the real
 // app.js event handler, plus an optional Chromium check of the actual CSS.
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
@@ -29,8 +29,13 @@ const samples=[
  ['JUMPING CATCH','ジャンピングキャッチ','田中','out','out'],
  ['STEAL','盗塁成功','二塁へ','','hit'],
  ['HOME RUN','ホームラン！','128 m','homer','homer'],
+ ['HOME RUN','ホームラン！','129 m · 1点','homer','homer','SOLO HOME RUN',1],
+ ['HOME RUN','ホームラン！','130 m · 2点','homer','homer','2-RUN HOME RUN',2],
+ ['HOME RUN','ホームラン！','131 m · 3点','homer','homer','3-RUN HOME RUN',3],
+ ['HOME RUN','ホームラン！','132 m · 4点','homer','homer','GRAND SLAM',4],
 ];
-const makeData=([en,ja,sub,kind])=>({en,ja,sub,kind,speech:ja});
+const makeData=([en,ja,sub,kind,tone,label,runs])=>({en,ja,sub,kind,speech:ja,...(runs?{homeRunRuns:runs}:{})});
+const expectedLabel=sample=>sample[5]||({'SWING & MISS':'STRIKE','SINGLE':'HIT','MISPLAY':'ERROR','WILD THROW':'ERROR'})[sample[0]]||sample[0];
 const fake=()=>({textContent:'',className:'',dataset:{},hidden:false,innerHTML:'',
   get classList(){return {contains:c=>this.className.split(' ').includes(c)}},
   animations:[],getAnimations(){return []},animate(frames,opts){this.animations.push({frames,opts})}});
@@ -49,7 +54,9 @@ for(const sample of samples){
  call(data);
  assert(ids['stage-message'].classList.contains('vision-call'),data.en);
  assert.equal(ids['stage-message'].dataset.visionTone,sample[4],data.en+' colour');
- assert.equal(ids['message-en'].textContent,data.en);
+ assert.equal(ids['message-en'].textContent,expectedLabel(sample));
+ assert(ids['message-ja'].hidden&&detail.hidden,'single label only');
+ assert.equal(ids['message-sub'].textContent,'');
  assert.equal(JSON.stringify(data),raw,'event data stays intact');
  assert.equal(speech.at(-1),data,'voice still receives raw message');
  assert.equal(sent.at(-1).d,data,'online peer receives the same raw event');
@@ -57,12 +64,13 @@ for(const sample of samples){
 call(makeData(['SWING & MISS','空振り','','']));
 assert(ids['message-ja'].hidden&&detail.hidden,'no duplicate Japanese or empty detail on an ordinary miss');
 call(makeData(['SWING & MISS','空振り','ボールの位置とカーソルを合わせよう','']));
-assert(ids['message-ja'].hidden&&!detail.hidden,'practice advice remains visible');
+assert(ids['message-ja'].hidden&&detail.hidden,'practice miss stays one label');
 call(makeData(['FOUL','ファウル','次の1球へ。','']));
-assert(ids['message-ja'].hidden&&!detail.hidden,'no duplicate foul label; detail retained');
+assert(ids['message-ja'].hidden&&detail.hidden,'foul displays one label');
 const strikeout=makeData(['STRIKEOUT','空振り三振！','2アウト','out']);
 call(strikeout);
-assert(!ids['message-ja'].hidden&&!detail.hidden,'swinging/looking information remains');
+assert(ids['message-ja'].hidden&&detail.hidden,'strikeout displays one label');
+assert.equal(speech.at(-1).ja,'空振り三振！','speech still distinguishes swinging and looking');
 assert.equal(context.playFeedback.resultTime,1500,'strikeouts remain readable for at least 1.5s');
 const n=banner.animations.length;call(strikeout);
 assert.equal(banner.animations.length,n,'result dedup is unchanged');
@@ -74,17 +82,19 @@ assert.equal(banner.animations.length,p,'same-pitch animation suppression preser
 assert.equal(banner.animations.at(-1).opts.duration,245,'existing pitch animation duration');
 call(makeData(['PLAY BALL','試合開始','次の試合','neutral']));
 assert(!ids['stage-message'].classList.contains('vision-call'),'announcements untouched');
-call(makeData(['HOME RUN','ホームラン！','129 m','homer']));
+call(makeData(['HOME RUN','ホームラン！','141 m','homer']));
 assert(ids['stage-message'].classList.contains('vision-call'),'home run now uses Stadium Vision');
 assert.equal(ids['stage-message'].dataset.visionTone,'homer');
-assert(ids['message-ja'].hidden&&!detail.hidden,'one HOME RUN headline plus distance');
+assert(ids['message-ja'].hidden&&detail.hidden,'one HOME RUN headline without distance');
 assert.equal(context.playFeedback.resultTime,1800,'normal homer readable before continuing');
 context.game.walkoffWin=true;context.game.next='finish';
-call(makeData(['HOME RUN','ホームラン！','130 m','homer']));
-assert.equal(ids['message-sub'].textContent,'サヨナラ！ · 130 m','walk-off HR remains in the same banner');
+call({en:'HOME RUN',ja:'ホームラン！',sub:'142 m · 3点',kind:'homer',homeRunRuns:3});
+assert.equal(ids['message-en'].textContent,'3-RUN HOME RUN','walk-off HR keeps run-based title');
+assert.equal(ids['message-sub'].textContent,'');
 context.game.walkoffWin=false;context.game.next='pitch';
 context.game.derby={};
-call(makeData(['HOME RUN','ホームラン！','131 m','homer']));
+call(makeData(['HOME RUN','ホームラン！','143 m','homer']));
+assert.equal(ids['message-en'].textContent,'HOME RUN','derby home run is not labelled solo');
 assert.equal(context.playFeedback.resultTime,0,'derby pace remains unchanged');
 delete context.game.derby;
 call(makeData(['OUT','アウト','2アウト','out']));
@@ -99,7 +109,7 @@ context.tickFeedback(999);assert.equal(context.playFeedback.resultTime,1,'result
 context.tickFeedback(1);assert.equal(context.playFeedback.resultTime,0);
 context.baseCall({verdict:'safe',base:1});
 assert.equal(ids['umpire-call'].dataset.verdict,'safe');
-assert(ids['umpire-call'].innerHTML.includes('SAFE'));
+assert.equal(ids['umpire-call'].innerHTML,'<strong>SAFE</strong>');
 assert.equal(context.playFeedback.callTime,1500,'SAFE duration unchanged');
 context.game.fastForward=true;
 call(makeData(['OUT AT FIRST','一塁へ送球、アウト！','3アウト','out']));
@@ -113,12 +123,34 @@ assert(css.includes('border-block: 1px solid var(--vision-accent)')&&css.include
 assert(!handler.includes("hr.querySelector('strong').textContent='ホームラン！'"),'old duplicate homer graphic is no longer shown');
 const currentAppPin=html.match(/\.\/app\.js\?v=\d+/)?.[0];
 assert(currentAppPin&&read('sw.js').includes(currentAppPin),'app URL is consistent with the cache');
-for(const file of ['index.html','sw.js']) assert(read(file).includes('verdict-vision.css?v=221'));
-console.log('PASS: H design tones, compact labels, preserved details, readability timing, home-run style, raw online events, cache pins');
+const currentCssPin=html.match(/\.\/verdict-vision\.css\?v=\d+/)[0];
+assert(read('sw.js').includes(currentCssPin));
+// Exercise the actual engine's HR scoring and event/log metadata, not just UI fixtures.
+global.window=global;
+for(const f of ['ratings-data','players','pennant','game'])vm.runInThisContext(read(f+'.js'));
+for(const half of ['top','bottom'])for(let n=0;n<=3;n++){
+ const messages=[],g=new NightGame('match','standard',(type,data)=>{if(type==='message')messages.push(data)});
+ g.half=half;g.inning=3;g.totalInnings=3;g.bases=[0,1,2].map(i=>i<n);
+ g.baseIds=g.bases.map((on,i)=>on?g.lineups[g.side][4+i].id:null);
+ g.startField(44,36,.30,false);
+ const score=g.battingScore;
+ g.finishBall('hr');
+ const hr=messages.findLast(m=>m.en==='HOME RUN');
+ assert.equal(g.battingScore-score,n+1,'actual home-run score');
+ assert.equal(hr.homeRunRuns,n+1,'event explicitly carries the scored runs');
+ assert.equal(g.log.at(-1).homeRunRuns,n+1,'retained in game history / resume');
+ const guestEvent=JSON.parse(JSON.stringify(hr));
+ context.game.homeScore+=n+1;
+ context.online={role:'guest'};
+ call(guestEvent);
+ assert.equal(ids['message-en'].textContent,['SOLO HOME RUN','2-RUN HOME RUN','3-RUN HOME RUN','GRAND SLAM'][n],'guest renders from message before next state');
+}
+context.online={role:'host',session:{open:true,send:d=>sent.push(d)}};
+console.log('PASS: H design tones, compact labels, single-label details, readability timing, home-run style, raw online events, cache pins');
 
 if(process.argv.includes('--browser')) (async()=>{
  const {chromium}=require('playwright');
- const browser=await chromium.launch({headless:true,args:['--no-sandbox']});
+ const browser=await chromium.launch({headless:true,args:['--no-sandbox'],...(process.env.CHROMIUM_PATH?{executablePath:process.env.CHROMIUM_PATH}:{})});
  try{
   const links=[...html.matchAll(/<link rel="stylesheet" href="\.\/([^?"]+)\?[^"]+">/g)].map(m=>m[1]);
   const styles=links.map(read).join('\n');
@@ -139,6 +171,8 @@ if(process.argv.includes('--browser')) (async()=>{
     });
     assert(m.width>0&&m.width<=width&&m.left>=0&&m.right<=width,sample[0]+' fits '+width+': '+JSON.stringify(m));
     assert(m.labelWidth<=m.headWidth+1,sample[0]+' no clipping');
+    assert.equal(await page.locator('#message-en').textContent(),expectedLabel(sample));
+    assert.equal(await page.locator('.stage-call-detail').isVisible(),false);
     assert(m.height<=65&&m.bg==='rgba(0, 0, 0, 0.36)'&&m.headBg==='rgba(0, 0, 0, 0)'&&m.top==='1px'&&m.bottom==='1px'&&m.headClip==='none',sample[0]+' thin-line translucent-black design');
    }
    for(const verdict of ['out','safe']){
