@@ -1,0 +1,43 @@
+/* v207: shared compact match UI; preserve NIGHTBALL blue/white palette. */
+.modal:is([data-kind="match-teams"],[data-kind="setup"],[data-kind="park-picker"]){
+ --ui-border:#b8dce9;--ui-ink:#123f66;--ui-surface:#f7fcff;--ui-accent:#086cae;
+ color:var(--ui-ink);padding:12px 12px 14px;overscroll-behavior:contain;
+}
+.modal :is(.ui-versus,.ui-team-grid,.ui-setup-panel,.ui-disclosure,.ui-park-grid){min-width:0}
+.modal .ui-versus{display:grid;grid-template-columns:minmax(0,1fr) 32px minmax(0,1fr);align-items:center;gap:6px;margin:10px 0 14px}
+.modal .ui-versus>button{min-height:104px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#fff;border:2px solid var(--ui-border);border-radius:13px;color:var(--ui-ink)}
+.modal .ui-versus>button.selected,.modal .ui-team-grid>button.selected,.modal .ui-park-grid>button.selected{border:2px solid #0b79be;background:#e1f5ff;box-shadow:0 0 0 2px #77c5ef55}
+.modal .ui-versus .club-badge{width:52px;height:52px}
+.modal .ui-versus>b,.modal .ui-versus>span{text-align:center;font-weight:850;color:#39769c}
+.modal .ui-league-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;margin:8px 0}
+.modal .ui-team-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 0}
+.modal .ui-team-grid>button{min-width:0;min-height:83px;border:1px solid var(--ui-border);border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--ui-ink);background:white;padding:6px 4px}
+.modal .ui-team-grid .club-badge{width:42px;height:42px;flex:none}
+.modal .ui-team-grid strong{font-size:12px;line-height:1.25;text-align:center;overflow-wrap:anywhere}
+.modal .ui-setup-grid{display:grid;grid-template-columns:1fr;gap:0}
+.modal .ui-setup-grid .setup-section{margin:10px 0}
+.modal .ui-setup-panel,.modal .ui-disclosure{border:1px solid var(--ui-border);border-radius:12px;background:var(--ui-surface);padding:10px;margin:10px 0;color:var(--ui-ink)}
+.modal .ui-disclosure summary{font-size:14px;font-weight:800;padding:5px;cursor:pointer}
+.modal .ui-disclosure>.setup-section{margin:13px 0}
+.modal .ui-setup-panel .setup-section{margin:5px 0 12px}
+.modal .ui-park-selected{width:100%;display:grid;grid-template-columns:94px minmax(0,1fr) 16px;align-items:center;gap:10px;text-align:left;background:white;border:1px solid var(--ui-border);border-radius:10px;padding:7px;color:var(--ui-ink)}
+.modal .ui-park-selected span:nth-child(2){display:grid;gap:4px;min-width:0;overflow-wrap:anywhere}
+.modal .ui-park-selected small,.modal .ui-park-grid small{font-size:11px;color:#4b718b}
+.modal .ui-park-mini{width:100%;height:auto;display:block}
+.modal .ui-park-tabs{display:flex;flex-wrap:wrap;gap:4px}
+.modal .ui-park-tabs button{min-height:42px;flex:1 1 27%;white-space:normal;font-size:12px}
+.modal .ui-park-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
+.modal .ui-park-grid>button{min-width:0;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:5px;border:1px solid var(--ui-border);border-radius:12px;padding:7px;background:white;color:var(--ui-ink)}
+.modal .ui-park-grid strong{font-size:12px;overflow-wrap:anywhere}
+.modal .ui-lineup-summary{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.modal .ui-lineup-summary h3{font-size:14px;margin:0}
+.modal .ui-starting-nine{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:3px 9px;margin-top:8px}
+.modal .ui-starting-nine>div{display:grid;grid-template-columns:17px minmax(0,1fr) auto;align-items:center;gap:3px;padding:6px 2px;border-bottom:1px solid #d9eaf1;font-size:12px}
+.modal .ui-starting-nine b,.modal .ui-starting-nine small{color:#517d99;font-size:11px}
+.modal .ui-starting-nine span{overflow-wrap:anywhere}
+.modal .ui-action-dock{position:sticky;bottom:-14px;z-index:6;display:grid;grid-template-columns:1fr 1.15fr;gap:7px;padding:9px 0 max(8px,env(safe-area-inset-bottom));background:#effafff5;border-top:1px solid var(--ui-border);backdrop-filter:blur(6px)}
+.modal .ui-action-dock :is(.primary-button,.secondary-button){margin:0;min-height:46px;font-size:13px;width:100%}
+.modal:is([data-kind="match-teams"],[data-kind="setup"],[data-kind="park-picker"]) :is(button,select,summary){touch-action:manipulation}
+.modal:is([data-kind="match-teams"],[data-kind="setup"],[data-kind="park-picker"]) :is(button,select):focus-visible{outline:3px solid #e8b92c;outline-offset:2px}
+@media(min-width:560px){.modal .ui-team-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.modal .ui-park-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:350px){.modal .ui-starting-nine{grid-template-columns:1fr}.modal .ui-team-grid{gap:5px}.modal .ui-team-grid>button{min-height:76px}}
