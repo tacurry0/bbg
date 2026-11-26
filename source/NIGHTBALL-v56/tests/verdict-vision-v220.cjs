@@ -37,7 +37,7 @@ const samples=[
 const makeData=([en,ja,sub,kind,tone,label,runs])=>({en,ja,sub,kind,speech:ja,...(runs?{homeRunRuns:runs}:{})});
 const expectedLabel=sample=>sample[5]||({'SWING & MISS':'STRIKE','SINGLE':'HIT','MISPLAY':'ERROR','WILD THROW':'ERROR'})[sample[0]]||sample[0];
 const fake=()=>({textContent:'',className:'',dataset:{},hidden:false,innerHTML:'',
-  get classList(){return {contains:c=>this.className.split(' ').includes(c)}},
+  get classList(){return {contains:c=>this.className.split(' ').includes(c),remove:c=>{this.className=this.className.split(' ').filter(x=>x!==c).join(' ')}}},
   animations:[],getAnimations(){return []},animate(frames,opts){this.animations.push({frames,opts})}});
 const ids=Object.fromEntries(['message-en','message-ja','message-sub','stage-message','umpire-call','distance','timing-result','play-tools','scoring-chip'].map(id=>[id,fake()]));
 const detail=fake(),banner=fake();
@@ -74,12 +74,19 @@ assert.equal(speech.at(-1).ja,'空振り三振！','speech still distinguishes s
 assert.equal(context.playFeedback.resultTime,1500,'strikeouts remain readable for at least 1.5s');
 const n=banner.animations.length;call(strikeout);
 assert.equal(banner.animations.length,n,'result dedup is unchanged');
+const beforeStale=ids['stage-message'].className;
 context.game.phase='aim';context.hideStale();assert(!ids['stage-message'].classList.contains('show'),'stale result hidden');
+assert.equal(ids['stage-message'].className,beforeStale.replace(' show',''),'stale result retains tone and layout during fade');
 assert.equal(context.playFeedback.resultTime,0,'stale state cannot carry a hold into a new pitch');
 context.game.phase='result';
 call(makeData(['BALL','','','']));const p=banner.animations.length;call(makeData(['BALL','','','']));
 assert.equal(banner.animations.length,p,'same-pitch animation suppression preserved');
 assert.equal(banner.animations.at(-1).opts.duration,245,'existing pitch animation duration');
+const pitchClass=ids['stage-message'].className;
+context.call('clear');
+assert.equal(ids['stage-message'].className,pitchClass.replace(' show',''),'fade keeps pitch styling');
+call(makeData(['BALL','','','']));
+assert.equal(banner.animations.length,p+1,'same call on a new pitch animates again');
 call(makeData(['PLAY BALL','試合開始','次の試合','neutral']));
 assert(!ids['stage-message'].classList.contains('vision-call'),'announcements untouched');
 call(makeData(['HOME RUN','ホームラン！','141 m','homer']));
@@ -115,7 +122,8 @@ context.game.fastForward=true;
 call(makeData(['OUT AT FIRST','一塁へ送球、アウト！','3アウト','out']));
 assert.equal(context.playFeedback.resultTime,0,'fast-forward does not wait on verdicts');
 context.game.fastForward=false;
-context.call('clear');assert.equal(ids['stage-message'].className,'stage-message');
+const beforeClear=ids['stage-message'].className;
+context.call('clear');assert.equal(ids['stage-message'].className,beforeClear.replace(' show',''),'clear only removes visibility, not the current visual design');
 assert.equal(context.playFeedback.resultTime,0,'clear removes result hold');
 assert(source.includes('const hold=playFeedback.scoreTime>0||playFeedback.callTime>0||playFeedback.resultTime>0;'),'frame holds the actual result phase');
 assert.equal((source.match(/!playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime/g)||[]).length,3,'local/online replay and queued bench wait for readability');
@@ -174,6 +182,16 @@ if(process.argv.includes('--browser')) (async()=>{
     assert.equal(await page.locator('#message-en').textContent(),expectedLabel(sample));
     assert.equal(await page.locator('.stage-call-detail').isVisible(),false);
     assert(m.height<=65&&m.bg==='rgba(0, 0, 0, 0.36)'&&m.headBg==='rgba(0, 0, 0, 0)'&&m.top==='1px'&&m.bottom==='1px'&&m.headClip==='none',sample[0]+' thin-line translucent-black design');
+    const fade=await page.evaluate(()=>{
+     const stage=document.getElementById('stage-message'),call=stage.querySelector('.stage-call'),head=stage.querySelector('.stage-call-head');
+     const before=[getComputedStyle(call).backgroundColor,getComputedStyle(head).backgroundImage,getComputedStyle(head).clipPath,stage.className.replace(' show','')];
+     window.sendVerdict('clear');
+     const after=[getComputedStyle(call).backgroundColor,getComputedStyle(head).backgroundImage,getComputedStyle(head).clipPath,stage.className];
+     return {before,after,show:stage.classList.contains('show')};
+    });
+    assert.deepEqual(fade.after,fade.before,'the old banner never reappears during fade');
+    assert.equal(fade.show,false,'the banner is dismissed');
+
    }
    for(const verdict of ['out','safe']){
     await page.evaluate(verdict=>window.sendBaseCall({verdict,base:1}),verdict);

@@ -2601,10 +2601,13 @@ function start(mode,challengeId=null,fixedPark=null){
    if(!isResult)return '';
    return [game.inning,game.half,game.batter?.name||'',data.en,data.ja||'',data.sub||'',game.outs,game.homeScore,game.awayScore].join('|');
  }
+ // Keep the current tone and layout until opacity finishes fading out.
+ // Resetting every class immediately briefly repaints the legacy banner.
+ function hideStageBanner(){ $('stage-message').classList.remove('show'); }
  function hideStaleResultBanner(){
    if(!stageResultKey||!game)return;
    if(!['aim','windup','pitch','miss','field','intro'].includes(game.phase))return;
-   $('stage-message').className='stage-message';stageResultKey='';playFeedback.resultTime=0;
+   hideStageBanner();stageResultKey='';playFeedback.resultTime=0;
  }
  function onEvent(type,data){
    if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
@@ -2621,7 +2624,7 @@ function start(mode,challengeId=null,fixedPark=null){
      const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
      const displayEn=visionLabel(data);
-     const samePitchCall=pitchCall&&previousCall===displayEn&&stage.classList.contains('pitch-call');
+     const samePitchCall=pitchCall&&previousCall===displayEn&&stage.classList.contains('show')&&stage.classList.contains('pitch-call');
      // v162: batted-ball result banners (kind hit/out that are not pitch
      // calls) get the .result-compact one-row layout from style.css, at
      // the same ~50px height as the v145 pitch-call banner instead of
@@ -2654,7 +2657,7 @@ function start(mode,challengeId=null,fixedPark=null){
        {opacity:1,transform:'none'}
       ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
-   }else if(type==='clear'){stageResultKey='';playFeedback.resultTime=0;$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
+   }else if(type==='clear'){stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
