@@ -2336,19 +2336,23 @@ function start(mode,challengeId=null,fixedPark=null){
   $('hit-readout').textContent=base?(hit.distance?base+' · '+Math.round(hit.distance)+'m':base):'';
   $('play-tools').hidden=!!review.playback||!$('hit-readout').textContent;
  }
- const playFeedback={score:null,scoreTime:0,callTime:0,pendingReplay:false,umpireLast:null,umpireShownAt:0};
+ const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,umpireLast:null,umpireShownAt:0};
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
-  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.pendingReplay=false;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
+  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.resultTime=0;playFeedback.pendingReplay=false;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
  function tickPlayFeedback(dt){
   playFeedback.scoreTime=Math.max(0,playFeedback.scoreTime-dt);
+  // The base OUT/SAFE panel takes visual priority over the result banner.
+  // Only count time during which the final result can actually be read.
+  const coveredTime=Math.min(dt,playFeedback.callTime);
   playFeedback.callTime=Math.max(0,playFeedback.callTime-dt);
+  playFeedback.resultTime=Math.max(0,playFeedback.resultTime-(dt-coveredTime));
   if(!playFeedback.scoreTime)$('scoring-chip').hidden=true;
   if(!playFeedback.callTime)$('umpire-call').hidden=true;
  }
@@ -2357,7 +2361,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const sub=['','一塁','二塁','三塁','本塁'][base];
   panel.dataset.verdict=verdict;
   panel.innerHTML=`<strong>${label}</strong>`+(sub?`<small>${sub}</small>`:'');
-  panel.hidden=false;playFeedback.callTime=1500;
+  panel.hidden=false;playFeedback.callTime=verdict==='out'?1800:1500;
   if(typeof panel.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
    panel.getAnimations().forEach(animation=>animation.cancel());
    panel.animate([{opacity:0,transform:'translateY(7px) scale(.86)'},{opacity:1,transform:'translateY(0) scale(1)'}],
@@ -2582,13 +2586,13 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   'STRIKE':'strike','SWING & MISS':'strike','STRIKEOUT':'strike','BALL':'ball','WALK':'ball',
   'INTENTIONAL WALK':'ball','HIT BY PITCH':'ball','FOUL':'neutral','TAKE':'neutral',
   'MISPLAY':'error','WILD THROW':'error','WILD PITCH':'error','PASSED BALL':'error',
-  'STEAL':'hit'
+  'STEAL':'hit','HOME RUN':'homer'
  });
  const VISION_JA_DUP={'SWING & MISS':['空振り'],'FOUL':['ファウル'],'TAKE':['見送り'],
-  'INTENTIONAL WALK':['申告敬遠'],'HIT BY PITCH':['死球'],'WILD PITCH':['暴投'],'PASSED BALL':['捕逸']};
+  'INTENTIONAL WALK':['申告敬遠'],'HIT BY PITCH':['死球'],'WILD PITCH':['暴投'],'PASSED BALL':['捕逸'],'HOME RUN':['ホームラン！']};
  function visionCallTone(en,kind){
   return Object.hasOwn(VISION_CALL_TONES,en)?VISION_CALL_TONES[en]:
-   kind==='hit'?'hit':kind==='out'?'out':'';
+   kind==='hit'?'hit':kind==='out'?'out':kind==='homer'?'homer':'';
  }
  let stageResultKey='',stageResultShown=new Set();
  function resultSignature(data){
@@ -2601,7 +2605,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
  function hideStaleResultBanner(){
    if(!stageResultKey||!game)return;
    if(!['aim','windup','pitch','miss','field','intro'].includes(game.phase))return;
-   $('stage-message').className='stage-message';stageResultKey='';
+   $('stage-message').className='stage-message';stageResultKey='';playFeedback.resultTime=0;
  }
  function onEvent(type,data){
    if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
@@ -2610,9 +2614,10 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      if(resultSig&&stageResultShown.has(resultSig))return;
      if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
      speakPlay(data);
-     if(data.en==='HOME RUN'){const hr=$('hr-celebration');if(hr){hr.querySelector('strong').textContent='ホームラン！';$('hr-distance').textContent=data.sub||'';hr.hidden=false;hr.classList.remove('play');void hr.offsetWidth;hr.classList.add('play');clearTimeout(hr._hideTimer);hr._hideTimer=setTimeout(()=>{hr.hidden=true;},3000);}}
+     // v221: HOME RUN now uses the same single Stadium Vision banner as other results.
      const previousCall=$('message-en').textContent;
      $('message-en').textContent=data.en;$('message-ja').textContent=data.ja;$('message-sub').textContent=data.sub||'';
+     if(data.en==='HOME RUN'&&game?.walkoffWin&&game.next==='finish')$('message-sub').textContent=['サヨナラ！',data.sub].filter(Boolean).join(' · ');
      if(game?.challenge&&data.en==='STRIKEOUT')updateChallenge(true);
      const stage=$('stage-message');
      const kind=data.kind||(/^(SINGLE|DOUBLE|TRIPLE|GROUND-RULE DOUBLE|BUNT HIT)$/.test(data.en)?'hit':
@@ -2623,16 +2628,19 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      // v162: batted-ball result banners (kind hit/out that are not pitch
      // calls) get the .result-compact one-row layout from style.css, at
      // the same ~50px height as the v145 pitch-call banner instead of
-     // the old two-row 103px design. HOME RUN is excluded: its banner is
-     // part of the home-run celebration (with the separate full-screen
-     // #hr-celebration overlay), and walk-off / championship celebrations
-     // use their own overlays, so none of those are shrunk here.
+     // the old two-row 103px design. HOME RUN uses its own larger
+     // Stadium Vision style, not the old separate celebration overlay.
      const resultCompact=!pitchCall&&['hit','out'].includes(kind)&&data.en!=='HOME RUN';
      const visionTone=visionCallTone(data.en,kind);
+     // The engine's field result phase can end in only 620 simulated ms
+     // (even faster with auto-defence). Hold the actual result for 1.5s
+     // of readable wall-clock time, without altering pitch/ABS rules.
+     const finalOut=kind==='out'&&!['JUMPING CATCH','DIVING CATCH'].includes(data.en);
+     playFeedback.resultTime=game?.fastForward?0:finalOut?1500:visionTone==='homer'&&!game?.derby?1800:0;
      stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'')+(visionTone?' vision-call':'');
      stage.dataset.visionTone=visionTone;
      stage.dataset.visionLong=String(data.en.length>12);
-     stage.dataset.visionImpact=String(['STRIKEOUT','DOUBLE PLAY','JUMPING CATCH','DIVING CATCH'].includes(data.en)||visionTone==='error');
+     stage.dataset.visionImpact=String(['STRIKEOUT','DOUBLE PLAY','JUMPING CATCH','DIVING CATCH'].includes(data.en)||visionTone==='error'||visionTone==='homer');
      // Display-only duplicate suppression, including the new vision calls.
      // Raw event data, TTS and the history log remain untouched.
      const jaDup=(resultCompact&&(RESULT_JA_DUP[data.en]||[]).includes(data.ja||''))||
@@ -2661,7 +2669,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
        {opacity:1,transform:'none'}
       ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
-   }else if(type==='clear'){stageResultKey='';$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
+   }else if(type==='clear'){stageResultKey='';playFeedback.resultTime=0;$('stage-message').className='stage-message';$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
@@ -2671,7 +2679,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      // Contact feedback is sound/vibration only; no text over the field.
    }else if(type==='hit'){
      if(game?.onlineDerby)onlineDerbyOnHit(data);
-     if(game?.walkoffWin&&game.next==='finish')showCelebration('サヨナラ！','WALK-OFF WIN');
+     if(game?.walkoffWin&&game.next==='finish'&&data.kind!=='hr')showCelebration('サヨナラ！','WALK-OFF WIN');
      if(review.capture(game,true))playFeedback.pendingReplay=true;
      updatePlayTools();closeChallengeResult();
      $('distance').textContent=data.distance?data.distance+' m':'';
@@ -2984,7 +2992,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   const o=online,g=game;onlineDecisionTick();
   if(o.sync.lock||o.sync.disconnected)return;
   if(g.phase==='play-review'&&review.clip&&!review.playback&&$('modal').hidden){onlineStartReplay();return;}
-  if(playFeedback.pendingReplay&&g.phase==='result'&&!playFeedback.scoreTime&&!playFeedback.callTime&&$('modal').hidden&&review.clip){onlineStartReplay();return;}
+  if(playFeedback.pendingReplay&&g.phase==='result'&&!playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime&&$('modal').hidden&&review.clip){onlineStartReplay();return;}
   const r=o.sync.request;if(r&&onlineSafeMenu(g,r.kind)){o.sync.request=null;onlineAcquire('menu',r.owner,r.kind);}
  }
  function onlineSendGameInput(msg){
@@ -4380,7 +4388,7 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
    }else{
     const activeDt=document.hidden?0:dt;
     if(!game.paused)tickPlayFeedback(activeDt);
-    const hold=playFeedback.scoreTime>0||playFeedback.callTime>0;
+    const hold=playFeedback.scoreTime>0||playFeedback.callTime>0||playFeedback.resultTime>0;
     const current=game;
     try{
      if(current.mirror)current.mirrorTick(activeDt);
@@ -4395,14 +4403,14 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
     if((game.fastForward||game.spectate)&&game.phase==='change'&&$('modal').hidden)continueHalf();
     if(game.phase==='field'&&(game.isFixture||game.career||game.challenge))updateScoreCube($('scoreboard'),game);
     if(!onlineMatchActive()&&playFeedback.pendingReplay&&!game.fastForward&&!game.spectate&&!game.paused&&(game.phase==='result'||(game.mirror&&['intro','change'].includes(game.phase)))&&
-     !playFeedback.scoreTime&&!playFeedback.callTime&&$('modal').hidden){
+     !playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime&&$('modal').hidden){
      playFeedback.pendingReplay=false;launchReplay();
     }
     if(game.phase==='field'&&!game.mirror)review.capture(game);
     if(game.mirror&&!onlineMatchActive()&&(game.phase==='field'||game.phase==='result')){try{review.capture(game);if(game.phase==='result'&&game.field?.resolved&&!game.field._rf){game.field._rf=1;if(review.capture(game,true))playFeedback.pendingReplay=true;}}catch{}}
     if(game.derby)updateDerbyClock(game);
     if(game.timeAttack)updateTimeAttackClock(game);
-    if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
+    if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
     if(game.phase==='ended')queuedBench=false;
     if(game.phase==='field')renderer.adaptResolution?.(dt);
     if(game.phase!=='abs-review'&&(game.phase!=='abs-call'||absFrozenCall!==game.absCall)){

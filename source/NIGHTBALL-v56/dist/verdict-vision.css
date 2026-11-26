@@ -1,6 +1,6 @@
-/* v220 — Stadium Vision (design H).
+/* v221 — Stadium Vision (design H), improved contrast and legibility.
    Only play verdicts use this treatment, not announcements or review screens.
-   Keep the established HUD anchor, events, compact one-row layout and timing. */
+   Keep the established HUD anchor and compact one-row layout. */
 #stage-message.vision-call {
   --vision-accent: #e1eaf0;
 }
@@ -11,6 +11,7 @@
 #umpire-call[data-verdict="out"] { --vision-accent: #ff8989; }
 #stage-message.vision-call[data-vision-tone="hit"] { --vision-accent: #aeef85; }
 #stage-message.vision-call[data-vision-tone="error"] { --vision-accent: #ffc17b; }
+#stage-message.vision-call[data-vision-tone="homer"] { --vision-accent: #ffdc77; }
 
 #stage-message.vision-call .stage-call,
 #umpire-call {
@@ -21,12 +22,12 @@
   width: fit-content;
   min-width: 0;
   max-width: min(94%, 360px);
-  min-height: 42px;
+  min-height: 48px;
   padding: 0;
   border: 0;
   border-block: 1px solid var(--vision-accent);
   border-radius: 0;
-  background: transparent;
+  background: rgba(0, 0, 0, .36);
   box-shadow: none;
   text-align: center;
   filter: none;
@@ -42,7 +43,7 @@
   max-width: 100%;
   min-width: 0;
   min-height: 0;
-  padding: 5px 9px;
+  padding: 6px 12px;
   border: 0;
   background: transparent;
   clip-path: none;
@@ -50,7 +51,7 @@
 }
 #stage-message.vision-call #message-en,
 #umpire-call strong {
-  font: 900 clamp(17px, 5.4vw, 26px)/1.12 system-ui, sans-serif;
+  font: 900 clamp(20px, 6.4vw, 30px)/1.12 system-ui, sans-serif;
   letter-spacing: .06em;
   color: inherit;
   white-space: nowrap;
@@ -60,7 +61,7 @@
 }
 /* Long English calls remain compact even on narrow screens. */
 #stage-message.vision-call[data-vision-long="true"] #message-en {
-  font-size: clamp(15px, 4.6vw, 22px);
+  font-size: clamp(17px, 5.3vw, 25px);
   letter-spacing: .035em;
 }
 #stage-message.vision-call .stage-call-detail {
@@ -85,7 +86,7 @@
 #stage-message.vision-call #message-sub,
 #umpire-call small {
   color: #f2f6f8;
-  font: 750 clamp(10px, 3vw, 13px)/1.2 system-ui, sans-serif;
+  font: 750 clamp(11px, 3.3vw, 14px)/1.2 system-ui, sans-serif;
   letter-spacing: 0;
   white-space: nowrap;
   overflow: hidden;
@@ -100,11 +101,18 @@
 }
 #umpire-call[hidden] { display: none; }
 
-/* The stronger calls get a slightly brighter LED glow, not a larger panel. */
+/* Important results use the same visual system; a homer earns extra emphasis. */
 #stage-message.vision-call[data-vision-impact="true"] .stage-call {
   text-shadow: 0 1px 3px #071019, 0 0 10px color-mix(in srgb, var(--vision-accent) 64%, transparent);
 }
+#stage-message.vision-call[data-vision-tone="homer"] .stage-call {
+  min-height: 56px;
+}
+#stage-message.vision-call[data-vision-tone="homer"] #message-en {
+  font-size: clamp(25px, 7.6vw, 36px);
+}
+#game.replay-active #stage-message.vision-call { visibility: hidden; }
 @media (max-height: 470px) and (orientation: landscape) {
   #stage-message.vision-call .stage-call,
-  #umpire-call { min-height: 32px; }
+  #umpire-call { min-height: 38px; }
 }
