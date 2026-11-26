@@ -135,6 +135,8 @@ for(const [id,name,corner,center,leftCenter,rightCenter,wallHeight,turf,wall] of
 }
 NightPlayers.schoolPark=(round,variant=0,tryout=false)=>tryout?schoolParks[variant%2][0]:
  round<2?schoolParks[2+(variant+round)%2][0]:'toyama';
+NightPlayers.foulDistance=(x,y)=>Math.abs(x)+y<0?Math.hypot(x,y):Math.max(0,(Math.abs(x)-y)/Math.SQRT2);
+NightPlayers.insideFoul=(park,x,y)=>!park.custom||(NightPlayers.foulDistance(x,y)<=park.foulWidth&&(Math.abs(x)+y)/Math.SQRT2<=NightPlayers.wallDistance(park,Math.sign(x)*Math.PI/4));
 NightPlayers.roofSurface=(park,x,z)=>{
  if(!park.roofHeight)return Infinity;
  if(park.roofProfile){
@@ -150,19 +152,20 @@ NightPlayers.roofSurface=(park,x,z)=>{
 };
 for(const park of NightPlayers.parks)Object.assign(park,parkDesigns[park.id]);
 NightPlayers.fenceHeight=(park,angle=0)=>{
+ if(park.heightAnchors){const t=Math.max(0,Math.min(8,angle/(Math.PI/16)+4)),i=Math.min(7,Math.floor(t));return park.heightAnchors[i]+(park.heightAnchors[i+1]-park.heightAnchors[i])*(t-i);}
  const section=park.wallSections?.find(([from,to])=>angle>=from&&angle<=to);
  return section?.[2]??park.wallHeight??2.8;
 };
 // Monotone cubic interpolation preserves the five surveyed or configured marks.
 NightPlayers.wallDistance=(park,angle)=>{
- const quarter=Math.PI/8,position=Math.max(0,Math.min(4,angle/quarter+2));
- const index=Math.min(3,Math.floor(position)),u=position-index;
+
  const left=park.left??park.corner,right=park.right??park.corner;
- const anchors=[left,park.leftCenter??(left+park.center)/2,park.center,park.rightCenter??(right+park.center)/2,right];
+ const anchors=park.fenceAnchors||[left,park.leftCenter??(left+park.center)/2,park.center,park.rightCenter??(right+park.center)/2,right];
+ const n=anchors.length-1,quarter=(Math.PI/2)/n,position=Math.max(0,Math.min(n,angle/quarter+n/2)),index=Math.min(n-1,Math.floor(position)),u=position-index;
  const tangent=i=>{
-  if(i===2)return 0;
+  if(i===n/2)return 0;
   if(i===0)return anchors[1]-anchors[0];
-  if(i===4)return anchors[4]-anchors[3];
+  if(i===n)return anchors[n]-anchors[n-1];
   const before=anchors[i]-anchors[i-1],after=anchors[i+1]-anchors[i];
   return before*after>0?2*before*after/(before+after):0;
  };

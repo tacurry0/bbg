@@ -89,6 +89,29 @@ const assert = require('node:assert/strict');
     const tap=async(p,s)=>p.locator(s).first().tap();
     const kind=async(p,k)=>p.locator('#modal-content[data-kind="'+k+'"]').waitFor({state:'visible'});
     const fit=async(p)=>{const b=await p.evaluate(()=>{const m=document.querySelector('#modal-content'),body=m.querySelector('.pf-body'),f=m.querySelector('.pf-footer'),r=f.getBoundingClientRect();return {width:body.scrollWidth<=body.clientWidth+1,footer:r.top>=0&&r.bottom<=innerHeight+1,modal:m.scrollHeight<=m.clientHeight+1};});assert(b.width&&b.footer&&b.modal,JSON.stringify(b));};
+    // Create a custom park through the responsive editor, before connecting.
+    await tap(host,'[data-mode="match"]');await kind(host,'setup');
+    await tap(host,'[data-action="ui-park-open"]');await kind(host,'park-picker');
+    await tap(host,'[data-action="stadium-editor"]');await kind(host,'stadium-editor');
+    await host.locator('#stadium-name').fill('Custom Online 219');
+    await host.locator('input[type=number][data-stadium-field="leftGap"]').fill('148');
+    await host.locator('input[type=number][data-stadium-field="height1"]').fill('7');
+    for(const [w,h] of [[320,568],[390,844],[412,915]]){
+      await host.setViewportSize({width:w,height:h});
+      const layout=await host.evaluate(()=>{const p=document.querySelector('#stadium-preview3d'),b=document.querySelector('#stadium-fields'),f=document.querySelector('.stadium-editor-footer'),r=p.getBoundingClientRect();return {pinned:r.bottom<=b.getBoundingClientRect().top,footer:f.getBoundingClientRect().bottom<=innerHeight+1,width:b.scrollWidth<=b.clientWidth+1,canvas:p.width>0&&p.height>0&&!p.hidden};});
+      assert(Object.values(layout).every(Boolean),JSON.stringify({w,h,layout}));
+    }
+    await tap(host,'[data-stadium-section="ground"]');await host.locator('[data-stadium-field="surface"]').selectOption('artificial');
+    await host.locator('[data-stadium-field="mow"]').selectOption('checker');
+    await tap(host,'[data-stadium-section="environment"]');await host.locator('[data-stadium-field="weather"]').selectOption('clear');
+    await host.locator('[data-stadium-field="windMode"]').selectOption('fixed');
+    await host.locator('input[type=number][data-stadium-field="windSpeed"]').fill('5');
+    await host.locator('input[type=number][data-stadium-field="windDirection"]').fill('90');
+    await tap(host,'[data-action="stadium-save"]');
+    const custom=await host.evaluate(()=>NightStadium.loadSpecs().find(x=>x.name==='Custom Online 219'));
+    assert(custom&&custom.leftGap===148&&custom.height1===7&&custom.surface==='artificial'&&custom.windDirection===90);
+    assert.equal(await guest.evaluate(id=>NightPlayers.parks.some(p=>p.id===id),custom.id),false);
+    await tap(host,'[data-action="stadium-back"]');await kind(host,'setup');await tap(host,'.pf-header [data-action="close"]');
     await tap(host,'[data-mode="online"]');await tap(host,'[data-action="online-host"]');
     const code=(await host.locator('.online-code').innerText()).trim();
     await host.waitForFunction(()=>document.querySelector('.pf-online-status')?.textContent.includes('接続を待って'));
@@ -99,7 +122,7 @@ const assert = require('node:assert/strict');
     await tap(host,'[data-online-club="'+hostClub+'"]');await kind(host,'online');
     await tap(host,'[data-online-side="away"]');await tap(host,'[data-online-innings="9"]');
     await tap(host,'[data-action="online-park-open"]');await kind(host,'online-park');
-    await tap(host,'[data-online-park-group="npb"]');
+    await tap(host,'[data-online-park-group="custom"]');
     const park=await host.locator('[data-online-park]').first().getAttribute('data-online-park');
     await tap(host,'[data-online-park="'+park+'"]');
     await tap(host,'[data-action="online-options-open"]');await kind(host,'online-options');
@@ -144,7 +167,7 @@ const assert = require('node:assert/strict');
     await host.waitForFunction(()=>!document.querySelector('[data-action="online-start"]').disabled);
     await tap(host,'[data-action="online-start"]');
     const wire=await host.evaluate(()=>window.__bcLog.find(x=>x.t==='start'));
-    assert.equal(wire.home,hostClub);assert.equal(wire.away,hostClub);assert.equal(wire.hostHome,false);assert.equal(wire.park,park);assert.equal(wire.innings,9);assert.equal(wire.rules.metalBat,true);
+    assert.equal(wire.home,hostClub);assert.equal(wire.away,hostClub);assert.equal(wire.hostHome,false);assert.equal(wire.park,park);assert.equal(park,custom.id);assert.equal(wire.parkSpec.leftGap,148);assert.equal(wire.parkSpec.height1,7);assert.equal(wire.parkSpec.surface,'artificial');assert.equal(wire.innings,9);assert.equal(wire.rules.metalBat,true);
     for(const [idx,entry] of [[0,wire.hostLineup],[1,wire.guestLineup]]){
       assert.deepEqual(entry.order,edited[idx].order);assert.deepEqual(entry.fielding,edited[idx].fielding);assert.equal(entry.pitcher,edited[idx].pitcher);
     }
@@ -210,6 +233,8 @@ const assert = require('node:assert/strict');
     assert(await guest.evaluate(()=>window.__game.paused));
     await click(guest,'#replay-skip');
     for(const p of [host,guest])await gameWait(p,()=>!window.__game.paused&&document.querySelector('#modal').hidden);
+    for(const p of [host,guest]){const spec=await p.evaluate(()=>window.__game.park.customSpec);const {id,...expected}=custom;assert.deepEqual(spec,expected);}
+    assert.equal(await guest.evaluate(id=>NightPlayers.parks.some(p=>p.id===id),custom.id),false,'guest uses a transient park');
     assert.deepEqual(errors,[]);
     console.log('PASS: online pregame layout, same-club sides, both lineups, form, pitchers, readiness, rules, synchronized pause/bench/replay and delayed ABS');
   }finally{await browser.close();server.close();}

@@ -1,0 +1,20 @@
+.modal[data-kind=stadium-editor]{width:min(780px,100%);max-width:780px;max-height:min(94dvh,920px);padding:0;overflow:hidden;display:flex;flex-direction:column}
+.stadium-editor-shell{display:flex;flex-direction:column;min-height:0;max-height:min(94dvh,920px);padding:14px;gap:9px}
+.stadium-editor-shell .modal-top{margin:0}.stadium-name-row{display:flex;gap:8px;align-items:center}.stadium-name-row input{flex:1;min-width:0}
+.stadium-preview3d{position:relative;flex-shrink:0;overflow:hidden;border-radius:12px;min-height:116px;background:#122636;border:1px solid #61738555;height:clamp(134px,29dvh,270px)}
+.stadium-preview3d canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}.stadium-preview3d canvas:active{cursor:grabbing}
+.stadium-preview-hint{position:absolute;bottom:6px;left:8px;font-size:10px;color:#e5ecf1;background:#091421bb;padding:3px 7px;border-radius:6px;pointer-events:none}
+.stadium-camera-reset{position:absolute;top:7px;right:7px;background:#152836e8!important;color:#eaedf0!important}
+.stadium-editor-tabs{display:flex;gap:5px;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+.stadium-editor-tabs button{border:1px solid #60708255;background:transparent;color:inherit;border-radius:8px;white-space:nowrap;padding:9px 11px;font-size:12px;font-weight:700}
+.stadium-editor-tabs button.active{color:#071821;background:#b6dbeb;border-color:#b6dbeb}
+.stadium-fields-scroll{min-height:80px;overflow:auto;overscroll-behavior:contain;flex:1;padding:0 1px 8px}
+.stadium-section-head{display:flex;align-items:center;gap:8px;margin:0 0 8px}.stadium-section-head p{margin:0;flex:1;font-size:11px}.stadium-section-head button{flex-shrink:0}
+.stadium-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.stadium-field{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid #61738544;border-radius:9px;min-width:0}
+.stadium-field>span{font-size:12px;font-weight:700}.stadium-field small{font-size:10px;font-weight:400;opacity:.65}.stadium-field .field-select{width:100%;min-width:0;padding:7px}
+.stadium-number{display:flex;align-items:center;gap:7px;min-width:0}.stadium-number input[type=range]{flex:1;min-width:30px;accent-color:#84b9cf}.stadium-number input[type=number]{flex:0 0 67px;width:67px;font-variant-numeric:tabular-nums}.stadium-number span{font-size:11px;min-width:10px}
+.stadium-field input[type=color]{height:32px;width:100%;border:0;background:transparent;padding:0;border-radius:5px}.stadium-color-value{font-size:11px!important;opacity:.7;font-weight:400!important}
+.stadium-editor-footer{flex-shrink:0;display:flex;gap:8px}.stadium-editor-footer button{flex:1;margin:0!important;min-width:0}
+.stadium-template{display:flex;flex-direction:column;gap:8px}.stadium-saved-row{flex-wrap:wrap}.stadium-saved-row .stadium-list-actions{flex-wrap:wrap}
+@media(max-width:480px){.stadium-editor-shell{padding:10px;gap:7px}.stadium-fields{grid-template-columns:1fr}.stadium-field{padding:8px}.stadium-preview3d{height:clamp(116px,25dvh,210px)}.stadium-editor-tabs button{padding:8px 9px}.stadium-section-head{align-items:flex-start}}

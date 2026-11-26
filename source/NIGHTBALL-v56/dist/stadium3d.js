@@ -1,3 +1,4 @@
+import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=219';
 import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=71';
@@ -115,7 +116,7 @@ export class StadiumRenderer {
   this.sky.renderOrder=-100;
  }
  makeGround(){
-  const grass=new T.MeshStandardMaterial({map:this.noiseTexture('grass'),roughness:.88});const ground=this.mesh(new T.PlaneGeometry(420,420),grass);ground.rotation.x=-Math.PI/2;ground.position.z=55;ground.receiveShadow=true;
+  const grass=new T.MeshStandardMaterial({map:this.noiseTexture('grass'),roughness:.88});const ground=this.ground=this.mesh(new T.PlaneGeometry(420,420),grass);ground.rotation.x=-Math.PI/2;ground.position.z=55;ground.receiveShadow=true;
   if(this.gl.isSoftwareRenderer){
    this.mowing=new T.MeshBasicMaterial({color:0x152a17,opacity:.20,transparent:true,depthWrite:false,side:T.DoubleSide});
    for(let x=-205;x<205;x+=19)this.flatShape([[x-26,-154],[x-18,-154],[x+44,264],[x+36,264]],this.mowing,.005);
@@ -203,10 +204,10 @@ export class StadiumRenderer {
   this.setPark(NightPlayers.parks[0]);
  }
  setPark(park,selection='auto'){
-  const mode=gameLightingMode(selection);
+  const mode=gameLightingMode(park.customSpec?.daylight&&park.customSpec.daylight!=='auto'?park.customSpec.daylight:selection);
   // A custom park keeps its id when edited, so the fence signature must
   // join the cache key or an edited park would keep its old 3D wall.
-  const parkSig=[park.left,park.leftCenter,park.center,park.rightCenter,park.right,park.wallHeight].join('/');
+  const parkSig=park.customSpec?JSON.stringify(park.customSpec):[park.left,park.leftCenter,park.center,park.rightCenter,park.right,park.wallHeight].join('/');
   if(this.parkKey===park.id&&this.parkSig===parkSig){
    if(this.lightingMode!==mode)applyParkLighting(this,park,mode);
    return;
@@ -226,6 +227,8 @@ export class StadiumRenderer {
   this.decoratePark(park);this.prepareSupporters();for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[];
   const trackWidth=park.trackWidth??4.15;
+  const colorKey=park.id;
+  if(park.custom)for(const k of ['wall','padSeam','rail','warningTrack','warningEdge']){const m=this.materials.get(colorKey+k);if(m){m.dispose();this.materials.delete(colorKey+k);}}
   const quad=(out,a,b,c,d)=>out.push(...a,...b,...c,...c,...b,...d);
   for(const [i,sign] of [-1,1].entries()){
    const line=this.foulLines[i],length=NightPlayers.wallDistance(park,sign*Math.PI/4)-.25;
@@ -249,17 +252,17 @@ export class StadiumRenderer {
     [b.x*edgeB,.024,b.z*edgeB],[b.x*innerB,.024,b.z*innerB]);
   }
   const make=(positions,mat)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.computeVertexNormals();mat.side=T.DoubleSide;const mesh=this.mesh(geo,mat,this.wallGroup);mesh.receiveShadow=true;};
-  const pads=this.mat(park.id+'wall',park.wall,.66);
+  const pads=this.mat(colorKey+'wall',park.wall,.66);
   make(wall,pads);
   const tokyo=park.id==='tokyo-dome';
   const tianmu=park.id==='brick',taipei=park.id==='taipei-dome';
-  make(seams,this.mat(park.id+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(park.id+'rail',park.rail,.48,.18));
+  make(seams,this.mat(colorKey+'padSeam',new T.Color(park.wall).multiplyScalar(.62).getHex(),.92));make(rail,this.mat(colorKey+'rail',park.rail,.48,.18));
   const trackColor=park.track??(tokyo?0x3c6247:tianmu?0x9c534c:taipei?0xc67543:0xa77959);
   const edgeColor=park.track?new T.Color(trackColor).multiplyScalar(1.21).getHex():tokyo?0x65825e:tianmu?0xa75951:0xcba684;
-  make(track,this.mat(park.id+'warningTrack',trackColor,.96));
-  make(trackEdge,this.mat(park.id+'warningEdge',edgeColor,.92));
+  make(track,this.mat(colorKey+'warningTrack',trackColor,.96));
+  make(trackEdge,this.mat(colorKey+'warningEdge',edgeColor,.92));
   for(const [i,point] of pts.entries()){
-   if(i%(FENCE_SEGMENTS/4)===0){
+   if(i%(FENCE_SEGMENTS/(park.custom?8:4))===0){
     const panel=this.distancePanel(Math.round(point.r),park.id+'-'+i,!park.alleysVerified&&i%(FENCE_SEGMENTS/2)!==0);
     panel.position.set(point.x*.992,point.h*.56,point.z*.992);
     const prev=pts[Math.max(0,i-1)],next=pts[Math.min(FENCE_SEGMENTS,i+1)];
@@ -274,7 +277,7 @@ export class StadiumRenderer {
    const wing=this.box(this.wallGroup,[.46,10.5,.04],[point.x-sign*.24,9.0,point.z+sign*.24],screenMat);
    wing.rotation.y=sign*Math.PI/4;
   }
-  if(!park.pro&&!VENUE_VISION_PARKS.has(park.id))buildPremiumPark(this,park);
+  if(!park.custom&&!park.pro&&!VENUE_VISION_PARKS.has(park.id))buildPremiumPark(this,park);
   applyParkLighting(this,park,mode);
   if (park.id === 'tokyo-dome') showTokyoDome(this);
  }
@@ -373,6 +376,17 @@ export class StadiumRenderer {
   this.scene.userData.venueClay=park.clay!==undefined;
   if(this.mowing)this.mowing.opacity=park.school ? .20 : .14*(park.mowing?.[1]??1);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
+  this.ground.visible=!park.custom;
+  if(park.custom){
+   for(const m of [...this.infieldSkin,...this.tokyoCutouts])m.visible=false;
+   if(this.mowing)this.mowing.opacity=0;
+   for(const light of this.lights)light.visible=false;
+   buildCustomPark(this.parkDecor,park);
+   const board=boardPlacement(park);this.board.position.set(...board.pos);this.board.rotation.y=board.angle;this.board.scale.set(board.width/30,board.height/14,1);
+   this.customBoardStyle=park.customSpec.boardStyle;this.boardKey=null;this.canvas.dataset.parkModel='custom';
+   return;
+  }
+  this.customBoardStyle=null;this.board.rotation.y=0;
   if(customVenue){
    for(const light of this.lights)light.visible=!indoors;
    if(park.pro)decorateProStadium(this,park);
@@ -521,10 +535,10 @@ export class StadiumRenderer {
   const c=this.boardCanvas.getContext('2d'),w=1024;
   const label=value=>globalThis.NightI18n?.text(value)??value;
   const bg=c.createLinearGradient(0,0,0,448);
-  bg.addColorStop(0,'#071320');bg.addColorStop(1,'#040b14');
+  bg.addColorStop(0,this.customBoardStyle==='classic'?'#4d4637':'#071320');bg.addColorStop(1,this.customBoardStyle==='classic'?'#28291f':'#040b14');
   c.fillStyle=bg;c.fillRect(0,0,w,448);
   const hdr=c.createLinearGradient(0,0,w,0);
-  hdr.addColorStop(0,'#132f44');hdr.addColorStop(.5,'#1d4460');hdr.addColorStop(1,'#122b3e');
+  hdr.addColorStop(0,this.customBoardStyle==='classic'?'#6b654d':'#132f44');hdr.addColorStop(.5,this.customBoardStyle==='classic'?'#807354':'#1d4460');hdr.addColorStop(1,this.customBoardStyle==='classic'?'#61513c':'#122b3e');
   c.fillStyle=hdr;c.fillRect(0,0,w,70);
   c.fillStyle='#53b8f2';c.fillRect(0,68,w,3);
   c.fillStyle='#f3fbff';c.font='italic 900 46px Arial';c.textAlign='left';c.fillText('NIGHTBALL',42,50);

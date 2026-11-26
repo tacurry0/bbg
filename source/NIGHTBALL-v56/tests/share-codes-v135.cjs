@@ -138,8 +138,8 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  // editor clamp on import: out-of-range dimensions cannot sneak in.
  const tampered='NB1.PARK.'+b64url({v:1,kind:'park',data:{...parkSpec,center:999,wallHeight:99}});
  const t=NightShare.importCode(tampered,store);
- assert.equal(t.ok,true);assert.equal(t.item.center,160,'out-of-range centre clamps to the editor ceiling');
- assert.equal(t.item.wallHeight,12,'out-of-range wall height clamps too');
+ assert.equal(t.ok,true);assert.equal(t.item.center,200,'out-of-range centre clamps to the editor ceiling');
+ assert.equal(t.item.wallHeight,25,'out-of-range wall height clamps too');
  NightStadium.remove(t.item.id,store);
 }
 
@@ -151,10 +151,10 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  assert(app.includes("case'stadium-share'")&&app.includes("case'stadium-share-import'"),'stadium editor wires share export/import');
  assert(app.includes("case'league-share-export'")&&app.includes("case'league-share-import'"),'league editor wires share export/import');
  assert(app.includes('id="share-park-code"')&&app.includes('id="share-league-code"'),'both editors render a share-code field');
- assert(index.includes('./share-codes.js?v=1'),'index loads share-codes');
- assert(sw.includes('./share-codes.js?v=1'),'SW precaches share-codes');
- assert(index.includes('./game.js?v=193')&&index.includes('./app.js?v=193'),'index pins move to v135');
- assert(sw.includes('nightball-v193-derby-bracket'),'SW cache renamed for v135');
- assert(sw.includes('./game.js?v=193')&&sw.includes('./app.js?v=193'),'SW precaches the v135 scripts');
+ assert(index.includes('./share-codes.js?v=219'),'index loads share-codes');
+ assert(sw.includes('./share-codes.js?v=219'),'SW precaches share-codes');
+ assert(index.includes('./game.js?v=219')&&index.includes('./app.js?v=219'),'index pins match release');
+ assert(sw.includes('nightball-v219-stadium-editor'),'SW cache renamed for v135');
+ assert(sw.includes('./game.js?v=219')&&sw.includes('./app.js?v=219'),'SW precaches the v135 scripts');
 }
 console.log('share-codes-v135: all assertions passed');

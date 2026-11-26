@@ -46,6 +46,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: node tests/stadium-editor-v219.cjs
+      - run: node tests/stadium-v107.cjs
+      - run: node tests/share-codes-v135.cjs
       - run: node tests/online-sync-v218.cjs
       - run: npm install --no-save --no-package-lock playwright@1.56.1
       - run: npx playwright install chromium

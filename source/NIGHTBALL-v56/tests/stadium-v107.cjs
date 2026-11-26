@@ -38,16 +38,15 @@ const near=(a,b)=>Math.abs(a-b)<1e-6;
 
 // ---------- (d) clamping at save time ----------
 {
- assert.deepEqual(NightStadium.clampSpec({left:10,leftCenter:500,center:999,rightCenter:0,right:-3,wallHeight:0}),
-  {left:80,leftCenter:145,center:160,rightCenter:85,right:80,wallHeight:1,name:'マイスタジアム'},'values below/above the editor ranges clamp to the range ends');
- assert.deepEqual(NightStadium.clampSpec({left:200,leftCenter:10,center:50,rightCenter:999,right:131,wallHeight:99}),
-  {left:130,leftCenter:85,center:95,rightCenter:145,right:130,wallHeight:12,name:'マイスタジアム'},'the opposite ends clamp too');
+ const fields=['left','leftCenter','center','rightCenter','right','wallHeight'];
+ assert.deepEqual(fields.map(k=>NightStadium.clampSpec({left:10,leftCenter:500,center:999,rightCenter:0,right:-3,wallHeight:0})[k]),[55,180,200,60,55,.5]);
+ assert.deepEqual(fields.map(k=>NightStadium.clampSpec({left:200,leftCenter:10,center:50,rightCenter:999,right:131,wallHeight:99})[k]),[160,60,70,180,131,25]);
  const store=memStorage();
  const saved=NightStadium.upsert({name:'<b>悪意</b>',left:1,leftCenter:1,center:1,rightCenter:1,right:1,wallHeight:100},store);
- assert.equal(saved.left,80);assert.equal(saved.center,95);assert.equal(saved.wallHeight,12);
+ assert.equal(saved.left,55);assert.equal(saved.center,70);assert.equal(saved.wallHeight,25);
  assert(!saved.name.includes('<'),'park name is stripped of markup characters');
  const persisted=NightStadium.loadSpecs(store);
- assert.equal(persisted.length,1);assert.equal(persisted[0].center,95,'the clamped spec is what reaches storage');
+ assert.equal(persisted.length,1);assert.equal(persisted[0].center,70,'the clamped spec is what reaches storage');
  assert(NightPlayers.parks.some(p=>p.id===saved.id),'saved park is registered in NightPlayers.parks');
  NightStadium.remove(saved.id,store);
  assert(!NightPlayers.parks.some(p=>p.id===saved.id),'deleted park leaves NightPlayers.parks');
@@ -81,10 +80,10 @@ function drive(parkId){
 // ---------- (e) extreme parks drive seeded plays without exceptions ----------
 {
  const store=memStorage();
- const tiny=NightStadium.upsert({name:'最小',left:80,leftCenter:80,center:80,rightCenter:80,right:80,wallHeight:1},store);
- const huge=NightStadium.upsert({name:'最大',left:150,leftCenter:150,center:150,rightCenter:150,right:150,wallHeight:12},store);
- assert.equal(tiny.center,95,'an 80 m centre request clamps to the 95 m floor');
- assert.equal(huge.left,130,'a 150 m foul-pole request clamps to the 130 m ceiling');
+ const tiny=NightStadium.upsert({name:'最小',left:80,leftCenter:80,center:50,rightCenter:80,right:80,wallHeight:1},store);
+ const huge=NightStadium.upsert({name:'最大',left:250,leftCenter:250,center:250,rightCenter:250,right:250,wallHeight:12},store);
+ assert.equal(tiny.center,70,'a 50 m centre request clamps to the 70 m floor');
+ assert.equal(huge.left,160,'a 250 m foul-pole request clamps to the 160 m ceiling');
  for(const [i,park] of [tiny,huge].entries()){
   const restore=seeded(700+i);
   const g=new NightGame('match','standard',()=>{},{userHome:true,manualRunning:false,park:park.id});

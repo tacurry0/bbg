@@ -6,7 +6,7 @@ const src=readFileSync(resolve(__dirname,'../dist/app.js'),'utf8');
 const cut=(a,b)=>src.slice(src.indexOf(a),src.indexOf(b,src.indexOf(a)));
 // Execute the production protocol with independent clocks, deferred messages,
 // and mocked presentation only. No network, sleeps or device-clock alignment.
-const protocol=cut(' const ONLINE_SYNC_VERSION=218',' function onlineCleanup()')+
+const protocol=cut(' const ONLINE_SYNC_VERSION=219',' function onlineCleanup()')+
  cut(' function onlineHostData(m)',' // v182: online matches');
 function peer(role){
  let time=0;

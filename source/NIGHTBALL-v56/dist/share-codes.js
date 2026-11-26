@@ -74,6 +74,7 @@ function decode(code){
 // The payload for one stored creation: only the editor-owned fields,
 // never the local id (an import must mint its own).
 function parkData(spec){
+ if(typeof NightStadium!=='undefined')return NightStadium.clampSpec(spec);
  const out={name:String(spec.name??'')};
  for(const field of PARK_FIELDS)out[field]=spec[field];
  return out;
