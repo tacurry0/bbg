@@ -10,6 +10,7 @@ on:
       - 'source/NIGHTBALL-v56/tests/kbo-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/career-world-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/abs-browser.mjs'
+      - 'source/NIGHTBALL-v56/tests/verdict-vision-v220.cjs'
       - '.github/workflows/smoke-premium-browser.yml'
   workflow_dispatch:
 
@@ -30,6 +31,9 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install chromium
+      - name: Verify Stadium Vision verdict layout
+        working-directory: source/NIGHTBALL-v56
+        run: node tests/verdict-vision-v220.cjs --browser
       - name: Verify home player directory
         working-directory: source/NIGHTBALL-v56
         run: node tests/player-directory-v201.cjs

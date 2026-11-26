@@ -143,7 +143,7 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  NightStadium.remove(t.item.id,store);
 }
 
-// ---------- app wiring + v135 pins ----------
+// ---------- app wiring + current release pins ----------
 {
  const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
  const index=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
@@ -153,8 +153,11 @@ const leagueDef={name:'共有リーグ',clubIds:CPBL4,gamesPerOpponent:3,dh:fals
  assert(app.includes('id="share-park-code"')&&app.includes('id="share-league-code"'),'both editors render a share-code field');
  assert(index.includes('./share-codes.js?v=219'),'index loads share-codes');
  assert(sw.includes('./share-codes.js?v=219'),'SW precaches share-codes');
- assert(index.includes('./game.js?v=219')&&index.includes('./app.js?v=219'),'index pins match release');
- assert(sw.includes('nightball-v219-stadium-editor'),'SW cache renamed for v135');
- assert(sw.includes('./game.js?v=219')&&sw.includes('./app.js?v=219'),'SW precaches the v135 scripts');
+ const version=fs.readFileSync(__dirname+'/../VERSION','utf8').trim();
+ assert(sw.includes('nightball-v'+version+'-'),'SW cache tracks the current release');
+ for(const name of ['game.js','app.js']){
+  const pin=index.split('"').find(value=>value.startsWith('./'+name+'?v='));
+  assert(pin&&sw.includes(pin),'SW precaches the same '+name+' URL as index');
+ }
 }
 console.log('share-codes-v135: all assertions passed');

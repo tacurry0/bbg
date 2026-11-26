@@ -2576,6 +2576,20 @@ function start(mode,challengeId=null,fixedPark=null){
 // 一塁へ送球、アウト！ is a pure restatement of OUT AT FIRST so it IS
 // listed) stay visible as the banner's single detail line.
 const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DOUBLE':['ツーベース'],'TRIPLE':['スリーベース'],'GROUND-RULE DOUBLE':['エンタイトルツーベース'],'BUNT HIT':['バントヒット'],'DOUBLE PLAY':['ダブルプレー'],'FORCE OUT':['二塁フォースアウト'],'SACRIFICE BUNT':['送りバント'],'OUT AT FIRST':['一塁へ送球、アウト！'],'OUT':['アウト'],'JUMPING CATCH':['ジャンピングキャッチ'],'DIVING CATCH':['ダイビングキャッチ']};
+ // v220: semantic colours for the Stadium Vision verdict display (H).
+ // Use raw event labels; the locale layer may translate the rendered text.
+ const VISION_CALL_TONES=Object.freeze({
+  'STRIKE':'strike','SWING & MISS':'strike','STRIKEOUT':'strike','BALL':'ball','WALK':'ball',
+  'INTENTIONAL WALK':'ball','HIT BY PITCH':'ball','FOUL':'neutral','TAKE':'neutral',
+  'MISPLAY':'error','WILD THROW':'error','WILD PITCH':'error','PASSED BALL':'error',
+  'STEAL':'hit'
+ });
+ const VISION_JA_DUP={'SWING & MISS':['空振り'],'FOUL':['ファウル'],'TAKE':['見送り'],
+  'INTENTIONAL WALK':['申告敬遠'],'HIT BY PITCH':['死球'],'WILD PITCH':['暴投'],'PASSED BALL':['捕逸']};
+ function visionCallTone(en,kind){
+  return Object.hasOwn(VISION_CALL_TONES,en)?VISION_CALL_TONES[en]:
+   kind==='hit'?'hit':kind==='out'?'out':'';
+ }
  let stageResultKey='',stageResultShown=new Set();
  function resultSignature(data){
    if(!game||!data?.en||RESULT_NON_RESULTS.includes(data.en))return '';
@@ -2614,11 +2628,15 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      // #hr-celebration overlay), and walk-off / championship celebrations
      // use their own overlays, so none of those are shrunk here.
      const resultCompact=!pitchCall&&['hit','out'].includes(kind)&&data.en!=='HOME RUN';
-     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'');
-     // v162: hide a Japanese line that only restates the English head
-     // (RESULT_JA_DUP). Display only — data.ja, TTS and the history log
-     // are untouched (speakPlay already ran on the raw data above).
-     const jaDup=resultCompact&&(RESULT_JA_DUP[data.en]||[]).includes(data.ja||'');
+     const visionTone=visionCallTone(data.en,kind);
+     stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'')+(visionTone?' vision-call':'');
+     stage.dataset.visionTone=visionTone;
+     stage.dataset.visionLong=String(data.en.length>12);
+     stage.dataset.visionImpact=String(['STRIKEOUT','DOUBLE PLAY','JUMPING CATCH','DIVING CATCH'].includes(data.en)||visionTone==='error');
+     // Display-only duplicate suppression, including the new vision calls.
+     // Raw event data, TTS and the history log remain untouched.
+     const jaDup=(resultCompact&&(RESULT_JA_DUP[data.en]||[]).includes(data.ja||''))||
+      (!!visionTone&&(VISION_JA_DUP[data.en]||[]).includes(data.ja||''));
      $('message-ja').hidden=jaDup;
      // v161: a pitch call whose Japanese detail is entirely empty (BALL /
      // STRIKE / SWING & MISS since v146/v147) must not render the detail
@@ -2630,13 +2648,16 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
      // the ja line is suppressed as a duplicate and sub is empty, the
      // result detail container is not rendered either.
      const detailEl=stage.querySelector('.stage-call-detail');
-     if(detailEl)detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
+     if(detailEl){
+      detailEl.hidden=(!!pitchCall||resultCompact)&&!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
+      if(visionTone&&!pitchCall&&!resultCompact)detailEl.hidden=!(jaDup?'':String(data.ja||'').trim())&&!String(data.sub||'').trim();
+     }
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
       const impact=['out','hit','homer'].includes(kind);
       banner.animate([
-       {opacity:0,transform:impact?'translateX(-14px) scale(.94)':'translateY(8px)'},
+       {opacity:0,transform:visionTone?(impact?'scale(.94)':'translateY(4px)'):(impact?'translateX(-14px) scale(.94)':'translateY(8px)')},
        {opacity:1,transform:'none'}
       ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
