@@ -39,6 +39,8 @@ U.apply(clubs,{});assert.deepEqual(U.kit(bro,'home'),factory);
   const p=r.makePlayer(role,'home',18);decorateChibiPlayer(r,p);r.stylePlayer(p,'home',18,bro);
   const cap=['pitcher','fielder'].includes(role);
   assert(p.head.getObjectByName(cap?'cloth-cap':'batting-helmet'));
+  assert.equal(p.head.children.filter(m=>m.material===r.materials.get('hair')&&m.isMesh).length,0,'no detached rear hair patches');
+  assert(!r.materials.has('hair'),'rear hair material is not allocated');
   assert.equal(!!p.head.getObjectByName('helmet-ear-cover'),['batter','runner'].includes(role));
   assert.equal(p.capMat.clearcoat,cap?0:.72);
   assert.equal(p.torsoMat.map.image.width,512);

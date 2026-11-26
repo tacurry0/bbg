@@ -664,7 +664,6 @@ export class StadiumRenderer {
   const elbowGuard=role==='batter'?this.ellipsoid(body,[.076,.092,.076],[-.32,.76,.05],capMat,true):null;
   for(const sign of [-1,1]){
    brows.push(this.ellipsoid(head,[.048,.021,.057],[sign*.145,.104,.374],this.mat('brow',0x463229)));
-   this.ellipsoid(head,[.065,.081,.024],[sign*.21,-.127,-.31],this.mat('hair',0x322928));
   }
   const mittScale=role==='catcher'?1.4:1.18;
   const glove=new T.Group();hands[0].add(glove);this.ellipsoid(glove,[mittScale,1.35,.79],[0,0,.1],this.mat('glove',0x965d38,.74),true);
