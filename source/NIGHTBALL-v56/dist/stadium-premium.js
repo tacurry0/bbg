@@ -216,46 +216,22 @@ export function buildPremiumPark(renderer,park){
 /** Detail additions that preserve the large-head, tiny-body chibi proportions. */
 export function decorateChibiPlayer(renderer,p){
  if(renderer.gl.isSoftwareRenderer)return;
- const head=p.head,body=p.body,root=p.root;
+ const head=p.head,root=p.root;
  const bright=renderer.mat('premiumFaceHighlight',0xffffff,.14);
  const iris=renderer.mat('premiumEyes',0x162d3c,.22);
  const cheek=renderer.mat('premiumCheeks',0xf0a88d,.92);
- const dark=renderer.mat('premiumDarkTrim',0x152a38,.46);
  const jerseyLight=renderer.mat('premiumWhiteStitch',0xf5f5ea,.72);
- const gold=renderer.mat('premiumGoldStitch',0xf2ca72,.48,.32);
- const cap=p.capMat,accent=p.accentMat;
+ const accent=p.accentMat;
  const ellipse=(parent,scale,pos,material)=>renderer.ellipsoid(parent,scale,pos,material,true);
  for(const side of [-1,1]){
   // Large sparkling eyes and softened cheeks: deliberately not realistic anatomy.
   ellipse(head,[.047,.067,.013],[side*.143,-.006,.416],iris);
   ellipse(head,[.019,.025,.009],[side*.130,.045,.432],bright);
   ellipse(head,[.048,.025,.012],[side*.225,-.078,.384],cheek);
-  // Round helmet ear cover, raised lip, and air vent; keep original silhouette.
-  ellipse(head,[.13,.16,.085],[side*.409,-.080,.07],cap);
-  ellipse(head,[.045,.014,.013],[side*.282,.305,.278],dark);
-  ellipse(head,[.023,.009,.016],[side*.31,.274,.315],gold);
-  // Shoulder inserts and sleeve cuff trims share the team's live colour.
-  ellipse(body,[.14,.095,.145],[side*.286,.89,.015],accent);
-  ellipse(body,[.10,.035,.09],[side*.353,.742,.10],jerseyLight);
+  // No universal ear cover or plastic crown decoration: headgear
+  // is now built by role in makePlayer. Sleeves use the actual kit.
   // Premium cleat stripe and tongue details.
   ellipse(root,[.10,.024,.16],[side*.17,.103,.213],jerseyLight);
   ellipse(root,[.062,.015,.08],[side*.17,.115,.276],accent);
  }
- const c=new T.CatmullRomCurve3([
-  new T.Vector3(-.13,.93,.232),new T.Vector3(-.09,.81,.295),
-  new T.Vector3(-.06,.64,.287),new T.Vector3(-.06,.50,.241)
- ]);
- const c2=new T.CatmullRomCurve3([
-  new T.Vector3(.13,.93,.232),new T.Vector3(.09,.81,.295),
-  new T.Vector3(.06,.64,.287),new T.Vector3(.06,.50,.241)
- ]);
- for(const curve of [c,c2]){
-  const piping=renderer.mesh(new T.TubeGeometry(curve,20,.008,5,false),accent,body);
-  piping.castShadow=false;
- }
- // Rounded jersey buttons and polished team badge over the chest.
- for(let j=0;j<3;j++)ellipse(body,[.015,.014,.008],[0,.81-j*.09,.298-j*.008],gold);
- // A fine raised crest on the cap is the only decorative player flourish.
- const crest=ellipse(head,[.16,.015,.14],[0,.355,.11],cap);
- crest.castShadow=false;
 }

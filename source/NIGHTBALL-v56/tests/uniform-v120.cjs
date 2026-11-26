@@ -41,11 +41,11 @@ assert.deepEqual(NightUniforms.load(),{},'missing storage loads empty');
 const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
 assert(app.includes('NightUniforms.load()'),'app loads overrides at boot');
 assert(app.includes('applyUniforms()'),'app applies overrides at boot');
-assert(app.includes("case'uniform-editor':uniformModal();"),'settings entry is wired');
+assert(app.includes("else if(kind==='uniform')uniformModal();"),'settings entry is wired');
 assert(app.includes("case'uniform-save'"),'save action exists');
 assert(app.includes("case'uniform-reset'"),'reset action exists');
 const html=fs.readFileSync(__dirname+'/../dist/index.html','utf8');
-assert(html.includes('./uniform-editor.js?v=1'),'module is loaded by the page');
+assert(html.includes('./uniform-editor.js?v=228'),'module is loaded by the page');
 const css=fs.readFileSync(__dirname+'/../dist/style.css','utf8');
 assert(css.includes('.uniform-preview'),'preview styles exist');
 

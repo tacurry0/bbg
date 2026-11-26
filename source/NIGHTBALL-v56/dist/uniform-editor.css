@@ -1,0 +1,19 @@
+/* Compact technical kit editor, designed for portrait touch screens. */
+.kit-selector{display:flex;align-items:center;gap:12px;padding:4px 0 10px}
+.kit-selector img,.kit-selector .club-badge{max-width:46px;max-height:46px;object-fit:contain}
+.kit-selector label{display:grid;gap:4px;flex:1;font-size:12px;font-weight:800}
+.kit-selector select,.kit-fields input,.kit-fields select{width:100%;min-width:0;border:1px solid #7897b66b;border-radius:9px;background:var(--hatch-widget-bg,#eaf2f7);color:var(--hatch-text,#17364e);font:inherit;padding:9px}
+.kit-side,.kit-role{display:flex;gap:4px;margin:5px 0}
+.kit-side button,.kit-role button{flex:1;min-height:36px}
+.kit-side button.active,.kit-role button.active{background:#173e66;color:white;box-shadow:inset 0 -3px #49b7ff}
+.kit-stage{position:relative;overflow:hidden;border-radius:14px;border:1px solid #52779f;background:linear-gradient(145deg,#172c47,#081523);margin:8px 0 4px}
+#uniform-preview3d{width:100%;height:clamp(220px,37vh,320px);display:block}
+.kit-stage-label{position:absolute;top:12px;left:12px;font:800 10px Arial;letter-spacing:.14em;color:#fff;background:#0b182ca8;border:1px solid #7896b6;padding:5px 7px;border-radius:4px;pointer-events:none}
+.kit-angle{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:800;padding:5px 0 8px}
+.kit-angle input{flex:1;min-width:0}
+.kit-fields{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:6px 0}
+.kit-fields label{display:grid;gap:4px;min-width:0;font-size:13px;font-weight:750}
+.kit-check{display:flex;align-items:center;gap:7px;padding:6px;font-weight:700;font-size:13px}
+.kit-colors{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0}
+.kit-color{display:flex;justify-content:space-between;align-items:center;min-width:0;gap:6px;border:1px solid #6b8da44b;border-radius:8px;padding:5px 8px;font-size:12px;font-weight:750}
+.kit-color input[type=color]{width:38px;height:30px;border:0;padding:1px;background:none;cursor:pointer}

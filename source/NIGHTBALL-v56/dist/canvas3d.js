@@ -66,7 +66,7 @@ export class CanvasSceneRenderer {
     if(kind==='dirt'&&!venueClay)fill=scene.userData.broadcastDome?'#b68167':'#ac805d';
     const ps=vs.map(v=>project(v.p));if(ps.every(p=>p.x<0)||ps.every(p=>p.x>w)||ps.every(p=>p.y<0)||ps.every(p=>p.y>h))continue;
     const depth=-vs.reduce((a,v)=>a+v.p.z,0)/vs.length;
-    const item={type:'poly',ps,vs,fill,depth,opacity,kind,groundColor:color,texture:!kind?mat.map?.image:null,serial:serial++,layer:new T.Vector3().setFromMatrixPosition(matrix).y,order:obj.renderOrder||0};(isGround?ground:items).push(item);
+    const item={type:'poly',ps,vs,fill,depth,opacity,kind,groundColor:color,texture:!kind?mat.map?.image:null,uniformBase:mat.userData?.uniformBase,serial:serial++,layer:new T.Vector3().setFromMatrixPosition(matrix).y,order:obj.renderOrder||0};(isGround?ground:items).push(item);
    }
   };
   scene.traverseVisible(obj=>{
@@ -114,6 +114,7 @@ export class CanvasSceneRenderer {
     const {x,y,rx,ry}=item;c.save();c.translate(x,y);c.scale(rx,ry);if(item.cap){c.beginPath();c.rect(-1.1,-1.1,2.2,1.5);c.clip();}c.beginPath();c.arc(0,0,1,0,Math.PI*2);if(item.mat.isMeshBasicMaterial||rx<2.5||ry<2.5)c.fillStyle=this.color(item.color);else{const grad=c.createRadialGradient(-.32,-.40,.02,0,0,1.1);grad.addColorStop(0,this.color(item.color,1.18));grad.addColorStop(.5,this.color(item.color,.95));grad.addColorStop(1,this.color(item.color,.47));c.fillStyle=grad;}c.fill();c.restore();
    }else if(item.type==='poly'){
     c.beginPath();item.ps.forEach((p,i)=>i?c.lineTo(p.x,p.y):c.moveTo(p.x,p.y));c.closePath();
+    if(item.uniformBase){c.fillStyle=item.uniformBase;c.fill();c.strokeStyle=item.uniformBase;c.lineWidth=.65;c.stroke();}
     if(item.texture&&item.vs.length===3&&item.texture.width){const a=item.vs[0],b=item.vs[1],d=item.vs[2],tw=item.texture.width,th=item.texture.height;const us=[a.u*tw,b.u*tw,d.u*tw],vs=[(1-a.v)*th,(1-b.v)*th,(1-d.v)*th],ps=item.ps;const den=us[0]*(vs[1]-vs[2])+us[1]*(vs[2]-vs[0])+us[2]*(vs[0]-vs[1]);if(Math.abs(den)>.01){const coeff=values=>[(values[0]*(vs[1]-vs[2])+values[1]*(vs[2]-vs[0])+values[2]*(vs[0]-vs[1]))/den,(values[0]*(us[2]-us[1])+values[1]*(us[0]-us[2])+values[2]*(us[1]-us[0]))/den,(values[0]*(us[1]*vs[2]-us[2]*vs[1])+values[1]*(us[2]*vs[0]-us[0]*vs[2])+values[2]*(us[0]*vs[1]-us[1]*vs[0]))/den];const X=coeff(ps.map(p=>p.x)),Y=coeff(ps.map(p=>p.y));c.save();c.clip();c.setTransform(X[0],Y[0],X[1],Y[1],X[2],Y[2]);c.drawImage(item.texture,0,0);c.restore();}else{c.fillStyle=item.kind?groundStyle(item):item.fill;c.fill();if(item.opacity>.95){c.strokeStyle=c.fillStyle;c.lineWidth=.55;c.lineJoin='round';c.stroke();}}}
     else{c.fillStyle=item.kind?groundStyle(item):item.fill;c.fill();if(item.opacity>.95){c.strokeStyle=c.fillStyle;c.lineWidth=.55;c.lineJoin='round';c.stroke();}}
     if(item.kind==='grass'&&grain){c.fillStyle=grain;c.fill();}

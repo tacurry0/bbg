@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=223';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer } from './stadium3d.js?v=219';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=228';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -61,7 +61,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  settings.language=setLanguage(settings.language);
  window.nightSettings=settings;
  // v120: saved uniform colour overrides recolour the shared club objects.
- let uniformOverrides=NightUniforms.load(),uniformClub='owls';
+ let uniformOverrides=NightUniforms.load(),uniformClub='owls',uniformSide='home',uniformRole='pitcher',uniformAngle=0,uniformDraft=null,uniformPreview=null,uniformFrame=0;
  const allClubs=()=>[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])];
  function applyUniforms(){NightUniforms.apply(allClubs(),uniformOverrides);}
  applyUniforms();
@@ -192,6 +192,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function modal(html,kind){
   const backdrop=$('modal'),content=$('modal-content');
   if(modalKind==='stadium-editor')disposeStadiumPreview();
+  if(modalKind==='uniform'&&kind!=='uniform'){disposeUniformPreview();uniformDraft=null;}
   const same=!backdrop.hidden&&modalKind===kind;
   const scroller=content.querySelector('.pf-body')||content;
   const scroll=same?scroller.scrollTop:0;
@@ -230,6 +231,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
   const previous=modalKind,backdrop=$('modal');
   if(previous==='stadium-editor')disposeStadiumPreview();
+  if(previous==='uniform'){disposeUniformPreview();uniformDraft=null;}
   pregameRoster=false;
   ballparkMusic.stop('preview');modalKind='';
   if(!backdrop.hidden){
@@ -411,12 +413,39 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   for(const [id,s] of Object.entries(g.box||{})){const club=clubOf(id);if(!club)continue;const r=row(id,club);r.pa+=s.pa||0;r.ab+=s.ab||0;r.h+=s.h||0;r.hr+=s.hr||0;r.rbi+=s.rbi||0;r.bb+=s.bb||0;r.doubles+=s.doubles||0;r.triples+=s.triples||0;}
   for(const [id,s] of Object.entries(g.pitchingStats||{})){const club=clubOf(id);if(!club)continue;const r=row(id,club);r.outs+=s.outs||0;r.k+=s.k||0;r.runs+=s.runs||0;r.pitches+=s.pitches||0;}
  }
+ function disposeUniformPreview(){
+  cancelAnimationFrame(uniformFrame);uniformFrame=0;uniformPreview?.dispose();uniformPreview=null;
+ }
+ const uniformLabels={shirt:'シャツ',pants:'パンツ',cap:'野球帽',visor:'つば',helmet:'ヘルメット',trim:'襟・袖口',letters:'胸文字',outline:'文字の縁',number:'背番号',stripe:'ライン',socks:'ソックス'};
+ const uniformEsc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function refreshUniformPreview(){
+  cancelAnimationFrame(uniformFrame);
+  uniformFrame=requestAnimationFrame(()=>{
+   if(modalKind!=='uniform'||!uniformPreview||!uniformDraft)return;
+   const club=allClubs().find(c=>c.id===uniformClub);
+   if(club)uniformPreview.update(club,uniformSide,uniformDraft[uniformSide],uniformRole,uniformAngle);
+  });
+ }
  function uniformModal(){
-   const club=allClubs().find(c=>c.id===uniformClub)||allClubs()[0];uniformClub=club.id;
-   const orig=NightUniforms.originals()[club.id]||{color:club.color,accent:club.accent};
-   const cur=uniformOverrides[club.id]||{};
-   const color=cur.color||orig.color||'#325e71',accent=cur.accent||orig.accent||'#f2cf63';
-   modal(`${modalTitle('UNIFORM','ユニフォームカラー')}<div class="setting-label">球団</div><div class="team-select-grid">${allClubs().map(c=>`<button data-uniform-club="${c.id}" class="${c.id===club.id?'selected':''}">${clubBadge(c.id)}<strong>${c.short}</strong></button>`).join('')}</div><div class="uniform-preview" id="uniform-preview" style="--club:${color};--accent:${accent}"><b>${club.name}</b><small>ビジターはメインカラー、ホームは白基調にアクセント</small></div><div class="setting-slider"><label for="uniform-color">メインカラー</label><input id="uniform-color" type="color" value="${color}"></div><div class="setting-slider"><label for="uniform-accent">アクセントカラー</label><input id="uniform-accent" type="color" value="${accent}"></div><div class="uniform-swatches">${NightUniforms.PRESETS.map(h=>`<button data-uniform-swatch="${h}" style="background:${h}" aria-label="メインカラーを${h}にする"></button>`).join('')}</div><p class="modal-note">バッジ・スコア表示・3Dユニフォームに反映されます。</p><button class="primary-button" data-action="uniform-save">保存して反映</button><button class="secondary-button" data-action="uniform-reset">この球団を初期カラーに戻す</button><button class="secondary-button" data-action="close">閉じる</button>`,'uniform');
+  const club=allClubs().find(c=>c.id===uniformClub)||allClubs()[0];uniformClub=club.id;
+  if(!uniformDraft)uniformDraft={home:NightUniforms.kit(club,'home'),away:NightUniforms.kit(club,'away')};
+  const k=uniformDraft[uniformSide];
+  const colors=NightUniforms.COLORS.map(key=>`<label class="kit-color"><span>${uniformLabels[key]}</span><input type="color" data-kit-field="${key}" value="${k[key]}"></label>`).join('');
+  const groups=[['CPBL',NightTeams.all],['NPB',NightTeams.npb||[]],['KBO',NightTeams.kbo||[]]];
+  const options=groups.map(([label,clubs])=>`<optgroup label="${label}">${clubs.map(c=>`<option value="${c.id}" ${c.id===club.id?'selected':''}>${uniformEsc(c.name)}</option>`).join('')}</optgroup>`).join('');
+  modal(`${modalTitle('UNIFORM','ユニフォーム')}<div class="kit-selector">${clubBadge(club.id)}<label>球団<select id="uniform-club-select">${options}</select></label></div>
+   <div class="segmented kit-side"><button data-uniform-side="home" class="${uniformSide==='home'?'active':''}" aria-pressed="${uniformSide==='home'}">HOME</button><button data-uniform-side="away" class="${uniformSide==='away'?'active':''}" aria-pressed="${uniformSide==='away'}">VISITOR</button></div>
+   <div class="kit-stage"><canvas id="uniform-preview3d" aria-label="3Dユニフォーム"></canvas><span class="kit-stage-label">3D PREVIEW</span></div>
+   <div class="segmented kit-role">${[['pitcher','投手'],['batter','打者'],['catcher','捕手']].map(([v,n])=>`<button data-uniform-role="${v}" class="${uniformRole===v?'active':''}" aria-pressed="${uniformRole===v}">${n}</button>`).join('')}</div>
+   <label class="kit-angle">回転 <input id="uniform-angle" type="range" min="-180" max="180" step="5" value="${uniformAngle}"></label>
+   <div class="setting-label">デザイン</div>
+   <div class="kit-fields"><label>胸文字<input data-kit-field="wordmark" maxlength="22" value="${uniformEsc(k.wordmark)}"></label><label>帽子マーク<input data-kit-field="capMark" maxlength="4" value="${uniformEsc(k.capMark)}"></label><label>柄<select data-kit-field="pattern">${[['plain','無地'],['pinstripe','縦縞'],['contrast','袖切替'],['panel','サイドパネル'],['chevron','矢印ライン']].map(([v,n])=>`<option value="${v}" ${v===k.pattern?'selected':''}>${n}</option>`).join('')}</select></label><label>胸文字の書体<select data-kit-field="font"><option value="block" ${k.font==='block'?'selected':''}>ブロック体</option><option value="script" ${k.font==='script'?'selected':''}>筆記体風</option></select></label></div>
+   <label class="kit-check"><input data-kit-field="frontNumber" type="checkbox" ${k.frontNumber?'checked':''}> 胸番号を表示</label>
+   <div class="setting-label">カラー</div><div class="kit-colors">${colors}</div>
+   <p class="modal-note">ホーム・ビジターを個別に編集できます。保存すると両方のデザインが試合に反映されます。</p>
+   <button class="primary-button" data-action="uniform-save">保存して反映</button>
+   <button class="secondary-button" data-action="uniform-reset-side">表示中のデザインを初期状態に戻す</button><button class="secondary-button" data-action="uniform-reset">この球団の全ユニフォームをリセット</button><button class="secondary-button" data-action="close">閉じる</button>`,'uniform');
+  try{if(uniformPreview)$('uniform-preview3d').replaceWith(uniformPreview.canvas);else uniformPreview=new UniformPreview($('uniform-preview3d'));refreshUniformPreview();}catch(err){console.warn('Uniform preview unavailable',err);}
  }
  function scoutingModal(oppId,fromMatch=false){
    let club=null,report=null;
@@ -3207,7 +3236,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(o.role==='host'){onlineSendLobbyConfig();return;}
    if(!o.session?.open)return;
    const {config}=lineupConfig('online');
-   o.session.send({t:'club',club:o.myClub,pitcher:config.pitcher,order:config.order,fielding:config.fielding,ready:!!o.myReady,syncVersion:ONLINE_SYNC_VERSION});
+   o.session.send({t:'club',club:o.myClub,pitcher:config.pitcher,order:config.order,fielding:config.fielding,ready:!!o.myReady,uniforms:{home:NightUniforms.snapshot(NightTeams.get(o.myClub),'home'),away:NightUniforms.snapshot(NightTeams.get(o.myClub),'away')},syncVersion:ONLINE_SYNC_VERSION});
  }
  function onlineBeginEdit(){
    if(online?.role==='guest'&&online.myReady){online.myReady=false;onlineSendClub();}
@@ -3362,7 +3391,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(m.t==='club'){
      if(o.started)return;
      const club=onlineClubs().find(c=>c.id===m.club);if(!club)return;
-     o.guestClub=club.id;o.guestLineup=onlineNormalizeLineup(club,m);o.guestPitcher=o.guestLineup.pitcher;o.guestReady=m.ready===true;o.guestSyncVersion=m.syncVersion;
+     o.guestClub=club.id;o.guestUniforms={home:NightUniforms.cleanKit(m.uniforms?.home),away:NightUniforms.cleanKit(m.uniforms?.away)};o.guestLineup=onlineNormalizeLineup(club,m);o.guestPitcher=o.guestLineup.pitcher;o.guestReady=m.ready===true;o.guestSyncVersion=m.syncVersion;
      o.session?.send({t:'lobby-mode',mode:o.mode||'match'});onlineSendLobbyConfig();
      o.status=`ゲスト：${club.name} · ${o.mode!=='derby'&&o.guestSyncVersion!==ONLINE_SYNC_VERSION?'最新版に更新してください':o.guestReady||o.mode==='derby'?'準備完了':'編成中'}`;
      onlineLobbyRefresh();return;
@@ -3476,11 +3505,12 @@ function start(mode,challengeId=null,fixedPark=null){
    const {config:hostLineup}=lineupConfig('online'),guestLineup=onlineNormalizeLineup(NightTeams.get(o.guestClub),o.guestLineup);
    if(o.started)o.conditionSeed=onlineSeed();
    const rules=onlineRulesConfig(),forecast=NightGame.rollForecast(NightPlayers.parks.find(p=>p.id===park));
-   o.session?.send({t:'start',home:homeId,away:awayId,innings:settings.innings,difficulty:settings.difficulty,park,parkSpec:onlineParkSpec(park),weather:forecast.weather,wind:forecast.wind,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:hostLineup.pitcher,hostHome:o.hostHome,hostLineup,guestLineup,conditionSeed:o.conditionSeed,syncVersion:ONLINE_SYNC_VERSION});
+   const uniforms={home:o.hostHome?NightUniforms.snapshot(home,'home'):NightUniforms.resolvedKit(home,'home',o.guestUniforms?.home||{}),away:o.hostHome?NightUniforms.resolvedKit(away,'away',o.guestUniforms?.away||{}):NightUniforms.snapshot(away,'away')};
+   o.session?.send({t:'start',home:homeId,away:awayId,uniforms,innings:settings.innings,difficulty:settings.difficulty,park,parkSpec:onlineParkSpec(park),weather:forecast.weather,wind:forecast.wind,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:hostLineup.pitcher,hostHome:o.hostHome,hostLineup,guestLineup,conditionSeed:o.conditionSeed,syncVersion:ONLINE_SYNC_VERSION});
    NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
    game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:settings.innings,park,weather:forecast.weather,wind:forecast.wind,pitcher:hostLineup.pitcher,opponentPitcher:guestLineup.pitcher,order:hostLineup.order,fielding:hostLineup.fielding,opponentOrder:guestLineup.order,opponentFielding:guestLineup.fielding,conditionSeed:o.conditionSeed,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home',variantRules:rules,handicap:{userRuns:settings.handicapUserRuns,cpuRuns:settings.handicapCpuRuns,userOuts:settings.handicapUserOuts,cpuOuts:settings.handicapCpuOuts},onlineMatch:true,tiebreak:!!settings.tiebreak,hardcore:!!settings.hardcore});
-   game.onlineGame=true;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;onlineInitSync(o);
+   game.uniformKits=uniforms;game.onlineGame=true;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;onlineInitSync(o);
    activateGame();updateStyle();updateUI();
  }
  // Full render state for the guest's mirror game (see NightGame.applyMirror).
@@ -3583,7 +3613,7 @@ function start(mode,challengeId=null,fixedPark=null){
    NightOnline.rememberRoom({code:o.code,role:'guest',club:o.myClub,opp:guestHome?m.away:m.home});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
    game=new NightGame('match',m.difficulty||settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:m.home,awayTeamId:m.away,userHome:guestHome,innings:m.innings,park:m.park||home.park,parkDefinition:onlineParkDefinition(m.park,m.parkSpec),weather:m.weather,wind:m.wind,pitcher:guestLineup.pitcher,opponentPitcher:hostLineup.pitcher,order:guestLineup.order,fielding:guestLineup.fielding,opponentOrder:hostLineup.order,opponentFielding:hostLineup.fielding,conditionSeed:m.conditionSeed,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:guestHome?'away':'home',variantRules:(m.rules&&typeof m.rules==='object')?m.rules:undefined,handicap:onlineHandicapLocal(m.handicap,guestHome),onlineMatch:true,tiebreak:!!m.tiebreak,hardcore:!!settings.hardcore});
-   game.onlineGame=true;game.mirror=true;onlineInitSync(o);game.mirrorSend=onlineSendGameInput;
+   game.uniformKits={home:NightUniforms.resolvedKit(home,'home',m.uniforms?.home||{}),away:NightUniforms.resolvedKit(away,'away',m.uniforms?.away||{})};game.onlineGame=true;game.mirror=true;onlineInitSync(o);game.mirrorSend=onlineSendGameInput;
    // Tell the host this player's baserunning choice so the host engine
    // hands over (or keeps) control of this side's runners accordingly.
    game.mirrorSend({t:'running-mode',manual:!!settings.manualRunning});
@@ -3603,9 +3633,10 @@ function start(mode,challengeId=null,fixedPark=null){
    const park=o.park||hostClub.park;
    const hb=NightOnlineDerby.pickBatter(hostClub),gb=NightOnlineDerby.pickBatter(guestClub);
    if(!hb||!gb)return;
-   o.session?.send({t:'start-derby',hostClub:o.myClub,guestClub:o.guestClub,hostBatter:hb.id,guestBatter:gb.id,park,parkSpec:onlineParkSpec(park),swings:NightOnlineDerby.SWINGS_PER_PLAYER,difficulty:settings.difficulty});
+   const uniforms={host:{home:NightUniforms.snapshot(hostClub,'home'),away:NightUniforms.snapshot(hostClub,'away')},guest:{home:NightUniforms.resolvedKit(guestClub,'home',o.guestUniforms?.home||{}),away:NightUniforms.resolvedKit(guestClub,'away',o.guestUniforms?.away||{})}};
+   o.session?.send({t:'start-derby',uniforms,hostClub:o.myClub,guestClub:o.guestClub,hostBatter:hb.id,guestBatter:gb.id,park,parkSpec:onlineParkSpec(park),swings:NightOnlineDerby.SWINGS_PER_PLAYER,difficulty:settings.difficulty});
    NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
-   setupOnlineDerby({hostClub:o.myClub,guestClub:o.guestClub,hostBatter:hb.id,guestBatter:gb.id,park,parkSpec:onlineParkSpec(park),swings:NightOnlineDerby.SWINGS_PER_PLAYER,difficulty:settings.difficulty},true);
+   setupOnlineDerby({uniforms,hostClub:o.myClub,guestClub:o.guestClub,hostBatter:hb.id,guestBatter:gb.id,park,parkSpec:onlineParkSpec(park),swings:NightOnlineDerby.SWINGS_PER_PLAYER,difficulty:settings.difficulty},true);
  }
  function startOnlineGuestDerby(m){
    const o=online;if(!o||o.role!=='guest')return;
@@ -3625,7 +3656,7 @@ function start(mode,challengeId=null,fixedPark=null){
    o.derbyMyIndex=amHost?0:1;o.derbyOver=false;o.started=true;o.ended=false;o.endSent=false;o.rematchState='';o.rematchOffer=null;
    closeModal(false);unlockAudio();lastMode='derby';saved=false;clearCheckpoint();
    game=new NightGame('derby',m.difficulty||settings.difficulty,onEvent,{clubs:{home:myClub,away:oppClub},homeTeamId:myClub.id,awayTeamId:oppClub.id,park:m.park||myClub.park,parkDefinition:onlineParkDefinition(m.park,m.parkSpec),practiceBatter:(amHost?hostBatter:guestBatter).id,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist});
-   game.onlineGame=true;game.onlineDerby=true;
+   game.uniformKits={home:NightUniforms.resolvedKit(myClub,'home',m.uniforms?.[amHost?'host':'guest']?.home||{}),away:NightUniforms.resolvedKit(oppClub,'away',m.uniforms?.[amHost?'guest':'host']?.away||{})};game.onlineGame=true;game.onlineDerby=true;
    // The offline tournament timer must not end an online turn: the
    // contest is swing-count based, so park the clock far in the future.
    if(game.derby)game.derby.remaining=3600000;
@@ -4051,8 +4082,8 @@ function start(mode,challengeId=null,fixedPark=null){
    if(b.dataset.uiParkGroup){parkPickerGroup=b.dataset.uiParkGroup;parkPicker();return;}
    if(b.dataset.uiPark){if(NightPlayers.parks.some(p=>p.id===b.dataset.uiPark)){settings.park=b.dataset.uiPark;save();setupMatch();}return;}
    if(b.dataset.matchGroup){matchClubGroup=b.dataset.matchGroup;setupMatchTeams();return;}
-   if(b.dataset.uniformClub){uniformClub=b.dataset.uniformClub;uniformModal();return;}
-   if(b.dataset.uniformSwatch){const input=$('uniform-color');if(input){input.value=b.dataset.uniformSwatch;$('uniform-preview')?.style.setProperty('--club',b.dataset.uniformSwatch);}return;}
+   if(b.dataset.uniformSide){uniformSide=b.dataset.uniformSide;uniformModal();return;}
+   if(b.dataset.uniformRole){uniformRole=b.dataset.uniformRole;document.querySelectorAll('[data-uniform-role]').forEach(el=>{const selected=el.dataset.uniformRole===uniformRole;el.classList.toggle('active',selected);el.setAttribute('aria-pressed',String(selected));});refreshUniformPreview();return;}
    if(b.dataset.matchSide){matchPickSide=b.dataset.matchSide;matchClubGroup=(matchPickSide==='home'?settings.matchTeam:settings.matchOpponent).startsWith('kbo-')?'kbo':(matchPickSide==='home'?settings.matchTeam:settings.matchOpponent).startsWith('npb-')?'npb':'cpbl';setupMatchTeams();return;}
    if(b.dataset.conquestUser){conquestUser=b.dataset.conquestUser;conquestSetup();return;}
    if(b.dataset.conquestOpp){startConquestMatch(b.dataset.conquestOpp);return;}
@@ -4259,8 +4290,9 @@ function start(mode,challengeId=null,fixedPark=null){
      case'ui-match-start':saveLineup('match');start('match');break;
      case'match-scout':scoutingModal(settings.matchOpponent,true);break;
      case'uniform-editor':if(screen!=='game')uniformModal();break;
-     case'uniform-save':{const color=$('uniform-color')?.value,accent=$('uniform-accent')?.value;if(NightUniforms.valid(color)&&NightUniforms.valid(accent)){uniformOverrides[uniformClub]={color,accent};NightUniforms.save(uniformOverrides);applyUniforms();toast('ユニフォームカラーを反映しました');uniformModal();}break;}
-     case'uniform-reset':{delete uniformOverrides[uniformClub];NightUniforms.save(uniformOverrides);applyUniforms();toast('初期カラーに戻しました');uniformModal();break;}
+     case'uniform-save':{if(!uniformDraft)break;const old=uniformOverrides[uniformClub]||{};uniformOverrides[uniformClub]={...old,home:NightUniforms.cleanKit(uniformDraft.home),away:NightUniforms.cleanKit(uniformDraft.away)};NightUniforms.save(uniformOverrides);applyUniforms();toast('ユニフォームを反映しました');uniformModal();break;}
+     case'uniform-reset-side':{const club=allClubs().find(c=>c.id===uniformClub);if(club&&uniformDraft)uniformDraft[uniformSide]=NightUniforms.defaultKit(club,uniformSide);uniformModal();break;}
+     case'uniform-reset':{delete uniformOverrides[uniformClub];NightUniforms.save(uniformOverrides);applyUniforms();uniformDraft=null;toast('初期ユニフォームに戻しました');uniformModal();break;}
      case'match-lineup':lineupModal('match');break;
      case'ui-lineup-done':saveLineup('match');setupMatch();break;
      case'lineup-play':saveLineup(lineupContext);if(lineupContext==='league')playLeague(true);else start(lineupContext.startsWith('apbc')?lineupContext:'match');break;
@@ -4327,7 +4359,7 @@ function start(mode,challengeId=null,fixedPark=null){
   else if(t.dataset.songSlot){setSongChoice(musicTarget().key,t.dataset.songSlot,t.value);ballparkMusic.stop('preview');drawMusicMenu(t.id);}
   else if(t.dataset.musicUpload&&t.files[0])importSong(t.dataset.musicUpload,t.files[0]);
  });
- $('modal-content').addEventListener('input',e=>{if(e.target.id==='uniform-color'||e.target.id==='uniform-accent'){$('uniform-preview')?.style.setProperty(e.target.id==='uniform-color'?'--club':'--accent',e.target.value);}if(e.target.id==='sound-volume'||e.target.id==='crowd-volume'){const master=e.target.id==='sound-volume';settings[master?'soundVolume':'crowdVolume']=Number(e.target.value);$(master?'sound-volume-output':'crowd-volume-output').textContent=e.target.value+'%';save();}if(e.target.id==='cursor-lift'){settings.cursorLift=Number(e.target.value);$('lift-output').textContent=settings.cursorLift+'px';save();$('thumb-preview-wrap').innerHTML=thumbPreview();}if(e.target.id==='cursor-shift'){settings.cursorShift=Number(e.target.value);$('shift-output').textContent=settings.cursorShift+'px';save();$('thumb-preview-wrap').innerHTML=thumbPreview();}});
+ $('modal-content').addEventListener('input',e=>{if(e.target.dataset.kitField&&uniformDraft){const f=e.target.dataset.kitField;const v=e.target.type==='checkbox'?e.target.checked:e.target.value;const clean=NightUniforms.cleanKit({[f]:v});if(Object.hasOwn(clean,f)){uniformDraft[uniformSide]={...uniformDraft[uniformSide],[f]:clean[f]};refreshUniformPreview();}return;}if(e.target.id==='uniform-angle'){uniformAngle=Number(e.target.value);refreshUniformPreview();return;}if(e.target.id==='sound-volume'||e.target.id==='crowd-volume'){const master=e.target.id==='sound-volume';settings[master?'soundVolume':'crowdVolume']=Number(e.target.value);$(master?'sound-volume-output':'crowd-volume-output').textContent=e.target.value+'%';save();}if(e.target.id==='cursor-lift'){settings.cursorLift=Number(e.target.value);$('lift-output').textContent=settings.cursorLift+'px';save();$('thumb-preview-wrap').innerHTML=thumbPreview();}if(e.target.id==='cursor-shift'){settings.cursorShift=Number(e.target.value);$('shift-output').textContent=settings.cursorShift+'px';save();$('thumb-preview-wrap').innerHTML=thumbPreview();}});
  $('modal-content').addEventListener('change',e=>{
   if(e.target.id==='training-club'){
    trainingSelection.club=e.target.value;
@@ -4351,6 +4383,7 @@ function start(mode,challengeId=null,fixedPark=null){
   bullpenModal();
  });
  $('modal-content').addEventListener('change',e=>{
+  if(e.target.id==='uniform-club-select'){uniformClub=e.target.value;uniformDraft=null;uniformModal();return;}
   if(e.target.id==='game-lighting'){
    if(screen==='game')return;
    settings.gameLighting=gameLightingMode(e.target.value);

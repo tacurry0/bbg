@@ -1,14 +1,15 @@
+import { jerseyUV, torsoGeometry, pantsTexture, capGeometry, visorGeometry, uniformTexture, helmetOrCap, contrast } from './uniform-render.js?v=228';
 import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=219';
 import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
 import * as T from './vendor/three.module.min.js';
-import { CanvasSceneRenderer } from './canvas3d.js?v=71';
+import { CanvasSceneRenderer } from './canvas3d.js?v=228';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
 import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
 import { drawVenueVision } from './venue-vision.js?v=74';
 import { loadMatchModel } from './match-models.js?v=56';
-import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=57';
+import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=228';
 import {
  createStadiumEnvMap,
  createContactShadowTexture,
@@ -71,7 +72,7 @@ export class StadiumRenderer {
   this.pitcher=this.makePlayer('pitcher','away',18);this.batter=this.makePlayer('batter','home',8);this.catcher=this.makePlayer('catcher','away',2);
   this.fielders=Array.from({length:9},(_,i)=>this.makePlayer('fielder','away',i+1));this.runners=Array.from({length:4},(_,i)=>this.makePlayer('runner','home',i+1));
   this.players=[this.pitcher,this.batter,this.catcher,...this.fielders,...this.runners];
-  for(const player of this.players)decorateChibiPlayer(this,player);
+  for(const player of this.players){decorateChibiPlayer(this,player);this.stylePlayer(player,player.team,player.no);}
   this.loadUniforms();
   this.ball=new T.Group();this.ball.userData.dynamic=true;
   const leather=this.mesh(new T.SphereGeometry(BALL_RADIUS,20,14),this.mat('ball',0xfffdf7,.42,.02),this.ball);leather.castShadow=true;
@@ -290,7 +291,7 @@ export class StadiumRenderer {
    for(const player of players){
     const jersey=model.clone();
     jersey.traverse(mesh=>{
-     if(mesh.name==='Uniform')mesh.material=player.jerseyMat||player.jerseyPlaceholder.material;
+     if(mesh.name==='Uniform'){if(!this.uniformGLBGeometry)this.uniformGLBGeometry=jerseyUV(mesh.geometry);mesh.geometry=this.uniformGLBGeometry;mesh.material=player.torsoMat;}else if(mesh.name==='Piping')mesh.visible=false;
      if(mesh.isMesh){mesh.castShadow=true;mesh.receiveShadow=true;}
     });
     player.body.add(jersey);
@@ -604,7 +605,11 @@ export class StadiumRenderer {
   const jersey=this.mat(team+'jersey',kit,.82),pants=this.mat('pants',0xf7f2e2,.86),skin=this.mat('skin'+(no%4),skinColors[no%4],.68),dark=this.mat('shoes'+team,team==='home'?0x163b37:0x493531,.42);
   const accentMat=new T.MeshStandardMaterial({color:capColor,roughness:.52,metalness:.06});
   const trimMat=new T.MeshStandardMaterial({color:0xf2cf63,roughness:.26,metalness:.72});
-  const jerseyPlaceholder=this.ellipsoid(body,[.32,.33,.27],[0,.72,0],jersey);this.ellipsoid(body,[.232,.128,.206],[0,.415,0],pants);
+  const torsoMat=new T.MeshStandardMaterial({color:0xffffff,roughness:.92,metalness:0});
+  this.uniformTorsoGeometry??=torsoGeometry();
+  const jerseyPlaceholder=this.mesh(this.uniformTorsoGeometry,torsoMat,body);jerseyPlaceholder.castShadow=true;jerseyPlaceholder.receiveShadow=true;
+  const pantsMat=new T.MeshStandardMaterial({color:pants.color,roughness:.92});this.ellipsoid(body,[.232,.128,.206],[0,.415,0],pantsMat);
+  const legMat=new T.MeshStandardMaterial({color:0xffffff,roughness:.92});
   const belt=this.mesh(new T.CylinderGeometry(.268,.263,.046,24),accentMat,body);belt.position.y=.46;
   const buckle=this.box(body,[.074,.054,.030],[0,.46,.264],trimMat);buckle.castShadow=false;
   const collar=this.mesh(new T.TorusGeometry(.115,.023,6,16),accentMat,body);collar.rotation.x=Math.PI/2;collar.position.y=1.01;
@@ -619,17 +624,26 @@ export class StadiumRenderer {
    this.ellipsoid(head,[.062,.034,.022],[side*.215,-.072,.362],cheekMat,true);
   }
   this.ellipsoid(head,[.058,.057,.067],[0,-.078,.399],skin);this.chalkFace(head);
-  const capMat=new T.MeshPhysicalMaterial({color:capColor,roughness:.16,metalness:.14,clearcoat:.96,clearcoatRoughness:.10});
-  const helmet=this.mesh(new T.SphereGeometry(.456,26,16,0,Math.PI*2,0,Math.PI*.56),capMat,head);helmet.position.y=.035;helmet.castShadow=true;
-  this.ellipsoid(head,[.385,.046,.275],[0,.04,.362],capMat);
-  if(role==='batter')for(const side of [-1,1])this.ellipsoid(head,[.072,.182,.135],[side*.419,-.105,.05],capMat);
+  const helmetRole=helmetOrCap(role)==='helmet';
+  const capMat=new T.MeshPhysicalMaterial({color:capColor,roughness:helmetRole?.30:.96,metalness:helmetRole?.03:0,clearcoat:helmetRole?.72:0,clearcoatRoughness:.26});
+  const visorMat=capMat.clone();visorMat.side=T.DoubleSide;
+  this.capGeometry??=capGeometry();this.helmetGeometry??=new T.SphereGeometry(.448,24,15,0,Math.PI*2,0,Math.PI*.56);
+  this.capVisorGeometry??=visorGeometry(false);this.helmetVisorGeometry??=visorGeometry(true);
+  const crown=this.mesh(helmetRole?this.helmetGeometry:this.capGeometry,capMat,head);crown.name=helmetRole?'batting-helmet':'cloth-cap';if(helmetRole)crown.position.y=.045;crown.castShadow=true;
+  const visor=this.mesh(helmetRole?this.helmetVisorGeometry:this.capVisorGeometry,visorMat,head);visor.name='visor';visor.castShadow=true;
+  if(!helmetRole){
+   const button=this.ellipsoid(head,[.034,.017,.034],[0,.435,0],visorMat,true);button.name='cap-button';
+  }
+  if(role==='batter'||role==='runner')for(const side of [-1,1]){
+   const ear=this.ellipsoid(head,[.070,.143,.103],[side*.412,-.077,.048],capMat,true);ear.name='helmet-ear-cover';
+  }
   if(role==='catcher'){
    const cageMat=this.mat('catcherCage',0x2a353d,.32,.72);
    for(const y of [-.14,-.05,.04,.12])this.box(head,[.52,.018,.025],[0,y,.425],cageMat);
    for(const side of [-.18,.18])this.box(head,[.02,.28,.025],[side,-.02,.415],cageMat);
   }
   const logoCanvas=document.createElement('canvas');logoCanvas.width=logoCanvas.height=64;const lc=logoCanvas.getContext('2d');lc.fillStyle='#edf6d6';lc.font='italic 900 43px Arial';lc.textAlign='center';lc.fillText(team==='home'?'N':'F',32,49);const logoTex=new T.CanvasTexture(logoCanvas);logoTex.colorSpace=T.SRGBColorSpace;
-  const logo=this.mesh(new T.PlaneGeometry(.17,.17),new T.MeshBasicMaterial({map:logoTex,transparent:true,depthWrite:false}),head);logo.renderOrder=10;logo.position.set(0,.20,.414);logo.scale.x=-1;
+  const logo=this.mesh(new T.PlaneGeometry(.17,.17),new T.MeshBasicMaterial({map:logoTex,transparent:true,depthWrite:false}),head);logo.renderOrder=10;logo.position.set(0,.242,helmetRole?.436:.408);logo.scale.x=-1;
   const hands=[this.ellipsoid(body,[.095,.105,.102],[-.40,.68,.08],role==='batter'?pants:skin),this.ellipsoid(body,[.095,.105,.102],[.40,.68,.08],role==='batter'?pants:skin)];
   for(const h of hands){
    const wb=this.mesh(new T.CylinderGeometry(.76,.76,.42,10),accentMat,h);wb.position.set(0,.52,-.12);
@@ -637,15 +651,16 @@ export class StadiumRenderer {
   }
   const arms=[this.limb(body,[-.23,.88,0],[-.40,.68,.08],.08,jersey),this.limb(body,[.23,.88,0],[.40,.68,.08],.08,jersey)];
   const cuffs=[this.limb(body,[-.30,.79,0],[-.32,.76,0],.084,accentMat),this.limb(body,[.30,.79,0],[.32,.76,0],.084,accentMat)];
+  const socksMat=new T.MeshStandardMaterial({color:capColor,roughness:.86});
   const feet=[this.ellipsoid(root,[.125,.086,.227],[-.17,.12,.10],dark),this.ellipsoid(root,[.125,.086,.227],[.17,.12,.10],dark)];
   for(const f of feet){
    this.ellipsoid(f,[.88,.26,.48],[0,.18,-.05],pants,true);
    this.ellipsoid(f,[.94,.22,.92],[0,-.52,0],pants,true);
   }
-  const legs=[this.limb(root,[-.15,.38,0],[-.17,.17,.05],.10,pants),this.limb(root,[.15,.38,0],[.17,.17,.05],.10,pants)];
+  const legs=[this.limb(root,[-.15,.38,0],[-.17,.17,.05],.10,legMat),this.limb(root,[.15,.38,0],[.17,.17,.05],.10,legMat)];
   const forearms=[this.limb(body,[-.32,.73,0],[-.40,.68,.08],.063,skin),this.limb(body,[.32,.73,0],[.40,.68,.08],.063,skin)];
-  const shins=[this.limb(root,[-.16,.27,0],[-.17,.16,.1],.074,pants),this.limb(root,[.16,.27,0],[.17,.16,.1],.074,pants)];
-  const socks=[this.limb(root,[-.165,.22,0],[-.17,.15,.1],.079,accentMat),this.limb(root,[.165,.22,0],[.17,.15,.1],.079,accentMat)];
+  const shins=[this.limb(root,[-.16,.27,0],[-.17,.16,.1],.074,legMat),this.limb(root,[.16,.27,0],[.17,.16,.1],.074,legMat)];
+  const socks=[this.limb(root,[-.165,.22,0],[-.17,.15,.1],.079,socksMat),this.limb(root,[.165,.22,0],[.17,.15,.1],.079,socksMat)];
   const elbowGuard=role==='batter'?this.ellipsoid(body,[.076,.092,.076],[-.32,.76,.05],capMat,true):null;
   for(const sign of [-1,1]){
    brows.push(this.ellipsoid(head,[.048,.021,.057],[sign*.145,.104,.374],this.mat('brow',0x463229)));
@@ -664,8 +679,9 @@ export class StadiumRenderer {
   const grip=this.mesh(new T.CylinderGeometry(.039,.038,.28,10),this.mat('gripTape',0x1d262b,.84),bat);grip.position.y=-.08;
   this.ellipsoid(bat,[.064,.026,.064],[0,-.23,0],batDark);
   body.add(bat);bat.visible=role==='batter';glove.visible=role!=='batter'&&role!=='runner';
+  let gearMat=null;
   if(role==='catcher'){
-   const gearMat=this.mat('catchGear',0x233d4b,.72);
+   gearMat=new T.MeshStandardMaterial({color:0x233d4b,roughness:.78});
    const chest=this.ellipsoid(body,[.28,.29,.12],[0,.75,.23],gearMat);chest.castShadow=true;
    for(const s of [-1,1])this.ellipsoid(root,[.095,.11,.085],[s*.162,.26,.09],gearMat,true);
    root.scale.setScalar(.85);
@@ -675,22 +691,39 @@ export class StadiumRenderer {
    ?this.mesh(new T.PlaneGeometry(2.35,2.35),new T.MeshBasicMaterial({map:this.contactShadowTex,transparent:true,opacity:.66,depthWrite:false}))
    :this.mesh(new T.CircleGeometry(.92,24),new T.MeshBasicMaterial({color:0x021a14,transparent:true,opacity:.24,depthWrite:false}));
   shadow.userData.dynamic=true;shadow.rotation.x=-Math.PI/2;shadow.position.y=.04;
-  const numberCanvas=document.createElement('canvas');numberCanvas.width=numberCanvas.height=128;const numberTexture=new T.CanvasTexture(numberCanvas);numberTexture.colorSpace=T.SRGBColorSpace;const number=this.mesh(new T.PlaneGeometry(.30,.31),new T.MeshBasicMaterial({map:numberTexture,transparent:true,depthWrite:false}),body);number.renderOrder=10;number.position.set(0,.73,-.278);number.rotation.y=Math.PI;number.scale.x=-1;
-  return {root,body,head,hands,arms,cuffs,forearms,feet,legs,shins,socks,elbowGuard,eyes,brows,bat,glove,shadow,role,team,no,lastX:0,lastZ:0,jerseyPlaceholder,capMat,accentMat,trimMat,logoCanvas,logoTex,numberCanvas,numberTexture};
+  return {root,body,head,hands,arms,cuffs,forearms,feet,legs,shins,socks,elbowGuard,eyes,brows,bat,glove,shadow,role,team,no,lastX:0,lastZ:0,jerseyPlaceholder,torsoMat,pantsMat,legMat,socksMat,gearMat,capMat,visorMat,accentMat,trimMat,logoCanvas,logoTex};
+
  }
- stylePlayer(p,team,no,club=NightTeams.get(team==='home'?'owls':'foxes')){
-  const img=this.clubImages.get(club.id),ready=!!(img?.complete&&img.naturalWidth);const key=club.id+'/'+team+'/'+no+'/'+ready;if(p.styleKey===key)return;p.styleKey=key;
-  const oldJ=p.jerseyMat||this.mat(p.team+'jersey'),newJ=this.mat('club-'+club.id+'-'+team,team==='home'?0xf2f5df:club.color,.82),oldS=this.mat('shoes'+p.team),newS=this.mat('shoes'+team,team==='home'?0x163b37:0x2b2423,.40);
-  p.root.traverse(m=>{if(m.material===oldJ)m.material=newJ;if(m.material===oldS)m.material=newS;});p.jerseyMat=newJ;p.capMat.color.set(club.color);
-  p.accentMat.color.set(team==='home'?club.color:club.accent||club.color);
-  p.trimMat.color.set(club.accent||'#f2cf63');
+ stylePlayer(p,team,no,club=NightTeams.get(team==='home'?'owls':'foxes'),wire=null){
+  const uniforms=globalThis.NightUniforms,rev=uniforms?.revision()||0;
+  if(p.styleClub===club&&p.styleSide===team&&p.styleNo===no&&p.styleRev===rev&&p.styleWire===wire)return;
+  p.styleClub=club;p.styleSide=team;p.styleNo=no;p.styleRev=rev;p.styleWire=wire;p.styleKey=club.id+'/'+team+'/'+no+'/'+rev;
+  const k=uniforms?.resolvedKit(club,team,wire)||{shirt:team==='home'?'#f5f5f3':club.color,pants:'#f5f5f3',cap:club.color,helmet:club.color,visor:club.color,trim:club.accent||club.color,letters:club.color,outline:'#ffffff',number:club.color,stripe:club.color,socks:club.color,wordmark:club.short||club.mark||'TEAM',capMark:club.mark||'T',pattern:'plain',frontNumber:true,font:'block'};
+  this.uniformTextures??=new Map();
+  const textureKey=JSON.stringify([k,String(no)]);
+  if(p.uniformTextureKey!==textureKey){
+   const cache=this.uniformTextures,old=cache.get(p.uniformTextureKey);
+   if(old)old.refs--;
+   let entry=cache.get(textureKey);if(!entry){entry={texture:uniformTexture(k,no),refs:0};cache.set(textureKey,entry);}
+   entry.refs++;p.uniformTextureKey=textureKey;p.torsoMat.map=entry.texture;p.torsoMat.userData.uniformBase=k.shirt;p.torsoMat.needsUpdate=true;
+   if(cache.size>32)for(const [key,item] of cache){if(cache.size<=32)break;if(item.refs<=0){item.texture.dispose();cache.delete(key);}}
+  }
+  const sleeve=k.pattern==='contrast'?k.trim:k.shirt;
+  const oldJ=p.jerseyMat||this.mat(p.team+'jersey'),newJ=this.mat('kit-sleeve-'+sleeve,sleeve,.92);
+  p.root.traverse(m=>{if(m.material===oldJ)m.material=newJ;});
+  p.jerseyMat=newJ;p.capMat.color.set(helmetOrCap(p.role)==='helmet'?k.helmet:k.cap);p.visorMat.color.set(k.visor);
+  p.accentMat.color.set(k.trim);p.trimMat.color.set(k.outline);p.gearMat?.color.set(k.cap);
+  p.pantsMat.color.set(k.pants);p.socksMat.color.set(k.socks);
+  const shoe=this.mat('kit-cleats-'+k.cap,k.cap,.5);for(const f of p.feet)f.material=shoe;
+  const pantsKey=k.pants+'/'+k.stripe+'/'+k.pattern;
+  if(p.pantsKey!==pantsKey){p.pantsKey=pantsKey;p.legMat.map?.dispose();p.legMat.map=this.gl.isSoftwareRenderer?null:pantsTexture(k);p.legMat.color.set(this.gl.isSoftwareRenderer?k.pants:0xffffff);p.legMat.needsUpdate=true;}
   p.team=team;
-  const c=p.logoCanvas.getContext('2d');c.clearRect(0,0,64,64);c.fillStyle='#edf6d6';c.font='italic 900 43px Arial';c.textAlign='center';if(ready){const k=Math.min(60/img.naturalWidth,60/img.naturalHeight),w=img.naturalWidth*k,h=img.naturalHeight*k;c.drawImage(img,(64-w)/2,(64-h)/2,w,h);}else{c.font='900 26px Arial';c.fillText(club.mark,32,43);}p.logoTex.needsUpdate=true;
-  const nc=p.numberCanvas.getContext('2d');nc.clearRect(0,0,128,128);
-  nc.font='900 92px Arial';nc.textAlign='center';
-  nc.lineWidth=8;nc.strokeStyle=team==='home'?(club.accent||'#ffffff'):'rgba(10,18,28,0.55)';nc.strokeText(String(no),64,102);
-  nc.fillStyle=team==='home'?club.color:(club.accent||'#ffffff');nc.fillText(String(no),64,102);p.numberTexture.needsUpdate=true;
+  const c=p.logoCanvas.getContext('2d');c.clearRect(0,0,64,64);
+  // Actual cap lettering rather than the full club badge. Plane already mirrored.
+  c.font='900 40px Arial';c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=3;
+  const mark=k.capMark,letter=contrast(helmetOrCap(p.role)==='helmet'?k.helmet:k.cap);c.strokeStyle=letter==='#ffffff'?'#1d2633':'#ffffff';c.strokeText(mark,32,34,58);c.fillStyle=letter;c.fillText(mark,32,34,58);p.logoTex.needsUpdate=true;
  }
+
  chalkFace(head){const pts=[new T.Vector3(-.045,-.17,.36),new T.Vector3(0,-.18,.37),new T.Vector3(.045,-.17,.36)];this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),8,.009,4,false),this.mat('mouth',0x9f6c52),head);}
  poseArm(player,index,shoulder,hand){
   const bend=player.role==='batter'?.075:.094,side=index?1:-1;
@@ -1093,7 +1126,7 @@ export class StadiumRenderer {
   if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
-  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
+  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def],g.uniformKits?.[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
@@ -1130,7 +1163,7 @@ export class StadiumRenderer {
    }
    if(!f.foul)f.runners.forEach((r,i)=>{
     const actor=this.runners[i],profile=g.lineups[g.side].find(b=>b.id===(r.id||(r.batter?g.batter.id:g.baseIds[r.start-1])));
-    this.stylePlayer(actor,g.side,profile?.no||g.batter.no,g.teams[g.side]);actor.motionStyle=window.NightGame.movementStyle(profile||{id:r.id,no:actor.no});
+    this.stylePlayer(actor,g.side,profile?.no||g.batter.no,g.teams[g.side],g.uniformKits?.[g.side]);actor.motionStyle=window.NightGame.movementStyle(profile||{id:r.id,no:actor.no});
     if(contact&&r.batter)return;
     const dx=r.x-actor.lastX,dz=r.y-actor.lastZ,facing=Math.hypot(dx,dz)>.002?Math.atan2(dx,dz):actor.root.rotation.y;
     const target=r.target??r.progress,distance=Math.abs(target-r.progress)*27.44;
@@ -1168,7 +1201,7 @@ export class StadiumRenderer {
    this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:0;this.batter.batForm=window.NightGame.battingForm(g?.batter);this.batter.swingActive=!!g&&g.swingAge<380;this.batter.bunting=!!g?.bunt;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);
    this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
    const positions=g?.derby?[]:(window.NightGame?.positions(g?.park)||[]);positions.forEach(([name,x,z],i)=>{if(i<2)return;this.animatePlayer(this.fielders[i],x,z,Math.PI,time);});
-   if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side]);p.motionStyle=window.NightGame.movementStyle(profile||{no:p.no});this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
+   if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side],g.uniformKits?.[g.side]);p.motionStyle=window.NightGame.movementStyle(profile||{no:p.no});this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
    this.ball.visible=false;this.ballHalo.visible=false;this.ballShadow.visible=false;this.trail.visible=false;this.landing.visible=false;this.landingInner.visible=false;
    if(g&&['pitch','miss'].includes(g.phase)&&g.pitch){
     const pitch=g.pitch;
@@ -1190,5 +1223,54 @@ export class StadiumRenderer {
    for(const lg of this.lightGlows)lg.material.opacity=pulse;
   }
   this.ballHalo.position.copy(this.ball.position);this.gl.render(this.scene,this.camera);if(this.hero)this.heroRendered=true;if(this.hud)this.drawHUD(g);
+ }
+}
+
+// Uniform editor: a lightweight three-dimensional player-only stage. The
+// same player factory, material definitions and texture mapping as live play.
+export class UniformPreview {
+ constructor(canvas){
+  this.canvas=canvas;
+  const r=this.r=Object.create(StadiumRenderer.prototype);
+  try{r.gl=new T.WebGLRenderer({canvas,antialias:true,alpha:false});}catch{r.gl=new CanvasSceneRenderer({canvas});}
+  canvas.dataset.graphics=r.gl.isSoftwareRenderer?'canvas-3d':'webgl-3d';
+  r.gl.setPixelRatio(Math.min(1.75,globalThis.devicePixelRatio||1));r.gl.outputColorSpace=T.SRGBColorSpace;
+  r.gl.setClearColor?.(0x101b2c);r.gl.toneMapping=T.ACESFilmicToneMapping;r.gl.toneMappingExposure=1.12;
+  r.scene=new T.Scene();r.scene.scale.z=-1;r.scene.background=new T.Color(0x152339);
+  r.materials=new Map();r.geometries={sphere:new T.SphereGeometry(1,32,24),lowSphere:new T.SphereGeometry(1,10,7),box:new T.BoxGeometry(1,1,1),cylinder:new T.CylinderGeometry(1,1,1,12)};
+  r.scene.add(new T.HemisphereLight(0xe7f1ff,0x5a6271,2.2));
+  const key=new T.DirectionalLight(0xfff5e9,3.2);key.position.set(3,5,-4);r.scene.add(key);
+  const rim=new T.DirectionalLight(0xa8d3ff,1.5);rim.position.set(-4,3,4);r.scene.add(rim);
+  this.camera=new T.PerspectiveCamera(33,1,.1,30);
+  this.players={};
+  for(const role of ['pitcher','batter','catcher']){
+   const p=r.makePlayer(role,'home',18);decorateChibiPlayer(r,p);p.root.visible=false;p.bat.visible=false;p.glove.visible=false;this.players[role]=p;
+  }
+  if(!r.gl.isSoftwareRenderer)loadMatchModel('jersey').then(model=>{
+   if(this.closed||!model)return;
+   for(const p of Object.values(this.players)){
+    const jersey=model.clone();jersey.traverse(m=>{if(m.name==='Uniform'){r.uniformGLBGeometry??=jerseyUV(m.geometry);m.geometry=r.uniformGLBGeometry;m.material=p.torsoMat;}else if(m.name==='Piping')m.visible=false;});
+    p.body.add(jersey);p.jerseyPlaceholder.visible=false;
+   }
+   this.render();
+  });
+ }
+ update(club,side,kit,role='pitcher',angle=0){
+  this.role=role;this.angle=angle;
+  for(const [key,p] of Object.entries(this.players)){p.root.visible=key===role;if(p.root.visible)this.r.stylePlayer(p,side,18,club,kit);}
+  this.render();
+ }
+ render(){
+  if(this.closed)return;
+  const w=Math.max(180,this.canvas.clientWidth||300),h=Math.max(180,this.canvas.clientHeight||240),r=this.r;
+  if(this.w!==w||this.h!==h){this.w=w;this.h=h;r.gl.setSize(w,h,false);this.camera.aspect=w/h;this.camera.updateProjectionMatrix();}
+  const a=(this.angle||0)*Math.PI/180,d=6.55;this.camera.position.set(Math.sin(a)*d,1.94,-Math.cos(a)*d);this.camera.lookAt(0,1.62,0);r.gl.render(r.scene,this.camera);
+ }
+ dispose(){
+  this.closed=true;const r=this.r,geometries=new Set(),materials=new Set(),textures=new Set();
+  r.scene.traverse(o=>{if(o.isMesh){geometries.add(o.geometry);materials.add(o.material);if(o.material.map)textures.add(o.material.map);}});
+  for(const e of r.uniformTextures?.values()||[])textures.add(e.texture);
+  for(const t of textures)t.dispose();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();
+  r.gl.dispose?.();r.gl.forceContextLoss?.();
  }
 }
