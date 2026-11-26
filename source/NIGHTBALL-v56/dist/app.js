@@ -2,7 +2,7 @@ import { CustomParkPreview } from './custom-park3d.js?v=219';
 import { AbsReview, absActorBounds } from './abs-review.js?v=3';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
 import {playoffHTML} from './playoff-view.js?v=77';
-import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML} from './results.js?v=208';
+import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=205';
@@ -2691,18 +2691,24 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    else if(type==='end')finish(data);
  }
  function updateHalfBreak(g){
-  const waiting=g.phase==='change'&&g.isFixture;$('half-break').hidden=!waiting;
-  if(!waiting){$('half-break').dataset.key='';return;}
+  const panel=$('half-break'),waiting=g.phase==='change'&&g.isFixture;panel.hidden=!waiting;
+  if(!waiting){panel.dataset.key='';return;}
   const h=g.halfBreak||{inning:g.half==='bottom'?g.inning:g.inning-1,half:g.half==='bottom'?'top':'bottom'};
-  const key=[g.inning,g.half,g.homeScore,g.awayScore,g.autoDefense].join('/');
-  if($('half-break').dataset.key!==key){
-   $('half-break').dataset.key=key;$('half-break-title').textContent=`${h.inning}回${h.half==='top'?'表':'裏'} 終了`;
-   $('half-break-score').innerHTML=lineScoreHTML(buildMatchReport(g));$('half-break-next').textContent=`${g.inning}回${g.half==='top'?'表':'裏'} · ${g.umpireMode?'審判として判定':g.defending?'あなたの守備':'あなたの攻撃'}`;
-   $('half-continue').textContent=g.mirror?'相手が次へ進めるのを待っています':'タップして次の回へ';$('half-auto-note').textContent=g.autoDefense?'自動守備 ON · 次の守備回も継続':'';
+  const turn=g.umpireMode?'umpire':g.defending?'defense':'attack';
+  const key=[g.inning,g.half,h.inning,h.half,g.homeScore,g.awayScore,g.homeHits,g.awayHits,g.autoDefense,turn,!!g.mirror].join('/');
+  if(panel.dataset.key!==key){
+   panel.dataset.key=key;panel.dataset.turn=turn;
+   $('half-break-title').textContent=`${h.inning}回${h.half==='top'?'表':'裏'} 終了`;
+   const report=buildMatchReport(g);report.highlight=h.inning;
+   $('half-break-score').innerHTML=halfBreakScoreHTML(report,g.teams);
+   $('half-break-next').textContent=`${g.inning}回${g.half==='top'?'表':'裏'} · ${g.umpireMode?'審判として判定':g.defending?'あなたの守備':'あなたの攻撃'}`;
+   const next=$('half-continue');next.disabled=!!g.mirror;
+   next.textContent=g.mirror?'相手が次へ進めるのを待っています':'次の回へ';
+   $('half-auto-note').textContent=g.autoDefense?'自動守備 ON · 次の守備回も継続':'';
   }
  }
  function continueHalf(){
-  if(!game||onlineInputBlocked()||screen!=='game'||!$('modal').hidden||game.phase!=='change')return;
+  if(!game||game.mirror||onlineInputBlocked()||screen!=='game'||!$('modal').hidden||game.phase!=='change')return;
   unlockAudio();if(game.acknowledgeHalf()){sound('tap');updateUI();}
  }
  let halfTap=null;

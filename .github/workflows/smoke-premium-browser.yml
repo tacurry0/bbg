@@ -11,6 +11,7 @@ on:
       - 'source/NIGHTBALL-v56/tests/career-world-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/abs-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/verdict-vision-v220.cjs'
+      - 'source/NIGHTBALL-v56/tests/inning-break-v222.cjs'
       - '.github/workflows/smoke-premium-browser.yml'
   workflow_dispatch:
 
@@ -34,6 +35,9 @@ jobs:
       - name: Verify Stadium Vision verdict layout
         working-directory: source/NIGHTBALL-v56
         run: node tests/verdict-vision-v220.cjs --browser
+      - name: Verify inning transition layout
+        working-directory: source/NIGHTBALL-v56
+        run: node tests/inning-break-v222.cjs --browser
       - name: Verify home player directory
         working-directory: source/NIGHTBALL-v56
         run: node tests/player-directory-v201.cjs

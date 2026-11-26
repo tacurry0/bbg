@@ -70,6 +70,16 @@ export function lineScoreHTML(report){
   }).join('')}<td class="scoreline-total">${t.score}</td>${hideHits?'':`<td>${t.hits}</td>`}</tr>`;
  }).join('')}</tbody></table></div>`;
 }
+// v222: inning-break scoreboard. Reuse the recorded line score rather than
+// recomputing the result; the large totals make 9+ inning scrolls readable.
+export function halfBreakScoreHTML(report,clubs={}){
+ const {teams}=report,away=teams.away.score,home=teams.home.score;
+ const team=side=>{
+  const t=teams[side],name=clubs[side]?.short||t.name;
+  return `<div class="half-break-team">${t.logo?`<img src="${escape(reportLogo(t.logo))}" alt="">`:''}<strong>${escape(name)}</strong></div>`;
+ };
+ return `<div class="half-break-matchup" aria-hidden="true">${team('away')}<div class="half-break-totals" data-wide="${Math.max(away,home)>=100}"><b class="${away>home?'is-leading':''}">${escape(away)}</b><i>–</i><b class="${home>away?'is-leading':''}">${escape(home)}</b></div>${team('home')}</div>${lineScoreHTML(report)}`;
+}
 export function resultReportHTML(report){
  const d=report.decision;
  return `<section class="match-report">${lineScoreHTML(report)}<div class="pitcher-decisions"><div><small>勝利投手</small><strong>${escape(d?.winner?.name||'—')}</strong></div><div><small>敗戦投手</small><strong>${escape(d?.loser?.name||'—')}</strong></div></div>${report.heroes.length?`<h3 class="report-heading">活躍した選手</h3><div class="hero-players">${report.heroes.map(({player:p,bat:b,pitch:q})=>`<div><span class="hero-team"><img src="${escape(reportLogo(report.teams[p.side].logo))}" alt=""></span><div><strong>${escape(p.name)}</strong><small>${b?`${b.ab}打数 ${b.h}安打${b.hr?' '+b.hr+'本塁打':''} ${b.rbi}打点`:q?`${ip(q.outs)}回 ${(q.k||0)}奪三振 ${q.runs}失点`:''}</small></div></div>`).join('')}</div>`:''}<small class="record-basis">勝敗投手は短縮試合用のゲーム内記録。決勝のリードと走者の責任投手から算出。</small></section>`;

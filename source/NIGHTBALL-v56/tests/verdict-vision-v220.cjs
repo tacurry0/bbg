@@ -111,7 +111,9 @@ assert(source.includes('const hold=playFeedback.scoreTime>0||playFeedback.callTi
 assert.equal((source.match(/!playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime/g)||[]).length,3,'local/online replay and queued bench wait for readability');
 assert(css.includes('border-block: 1px solid var(--vision-accent)')&&css.includes('background: rgba(0, 0, 0, .36)')&&css.includes('clip-path: none'));
 assert(!handler.includes("hr.querySelector('strong').textContent='ホームラン！'"),'old duplicate homer graphic is no longer shown');
-for(const file of ['index.html','sw.js']) assert(read(file).includes('verdict-vision.css?v=221')&&read(file).includes('app.js?v=221'));
+const currentAppPin=html.match(/\.\/app\.js\?v=\d+/)?.[0];
+assert(currentAppPin&&read('sw.js').includes(currentAppPin),'app URL is consistent with the cache');
+for(const file of ['index.html','sw.js']) assert(read(file).includes('verdict-vision.css?v=221'));
 console.log('PASS: H design tones, compact labels, preserved details, readability timing, home-run style, raw online events, cache pins');
 
 if(process.argv.includes('--browser')) (async()=>{

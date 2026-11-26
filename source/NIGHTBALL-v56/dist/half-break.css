@@ -1,0 +1,265 @@
+/* v222 — inning transition, Stadium Vision / broadcast scoreboard.
+   Scoped to this dialog so box scores, results and career tables keep their styles. */
+#half-break {
+  --half-accent: #a6d9fa;
+  --half-muted: #9cb1c1;
+  background: rgba(4, 12, 22, .64);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  padding: clamp(9px, 3.3vw, 18px);
+}
+#half-break[data-turn="attack"] { --half-accent: #ffe179; }
+#half-break[data-turn="umpire"] { --half-accent: #d4e2ed; }
+#half-break[hidden] { display: none; }
+#half-break .half-break-card {
+  position: relative;
+  width: 100%;
+  max-width: 540px;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  padding: 18px 15px 15px;
+  border: 1px solid #a5c6e23b;
+  border-top-color: #96c9e8a1;
+  border-radius: 13px;
+  background: linear-gradient(150deg, #172b3bf7 0%, #0b1723f7 68%, #0b1420fa 100%);
+  box-shadow: 0 12px 36px #01060e80;
+  color: #f0f6fc;
+  text-align: center;
+}
+#half-break .half-break-card h2 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0 0 15px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  text-shadow: none;
+  color: #eef6ff;
+  font-size: clamp(19px, 5.3vw, 24px);
+  line-height: 1.2;
+  font-weight: 850;
+  letter-spacing: .045em;
+}
+#half-break .half-break-card h2::before,
+#half-break .half-break-card h2::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  max-width: 62px;
+  background: linear-gradient(90deg, transparent, #a6d9fa9c);
+}
+#half-break .half-break-card h2::after { transform: rotate(180deg); }
+#half-break-score { min-width: 0; }
+#half-break .half-break-matchup {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 15px;
+  min-height: 76px;
+}
+#half-break .half-break-team {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+#half-break .half-break-team img {
+  display: block;
+  width: clamp(40px, 13vw, 57px);
+  height: clamp(40px, 13vw, 57px);
+  object-fit: contain;
+  filter: drop-shadow(0 2px 3px #02071180);
+}
+#half-break .half-break-team strong {
+  display: block;
+  max-width: 100%;
+  color: #dce9f3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: clamp(12px, 3.6vw, 15px);
+  line-height: 1.3;
+  font-weight: 800;
+}
+#half-break .half-break-totals {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: clamp(7px, 2vw, 13px);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+#half-break .half-break-totals b {
+  color: #f4f8ff;
+  font: 900 clamp(42px, 13.5vw, 64px)/1 system-ui, sans-serif;
+  letter-spacing: -.065em;
+  text-shadow: 0 2px 9px #0006;
+}
+#half-break .half-break-totals b.is-leading { color: #ffe179; }
+#half-break .half-break-totals i {
+  color: #7b93a7;
+  font: 500 clamp(21px, 6.5vw, 30px)/1 system-ui, sans-serif;
+}
+#half-break .half-break-totals[data-wide="true"] b { font-size: clamp(29px, 9vw, 48px); }
+#half-break .scoreline-scroll {
+  margin: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: thin;
+  border: 1px solid #b2cee32c;
+  border-radius: 6px;
+  background: #101f2e;
+}
+#half-break .scoreline-table {
+  color: #edf5fb;
+  font-size: clamp(12px, 3.7vw, 15px);
+  width: 100%;
+  font-variant-numeric: tabular-nums;
+}
+#half-break .scoreline-table caption {
+  /* The large score and inning title already identify this table visually. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  padding: 0;
+  border: 0;
+}
+#half-break .scoreline-table thead {
+  background: #1c3345;
+  color: #afc7d8;
+  font-size: 11px;
+  letter-spacing: .02em;
+}
+#half-break .scoreline-table :is(th,td) {
+  padding: 5px 4px;
+  min-width: 26px;
+  height: 32px;
+  border-bottom: 1px solid #9ebed124;
+}
+#half-break .scoreline-table thead th:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: #1c3345;
+  text-align: left;
+  padding-left: 8px;
+}
+#half-break .scoreline-table tbody th {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: #142637;
+  text-align: left;
+  color: #e9f2fb;
+  min-width: clamp(88px, 29vw, 128px);
+  max-width: 128px;
+  font-size: clamp(10px, 2.85vw, 12px);
+  font-weight: 750;
+  line-height: 1.25;
+  padding-left: 7px;
+  overflow-wrap: anywhere;
+}
+#half-break .scoreline-table tbody th img {
+  width: 21px;
+  height: 23px;
+  object-fit: contain;
+  margin-right: 4px;
+}
+#half-break .scoreline-table tbody td { background: #101f2e; }
+#half-break .scoreline-table .scoreline-current {
+  background: #244058;
+  color: #d7ecfc;
+  font-weight: 800;
+}
+#half-break .scoreline-table .scoreline-total {
+  background: #263c45;
+  color: #ffe179;
+  font-size: 18px;
+  font-weight: 900;
+  border-left: 1px solid #a1bfce35;
+}
+#half-break .scoreline-table tbody tr:last-child > * { border-bottom: 0; }
+#half-break .half-break-card > strong {
+  display: block;
+  color: var(--half-accent);
+  font-size: clamp(15px, 4.25vw, 18px);
+  line-height: 1.25;
+  margin: 16px 0 11px;
+  font-weight: 800;
+}
+#half-break .half-break-card > small {
+  min-height: 0;
+  margin: -3px 0 12px;
+  color: #b7ccb7;
+  font-size: 11px;
+  font-weight: 700;
+}
+#half-break .half-break-card > small:empty { display: none; }
+#half-break #half-continue {
+  position: relative;
+  width: 100%;
+  display: flex;
+  min-height: 48px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4e9f575;
+  border-radius: 6px;
+  background: var(--half-accent);
+  color: #0b2130;
+  font-size: 16px;
+  font-weight: 850;
+  text-shadow: none;
+  box-shadow: none;
+  padding: 10px 36px;
+}
+#half-break #half-continue::after {
+  content: "";
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  right: 17px;
+  border-top: 2px solid currentColor;
+  border-right: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+#half-break #half-continue:active:not(:disabled) { filter: brightness(.92); transform: translateY(1px); }
+#half-break #half-continue:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+#half-break #half-continue:disabled {
+  background: #1e3446;
+  color: #c4d7e6;
+  border-color: #afcce433;
+  font-size: 13px;
+  cursor: default;
+  padding-inline: 12px;
+}
+#half-break #half-continue:disabled::after { display: none; }
+@media (max-width: 360px) {
+  #half-break .half-break-card { padding: 15px 10px 12px; }
+  #half-break .half-break-card h2 { margin-bottom: 11px; }
+  #half-break .half-break-matchup { margin-bottom: 11px; }
+  #half-break .scoreline-table :is(th,td) { min-width: 24px; padding-inline: 3px; }
+}
+@media (max-height: 470px) and (orientation: landscape) {
+  #half-break .half-break-card { max-width: 660px; padding: 10px 16px; }
+  #half-break .half-break-card h2 { font-size: 17px; margin-bottom: 8px; }
+  #half-break-score { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(0, 1.7fr); gap: 14px; align-items: center; }
+  #half-break .half-break-matchup { margin: 0; min-height: 54px; }
+  #half-break .half-break-totals b { font-size: 40px; }
+  #half-break .half-break-team img { width: 37px; height: 37px; }
+  #half-break .half-break-team strong { font-size: 11px; }
+  #half-break .half-break-card > strong { margin: 9px 0 7px; font-size: 14px; }
+  #half-break #half-continue { min-height: 36px; padding-block: 6px; font-size: 14px; }
+  #half-break .scoreline-table :is(th,td) { height: 27px; padding-block: 3px; }
+}
