@@ -167,6 +167,36 @@ window.NightGame=class NightGame{
   if(!Number.isFinite(age)||age<0||age>=duration||duration<=0)return 0;
   return Math.sin(Math.PI*age/duration);
  }
+ // v204: count, plate history and batter profile inform probabilistic CPU
+ // choices. Only completed pitches are used to predict the next delivery.
+ static cpuDiscipline(batter){
+  const s=batter?.stats||{},pa=Number(s.pa)||0,weight=pa/(pa+80);
+  const bb=Number.isFinite(s.bb)&&pa>0?s.bb/pa:.085,k=pa>0&&Number.isFinite(s.so??s.k)?(s.so??s.k)/pa:.18;
+  return {walk:clamp(.085+(bb-.085)*weight,.025,.22),strikeout:clamp(.18+(k-.18)*weight,.06,.38)};
+ }
+ static cpuPitchWeight(id,ctx){
+  const {balls=0,strikes=0,recent=[],power=65,discipline=.085,risp=false,lateClose=false,control=70}=ctx;
+  const last=recent.at(-1),repeat=recent.filter(p=>p.id===id).length,drop=['fork','split','change','vslider','curve','slowcurve','knucklecurve','powercurve','sinker','screw'].includes(id);
+  const fast=['fast','twoseam','cutter','shoot','oneseam'].includes(id);
+  let w=1;
+  if(strikes===2&&balls<3&&drop)w*=1.30;
+  if(balls===3&&fast)w*=1.30;
+  if(last?.id===id)w*=repeat>=2?.50:.78;
+  if(last?.id==='fast'&&drop)w*=1.22;
+  if(last&&['fork','split','change','curve','slowcurve'].includes(last.id)&&fast)w*=1.22;
+  if(power>=80&&risp&&fast)w*=.86;
+  if(lateClose&&control<60&&balls>=2&&drop)w*=.78;
+  if(discipline>=.13&&strikes<2&&fast)w*=1.10;
+  return w;
+ }
+ static cpuSwingOdds(ctx){
+  const {balls=0,strikes=0,edge=0,isStrike=true,walk=.085,contact=65,repeat=0,locationRepeat=0,breakAmount=0}=ctx;
+  const ag=strikes===2?.86:strikes===1?.61:.40;
+  const anticipation=Math.min(.12,repeat*.027+locationRepeat*.018);
+  const strike=clamp(ag+anticipation-(edge>.78?.09:0)+(balls===3?(strikes===2?.04:-.15):balls===2&&strikes===0?-.07:0)-walk*.38,.18,.95);
+  const chase=clamp((strikes===2?.32:.17)-Math.max(0,edge-1.06)*.43+(80-contact)*.0015-walk*.70+Math.min(.045,breakAmount*.025)+anticipation*.30-(balls===3?.07:0),.015,.40);
+  return isStrike?strike:chase;
+ }
  static TYPES=TYPES;
  static POS=POS;
  static BASES=BASES;
@@ -1040,6 +1070,10 @@ window.NightGame=class NightGame{
  cpuPitchPlan(){
   const p=this.pitcher,control=clamp(p.control+this.conditionFor(p)*3,10,99),b=this.activeBatter,recent=this.pitchTrace.filter(x=>x.pitcherId===p.id).slice(-3),two=this.strikes===2,behind=this.balls>this.strikes;
   const read=this.mode==='career-bat'?this.career.opponentPlan:null;
+  const plate=(this.atBatPitches||[]).slice(-4),history=plate.length?plate:recent;
+  const discipline=NightGame.cpuDiscipline(b).walk,risp=!!(this.bases[1]||this.bases[2]);
+  const lateClose=this.inning>=Math.max(3,this.totalInnings-2)&&Math.abs(this.homeScore-this.awayScore)<=2;
+  const tactics={balls:this.balls,strikes:this.strikes,recent:history,power:b.power,discipline,risp,lateClose,control};
   const counter=(read?.byPitcher?.[p.id]??(read?.byPitcher?0:read?.inner??0))>=2;
   const pitcherStyle=this.mode==='career-bat'?Number(p.id.charCodeAt(p.id.length-1))%3:-1;
   let weighted=p.pitches.map(id=>{
@@ -1047,7 +1081,7 @@ window.NightGame=class NightGame{
    let weight=Number.isFinite(detail.usage)?Math.max(.1,detail.usage):id==='fast'?3:1.4;
    if(two&&['fork','split','slider','vslider','curve','change'].includes(id))weight*=1.6;
    if(behind&&id==='fast')weight*=1.6;
-   if(recent.at(-1)?.id===id)weight*=.55;
+   weight*=NightGame.cpuPitchWeight(id,tactics);
    if(b.power>=85&&id==='fast')weight*=.85;
    if(counter)weight*=id==='fast'?.66:1.35;
    if(pitcherStyle===0&&id==='fast')weight*=1.4;
@@ -1057,16 +1091,17 @@ window.NightGame=class NightGame{
   }).filter(x=>x.type);
   // No-breaking variant rule: both pitchers throw fastballs only. The
   // user's own pitch selection is forced the same way in throwPitch().
-  if(this.variantRules?.noBreaking){const fastOnly=weighted.filter(x=>x.type.id==='fast');if(fastOnly.length)weighted=fastOnly;}
+  if(this.variantRules?.noBreaking)weighted=[{type:TYPES[0],weight:1}];
   let draw=Math.random()*weighted.reduce((n,x)=>n+x.weight,0),choice=weighted.at(-1);
   for(const x of weighted){draw-=x.weight;if(draw<=0){choice=x;break;}}
-  const type=choice?.type||TYPES[0],waste=two&&this.balls<3&&Math.random()<.42;
+  const type=choice?.type||TYPES[0],waste=two&&this.balls<3&&Math.random()<clamp(.42-(discipline-.085)*1.5-(lateClose&&this.bases.every(Boolean)?.12:0),.16,.50);
   const fatigue=this.pitchFatigue(),lostCommand=fatigue*fatigue;
   const baseline=this.balls===3?.86:behind?.78:two?.58:.70;
   const attack=clamp(baseline+(control-70)*.004-lostCommand*.19,.33,.95);
   const strike=!waste&&Math.random()<attack;
   const handed=this.battingHand==='L'?-1:1,outside=handed;
   let x=(Math.random()<(counter?.86:pitcherStyle===0?.49:.68)?outside:-outside)*rnd(.48,.9),y=rnd(-.85,.85);
+  const last=history.at(-1);if(last&&Math.random()<.56){if(Math.abs(last.x)>.42&&Math.sign(x)===Math.sign(last.x))x=-x;if(Math.abs(last.y)>.40&&Math.sign(y)===Math.sign(last.y))y=-y;}
   if(counter&&type.id!=='fast')y=Math.max(.18,y);
   if(two&&['fork','split','change','vslider','curve'].includes(type.id))y=rnd(.5,.93);
   if(!strike){if(['fork','split','change','vslider','curve'].includes(type.id))y=rnd(1.14,1.51)+lostCommand*.16;else x=outside*(rnd(1.14,1.53)+lostCommand*.16);}
@@ -1111,19 +1146,17 @@ window.NightGame=class NightGame{
   if(mastery>0){const m=1+mastery*.0025;this.pitch.bx*=m;this.pitch.by*=m;this.pitch.spinRpm=Math.round((this.pitch.spinRpm||0)*m);}
   if((this.defending||this.autoBatting||this.umpireMode)&&!this.remoteBatter){
    const repeated=this.career?.opponentPlan?.repeat===type.id;
-   const recent=this.pitchHistory.slice(-3),repeat=recent.filter(p=>p.id===type.id).length,locationRepeat=recent.filter(p=>Math.hypot(p.x-target.x,p.y-target.y)<.4).length;
+   const recent=(this.atBatPitches||[]).slice(-4),repeat=recent.filter(p=>p.id===type.id).length,locationRepeat=recent.filter(p=>Math.hypot(p.x-target.x,p.y-target.y)<.4).length;
    // Read more pitches early, protect with two strikes, and punish repetition.
-   const contact=this.matchup().contact,kRate=(this.batter.stats?.so??this.batter.stats?.k??0)/Math.max(1,this.batter.stats?.pa||200),edge=Math.max(Math.abs(target.x),Math.abs(target.y));
-   const discipline=clamp((this.batter.stats?.bb||0)/Math.max(1,this.batter.stats?.pa||200),.02,.2);const aggression=this.strikes===2?.86:this.strikes===1?.61:.40;
-   const strikeSwing=clamp(aggression+(repeat+locationRepeat)*.025-(edge>.78?.08:0)+(this.balls===3?.05:0)-discipline*.4,.26,.94);
-   const chase=clamp((this.strikes===2?.29:.14)-(edge-1.06)*.24+(80-contact)*.002-discipline*.45,.02,.32);
-   this.pitch.cpuSwing=Math.random()<(this.pitch.isStrike?strikeSwing:chase);
+   const contact=this.matchup().contact,profile=NightGame.cpuDiscipline(this.batter),kRate=profile.strikeout,edge=Math.max(Math.abs(target.x),Math.abs(target.y));
+   const breakAmount=Math.hypot(this.pitch.bx,this.pitch.by);
+   this.pitch.cpuSwing=Math.random()<NightGame.cpuSwingOdds({balls:this.balls,strikes:this.strikes,edge,isStrike:this.pitch.isStrike,walk:profile.walk,contact,repeat,locationRepeat,breakAmount});
    const buntSpot=(this.bases[0]||this.bases[1])&&!this.bases[2]&&this.outs<this.outsNeeded-1&&this.inning>=Math.max(2,this.totalInnings-2)&&Math.abs(this.homeScore-this.awayScore)<=1&&this.batter.contact<64&&this.batter.power<62;
    this.pitch.cpuBunt=buntSpot&&Math.random()<(this.cpuManager?.bunt??.5);if(this.pitch.cpuBunt)this.pitch.cpuSwing=false;
    const skill={casual:.09,standard:0,pro:-.07}[this.difficulty]-this.customAdj('bat')*.01;
    const error=clamp(.35+(80-contact)*.004+(kRate-.16)*.75+skill+.17*Math.hypot(this.pitch.bx,this.pitch.by)+Math.max(0,velocity-145)*.004-.05*repeat-.025*locationRepeat-(repeated?(this.career.scouted?.025:.085):0),.17,.88);
    this.pitch.cpuAim={x:target.x+rnd(-error,error)-this.pitch.bx*.16,y:target.y+rnd(-error,error)-this.pitch.by*.12};
-   const timingSpread=Math.max(.05,.11+Math.max(0,kRate-.14)*.3+Math.hypot(this.pitch.bx,this.pitch.by)*.04+Math.max(0,velocity-145)*.002-this.customAdj('bat')*.004);
+   const timingSpread=Math.max(.05,.11+Math.max(0,kRate-.14)*.3+breakAmount*.04+Math.max(0,velocity-145)*.002-this.customAdj('bat')*.004-Math.min(.025,repeat*.008));
    this.pitch.cpuTime=1+rnd(-timingSpread,timingSpread)+(Math.random()<.22?rnd(-.17,.17):0);
    this.pitchHistory.push({id:type.id,x:target.x,y:target.y});if(this.pitchHistory.length>12)this.pitchHistory.shift();
   }
@@ -1377,7 +1410,7 @@ window.NightGame=class NightGame{
   const roll=Math.random();this.startField(9,1,rnd(-.3,.3),false);
   this.field.manual=null;this.field.buntResult=roll<.90?'sacrifice':roll<.95?'buntout':'buntsingle';
  }
- cpuBat(){if(this.pitch.cpuBunt){this.buntBall();return;}if(this.pitch.cpuSwing)this.attempt(this.pitch.cpuAim,Math.random()<Math.min(.8,(this.matchup().power>80?.50:.27)*(this.cpuManager?.powerMul??1)),this.pitch.cpuTime-1,true);}
+ cpuBat(){if(this.pitch.cpuBunt){this.buntBall();return;}if(this.pitch.cpuSwing){const m=this.matchup(),edge=Math.max(Math.abs(this.pitch.targetX),Math.abs(this.pitch.targetY)),trailing=this[this.side+'Score']<this[(this.side==='home'?'away':'home')+'Score'];const power=clamp((m.power>80?.50:.27)*(this.cpuManager?.powerMul??1)+(this.balls>=2&&this.strikes===0?.10:0)-(this.strikes===2?.16:0)-(edge>.85?.09:0)+(trailing&&this.inning>=Math.max(3,this.totalInnings-1)?.06:0),.04,.8);this.attempt(this.pitch.cpuAim,Math.random()<power,this.pitch.cpuTime-1,true);}}
  attempt(aim,power,delta,cpu){
   const p=this.pitch;p.swung=true;this.swingAge=0;this.emit('sound','swing');if(!cpu)this.session.swings++;
   const previousPower=this.power;this.power=power;const {rx,ry}=this.batSize;this.power=previousPower;
