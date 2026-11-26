@@ -72,3 +72,33 @@
 .modal .ui-result-body :is(.scoreline-table,.detailed-box) th:first-child{position:sticky;left:0;z-index:1;background:#edf8ff;min-width:68px;max-width:115px;white-space:normal;overflow-wrap:anywhere}
 .modal .ui-result-body :is(.scoreline-table,.detailed-box) thead th:first-child{z-index:2;background:#d2edfa}
 @media(max-width:350px){.ui-final-team img{width:43px;height:43px}.ui-final-score{gap:3px}.ui-final-score b{font-size:29px}}
+
+/* v209: roster browsing and touch lineup editing. */
+.modal:is([data-kind="directory-teams"],[data-kind="directory-roster"],[data-kind="directory-player"],[data-kind="lineup"]){--ui-border:#b8dce9;--ui-ink:#123f66}
+.modal .ui-directory-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:4px}
+.modal .ui-directory-tabs button{min-height:42px;font-size:12px;padding:5px 2px}
+.modal .ui-directory-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(94px,.52fr);gap:6px;margin:10px 0}
+.modal .ui-directory-filters :is(input,select){min-width:0;font-size:16px;min-height:43px}
+.modal .ui-directory-list{display:grid;gap:5px;margin:6px 0 12px}
+.modal .ui-directory-row{width:100%;display:grid;grid-template-columns:36px minmax(0,1fr) 35px 12px;gap:8px;align-items:center;min-height:53px;text-align:left;background:white;color:#123f66;border:1px solid #b8dce9;border-radius:10px;padding:6px 9px}
+.ui-directory-number{text-align:center;color:#29769e;font-size:16px;font-variant-numeric:tabular-nums}
+.ui-directory-name{display:grid;gap:3px;min-width:0}
+.ui-directory-name strong{font-size:14px;overflow-wrap:anywhere}
+.ui-directory-name small{font-size:11px;color:#52738b}
+.ui-directory-row .rank-tile{margin:0;min-width:0;width:35px;padding:4px 0;text-align:center}
+.ui-directory-row .rank-tile b{font-size:20px}
+.modal .directory-heading>div{flex:1}
+.modal .directory-heading>.league-inline-button{margin-left:auto;flex-shrink:0;font-size:11px}
+.ui-player-rating{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;background:#f7fcff;border:1px solid #b8dce9;color:#123f66;margin:8px 0}
+.ui-player-rating strong{min-width:0;overflow-wrap:anywhere;font-size:15px}
+.ui-player-rating small{font-size:11px}
+.ui-player-nav{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ui-player-nav button:disabled{opacity:.45}
+.modal[data-kind="lineup"] .squad-starter-row{grid-template-columns:18px 18px minmax(0,1fr) auto;gap:3px}
+.modal[data-kind="lineup"] .ui-bench-row{display:grid;grid-template-columns:19px minmax(0,1fr);gap:3px;align-items:center}
+.modal[data-kind="lineup"] .ui-bench-row .squad-player{width:100%;min-width:0}
+.ui-drag-handle{display:grid;place-items:center;align-self:stretch;min-height:38px;color:#407da1;background:#d9eef9;border-radius:5px;font-size:20px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.ui-drag-source{opacity:.45}
+.modal .ui-drop-target{outline:3px solid #0d80bb;outline-offset:-3px;background:#d1f2ff!important}
+.ui-editor-ghost{position:fixed;left:0;top:0;z-index:10000;pointer-events:none;max-width:130px;padding:8px 12px;background:#075c96;color:white;border-radius:9px;font-size:12px;font-weight:800;box-shadow:0 4px 12px #0004}
+@media(max-width:350px){.modal[data-kind="lineup"] .squad-starter-row{grid-template-columns:14px 14px minmax(0,1fr) auto;gap:2px}.ui-drag-handle{font-size:16px}}
