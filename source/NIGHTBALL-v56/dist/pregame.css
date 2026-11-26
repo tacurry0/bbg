@@ -117,3 +117,12 @@
 @media(max-width:350px){.preflight .pf-body{padding:9px}.preflight .pf-footer{padding-inline:9px}.preflight .pf-team{min-height:128px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:46px;height:46px}.preflight .pf-team>b{font-size:13px}.preflight .pf-venue-main{grid-template-columns:76px minmax(0,1fr) 15px;gap:7px}.preflight .pf-link{grid-template-columns:minmax(0,1fr) 12px}.preflight .pf-link-icon{display:none}.preflight .pf-team-grid{gap:5px}.preflight[data-kind="lineup"] .squad-starter-row{grid-template-columns:13px 14px minmax(0,1fr) 24px}.preflight[data-kind="lineup"] .squad-position{width:24px}.preflight .pf-choice button{font-size:11px}}
 @media(max-height:690px){.preflight .pf-team{min-height:122px}.preflight .pf-team-logo{width:54px;height:54px}.preflight .pf-team-logo .club-badge{width:47px;height:47px}.preflight .pf-body{padding-block:9px}.preflight .pf-matchup{margin-bottom:8px}.preflight .pf-conditions{margin:8px 0}.preflight .pf-roster{margin:6px 0}}
 @media(prefers-reduced-motion:no-preference){.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary,.pf-choice button){transition:filter .12s,background .12s}.preflight :is(.pf-team,.pf-team-tile,.pf-park-tile,.pf-pitcher-row,.pf-link,.pf-primary,.pf-secondary):active{filter:brightness(.91)}}
+
+/* v213: size the shell from its fixed viewport, not the dynamic viewport
+   units (mobile Chromium can report different values while resizing). */
+.app #modal.preflight-backdrop{position:fixed;inset:0;box-sizing:border-box;margin:0;min-height:0;height:auto;max-height:none}
+.app #modal-content.preflight{box-sizing:border-box;min-height:0;max-height:100%;height:min(100%,860px);margin:0}
+@media(max-width:520px){
+ .app #modal.preflight-backdrop{align-items:stretch}
+ .app #modal-content.preflight{height:100%;max-height:100%;width:100%;max-width:100%;min-height:0}
+}

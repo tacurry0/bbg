@@ -22,10 +22,10 @@ try{
  mkdirSync('tests/screenshots',{recursive:true});
  for(const [width,height] of [[320,568],[390,844],[412,915]]){
   await page.setViewportSize({width,height});
-  await page.waitForTimeout(150);
-  const fit=await page.evaluate(()=>{const p=document.querySelector('#modal-content'),b=p.querySelector('.pf-body'),f=p.querySelector('.pf-footer'),r=f.getBoundingClientRect();return {width:b.scrollWidth<=b.clientWidth+1,footer:r.bottom<=innerHeight+1&&r.top>=0,scroll:p.scrollHeight<=p.clientHeight+1};});
-  assert(fit.width&&fit.footer&&fit.scroll,JSON.stringify({width,height,fit}));
+  await page.waitForTimeout(350);
+  const fit=await page.evaluate(()=>{const p=document.querySelector('#modal-content'),b=p.querySelector('.pf-body'),f=p.querySelector('.pf-footer'),r=f.getBoundingClientRect(),v=window.visualViewport;return {width:b.scrollWidth<=b.clientWidth+1,footer:r.bottom<=Math.min(innerHeight,v?.height??innerHeight)+1&&r.top>=0,scroll:p.scrollHeight<=p.clientHeight+1,innerHeight,visualHeight:v?.height,footerRect:r.toJSON(),modalRect:p.getBoundingClientRect().toJSON(),backdropRect:document.querySelector('#modal').getBoundingClientRect().toJSON()};});
   await page.screenshot({path:'tests/screenshots/pregame-'+width+'.png'});
+  assert(fit.width&&fit.footer&&fit.scroll,JSON.stringify({width,height,fit}));
  }
  await tap('[data-ui-team-side="home"]');await kind('match-teams');
  await tap('[data-match-group="npb"]');assert.equal(await page.locator('[data-match-club]:not([data-match-club="dream"])').count(),14);

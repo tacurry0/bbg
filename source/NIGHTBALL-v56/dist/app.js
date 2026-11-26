@@ -212,6 +212,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(button)setTimeout(()=>{if(!backdrop.hidden&&content.contains(button))button.focus({preventScroll:true});},30);
   }
  }
+ let pregameRoster=false;
  function closeModal(resume=true){
   const previous=modalKind,backdrop=$('modal');
   pregameRoster=false;
@@ -1590,7 +1591,6 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const parks=NightPlayers.parks.filter(p=>parkGroup(p)===parkPickerGroup);
   pfScreen('球場選択',`<div class="pf-sticky-filter">${pfChoice(groups,parkPickerGroup,'data-ui-park-group')}</div><div class="pf-park-grid">${parks.map(p=>`<button type="button" class="pf-park-tile ${p.id===settings.park?'selected':''}" data-ui-park="${uiEscape(p.id)}" aria-pressed="${p.id===settings.park}">${parkMiniSVG(p)}<span><b>${uiEscape(p.name)}</b><small>${p.left??p.corner} / ${p.center} / ${p.right??p.corner} m</small></span>${p.id===settings.park?`<span class="pf-check">${pfIcon('check')}</span>`:''}</button>`).join('')}</div><button class="pf-secondary pf-wide" data-action="stadium-editor">球場エディタ（カスタム球場を作成）</button>`,'park-picker');
  }
- let pregameRoster=false;
  function matchPitchers(){
   const {club,config}=lineupConfig('match');
   const row=(p,i)=>`<button type="button" class="pf-pitcher-row ${config.pitcher===i?'selected':''}" data-ui-pitcher="${i}" aria-pressed="${config.pitcher===i}"><span class="pf-pitcher-no">${uiEscape(p.no??'—')}</span><span class="pf-pitcher-name"><b>${uiEscape(p.name)}</b><small>${p.hand==='L'?'左投':'右投'} · ${pitchRole(p)}</small></span><span class="pf-pitcher-speed"><b>${p.velocity??'—'}</b><small>km/h</small></span><span class="pf-pitcher-grade grade-${NightPlayers.grade(NightSquad.overall(p))}">${NightPlayers.grade(NightSquad.overall(p))}</span><span class="pf-pitcher-check">${config.pitcher===i?pfIcon('check'):''}</span></button>`;
