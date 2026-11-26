@@ -1,0 +1,47 @@
+/* Shared NIGHTBALL artwork: home, match and online headers, and ABS. */
+.topbar .wordmark {
+  flex: 0 1 clamp(138px, 43vw, 205px);
+  min-width: 0;
+  height: 40px;
+  max-height: 100%;
+  margin: 0;
+}
+.topbar .top-actions {
+  flex-shrink: 0;
+}
+.topbar .wordmark .nightball-logo {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+}
+.app:has(>.game-screen:not([hidden])) .wordmark::after {
+  content: none;
+}
+.app .stadium-menu .menu-hero h1 {
+  top: 52%;
+  left: 10%;
+  width: min(51%, 330px);
+  max-height: 90%;
+  transform: translateY(-50%);
+  line-height: 0;
+  border-radius: 0;
+}
+.app .stadium-menu .menu-hero h1 .nightball-logo {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 3px 5px #001b3b9c);
+}
+.abs-ident strong {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 8px;
+}
+.abs-ident strong .nightball-logo {
+  display: block;
+  width: clamp(93px, 30vw, 140px);
+  height: auto;
+}

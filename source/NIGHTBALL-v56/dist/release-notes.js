@@ -2,6 +2,14 @@
 // Keep history, and supply zh-TW/ko translations alongside Japanese.
  globalThis.NightballReleases = [
 {
+  "version": 226,
+  "title": "NIGHTBALLのロゴをリニューアル",
+  "detail": "新しいロゴをホーム画面と共通ヘッダー、ABS画面に採用しました。",
+  "items": [
+    "オンライン対戦を含む各モードで同じロゴを表示します。"
+  ]
+},
+{
   "version": 225,
   "title": "判定表示が消えるときのちらつきを修正",
   "detail": "判定の終了時に旧デザインが一瞬表示される現象を修正しました。",
@@ -850,5 +858,20 @@ Object.assign(globalThis.NightballMessages||={},{
   "新しいデザインのまま自然にフェードアウトします。": [
     "保留新設計並自然淡出。",
     "새 디자인 그대로 자연스럽게 사라집니다."
+  ]
+});
+
+Object.assign(globalThis.NightballMessages||={},{
+  "v226 NIGHTBALLのロゴをリニューアル": [
+    "v226 NIGHTBALL 全新標誌",
+    "v226 NIGHTBALL 로고 리뉴얼"
+  ],
+  "新しいロゴをホーム画面と共通ヘッダー、ABS画面に採用しました。": [
+    "主畫面、共用頁首及 ABS 畫面採用全新標誌。",
+    "홈 화면, 공통 헤더, ABS 화면에 새 로고를 적용했습니다."
+  ],
+  "オンライン対戦を含む各モードで同じロゴを表示します。": [
+    "包含線上對戰在內的各模式使用相同標誌。",
+    "온라인 대전을 포함한 각 모드에 동일한 로고를 표시합니다."
   ]
 });
