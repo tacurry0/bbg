@@ -197,6 +197,14 @@ window.NightGame=class NightGame{
   const chase=clamp((strikes===2?.32:.17)-Math.max(0,edge-1.06)*.43+(80-contact)*.0015-walk*.70+Math.min(.045,breakAmount*.025)+anticipation*.30-(balls===3?.07:0),.015,.40);
   return isStrike?strike:chase;
  }
+ static stadiumAtmosphere(g){
+  const home=g?.teams?.home?.id||'',away=g?.teams?.away?.id||'',school=!!g?.park?.school;
+  const league=id=>id.startsWith('npb-')||id==='apbc-japan'?'npb':id.startsWith('kbo-')||id==='apbc-korea'?'kbo':id.startsWith('apbc-')&&id!=='apbc-taipei'?'other':'cpbl';
+  let h=2166136261;for(const c of home+'/'+away+'/'+(g?.park?.id||''))h=Math.imul(h^c.charCodeAt(0),16777619);
+  const attendance=school?.70:.74+(h>>>0)%25/100;
+  const active=league(g?.teams?.[g?.side]?.id||home);
+  return {attendance,excitement:g?.crowdExcitement?.()??.18,league:active,pan:g?.side==='away'?-.36:.36,tempo:active==='cpbl'?1.12:active==='kbo'?1.07:active==='npb'?.96:1};
+ }
  static TYPES=TYPES;
  static POS=POS;
  static BASES=BASES;

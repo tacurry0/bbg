@@ -17,7 +17,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=75';
+} from './stadium-fx.js?v=205';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -223,7 +223,7 @@ export class StadiumRenderer {
    this.grassUniforms.uConcourseColor.value.setHex(park.school?0x586552:park.id==='tokyo-dome'?0x1c2c3d:0x16222f);
    this.grassUniforms.uVenueMow.value.set(...(park.mowing??[0,1]));
   }
-  this.decoratePark(park);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
+  this.decoratePark(park);this.prepareSupporters();for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[];
   const trackWidth=park.trackWidth??4.15;
   const quad=(out,a,b,c,d)=>out.push(...a,...b,...c,...c,...b,...d);
@@ -307,6 +307,33 @@ export class StadiumRenderer {
   const texture=new T.CanvasTexture(c);texture.colorSpace=T.SRGBColorSpace;
   const panel=new T.Mesh(new T.PlaneGeometry(3.5,1.75),new T.MeshBasicMaterial({map:texture,side:T.DoubleSide}));
   panel.renderOrder=2;panel.userData.parkMarker=key;return panel;
+ }
+ prepareSupporters(){
+  this.supporterKey=null;this.supporterMeshes=[];
+  this.parkDecor.traverse(o=>{
+   if(!o.isInstancedMesh||!/(spectators|seated crowd|crowd heads|nightball crowd)/i.test(o.name))return;
+   if(!this.gl.isSoftwareRenderer&&!o.material.userData.crowdEnhanced){
+    o.material=o.material.clone();o.material.userData.crowdEnhanced=false;o.userData.disposeMaterial=true;
+    enhanceCrowdMaterial(o.material,this.gl,this.vfx.crowdUniforms);
+   }
+   if(o.instanceColor&&!/crowd heads/i.test(o.name))this.supporterMeshes.push({mesh:o,colors:o.instanceColor.array.slice()});
+  });
+ }
+ updateSupporters(g){
+  if(!g||!this.supporterMeshes?.length)return;
+  const home=g.teams.home,away=g.teams.away,key=[home.id,away.id,home.color,away.color].join('/');
+  if(this.supporterKey===key)return;this.supporterKey=key;
+  const matrix=new T.Matrix4(),color=new T.Color(),homeColor=new T.Color(home.color||0xffffff),awayColor=new T.Color(away.color||0xffffff);
+  for(const {mesh,colors} of this.supporterMeshes){
+   for(let i=0;i<mesh.count;i++){
+    mesh.getMatrixAt(i,matrix);const e=matrix.elements;
+    if(Math.hypot(e[4],e[5],e[6])<.38)continue;
+    color.fromArray(colors,i*3);const section=Math.floor(e[12]/12);
+    if((i*17+Math.abs(section)*13)%10<8)color.lerp(section<0?awayColor:homeColor,.72);
+    mesh.setColorAt(i,color);
+   }
+   mesh.instanceColor.needsUpdate=true;
+  }
  }
  decoratePark(park){
   if(!this.parkDecor)return;
@@ -392,7 +419,7 @@ export class StadiumRenderer {
     transform.scale.set(.92,1.38,.88);transform.updateMatrix();
     crowd.setMatrixAt(i,transform.matrix);crowd.setColorAt(i,new T.Color(colors[(i*17+i%7)%colors.length]));
    }
-   group.add(crowd);
+   crowd.name='Nightball crowd';group.add(crowd);
   }
   // Center-field Batter's Eye & 1B/3B Pro Dugouts for non-school parks
   if(!park.school){
@@ -1052,7 +1079,7 @@ export class StadiumRenderer {
   if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
-  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
+  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,

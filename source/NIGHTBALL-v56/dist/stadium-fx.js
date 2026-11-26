@@ -457,25 +457,29 @@ export function enhanceDirtMaterial(material, gl) {
 export function enhanceCrowdMaterial(material, gl, crowdUniforms) {
   if (gl.isSoftwareRenderer || material.userData.crowdEnhanced) return;
   material.userData.crowdEnhanced = true;
-  material.customProgramCacheKey = () => 'nb-crowd-v56';
+  material.customProgramCacheKey = () => 'nb-crowd-v205';
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uCrowdTime = crowdUniforms.uCrowdTime;
     shader.uniforms.uCrowdExcite = crowdUniforms.uCrowdExcite;
+    shader.uniforms.uCrowdTempo = crowdUniforms.uCrowdTempo;
+    shader.uniforms.uCrowdAttendance = crowdUniforms.uCrowdAttendance;
     shader.vertexShader = shader.vertexShader
       .replace('#include <common>', `#include <common>
         uniform float uCrowdTime;
         uniform float uCrowdExcite;
+        uniform float uCrowdTempo;
+        uniform float uCrowdAttendance;
       `)
       .replace('#include <begin_vertex>', `#include <begin_vertex>
         #ifdef USE_INSTANCING
           vec3 instPos = instanceMatrix[3].xyz;
-          float seed = fract(sin(dot(instPos.xz, vec2(12.9898, 78.233))) * 43758.5453);
-          float speed = mix(3.4, 11.5, uCrowdExcite);
-          float amp = mix(0.055, 0.34, uCrowdExcite);
-          float wave = instPos.x * 0.045;
-          float bounce = abs(sin(uCrowdTime * speed + seed * 6.2831 + wave));
-          transformed.y += bounce * amp;
-          transformed.x += sin(uCrowdTime * (speed * 0.5) + seed * 12.0) * (0.02 + uCrowdExcite * 0.06);
+          vec2 section = floor(instPos.xz * 0.2);
+          float seed = fract(sin(dot(section, vec2(12.9898, 78.233))) * 43758.5453);
+          float speed = mix(3.4, 9.2, uCrowdExcite) * uCrowdTempo;
+          float amp = mix(0.018, 0.24, uCrowdExcite);
+          float bounce = abs(sin(uCrowdTime * speed + seed * 6.2831 + instPos.x * 0.035));
+          float sy = max(0.05, length(instanceMatrix[1].xyz));
+          transformed.y += (seed < uCrowdAttendance ? bounce * amp : -1500.0) / sy;
         #endif
       `);
   };
@@ -490,7 +494,9 @@ export class StadiumVFX {
     this.software = renderer.gl.isSoftwareRenderer;
     this.crowdUniforms = {
       uCrowdTime: { value: 0 },
-      uCrowdExcite: { value: 0 }
+      uCrowdExcite: { value: 0 },
+      uCrowdTempo: { value: 1 },
+      uCrowdAttendance: { value: 1 }
     };
     if (this.software) return;
 
@@ -763,7 +769,9 @@ export class StadiumVFX {
     this.crowdUniforms.uCrowdTime.value = tSec;
     const isHR = g?.hit?.kind === 'hr' || g?.field?.outcome === 'hr';
     const isHit = fieldMode && g?.field && !g.field.foul;
-    const targetExcite = isHR ? 1.0 : (g?.phase === 'result' && ['single', 'double', 'triple'].includes(g?.hit?.kind)) ? 0.72 : isHit ? 0.35 : 0.0;
+    const a=window.NightGame?.stadiumAtmosphere(g)||{attendance:1,excitement:0,tempo:1};
+    this.crowdUniforms.uCrowdAttendance.value=a.attendance;this.crowdUniforms.uCrowdTempo.value=a.tempo;
+    const targetExcite=isHR?1:Math.max(a.excitement*.72,(g?.phase==='result'&&['single','double','triple'].includes(g?.hit?.kind))?.82:isHit?.48:0);
     this.crowdUniforms.uCrowdExcite.value += (targetExcite - this.crowdUniforms.uCrowdExcite.value) * 0.08;
 
     if (this.r.sky?.material?.uniforms?.uTime) {

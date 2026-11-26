@@ -5,10 +5,20 @@ const brass=[
  {id:'rally',name:'チャンスコール',bpm:145,notes:[65,68,72,68,65,68,75,72,63,67,70,67,63,67,72,70]},
  {id:'clap',name:'クラップ応援',bpm:112,notes:[62,0,62,65,67,0,69,67,65,0,65,67,69,72,69,62]},
  {id:'out',name:'アウトファンファーレ',bpm:112,notes:[67,64,60,0,55,60,64,60]},
- {id:'strike',name:'三振コール',bpm:122,notes:[72,0,72,70,67,0,65,60]}
+ {id:'strike',name:'三振コール',bpm:122,notes:[72,0,72,70,67,0,65,60]},
+ {id:'taiwan-rally',name:'台湾風チャンス',bpm:152,notes:[67,67,0,72,74,72,69,0,67,69,72,76,74,72,69,0]},
+ {id:'korea-rally',name:'韓国風チャンス',bpm:142,notes:[60,0,65,65,67,0,72,67,65,67,0,72,74,72,67,0]},
+ {id:'japan-rally',name:'日本風チャンス',bpm:136,notes:[60,64,67,67,0,67,69,67,65,64,62,65,67,0,67,0]}
 ];
 export const PRESETS=brass.map(({id,name})=>({id:'preset:'+id,name}));
 export const DEFAULT_CAREER_CHEER='preset:stadium';
+export function defaultTeamCheer(id,chance=false){
+ if(!id)return null;
+ if(id.startsWith('npb-')||id==='apbc-japan')return chance?'preset:japan-rally':'preset:stadium';
+ if(id.startsWith('kbo-')||id==='apbc-korea')return chance?'preset:korea-rally':'preset:clap';
+ if(['brothers','dragons','lions','guardians','monkeys','hawks','apbc-taipei'].includes(id))return chance?'preset:taiwan-rally':'preset:clap';
+ return null;
+}
 export function musicSettings(saved){
  const s=saved&&typeof saved==='object'?saved:{};
  return {cheer:level(s.cheer,64),results:level(s.results,62),overlap:level(s.overlap,30),
@@ -156,7 +166,7 @@ export class BallparkMusic{
   if(newPlate){
    const side=game.side,key=[game.inning,game.half,game.battingIndex[side],game.batter.id,game.box?.[game.batter.id]?.pa,game.derby?.turn].join('/');
    const chance=game.bases?.[1]||game.bases?.[2];
-   const fallback=game.worldMusic&&side===game.userSide?DEFAULT_CAREER_CHEER:null;
+   const fallback=defaultTeamCheer(game.teams[side]?.id,chance)||(game.worldMusic&&side===game.userSide?DEFAULT_CAREER_CHEER:null);
    const track=trackForEvent(settings,chance?['chance','cheer']:['cheer'],gameMusicKeys(game,side,game.batter.id),fallback);
    if(this.atBat!==key||this.cheerTrack!==track){
     this.atBat=key;this.atBatSide=side;this.cheerTrack=track;

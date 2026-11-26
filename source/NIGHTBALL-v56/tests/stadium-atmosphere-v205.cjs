@@ -1,0 +1,4 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');global.window=global;vm.runInThisContext(fs.readFileSync(__dirname+'/../dist/game.js','utf8'));const G=NightGame;
+for(const [id,league] of [['npb-l','npb'],['kbo-ss','kbo'],['brothers','cpbl']]){
+const g={teams:{home:{id},away:{id:'npb-g'}},park:{id:'dome'},side:'home',crowdExcitement:()=>.8};const a=G.stadiumAtmosphere(g);assert.equal(a.league,league);assert(a.attendance>=.74&&a.attendance<=.98);assert.deepEqual(a,G.stadiumAtmosphere(g));g.side='away';assert(G.stadiumAtmosphere(g).pan<0);}
+console.log('v205 stadium atmosphere passed');

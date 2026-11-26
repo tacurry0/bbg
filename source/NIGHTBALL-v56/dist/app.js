@@ -4,9 +4,9 @@ import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML} from './results.js?v=77';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
-import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=84';
+import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=205';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer } from './stadium3d.js?v=203';
+import { StadiumRenderer } from './stadium3d.js?v=205';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -1763,7 +1763,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   return {key,keys:person?[key,teamKey]:[key]};
  }
  function musicTrack(slot,keys){
-  const fallback=musicSelection.club==='world-career'&&['cheer','chance'].includes(slot)?DEFAULT_CAREER_CHEER:null;
+  const fallback=['cheer','chance'].includes(slot)?(musicSelection.club==='world-career'?DEFAULT_CAREER_CHEER:defaultTeamCheer(musicSelection.club,slot==='chance')):null;
   return trackForEvent(settings.music,musicSlots(slot),keys,fallback);
  }
  function musicControls(){
@@ -2528,7 +2528,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
    $('atbat-chart-svg').innerHTML=`<rect x="24" y="8" width="36" height="48" rx="2" fill="#304a2b" stroke="#b8cc9a66"/><path d="M36 8v48m12-48v48M24 24h36M24 40h36" stroke="#b8cc9a22"/>${pitches.map((p,i)=>{const cx=clamp(42+p.x*18,7,77),cy=clamp(32+p.y*24,7,57),fill=ATBAT_RESULT_FILL[p.result]||'#d5f36a',last=i===pitches.length-1;return `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="6.2" fill="${fill}"${last?' stroke="#fff" stroke-width="1.5"':''}/><text x="${cx.toFixed(1)}" y="${(cy+2.4).toFixed(1)}" fill="#182b15" text-anchor="middle" font-size="7" font-weight="bold">${i+1}</text>`;}).join('')}`;
  }
  function updateUI(){
-   if(!game)return;const g=game;hideStaleResultBanner();stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
+   if(!game)return;const g=game;hideStaleResultBanner();stadiumAudio.setAtmosphere(NightGame.stadiumAtmosphere(g));stadiumAudio.setExcitement(g.crowdExcitement());updateHalfBreak(g);const def=g.defending,field=!!g.field&&['field','result'].includes(g.phase);$('bench-button').hidden=!g.isFixture||!!g.umpireMode||(g.mirror&&!g.onlineGame);$('bench-button').disabled=g.phase==='ended';$('bench-button').textContent=queuedBench?'交代待ち':'ベンチ';$('bench-button').classList.toggle('pending',queuedBench);const subBtn=$('sub');subBtn.hidden=$('bench-button').hidden;subBtn.disabled=g.phase==='ended';subBtn.textContent=queuedBench?'交代待ち':'交代';subBtn.classList.toggle('pending',queuedBench);
    if(g.timeAttack){
      const ta=g.timeAttack,live=ta.kind==='pitch'?ta.outs+(g.defending?g.outs:0):(g.userHome?g.homeScore:g.awayScore),opp=g.userHome?g.awayScore:g.homeScore;
      $('scoreboard').innerHTML=`<div class="derby-score"><div class="derby-round"><span>タイムアタック · ${ta.kind==='bat'?'攻撃編':'守備編'} · ${ta.halves+1}セット目</span><strong id="ta-clock"></strong></div><div class="derby-names"><span>${ta.kind==='bat'?'得点':'アウト'}<b>${live}</b></span><span>${ta.kind==='bat'?`安打 ${g.session.hits} · 本塁打 ${g.session.hr}`:`失点 ${opp} · 奪三振 ${g.session.ks}`}</span></div></div>`;
