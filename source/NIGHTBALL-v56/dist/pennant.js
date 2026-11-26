@@ -143,7 +143,7 @@
    if(!leagueId)throw Error('Unknown club');
    if(customDef&&!customDef.clubIds.includes(clubId))throw Error('Club is not in the custom league');
    if(!Number.isInteger(gamesPerOpponent)||gamesPerOpponent<1||gamesPerOpponent>10)throw Error('Choose 1–10 games per opponent');
-   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.negotiationLog=[];this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.learnedPitches={};this.pitchLearning={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
+   this.rotation={};this.playerStats={};this.history=[];this.injuries={};this.settledRound=-1;this.season=1;this.rosterMoves={};this.customPlayers={};this.departed=[];this.ratingMods={};this.ages={};this.news=[];this.tradeOffer=null;this.negotiationLog=[];this.offseason=null;this.titles=[];this.seasonArchive=[];this.mastery={};this.learnedPitches={};this.pitchLearning={};this.farmGameRound=-1;this.farmMoves={};this.farmProgress={};this.allstarPlayed=false;this.celebrated=false;this.faDone=false;this.schema=3;this.leagueId=leagueId;this.customLeague=customDef;this.dh=customDef?customDef.dh:true;this.playoffs=customDef?customDef.playoffs:true;this.gamesPerOpponent=gamesPerOpponent;this.id=Date.now().toString(36)+Math.random().toString(36).slice(2,7);this.clubId=clubId;this.round=0;this.results={};this.pitcher=NightPlayers.defaultPitcherIndex?.(NightTeams.get(clubId))??0;this.currentGame=null;this.postseason=null;this.createdAt=new Date().toISOString();
    this.schedule=roundRobin(this.clubs.map(c=>c.id),gamesPerOpponent,clubId);
    if(this.isNPB){
     this.schema=4;
@@ -402,6 +402,7 @@
    let pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP'&&!out.has(club.pitchers[i].id)&&!(this.farmMoves||{})[club.pitchers[i].id]);
    if(!pool.length)pool=club.pitchers.map((p,i)=>i).filter(i=>club.pitchers[i].role==='SP');
    const list=pool.length?pool:club.pitchers.map((_,i)=>i).slice(0,4);
+   if(this.season===1&&club.startingPitcherId){const opening=club.pitchers.findIndex(p=>p.id===club.startingPitcherId);if(opening>=0&&!out.has(club.startingPitcherId)&&!(this.farmMoves||{})[club.startingPitcherId]){const i=list.indexOf(opening);if(i>=0)list.splice(i,1);list.unshift(opening);}}
    return list[(this.rotation[clubId]||0)%list.length];
   }
   clubRoster(clubId){

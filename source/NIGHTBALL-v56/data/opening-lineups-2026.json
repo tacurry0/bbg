@@ -1,0 +1,2151 @@
+{
+  "season": 2026,
+  "applied": [
+    "owls",
+    "foxes",
+    "falcons",
+    "mariners",
+    "wolves",
+    "comets",
+    "npb-g",
+    "npb-db",
+    "npb-t",
+    "npb-c",
+    "npb-d",
+    "npb-s",
+    "npb-h",
+    "npb-f",
+    "npb-e",
+    "npb-m",
+    "npb-b",
+    "npb-l",
+    "npb-a",
+    "npb-v",
+    "kbo-ht",
+    "kbo-ss",
+    "kbo-lg",
+    "kbo-ob",
+    "kbo-kt",
+    "kbo-sk",
+    "kbo-lt",
+    "kbo-hh",
+    "kbo-nc",
+    "kbo-wo"
+  ],
+  "newPlayers": [
+    {
+      "club": "npb-a",
+      "id": "npb-a-opening-p-ul4-n5c-mxu-nej",
+      "name": "髙田 琢登",
+      "pos": "P",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "npb-a",
+      "id": "npb-a-opening-b-kfy-i9d-o9o-inn",
+      "name": "松山 竜平",
+      "pos": "1B",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "npb-v",
+      "id": "npb-v-opening-p-obk-id2-i6y-kzd",
+      "name": "笠島 尚樹",
+      "pos": "P",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-ht",
+      "id": "kbo-ht-b-52667",
+      "name": "ユン・ドヒョン",
+      "pos": "1B",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-ht",
+      "id": "kbo-ht-b-50657",
+      "name": "パク・ミン",
+      "pos": "SS",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-ss",
+      "id": "kbo-ss-b-52430",
+      "name": "キム・ヨンウン",
+      "pos": "3B",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-lg",
+      "id": "kbo-lg-p-55146",
+      "name": "ヨニー・チリノス",
+      "pos": "P",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-kt",
+      "id": "kbo-kt-b-56006",
+      "name": "イ・ガンミン",
+      "pos": "SS",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-hh",
+      "id": "kbo-hh-b-62700",
+      "name": "ハ・ジュソク",
+      "pos": "2B",
+      "provisional": true,
+      "historical": true
+    },
+    {
+      "club": "kbo-hh",
+      "id": "kbo-hh-b-78288",
+      "name": "チェ・ジェフン",
+      "pos": "C",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-nc",
+      "id": "kbo-nc-b-54944",
+      "name": "マット・デビッドソン",
+      "pos": "DH",
+      "provisional": true,
+      "historical": true
+    },
+    {
+      "club": "kbo-nc",
+      "id": "kbo-nc-b-69995",
+      "name": "ソ・ホチョル",
+      "pos": "1B",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-wo",
+      "id": "kbo-wo-b-56304",
+      "name": "パク・ハンギョル",
+      "pos": "2B",
+      "provisional": true,
+      "historical": false
+    },
+    {
+      "club": "kbo-wo",
+      "id": "kbo-wo-b-78135",
+      "name": "イ・ヒョンジョン",
+      "pos": "RF",
+      "provisional": true,
+      "historical": false
+    }
+  ],
+  "battingViews": [
+    {
+      "club": "npb-g",
+      "name": "竹丸 和幸",
+      "id": "npb-g-p2-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-db",
+      "name": "東 克樹",
+      "id": "npb-db-p1-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-t",
+      "name": "村上 頌樹",
+      "id": "npb-t-p1-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-c",
+      "name": "床田 寛樹",
+      "id": "npb-c-p1-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-d",
+      "name": "柳 裕也",
+      "id": "npb-d-p2-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-s",
+      "name": "吉村 貢司郎",
+      "id": "npb-s-p3-opening-bat",
+      "pitcherSlot": true
+    },
+    {
+      "club": "npb-f",
+      "name": "矢澤 宏太",
+      "id": "npb-f-p-extra-2106284-opening-bat",
+      "pitcherSlot": false
+    }
+  ],
+  "unresolved": [],
+  "notes": [
+    "Actual opening lineup positions are retained in openingLineup.order. The current DH-based engine uses the pitcher batting view in DH slot for six Central League clubs; no full non-DH substitution logic added.",
+    "Historical club entries are created when a season roster lists the opening starter on another team; ratings are provisional.",
+    "Prior saved custom lineups are preserved; old default orders migrate."
+  ],
+  "teams": {
+    "owls": {
+      "date": "2026-03-28",
+      "source": "https://www.ftvnews.com.tw/news/detail/2026328W0182",
+      "starterSource": "https://www.ftvnews.com.tw/news/detail/2026328W0182",
+      "starterId": "op1",
+      "starterName": "羅戈",
+      "order": [
+        {
+          "id": "o4",
+          "name": "王威晨",
+          "position": "3B",
+          "battingOrder": 1
+        },
+        {
+          "id": "o3",
+          "name": "陳俊秀",
+          "position": "1B",
+          "battingOrder": 2
+        },
+        {
+          "id": "o5",
+          "name": "宋晟睿",
+          "position": "CF",
+          "battingOrder": 3
+        },
+        {
+          "id": "o12",
+          "name": "曾頌恩",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "o6",
+          "name": "詹子賢",
+          "position": "LF",
+          "battingOrder": 5
+        },
+        {
+          "id": "o7",
+          "name": "江坤宇",
+          "position": "SS",
+          "battingOrder": 6
+        },
+        {
+          "id": "o8",
+          "name": "高宇杰",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "o2",
+          "name": "岳東華",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "o15",
+          "name": "許庭綸",
+          "position": "RF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "foxes": {
+      "date": "2026-03-29",
+      "source": "https://www.dcard.tw/f/cpbl/p/261197160",
+      "starterSource": "https://www.dcard.tw/f/cpbl/p/261197160",
+      "starterId": "fp2",
+      "starterName": "梅賽鍶",
+      "order": [
+        {
+          "id": "f1",
+          "name": "李凱威",
+          "position": "2B",
+          "battingOrder": 1
+        },
+        {
+          "id": "f2",
+          "name": "劉基鴻",
+          "position": "3B",
+          "battingOrder": 2
+        },
+        {
+          "id": "f3",
+          "name": "吉力吉撈．鞏冠",
+          "position": "DH",
+          "battingOrder": 3
+        },
+        {
+          "id": "f4",
+          "name": "朱育賢",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "f5",
+          "name": "陳子豪",
+          "position": "LF",
+          "battingOrder": 5
+        },
+        {
+          "id": "f6",
+          "name": "郭天信",
+          "position": "CF",
+          "battingOrder": 6
+        },
+        {
+          "id": "f7",
+          "name": "劉俊緯",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "f8",
+          "name": "蔣少宏",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "f9",
+          "name": "曾聖安",
+          "position": "RF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": "先発打順は試合スレッド、投手と結果はCNAでも確認"
+    },
+    "falcons": {
+      "date": "2026-03-29",
+      "source": "https://www.dcard.tw/f/cpbl/p/261197049",
+      "starterSource": "https://www.dcard.tw/f/cpbl/p/261197049",
+      "starterId": "falcons-p10",
+      "starterName": "獅帝芬",
+      "order": [
+        {
+          "id": "falcons-b-extra-0000006847",
+          "name": "田子杰",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "falcons-b7",
+          "name": "陳聖平",
+          "position": "SS",
+          "battingOrder": 2
+        },
+        {
+          "id": "falcons-b6",
+          "name": "林子豪",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "falcons-b-extra-0000001474",
+          "name": "蘇智傑",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "falcons-b4",
+          "name": "林培緯",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "falcons-b12",
+          "name": "朱迦恩",
+          "position": "RF",
+          "battingOrder": 6
+        },
+        {
+          "id": "falcons-b15",
+          "name": "林祖傑",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "falcons-b8",
+          "name": "陳重羽",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "falcons-b1",
+          "name": "邱智呈",
+          "position": "LF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": "先発打順は試合スレッド、投手はCPBL公式でも確認"
+    },
+    "mariners": {
+      "date": "2026-03-29",
+      "source": "https://www.dcard.tw/f/cpbl/p/261197207",
+      "starterSource": "https://www.dcard.tw/f/cpbl/p/261197207",
+      "starterId": "mariners-p-extra-0000007782",
+      "starterName": "威戈神",
+      "order": [
+        {
+          "id": "mariners-b-extra-0000000361",
+          "name": "張洺瑀",
+          "position": "LF",
+          "battingOrder": 1
+        },
+        {
+          "id": "mariners-b3",
+          "name": "張育成",
+          "position": "SS",
+          "battingOrder": 2
+        },
+        {
+          "id": "mariners-b-extra-0000006063",
+          "name": "邦力多",
+          "position": "CF",
+          "battingOrder": 3
+        },
+        {
+          "id": "mariners-b4",
+          "name": "范國宸",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "mariners-b2",
+          "name": "孔念恩",
+          "position": "RF",
+          "battingOrder": 5
+        },
+        {
+          "id": "mariners-b-extra-0000005496",
+          "name": "辛元旭",
+          "position": "DH",
+          "battingOrder": 6
+        },
+        {
+          "id": "mariners-b8",
+          "name": "戴培峰",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "mariners-b7",
+          "name": "王念好",
+          "position": "3B",
+          "battingOrder": 8
+        },
+        {
+          "id": "mariners-b16",
+          "name": "林岳谷",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": "先発打順は試合スレッド"
+    },
+    "wolves": {
+      "date": "2026-03-28",
+      "source": "https://www.ftvnews.com.tw/news/detail/2026328W0182",
+      "starterSource": "https://www.ftvnews.com.tw/news/detail/2026328W0182",
+      "starterId": "wolves-p1",
+      "starterName": "威能帝",
+      "order": [
+        {
+          "id": "wolves-b-extra-0000007288",
+          "name": "何品室融",
+          "position": "RF",
+          "battingOrder": 1
+        },
+        {
+          "id": "wolves-b12",
+          "name": "林政華",
+          "position": "CF",
+          "battingOrder": 2
+        },
+        {
+          "id": "wolves-b1",
+          "name": "陳晨威",
+          "position": "LF",
+          "battingOrder": 3
+        },
+        {
+          "id": "wolves-b4",
+          "name": "林泓育",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "wolves-b13",
+          "name": "林智平",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "wolves-b14",
+          "name": "林承飛",
+          "position": "SS",
+          "battingOrder": 6
+        },
+        {
+          "id": "wolves-b7",
+          "name": "林子偉",
+          "position": "3B",
+          "battingOrder": 7
+        },
+        {
+          "id": "wolves-b8",
+          "name": "宋嘉翔",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "wolves-b-extra-0000007589",
+          "name": "許賀捷",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "comets": {
+      "date": "2026-03-29",
+      "source": "https://www.dcard.tw/f/cpbl/p/261197049",
+      "starterSource": "https://www.dcard.tw/f/cpbl/p/261197049",
+      "starterId": "comets-p4",
+      "starterName": "黃子鵬",
+      "order": [
+        {
+          "id": "comets-b1",
+          "name": "王博玄",
+          "position": "RF",
+          "battingOrder": 1
+        },
+        {
+          "id": "comets-b2",
+          "name": "曾子祐",
+          "position": "SS",
+          "battingOrder": 2
+        },
+        {
+          "id": "comets-b3",
+          "name": "吳念庭",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "comets-b4",
+          "name": "魔鷹",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "comets-b6",
+          "name": "陳文杰",
+          "position": "CF",
+          "battingOrder": 5
+        },
+        {
+          "id": "comets-b7",
+          "name": "杜家明",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "comets-b9",
+          "name": "曾昱磬",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "comets-b8",
+          "name": "劉時豪",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "comets-b10",
+          "name": "藍寅倫",
+          "position": "LF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": "先発打順は試合スレッド、投手はCPBL公式でも確認"
+    },
+    "npb-g": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-g-p2",
+      "starterName": "竹丸 和幸",
+      "order": [
+        {
+          "id": "npb-g-b6",
+          "name": "キャベッジ",
+          "position": "LF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-g-b8",
+          "name": "松本 剛",
+          "position": "CF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-g-b5",
+          "name": "泉口 友汰",
+          "position": "SS",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-g-b2",
+          "name": "ダルベック",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-g-b16",
+          "name": "岸田 行倫",
+          "position": "C",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-g-b-extra-ffx-i9d-ny4-sn1",
+          "name": "中山 礼都",
+          "position": "RF",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-g-b-extra-h8i-kdo-gcn-fju",
+          "name": "坂本 勇人",
+          "position": "3B",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-g-b3",
+          "name": "浦田 俊輔",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-g-p2-opening-bat",
+          "name": "竹丸 和幸",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-db": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-db-p1",
+      "starterName": "東 克樹",
+      "order": [
+        {
+          "id": "npb-db-b3",
+          "name": "牧 秀悟",
+          "position": "2B",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-db-b2",
+          "name": "佐野 恵太",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-db-b10",
+          "name": "宮﨑 敏郎",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-db-b-extra-9n7-9mf-9m0-9mx",
+          "name": "ビシエド",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-db-b-extra-9n6-9np-9o3-9nl-9nv",
+          "name": "ヒュンメル",
+          "position": "RF",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-db-b8",
+          "name": "蝦名 達夫",
+          "position": "CF",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-db-b-extra-i9d-kdo-nyo-hlz",
+          "name": "山本 祐大",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-db-b-extra-noz-fey-lio-s9p",
+          "name": "石上 泰輝",
+          "position": "SS",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-db-p1-opening-bat",
+          "name": "東 克樹",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-t": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-t-p1",
+      "starterName": "村上 頌樹",
+      "order": [
+        {
+          "id": "npb-t-b8",
+          "name": "近本 光司",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-t-b3",
+          "name": "中野 拓夢",
+          "position": "2B",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-t-b7",
+          "name": "森下 翔太",
+          "position": "RF",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-t-b4",
+          "name": "佐藤 輝明",
+          "position": "3B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-t-b2",
+          "name": "大山 悠輔",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-t-b-extra-ffx-ijh-gcn-k2f",
+          "name": "中川 勇斗",
+          "position": "LF",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-t-b-extra-i6n-in5-o9o-inn",
+          "name": "小幡 竜平",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-t-b1",
+          "name": "坂本 誠志郎",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-t-p1-opening-bat",
+          "name": "村上 頌樹",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-c": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-c-p1",
+      "starterName": "床田 寛樹",
+      "order": [
+        {
+          "id": "npb-c-b-extra-inn-ijh-q9a",
+          "name": "平川 蓮",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-c-b-extra-ffx-kep-hns-jdc",
+          "name": "中村 奨成",
+          "position": "RF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-c-b5",
+          "name": "小園 海斗",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-c-b4",
+          "name": "佐々木 泰",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-c-b6",
+          "name": "ファビアン",
+          "position": "LF",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-c-b3",
+          "name": "菊池 涼介",
+          "position": "2B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-c-b2",
+          "name": "坂倉 将吾",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-c-b14",
+          "name": "勝田 成",
+          "position": "SS",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-c-p1-opening-bat",
+          "name": "床田 寛樹",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-d": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-d-p2",
+      "starterName": "柳 裕也",
+      "order": [
+        {
+          "id": "npb-d-b-extra-9m3-9nu-9mh-9mu",
+          "name": "カリステ",
+          "position": "RF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-d-b10",
+          "name": "田中 幹也",
+          "position": "2B",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-d-b7",
+          "name": "岡林 勇希",
+          "position": "CF",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-d-b8",
+          "name": "細川 成也",
+          "position": "LF",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-d-b3",
+          "name": "福永 裕基",
+          "position": "3B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-d-b2",
+          "name": "サノー",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-d-b1",
+          "name": "石伊 雄太",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-d-b5",
+          "name": "村松 開人",
+          "position": "SS",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-d-p2-opening-bat",
+          "name": "柳 裕也",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-s": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/2/",
+      "starterId": "npb-s-p3",
+      "starterName": "吉村 貢司郎",
+      "order": [
+        {
+          "id": "npb-s-b5",
+          "name": "長岡 秀樹",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-s-b7",
+          "name": "サンタナ",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-s-b1",
+          "name": "古賀 優大",
+          "position": "C",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-s-b2",
+          "name": "オスナ",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-s-b8",
+          "name": "増田 珠",
+          "position": "RF",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-s-b4",
+          "name": "赤羽 由紘",
+          "position": "3B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-s-b6",
+          "name": "岩田 幸宏",
+          "position": "CF",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-s-b-extra-fm2-qg4-mx5-fux",
+          "name": "伊藤 琉偉",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-s-p3-opening-bat",
+          "name": "吉村 貢司郎",
+          "position": "P",
+          "battingOrder": 9
+        }
+      ],
+      "dh": false,
+      "sourceNote": null
+    },
+    "npb-h": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-h-p2",
+      "starterName": "上沢 直之",
+      "order": [
+        {
+          "id": "npb-h-b7",
+          "name": "周東 佑京",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-h-b6",
+          "name": "近藤 健介",
+          "position": "RF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-h-b12",
+          "name": "柳町 達",
+          "position": "LF",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-h-b9",
+          "name": "柳田 悠岐",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-h-b16",
+          "name": "山川 穂高",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-h-b-extra-fka-i3y-fvp-hm2",
+          "name": "今宮 健太",
+          "position": "SS",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-h-b4",
+          "name": "栗原 陵矢",
+          "position": "3B",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-h-b1",
+          "name": "海野 隆司",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-h-b3",
+          "name": "牧原 大成",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-f": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-f-p1",
+      "starterName": "伊藤 大海",
+      "order": [
+        {
+          "id": "npb-f-b14",
+          "name": "水谷 瞬",
+          "position": "LF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-f-b9",
+          "name": "清宮 幸太郎",
+          "position": "1B",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-f-b2",
+          "name": "レイエス",
+          "position": "DH",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-f-b4",
+          "name": "郡司 裕也",
+          "position": "3B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-f-b8",
+          "name": "万波 中正",
+          "position": "RF",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-f-p-extra-2106284-opening-bat",
+          "name": "矢澤 宏太",
+          "position": "CF",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-f-b-extra-i9d-owz-o1s",
+          "name": "山縣 秀",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-f-b1",
+          "name": "田宮 裕涼",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-f-b5",
+          "name": "水野 達稀",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-e": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-e-p1",
+      "starterName": "荘司 康誠",
+      "order": [
+        {
+          "id": "npb-e-b5",
+          "name": "村林 一輝",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-e-b6",
+          "name": "辰己 涼介",
+          "position": "CF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-e-b-extra-9ng-9lw-9mw",
+          "name": "ボイト",
+          "position": "DH",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-e-b9",
+          "name": "マッカスカー",
+          "position": "LF",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-e-b4",
+          "name": "黒川 史陽",
+          "position": "3B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-e-b2",
+          "name": "浅村 栄斗",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-e-b8",
+          "name": "中島 大輔",
+          "position": "RF",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-e-b1",
+          "name": "太田 光",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-e-b-extra-i6n-lpt-n5c-hlz-p90",
+          "name": "小深田 大翔",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-m": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-m-p-extra-2100442",
+      "starterName": "毛利 海大",
+      "order": [
+        {
+          "id": "npb-m-b-extra-ul4-smg-mzf-k2f",
+          "name": "髙部 瑛斗",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-m-b9",
+          "name": "藤原 恭大",
+          "position": "RF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-m-b7",
+          "name": "西川 史礁",
+          "position": "LF",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-m-b-extra-9nh-9nt-9o3-9mb",
+          "name": "ポランコ",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-m-b10",
+          "name": "寺地 隆成",
+          "position": "3B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-m-b2",
+          "name": "ソト",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-m-b-extra-leo-n5c-kf9-p90",
+          "name": "池田 来翔",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-m-b-extra-kfy-ijh-qj2-n4v",
+          "name": "松川 虎生",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-m-b3",
+          "name": "小川 龍成",
+          "position": "SS",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-b": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-b-p-extra-1900087",
+      "starterName": "宮城 大弥",
+      "order": [
+        {
+          "id": "npb-b-b4",
+          "name": "宗 佑磨",
+          "position": "3B",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-b-b8",
+          "name": "西川 龍馬",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-b-b3",
+          "name": "太田 椋",
+          "position": "2B",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-b-b-extra-9mf-9oc-9nm-9lu",
+          "name": "シーモア",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-b-b1",
+          "name": "若月 健矢",
+          "position": "DH",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-b-b16",
+          "name": "森 友哉",
+          "position": "C",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-b-b9",
+          "name": "中川 圭太",
+          "position": "CF",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-b-b5",
+          "name": "紅林 弘太郎",
+          "position": "SS",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-b-b-extra-iqr-iap-hlz-ixj",
+          "name": "廣岡 大志",
+          "position": "RF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-l": {
+      "date": "2026-03-27",
+      "source": "https://www.baseballchannel.jp/npb/257522/",
+      "starterSource": "https://www.baseballchannel.jp/npb/257522/",
+      "starterId": "npb-l-p5",
+      "starterName": "渡邉 勇太朗",
+      "order": [
+        {
+          "id": "npb-l-b-extra-klt-gin-i6e-ixj",
+          "name": "桑原 将志",
+          "position": "LF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-l-b8",
+          "name": "長谷川 信哉",
+          "position": "1B",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-l-b7",
+          "name": "西川 愛也",
+          "position": "CF",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-l-b6",
+          "name": "カナリオ",
+          "position": "RF",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-l-b-extra-hli-idq-fse-lf4",
+          "name": "外崎 修汰",
+          "position": "DH",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-l-b4",
+          "name": "渡部 聖弥",
+          "position": "3B",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-l-b5",
+          "name": "源田 壮亮",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-l-b3",
+          "name": "滝澤 夏央",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-l-b1",
+          "name": "小島 大河",
+          "position": "C",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-a": {
+      "date": "2026-03-14",
+      "source": "https://baseball.yahoo.co.jp/npb/game/2021040178/top",
+      "starterSource": "https://baseball.yahoo.co.jp/npb/game/2021040178/top",
+      "starterId": "npb-a-opening-p-ul4-n5c-mxu-nej",
+      "starterName": "髙田 琢登",
+      "order": [
+        {
+          "id": "npb-a-b7",
+          "name": "漆原 幻汰",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-a-b3",
+          "name": "田中 俊太",
+          "position": "2B",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-a-b9",
+          "name": "渡邉 諒",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-a-b8",
+          "name": "大川 陽大",
+          "position": "LF",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-a-opening-b-kfy-i9d-o9o-inn",
+          "name": "松山 竜平",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-a-b6",
+          "name": "ウォーカー",
+          "position": "DH",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-a-b15",
+          "name": "浅井 玲於",
+          "position": "RF",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-a-b16",
+          "name": "山田 和",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-a-b13",
+          "name": "上原 裕樹",
+          "position": "CF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "npb-v": {
+      "date": "2026-03-14",
+      "source": "https://npb.jp/bis/2026/games/fs2026031400111.html",
+      "starterSource": "https://npb.jp/bis/2026/games/fs2026031400111.html",
+      "starterId": "npb-v-opening-p-obk-id2-i6y-kzd",
+      "starterName": "笠島 尚樹",
+      "order": [
+        {
+          "id": "npb-v-b8",
+          "name": "鈴木 将平",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "npb-v-b7",
+          "name": "廣沢 新太郎",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "npb-v-b4",
+          "name": "倉本 寿彦",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "npb-v-b2",
+          "name": "今村 龍之介",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "npb-v-b11",
+          "name": "和辻 大輝",
+          "position": "2B",
+          "battingOrder": 5
+        },
+        {
+          "id": "npb-v-b6",
+          "name": "塩﨑 栄多",
+          "position": "DH",
+          "battingOrder": 6
+        },
+        {
+          "id": "npb-v-b5",
+          "name": "仲村 来唯也",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "npb-v-b15",
+          "name": "李 健熙",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "npb-v-b14",
+          "name": "篠原 玲央",
+          "position": "RF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-ht": {
+      "date": "2026-03-28",
+      "source": "https://v.daum.net/v/20260328173405903",
+      "starterSource": "https://v.daum.net/v/20260328173405903",
+      "starterId": "kbo-ht-p-54640",
+      "starterName": "ジェームズ・ネイル",
+      "order": [
+        {
+          "id": "kbo-ht-b-65653",
+          "name": "キム・ホリョン",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-ht-b-56626",
+          "name": "ハロルド・カストロ",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-ht-b-52605",
+          "name": "キム・ドヨン",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-ht-b-62947",
+          "name": "ナ・ソンボム",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-ht-b-78603",
+          "name": "キム・ソンビン",
+          "position": "2B",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-ht-b-69636",
+          "name": "オ・ソヌ",
+          "position": "RF",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-ht-b-52667",
+          "name": "ユン・ドヒョン",
+          "position": "1B",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-ht-b-78122",
+          "name": "キム・テグン",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-ht-b-50657",
+          "name": "パク・ミン",
+          "position": "SS",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-ss": {
+      "date": "2026-03-28",
+      "source": "https://www.osen.co.kr/article/G1112768605",
+      "starterSource": "https://www.osen.co.kr/article/G1112768605",
+      "starterId": "kbo-ss-p-53375",
+      "starterName": "アリエル・フラード",
+      "order": [
+        {
+          "id": "kbo-ss-b-52415",
+          "name": "イ・ジェヒョン",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-ss-b-67449",
+          "name": "キム・ソンユン",
+          "position": "RF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-ss-b-62404",
+          "name": "ク・ジャウク",
+          "position": "LF",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-ss-b-54400",
+          "name": "ルーウィン・ディアス",
+          "position": "1B",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-ss-b-72443",
+          "name": "チェ・ヒョンウ",
+          "position": "DH",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-ss-b-52430",
+          "name": "キム・ヨンウン",
+          "position": "3B",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-ss-b-74540",
+          "name": "カン・ミンホ",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-ss-b-62234",
+          "name": "リュ・ジヒョク",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-ss-b-50458",
+          "name": "キム・ジチャン",
+          "position": "CF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-lg": {
+      "date": "2026-03-28",
+      "source": "https://www.newspim.com/news/view/20260329000080",
+      "starterSource": "https://www.koreabaseball.com/MediaNews/Notice/View.aspx?bdSe=11882",
+      "starterId": "kbo-lg-p-55146",
+      "starterName": "ヨニー・チリノス",
+      "order": [
+        {
+          "id": "kbo-lg-b-66108",
+          "name": "ホン・チャンギ",
+          "position": "RF",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-lg-b-65207",
+          "name": "シン・ミンジェ",
+          "position": "2B",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-lg-b-53123",
+          "name": "オースティン・ディーン",
+          "position": "1B",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-lg-b-69102",
+          "name": "ムン・ボギョン",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-lg-b-79365",
+          "name": "パク・ドンウォン",
+          "position": "C",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-lg-b-68119",
+          "name": "ムン・ソンジュ",
+          "position": "LF",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-lg-b-79109",
+          "name": "オ・ジファン",
+          "position": "SS",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-lg-b-69100",
+          "name": "ク・ボンヒョク",
+          "position": "3B",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-lg-b-62415",
+          "name": "パク・ヘミン",
+          "position": "CF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-ob": {
+      "date": "2026-03-28",
+      "source": "https://www.chosun.com/sports/baseball/2026/03/28/GA4WKZLFHFSWGMBUGY2TKOJQMI/?outputType=amp",
+      "starterSource": "https://www.chosun.com/sports/baseball/2026/03/28/GA4WKZLFHFSWGMBUGY2TKOJQMI/?outputType=amp",
+      "starterId": "kbo-ob-p-50234",
+      "starterName": "FLEXEN Christopher",
+      "order": [
+        {
+          "id": "kbo-ob-b-64646",
+          "name": "パク・チャンホ",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-ob-b-79231",
+          "name": "チョン・スビン",
+          "position": "CF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-ob-b-56251",
+          "name": "ダズ・キャメロン",
+          "position": "RF",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-ob-b-76232",
+          "name": "ヤン・ウィジ",
+          "position": "C",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-ob-b-63123",
+          "name": "カン・スンホ",
+          "position": "DH",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-ob-b-64153",
+          "name": "ヤン・ソクファン",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-ob-b-55252",
+          "name": "パク・ジュンスン",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-ob-b-51203",
+          "name": "アン・ジェソク",
+          "position": "3B",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-ob-b-50204",
+          "name": "パク・ジフン",
+          "position": "LF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-kt": {
+      "date": "2026-03-28",
+      "source": "https://www.newsen.com/news_view.php?uid=202603281037021031",
+      "starterSource": "https://www.newsen.com/news_view.php?uid=202603281037021031",
+      "starterId": "kbo-kt-p-56032",
+      "starterName": "マット・サウアー",
+      "order": [
+        {
+          "id": "kbo-kt-b-66606",
+          "name": "チェ・ウォンジュン",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-kt-b-76290",
+          "name": "キム・ヒョンス",
+          "position": "1B",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-kt-b-52001",
+          "name": "アン・ヒョンミン",
+          "position": "RF",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-kt-b-56034",
+          "name": "サム・ヒリアード",
+          "position": "LF",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-kt-b-53036",
+          "name": "リュ・ヒョニン",
+          "position": "2B",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-kt-b-67644",
+          "name": "イ・ジョンフン",
+          "position": "DH",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-kt-b-79240",
+          "name": "ホ・ギョンミン",
+          "position": "3B",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-kt-b-63722",
+          "name": "ハン・スンテク",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-kt-b-56006",
+          "name": "イ・ガンミン",
+          "position": "SS",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-sk": {
+      "date": "2026-03-28",
+      "source": "https://v.daum.net/v/20260328173405903",
+      "starterSource": "https://v.daum.net/v/20260328173405903",
+      "starterId": "kbo-sk-p-55855",
+      "starterName": "WHITE Mitch",
+      "order": [
+        {
+          "id": "kbo-sk-b-67893",
+          "name": "パク・ソンハン",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-sk-b-53827",
+          "name": "ギジェルモ・エレディア",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-sk-b-75847",
+          "name": "チェ・ジョン",
+          "position": "3B",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-sk-b-78224",
+          "name": "キム・ジェファン",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-sk-b-51868",
+          "name": "コ・ミョンジュン",
+          "position": "1B",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-sk-b-50854",
+          "name": "チェ・ジフン",
+          "position": "CF",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-sk-b-51865",
+          "name": "チョ・ヒョンウ",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-sk-b-62934",
+          "name": "キム・ソンウク",
+          "position": "RF",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-sk-b-54812",
+          "name": "チョン・ジュンジェ",
+          "position": "2B",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-lt": {
+      "date": "2026-03-28",
+      "source": "https://www.osen.co.kr/article/G1112768605",
+      "starterSource": "https://www.osen.co.kr/article/G1112768605",
+      "starterId": "kbo-lt-p-56531",
+      "starterName": "エルビン・ロドリゲス",
+      "order": [
+        {
+          "id": "kbo-lt-b-54529",
+          "name": "ビクター・レイエス",
+          "position": "DH",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-lt-b-50150",
+          "name": "ソン・ホヨン",
+          "position": "3B",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-lt-b-52591",
+          "name": "ユン・ドンヒ",
+          "position": "RF",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-lt-b-78513",
+          "name": "チョン・ジュヌ",
+          "position": "LF",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-lt-b-61102",
+          "name": "ユ・ガンナム",
+          "position": "C",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-lt-b-62931",
+          "name": "ノ・ジンヒョク",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-lt-b-52568",
+          "name": "ハン・テヤン",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-lt-b-68205",
+          "name": "チョン・ミンジェ",
+          "position": "SS",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-lt-b-68507",
+          "name": "チャン・ドゥソン",
+          "position": "CF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-hh": {
+      "date": "2026-03-28",
+      "source": "https://www.koreabaseball.com/MediaNews/News/BreakingNews/View.aspx?bdSe=60525",
+      "starterSource": "https://www.koreabaseball.com/MediaNews/News/BreakingNews/View.aspx?bdSe=60525",
+      "starterId": "kbo-hh-p-56712",
+      "starterName": "ウィルケル・エルナンデス",
+      "order": [
+        {
+          "id": "kbo-hh-b-56754",
+          "name": "オ・ジェウォン",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-hh-b-54730",
+          "name": "ヨナタン・ペルラザ",
+          "position": "RF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-hh-b-53764",
+          "name": "ムン・ヒョンビン",
+          "position": "LF",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-hh-b-69737",
+          "name": "ノ・シファン",
+          "position": "3B",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-hh-b-68050",
+          "name": "カン・ベクホ",
+          "position": "DH",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-hh-b-79192",
+          "name": "チェ・ウンソン",
+          "position": "1B",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-hh-b-62700",
+          "name": "ハ・ジュソク",
+          "position": "2B",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-hh-b-78288",
+          "name": "チェ・ジェフン",
+          "position": "C",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-hh-b-64006",
+          "name": "シム・ウジュン",
+          "position": "SS",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-nc": {
+      "date": "2026-03-28",
+      "source": "https://www.chosun.com/sports/baseball/2026/03/28/GA4WKZLFHFSWGMBUGY2TKOJQMI/?outputType=amp",
+      "starterSource": "https://www.chosun.com/sports/baseball/2026/03/28/GA4WKZLFHFSWGMBUGY2TKOJQMI/?outputType=amp",
+      "starterId": "kbo-nc-p-65933",
+      "starterName": "ク・チャンモ",
+      "order": [
+        {
+          "id": "kbo-nc-b-51907",
+          "name": "キム・ジュウォン",
+          "position": "SS",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-nc-b-63963",
+          "name": "クォン・ヒドン",
+          "position": "LF",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-nc-b-62907",
+          "name": "パク・ミヌ",
+          "position": "2B",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-nc-b-54944",
+          "name": "マット・デビッドソン",
+          "position": "DH",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-nc-b-79215",
+          "name": "パク・ゴヌ",
+          "position": "RF",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-nc-b-51344",
+          "name": "キム・フィジプ",
+          "position": "3B",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-nc-b-68912",
+          "name": "キム・ヒョンジュン",
+          "position": "C",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-nc-b-69995",
+          "name": "ソ・ホチョル",
+          "position": "1B",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-nc-b-69992",
+          "name": "チェ・ジョンウォン",
+          "position": "CF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": null
+    },
+    "kbo-wo": {
+      "date": "2026-03-28",
+      "source": "https://www.koreabaseball.com/MediaNews/News/BreakingNews/View.aspx?bdSe=60525",
+      "starterSource": "https://www.koreabaseball.com/MediaNews/News/BreakingNews/View.aspx?bdSe=60525",
+      "starterId": "kbo-wo-p-69045",
+      "starterName": "ラウル・アルカンタラ",
+      "order": [
+        {
+          "id": "kbo-wo-b-50167",
+          "name": "イ・ジュヒョン",
+          "position": "CF",
+          "battingOrder": 1
+        },
+        {
+          "id": "kbo-wo-b-79608",
+          "name": "アン・チホン",
+          "position": "DH",
+          "battingOrder": 2
+        },
+        {
+          "id": "kbo-wo-b-56322",
+          "name": "トレントン・ブルックス",
+          "position": "1B",
+          "battingOrder": 3
+        },
+        {
+          "id": "kbo-wo-b-76267",
+          "name": "チェ・ジュファン",
+          "position": "3B",
+          "battingOrder": 4
+        },
+        {
+          "id": "kbo-wo-b-55392",
+          "name": "オ・ジュンソ",
+          "position": "SS",
+          "battingOrder": 5
+        },
+        {
+          "id": "kbo-wo-b-53312",
+          "name": "キム・ゴンヒ",
+          "position": "C",
+          "battingOrder": 6
+        },
+        {
+          "id": "kbo-wo-b-64340",
+          "name": "イム・ジヨル",
+          "position": "LF",
+          "battingOrder": 7
+        },
+        {
+          "id": "kbo-wo-b-56304",
+          "name": "パク・ハンギョル",
+          "position": "2B",
+          "battingOrder": 8
+        },
+        {
+          "id": "kbo-wo-b-78135",
+          "name": "イ・ヒョンジョン",
+          "position": "RF",
+          "battingOrder": 9
+        }
+      ],
+      "dh": true,
+      "sourceNote": "KBO掲載の実戦オーダー（引退セレモニーの選手は除外）"
+    }
+  }
+}
