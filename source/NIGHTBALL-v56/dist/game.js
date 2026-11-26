@@ -21,7 +21,16 @@ const TYPES=[
  {id:'split',name:'スプリット',short:'スプリット',speed:135,gap:10,bx:.02,by:.85,cost:2,spin:1200},
  {id:'vslider',name:'縦スライダー',short:'縦スラ',speed:125,gap:15,bx:.22,by:1.08,cost:2,spin:2400},
  {id:'slowcurve',name:'スローカーブ',short:'スローカーブ',speed:93,gap:34,bx:-.72,by:1.32,cost:1.5,spin:2050},
- {id:'knuckle',name:'ナックル',short:'ナックル',speed:100,gap:30,bx:.32,by:.38,cost:1.6,spin:300}
+ {id:'knuckle',name:'ナックル',short:'ナックル',speed:100,gap:30,bx:.32,by:.38,cost:1.6,spin:300},
+ {"id":"twoseam","name":"ツーシーム","short":"ツーシーム","speed":144,"gap":4,"bx":-0.52,"by":0.25,"cost":1.5,"spin":1950},
+ {"id":"sweeper","name":"スイーパー","short":"スイーパー","speed":128,"gap":15,"bx":1.12,"by":0.16,"cost":1.8,"spin":2400},
+ {"id":"knucklecurve","name":"ナックルカーブ","short":"ナックルC","speed":116,"gap":23,"bx":-0.34,"by":1.05,"cost":1.8,"spin":2500},
+ {"id":"slurve","name":"スラーブ","short":"スラーブ","speed":118,"gap":20,"bx":0.62,"by":0.81,"cost":1.8,"spin":2350},
+ {"id":"powercurve","name":"パワーカーブ","short":"パワーC","speed":124,"gap":18,"bx":-0.31,"by":0.87,"cost":1.8,"spin":2450},
+ {"id":"screw","name":"スクリュー","short":"スクリュー","speed":121,"gap":16,"bx":-0.78,"by":0.63,"cost":1.8,"spin":1900},
+ {"id":"oneseam","name":"ワンシーム","short":"ワンシーム","speed":144,"gap":4,"bx":-0.46,"by":0.39,"cost":1.6,"spin":1900},
+ {"id":"palm","name":"パーム","short":"パーム","speed":113,"gap":25,"bx":-0.16,"by":0.9,"cost":1.5,"spin":1300},
+ {"id":"slowball","name":"スローボール","short":"スロー","speed":90,"gap":35,"bx":0,"by":0.15,"cost":1.4,"spin":1250}
 ];
 const POS=[['P',0,18.4],['C',0,-2],['1B',23,24],['2B',12,36],['SS',-13,36],['3B',-23,24],['LF',-45,74],['CF',0,88],['RF',45,74]];
 const BASES=[{x:0,y:0},{x:19.4,y:19.4},{x:0,y:38.8},{x:-19.4,y:19.4},{x:0,y:0}];

@@ -1566,7 +1566,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const split=e?.splits,fmt=n=>Number.isFinite(n)?n.toFixed(3).replace(/^0/,''):'—';
   const matchup=!thrower?split?`<section class="matchup-card"><h4>2026 投手タイプ別</h4><div class="matchup-splits">${['R','L'].map(hand=>{const a=split[hand];return `<div><b>${hand==='L'?'対左投':e.rawPitcherTypes?'対右・下手投':'対右投'}</b><strong>${fmt(a.avg)}</strong><span>${a.ab}打数 ${a.h}安打 / ${a.hr}HR</span><small>${Number.isFinite(a.slg)?'長打率 '+fmt(a.slg):'長打率未取得'}</small></div>`;}).join('')}</div><p>打率・取得済みの長打率を打撃へ反映。少数サンプルは総合成績へ補正。</p><details><summary>集計方法・出典</summary><p>${e.note}</p><a href="${e.source}" target="_blank" rel="noopener noreferrer">${e.publisher} ↗</a></details></section>`:'<p class="split-unavailable">左右別成績：未取得（総合成績を適用）</p>':'';
   const field=positions?`<section class="position-evidence"><h4>2026 守備出場</h4><div>${positions.map(a=>`<span>${({C:'捕手','1B':'一塁','2B':'二塁','3B':'三塁',SS:'遊撃',LF:'左翼',CF:'中堅',RF:'右翼',OF:'外野',DH:'指名打者'})[a.pos]||a.pos} <b>${a.games}</b>試合</span>`).join('')}</div><small>外野の「OF」は左・中・右の内訳未取得。守備・肩の能力値は推定。</small></section>`:!thrower?`<p class="position-fits">適性：${(p.positions||[p.pos]).map(pos=>({C:'捕','1B':'一','2B':'二','3B':'三',SS:'遊',LF:'左',CF:'中',RF:'右',DH:'指'})[pos]||pos).join(' / ')}${p.placementNote?'（一部配置は推定）':''}</p>`:'';
-  const pitch=thrower?`<section class="repertoire-card"><h4>持ち球と設定球速</h4>${p.pitches.map(id=>{const spec=NightGame.pitchSpec(p,id),d=p.pitchDetails?.[id];return `<div><b>${spec.short}</b><strong>${Math.round(spec.speed)}<small> km/h</small></strong><span>${d?.speedBasis||'ゲーム用推定'}</span></div>`;}).join('')}<small>変化量はゲーム用の推定。球速の根拠は各球種に表示。</small></section>`:'';
+  const pitch=thrower?`<section class="repertoire-card"><h4>持ち球と設定球速</h4>${p.pitches.map(id=>{const spec=NightGame.pitchSpec(p,id),d=p.pitchDetails?.[id];return `<div><b>${spec.short}</b><strong>${Math.round(spec.speed)}<small> km/h</small></strong><span>${d?.speedBasis||'ゲーム用推定'}${Number.isFinite(d?.measuredAverage)?`・実測 ${d.measuredAverage} km/h`:''}${Number.isFinite(d?.measuredMax)?` / 最高 ${d.measuredMax} km/h`:''}${Number.isFinite(d?.usagePct)?` / ${d.usagePct}%`:''}</span></div>`;}).join('')}<small>変化量はゲーム用の推定。球速の根拠は各球種に表示。</small></section>`:'';
   return matchup+field+pitch;
  }
  function abilityHTML(p){
@@ -3279,7 +3279,7 @@ const RESULT_JA_DUP={'FLY OUT':['フライアウト'],'SINGLE':['ヒット'],'DO
   // flatter ellipse — in the mockup the bottom pills hang lower
   // (about +64px under the ball) and the whole cluster reads as a
   // ring, not a row. Arrow markers grow to 28px on a ring of 41.
-  const orderIds=['slider','cutter','shoot','curve','slowcurve','fork','split','vslider','sinker','change','knuckle'];
+  const orderIds=['slider','sweeper','cutter','shoot','twoseam','oneseam','curve','knucklecurve','powercurve','slurve','slowcurve','fork','split','vslider','sinker','screw','change','palm','knuckle','slowball'];
   const flip=g.pitcher.hand==='L'?-1:1;
   // v183: pitchSpec scales every break by 1.3, so the level divisor
   // grows by the same factor (18 -> 23.4) and a level keeps meaning
