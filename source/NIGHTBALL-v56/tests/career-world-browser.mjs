@@ -67,6 +67,7 @@ try{
   await page.locator('[name="style"]').selectOption(style);
   await page.locator('#world-create [type="submit"]').click();
   if(country==='jp'){
+   await press('career-options');
    await press('music');
    assert.equal(await page.locator('#music-club').inputValue(),'world-career');
    assert.equal(await page.locator('#music-person').inputValue(),'career-player');
@@ -77,12 +78,20 @@ try{
    await page.locator('[data-action="music-back"]').click();
   }
   const drill=country==='kr'?'control':'contact';
-  await press('success-action','practice');
-  await press('success-skill',drill);
-  assert.match(await page.locator('.cw-last-action').innerText(),/通常練習/);
+  assert.equal(await page.locator('.cw-avatar').count(),0);
+  assert.equal(await page.locator('.cw-tr-card').count(),country==='kr'?5:6);
+  assert.equal(await page.locator('[data-world-action="success-skill"]').count(),0);
+  assert.equal(await page.locator('.cw-fixed-dock').evaluate(e=>getComputedStyle(e).position),'fixed');
+  const visibleDock=()=>page.locator('.cw-fixed-progress').evaluate(e=>{const r=e.getBoundingClientRect();return r.top>=0&&r.bottom<=innerHeight;});
+  assert(await visibleDock());
+  await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));
+  assert(await visibleDock());
+  await press('success-action','quick-toggle');
+  await press('train-direct',drill);
+  assert.match(await page.locator('.cw-tr-result').innerText(),/練習/);
   assert.equal((await state()).success.goal.skill,drill);
   assert.equal((await state()).success.actionWeek,'2027-'+(country==='jp'?'03-29':country==='tw'?'08-09':'03-01'));
-  assert.match(await page.locator('.cw-hero').innerText(),new RegExp(name));
+  assert.match(await page.locator('.cw-compact-profile').innerText(),new RegExp(name));
   // Create a second high-school player, then return to the original, saved athlete.
   const originalSeed=(await state()).seed;
   await press('slots');
@@ -100,11 +109,11 @@ try{
   await press('tab','skills');
   assert(await page.getByText('育成方針・経験点',{exact:true}).isVisible());
   await press('tab','home');
-  await press('detail','schedule');
-  if(country==='tw')assert.match(await page.locator('#modal-content').innerText(),/黑豹旗/);
-  if(country==='jp')assert.match(await page.locator('#modal-content').innerText(),/甲子園/);
-  if(country==='kr')assert.match(await page.locator('#modal-content').innerText(),/週末リーグ/);
-  await page.locator('[data-action="close"]').click();
+  await press('tab','schedule');
+  if(country==='tw')assert.match(await page.locator('#career').innerText(),/黑豹旗/);
+  if(country==='jp')assert.match(await page.locator('#career').innerText(),/甲子園/);
+  if(country==='kr')assert.match(await page.locator('#career').innerText(),/週末リーグ/);
+  await press('tab','home');
 
   for(let grade=1;grade<=3;grade++){
    let w=await state();
@@ -175,8 +184,9 @@ try{
    assert.match(await page.locator('#modal-content').innerText(),/イニング別スコア/);
    assert.match(await page.locator('#modal-content').innerText(),country==='kr'?/奪三振/:/打数/);
    await press('result-next');
-   await page.locator('#career .cw-last').waitFor({state:'visible'});
+   await page.locator('#career .cw-compact-profile').waitFor({state:'visible'});
    if(grade===1){
+    await press('career-options');
     await press('last-result');
     assert.match(await page.locator('.career-result-banner').innerText(),new RegExp(w.last.score.join(' − ')));
     await press('result-next');
@@ -189,7 +199,7 @@ try{
      await press('result-next');
     }
     else{
-     await page.locator('.cw-batch summary').click();
+     await press('progress-menu');
      await press('advance','season');
     }
     w=await state();
