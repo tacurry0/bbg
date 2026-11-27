@@ -1106,9 +1106,9 @@ export class StadiumRenderer {
   }
  }
  // Camera coordinates are world-space; actors use reflected local Z.
- renderLiveCut(g,time){
-  const cut=g.broadcastCut;if(!cut)return;
-  const u=clamp(g.phaseTime/cut.duration,0,1),still=matchMedia('(prefers-reduced-motion: reduce)').matches,p=still?.5:u,club=g.teams[cut.side],kit=g.uniformKits?.[cut.side];
+ renderLiveCut(g,time,cut=g.broadcastCut){
+  if(!cut)return;
+  const u=clamp((cut.preview?0:g.phaseTime)/cut.duration,0,1),still=matchMedia('(prefers-reduced-motion: reduce)').matches,p=still?.5:u,club=g.teams[cut.side],kit=g.uniformKits?.[cut.side];
   for(const a of this.players){a.root.visible=false;a.shadow.visible=false;}
   this.ball.visible=this.ballHalo.visible=this.ballShadow.visible=this.trail.visible=this.landing.visible=this.landingInner.visible=false;
   let x=0,z=18.4,tx=0,tz=18.4,wide=false;
@@ -1120,7 +1120,7 @@ export class StadiumRenderer {
    tx=x;tz=z;
    if(cut.kind==='pressure'&&cut.base){const b=NightGame.BASES[cut.base],s=g.side,profile=g.lineups[s].find(a=>a.id===g.baseIds[cut.base-1]),a=this.runners[0];this.stylePlayer(a,s,profile?.no||1,g.teams[s],g.uniformKits?.[s]);this.animatePlayer(a,b.x,b.y,Math.PI,time,false);
     if(p>.58){tx=b.x;tz=b.y;}}
-  }else if(cut.kind==='strikeout'){x=tx=0;z=tz=18.4;this.pitcher.throwHand=pitcher.hand||'R';this.pitcher.releaseProgress=null;this.pitcher.fromSet=false;place(this.pitcher,pitcher,x,z,Math.PI);const i=pitcher.hand==='L'?0:1,sign=i?1:-1,beat=Math.sin(Math.PI*clamp(p*1.2,0,1)),lift=cut.level>=3?.73:.43,hand=[sign*(.28+.17*beat),.86+lift*beat,.18+.12*beat];this.pitcher.hands[i].position.set(...hand);this.poseArm(this.pitcher,i,[sign*.245,.94,0],hand);this.pitcher.body.rotation.x=-.08*beat;
+  }else if(cut.kind==='strikeout'){x=tx=0;z=tz=18.4;this.pitcher.throwHand=pitcher.hand||'R';this.pitcher.releaseProgress=null;this.pitcher.fromSet=false;place(this.pitcher,pitcher,x,z,Math.PI);const i=pitcher.hand==='L'?0:1,sign=i?1:-1,beat=cut.preview?0:Math.sin(Math.PI*clamp(p*1.2,0,1)),lift=cut.level>=3?.73:.43,hand=[sign*(.28+.17*beat),.86+lift*beat,.18+.12*beat];this.pitcher.hands[i].position.set(...hand);this.poseArm(this.pitcher,i,[sign*.245,.94,0],hand);this.pitcher.body.rotation.x=-.08*beat;
    }else if(cut.kind==='catch'){
    x=cut.x||0;z=cut.z||35;tx=x;tz=z;const a=this.fielders[0];place(a,batter,x,z,Math.PI);
    a.hands[0].position.set(-.42,1.28,.20);this.poseArm(a,0,[-.245,.94,0],a.hands[0].position.toArray());
@@ -1136,8 +1136,8 @@ export class StadiumRenderer {
    a.swingActive=false;a.bunting=false;a.batHand=batter.hand||'R';place(a,batter,x,z,cut.kind==='homer'?Math.PI/4:Math.PI,cut.kind==='homer'||cut.kind==='pinch-hit');if(cut.kind==='homer'){const beat=Math.sin(Math.PI*p),i=batter.hand==='L'?0:1,sign=i?1:-1,hand=[sign*.36,.9+(cut.level>=2?.62:.35)*beat,.28];a.hands[i].position.set(...hand);this.poseArm(a,i,[sign*.245,.94,0],hand);a.head.rotation.y=.35*beat;}
   }
   const side=cut.kind==='strikeout'?(pitcher.hand==='L'?-1:1):cut.kind==='homer'&&cut.variant==='liner'?-1:tx>10?-1:1,dist=wide?13:cut.kind==='homer'&&cut.variant==='deep'?8:6.2;
-  this.camera.position.set(tx+side*(wide?5:2.4-.8*p),wide?6.2:cut.kind==='strikeout'?1.65:cut.variant==='tower'?3.6:2.6,-tz+dist);
-  this.camera.lookAt(tx,wide?1.4:1.65,-tz);this.camera.fov=wide?53:this.camera.aspect<.85?47:38;
+  this.camera.position.set(tx+side*(wide?5:2.4-.8*p),wide?6.2:cut.kind==='strikeout'?1.65:cut.variant==='tower'?3.6:2.6,-tz+(cut.kind==='strikeout'?4.7:dist));
+  this.camera.lookAt(tx-(cut.preview?.65:0),wide?1.4:1.65,-tz);this.camera.fov=wide?53:this.camera.aspect<.85?47:38;
   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
  }
  broadcastCamera(g){
@@ -1325,7 +1325,7 @@ export class StadiumRenderer {
    this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
   }
   this.overviewMode=g?.phase==='intro'&&(g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
-  const cameraView=this.overviewMode?'overview':'play';
+  const cameraView=g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;
   if(field)this.followPlay(g,time);
   else if(g?.broadcastIntro)this.broadcastCamera(g);
@@ -1406,6 +1406,7 @@ export class StadiumRenderer {
    }
   }
   if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
+  else if(g&&!g.replayView&&(g.absCalledStrikeout||g.phase==='result'&&g.pitch?.strikeCelebration)&&!g.fastForward&&!g.spectate&&!g.autoDefense&&!g.autoBatting){const k=g.pitch?.strikeCelebration,side=g.side==='home'?'away':'home';this.renderLiveCut(g,time,{kind:'strikeout',side,playerId:g.pitcher.id,level:k?.level||1,duration:1500,preview:g.phase==='abs-call'});}
   this.vfx?.update(g,time,field);
   if(this.lightGlows?.length&&this.lightsLit){
    const hrShow=g&&(g.hit?.kind==='hr'||g.field?.outcome==='hr');

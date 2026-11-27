@@ -251,3 +251,19 @@
 @media(prefers-reduced-motion:reduce){
  #impact-fx[data-source="abs"] .impact-title,#impact-fx[data-source="abs"] .impact-meta {animation:none!important;opacity:1}
 }
+
+/* v256 — pending called strikeout stays in ABS phase; only the camera changes. */
+#stage[data-abs-strikeout="true"] > #abs-challenge:not([hidden]) {
+ visibility:visible!important;pointer-events:auto!important;z-index:110;
+ touch-action:manipulation;bottom:clamp(12px,5%,40px);min-width:152px;min-height:48px;
+}
+#stage[data-abs-strikeout="true"] > #impact-fx {pointer-events:none!important}
+#stage[data-abs-strikeout="true"] > #abs-actor {display:none!important}
+#stage[data-abs-strikeout="true"] .impact-core {transform:translate(-25%,-3%);width:48%;gap:6px}
+#stage[data-abs-strikeout="true"] .impact-glyph {font-size:clamp(86px,min(34vw,31vh),215px)}
+#stage[data-abs-strikeout="true"] .impact-title {font-size:clamp(17px,4.8vw,30px)}
+#stage[data-abs-strikeout="true"] .impact-meta {font-size:clamp(12px,3vw,17px)}
+#stage[data-abs-strikeout="true"] .impact-shade {background:linear-gradient(90deg,#04132494,transparent 70%)}
+#stage[data-half-done="true"] :is(#bat-options,#pitch-deck,#thumb-hint,#atbat-chart,#abs-actor) {visibility:hidden!important;pointer-events:none!important}
+#stage:has(#half-break:not([hidden])) > #impact-fx {visibility:hidden!important}
+@media(orientation:portrait){#stage[data-abs-strikeout="true"] .impact-core{transform:translate(-30%,-7%);width:62%}}
