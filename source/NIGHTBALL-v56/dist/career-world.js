@@ -39,12 +39,21 @@
    this.seed=seed||Date.now().toString(36)+Math.random().toString(36).slice(2,10);
    this.country=country;this.region=region;
    const entry=this.random('enrollment/'+country+'/'+region),roll=entry();
-   this.schoolTier=seed&&Number.isInteger(schoolTier)?clamp(schoolTier,0,2):roll<.25?0:roll<.85?1:2;
+   this.schoolTier=schoolTier!==undefined&&schoolTier!==null&&schoolTier!==''&&Number.isInteger(Number(schoolTier))?clamp(Number(schoolTier),0,2):1;
    this.schoolIndex=seed&&Number.isInteger(schoolIndex)?clamp(schoolIndex,0,D.schools[country].length-1):Math.floor(entry()*D.schools[country].length);
    this.school=D.schools[country][this.schoolIndex];
    const talent=this.random('hidden-talent'),t=talent();
-   const hiddenGrowth=t<.19?0:t<.60?1:t<.76?2:t<.80?3:t<.94?4:5;
-   this.talent={ceiling:Math.round(77+talent()*21),durability:.75+talent()*.65,learning:.83+talent()*.40};
+   const hiddenGrowth=t<.19?0:t<.59?1:t<.78?2:t<.82?3:t<.94?4:5;
+   const r=talent(),tier=r<.10?0:r<.65?1:r<.90?2:r<.99?3:4;
+   this.talent={tier,ceiling:Math.min(99,Math.round([72,84,91,96,99][tier]+talent()*8)),durability:.75+talent()*.65,learning:[.8,1,1.12,1.27,1.48][tier]*(.93+talent()*.14)};
+   this.balanceRevision=247;
+   const initial=this.random('initial-abilities'),bonus=[-5,0,6,12,20][tier];
+   const initialSkill=(key,num)=>{
+    const variance=Math.round((initial()-.5)*(key==='velocity'?8:12));
+    if(key==='velocity')return clamp(Math.round(121+(num-126)*.65+bonus*.55+variance),112,147);
+    const center={contact:29,power:23,run:35,field:27,arm:32,control:29,movement:25,stamina:32}[key]||28;
+    return clamp(Math.round(center+(num-40)*.45+bonus+variance),14,65);
+   };
    this.style=style;this.difficulty=difficulty;this.short=short!==false;this.format='self';this.stage='school';
    this.academicYear=startYear;this.grade=1;this.year=startYear;this.day=date(this.year,c.start);
    this.trainingPlan=profile.pos==='P'?'control':'contact';
@@ -53,12 +62,12 @@
     born:startYear-15,nation:country,origin:country,club:'school-player',school:this.school,stage:'school',
     role:profile.pos==='P'?'SP':null,pitches:profile.pitches?.slice()||null,
     stats:blank(),growth:hiddenGrowth,form:0,injury:0,history:[],
-    ...Object.fromEntries(Object.entries(profile.skills).map(([key,num])=>[key,num+(key==='velocity'?1:5)]))};
+    ...Object.fromEntries(Object.entries(profile.skills).map(([key,num])=>[key,initialSkill(key,num)]))};
    this.player.positions=[this.player.pos];
    this.people=[];this.schoolClubs={};this.schoolEvents={};this.schoolHistory=[];
    this.regionalSelected=false;this.schoolPlay={};this.schoolCursor=0;this.schoolTotals=blank();this.tournament=null;this.scoutLevel=0;
    this.club=null;this.proYear=0;this.service=0;this.contract=null;this.path=null;this.academyGames=0;this.draft=null;
-   this.ratings={manager:45,coach:50,trust:45,fans:15,media:12,scout:15};
+   this.ratings={manager:25,coach:35,trust:30,fans:5,media:2,scout:0};
    this.health={fatigue:0,injury:0,slump:0,adapt:0};this.perks=[];this.form='基本';this.experience=0;
    this.life={savings:0,housing:'寮',relationship:0,married:false,friends:0,spend:0,currency:c.currency,budget:{}};
    this.standings=L.tables();this.past=[];this.post=null;this.daysPlayed=0;this.seasonDays=0;this.postStarted=false;
@@ -203,6 +212,7 @@
    this.academicYear++;this.grade++;this.schoolCursor=0;this.schoolEvents={};this.tournament=null;this.regionalSelected=false;
    this.note('高校'+this.grade+'年に進級');
    Z.semester(this);
+   if(this.balanceRevision>=247){for(const key of (this.pitching?M.pitching:M.batting))this.improve(key,key==='velocity'?1.5:3.5);}
    for(const p of this.people.filter(p=>p.stage==='school'&&p.club)){
     if(this.year-p.born<18){this.grow(p);continue;}
     p.stage='amateur';p.club=null;p.amateur=routing(p.nation,p.growth);
@@ -219,12 +229,13 @@
   schoolScout(){
    const stageWins=this.schoolHistory.filter(x=>x.place===1&&!x.name.includes('練習')).length;
    const outcome=this.pitching?clamp((4.5-M.era(this.schoolTotals))*5,0,18):clamp((M.ops(this.schoolTotals)-.52)*42,0,20);
-   return clamp(this.scoutLevel*.55+outcome+stageWins*2.1+this.ratings.coach*.13,0,95);
+   return clamp(this.scoutLevel*.55+outcome+stageWins*1.4+this.ratings.coach*.10+(this.schoolTier-1)*3,0,95);
   }
   depth(id,pos){return this.members(id).filter(p=>p.positions.includes(pos)).map(p=>this.ability(p)).sort((a,b)=>b-a).slice(0,pos==='P'?5:2).reduce((a,b)=>a+b,0);}
   pastRanking(country){return this.past.at(-1)?.ranking?.[country]?.map(r=>r.id)||D.roster(country).map(c=>c.id);}
   note(message){
    this.timeline.push({day:this.day,message});
+   if(/に入学（|に進級|一軍に昇格|二軍に降格|才能が開花|で優勝|指名|現役引退|代表選出|へ移籍|負傷・復帰/.test(message)){this.spotlight={day:this.day,message,kind:/優勝|才能|指名|昇格|代表/.test(message)?'gold':'blue'};}
    if(this.timeline.length>650)this.timeline.splice(0,1);
   }
   advanceDate(next){this.day=next;this.year=calendarYear(next);}
@@ -349,7 +360,7 @@
    const start=Date.parse(from);
    while(Date.parse(this.day)-start<limit*86400000&&steps<900&&
     !['draft','offseason','retired'].includes(this.stage)){
-    if(!this.queue&&batch){
+    if(!this.queue){
      const before=this.health.injury;
      const trained=Z.autoWeek(this);
      if(trained&&(Z.state(this).last?.summary.startsWith('覚醒')||this.health.injury>before+14)){steps++;break;}
@@ -473,15 +484,15 @@
      this.note('試合で負傷・復帰見込み '+this.health.injury+'日');
     }
     this.health.slump=clamp(this.health.slump+(quality<-1?.45:-.15),0,4);
-    if(f.kind==='farm'&&quality>0){
+    if(!this.balanceRevision&&f.kind==='farm'&&quality>0){
      const track=(this.pitching?M.pitching:M.batting).filter(key=>key!==this.trainingPlan);
      this.improve(track[Math.floor(this.random(f.id+'/growth')()*track.length)],.55+quality*.1);
     }
     if(school){
-     this.scoutLevel=clamp(this.scoutLevel+.44+Math.max(0,quality)*.8+(f.important?2:0),0,95);
+     this.scoutLevel=clamp(this.scoutLevel+[.20,.32,.48][this.schoolTier]+Math.max(0,quality)*.52+(f.important?1.1:0),0,95);
      if(this.scoutLevel>12&&Math.floor(this.scoutLevel)%9===0)this.note(countries[this.country].league+'スカウトが視察');
     }
-    if(this.experience>=16){this.experience-=9;this.improve(this.trainingPlan,school?.9:1.2);}
+    if(!this.balanceRevision&&this.experience>=16){this.experience-=9;this.improve(this.trainingPlan,school?.9:1.2);}
    }
    if(f.kind==='post'||f.kind==='asia'||s.hr>=2||s.sv>0)this.note(f.name+' '+result.join('–')+' / '+this.clubName(rival)+(s.hr?' · '+s.hr+'本塁打':''));
   }
@@ -533,12 +544,13 @@
    const salary=countries[this.country].salary;
    this.sign({club:offer.club,annual:Math.round(salary*(offer.round===1?1.7:offer.round<=3?1.25:1)),years:offer.round<=3?2:1,type:'新人契約'});
    this.startSeason(this.year+1);
+   this.note('ドラフト'+offer.round+'巡目指名 · '+this.clubName(offer.club)+'に入団');
    return true;
   }
   improve(key,amount){
    if(!Object.hasOwn(this.player,key))return false;
    const scale=[this.age<24?1.45:.65,1,this.age<24?.8:1.35,1.38,.95,this.age<27?.67:1.63][this.player.growth];
-   const difficulty={easy:1.3,normal:1,hard:.85}[this.difficulty];
+   const difficulty={easy:1.15,normal:1,hard:.88}[this.difficulty];
    const ceiling=this.talent?.ceiling??99;
    const cap=Math.max(this.player[key],key==='velocity'?Math.min(164,137+Math.round((ceiling-70)*.85)):ceiling);
    this.player[key]=clamp(this.player[key]+amount*scale*difficulty*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
@@ -625,7 +637,7 @@
    const used=p.pos==='P'?p.stats.outs:p.stats.pa;
    const training=p.id===this.player.id?this.trainingPlan:k[Math.floor(rng()*k.length)];
    for(const key of k){
-    const young=age<prime?Math.max(.1,(p.id===playerId&&this.proYear?2.45:1.6)-(age-16)*.055)+(key===training?.6:0):-(age-prime)*.3-.7;
+    const young=age<prime?Math.max(.1,(p.id===playerId&&this.proYear?1.25:1.6)-(age-16)*.055)+(key===training?.6:0):-(age-prime)*.3-.7;
     const scale=key==='velocity'?.43:1;
     const ceiling=p.id===playerId&&this.talent?Math.max(p[key],key==='velocity'?Math.min(164,137+Math.round((this.talent.ceiling-70)*.85)):this.talent.ceiling):key==='velocity'?166:99;
     p[key]=clamp(p[key]+(young+(rng()-.44)*1.35+Math.min(.38,used/600)-(p.injury>0?.7:0))*scale,key==='velocity'?111:19,ceiling);

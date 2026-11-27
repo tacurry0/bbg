@@ -912,6 +912,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='country'){worldCountry=v;worldDashboard();return;}
   const w=world;
   if(!w)return;
+  if(action==='tab'){NightCareerWorldView.setTab(v);worldDashboard();return;}
+  if(action==='spotlight-dismiss'){w.spotlight=null;saveWorld();worldDashboard();return;}
   if(action==='music'){musicMenu('world-career');return;}
   if(action==='last-result'){if(w.last)showWorldResult();return;}
   if(action==='result-next'){

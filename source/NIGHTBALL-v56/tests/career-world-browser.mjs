@@ -62,7 +62,8 @@ try{
   await press('country',country);
   assert.match(await page.locator('#career h1').innerText(),new RegExp(label));
   await page.locator('[name="name"]').fill(name);
-  assert.equal(await page.locator('[name="schoolTier"],[name="schoolIndex"],[name="growth"]').count(),0);
+  assert.equal(await page.locator('[name="schoolIndex"],[name="growth"]').count(),0);
+  await page.locator('[name="schoolTier"]').selectOption('1');
   await page.locator('[name="style"]').selectOption(style);
   await page.locator('#world-create [type="submit"]').click();
   if(country==='jp'){
@@ -95,7 +96,10 @@ try{
   await press('slot-open','0');
   assert.equal((await state()).seed,originalSeed);
   assert.equal((await state()).success.goal.skill,drill);
-  assert.equal(await page.locator('[data-world-action="tab"]').count(),0);
+  assert.equal(await page.locator('[data-world-action="tab"]').count(),6);
+  await press('tab','skills');
+  assert(await page.getByText('育成方針・経験点',{exact:true}).isVisible());
+  await press('tab','home');
   await press('detail','schedule');
   if(country==='tw')assert.match(await page.locator('#modal-content').innerText(),/黑豹旗/);
   if(country==='jp')assert.match(await page.locator('#modal-content').innerText(),/甲子園/);

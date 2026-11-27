@@ -217,14 +217,14 @@
   ['大胆に挑戦（失敗しやすい・大成長）',.40,3.6]
  ];
  const xpMap={contact:{skill:3,mental:1},power:{strength:4,skill:1},run:{speed:4},field:{skill:2,speed:2},arm:{strength:2,skill:2},velocity:{strength:4,skill:1},control:{skill:3,mental:2},movement:{skill:4},stamina:{strength:3,mental:2}};
- const cost=(w,key)=>Math.max(3,Math.round((key==='velocity'?(w.player[key]-110)*.24:w.player[key]*.15)-2));
+ const cost=(w,key)=>Math.max(6,Math.round((key==='velocity'?(w.player[key]-110)*.20:w.player[key]*.115)+4));
  function allocate(w,key){
   const s=state(w),mix=xpMap[key];
   if(!mix||!(w.pitching?arms:bats).includes(key)||!usable(w))return false;
   const sum=Object.values(mix).reduce((a,b)=>a+b,0),price=cost(w,key);
   const fees=Object.entries(mix).map(([k,n])=>[k,Math.max(1,Math.ceil(price*n/sum))]);
   if(fees.some(([k,n])=>s.xp[k]<n))return false;
-  const old=w.player[key];w.improve(key,1.15);
+  const old=w.player[key];w.improve(key,w.balanceRevision>=247?.85:1.0);
   if(w.player[key]<=old)return false;
   for(const [k,n] of fees)s.xp[k]-=n;
   return true;
@@ -239,13 +239,16 @@
   const environment=w.stage==='school'?(w.schoolTier-1)*.035:(w.ratings.coach-50)*.001;
   const condition=clamp((s.energy-65)*.002+(s.morale-50)*.001+environment-(w.health.fatigue||0)*.0007,-.20,.14);
   const risk=clamp((.02+(s.energy<40?(40-s.energy)*.003:0)+(hard?.025:0))/(w.talent?.durability||1),.005,.22);
-  const roll=rng(),q=clamp(rng()+condition,0,1);
-  const outcome=roll<risk?'怪我':q<.0816?'失敗':q<.2857?'不調':q<.898?'成功':q<.9898?'大成功':'覚醒';
+  const roll=rng(),q=rng();
+  const awaken=clamp(.01+condition*.012+(hard?.004:0),.004,.018);
+  const great=clamp(.09+condition*.20+(hard?.03:0),.035,.16);
+  const poor=clamp(.20-condition*.35,.10,.32),failure=clamp(.08-condition*.20,.035,.15);
+  const outcome=roll<risk?'怪我':q<awaken?'覚醒':q<awaken+great?'大成功':q>1-failure?'失敗':q>1-failure-poor?'不調':'成功';
   const mult={'怪我':0,'失敗':0,'不調':.5,'成功':1,'大成功':2.5,'覚醒':5}[outcome];
   const friend=w.members(w.player.club).find(p=>p.id!==w.player.id&&(p.relationship||0)>=70);
   const gain={};
   for(const [k,n] of Object.entries(xpMap[key])){
-   gain[k]=Math.round(n*2*mult*(friend?1.25:1)*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
+   gain[k]=Math.round(n*1.8*mult*(friend?1.25:1)*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
   }
   w.trainingPlan=key;s.plan=key;
   if(outcome==='怪我')w.health.injury=Math.max(w.health.injury,5+Math.floor(rng()*24));
@@ -255,9 +258,10 @@
   w.ratings.coach=clamp(w.ratings.coach+(mult>=1?1.2:-.4),0,100);
   if(mult>=1)w.experience+=Math.round(mult);
   if(outcome==='覚醒')w.note('才能が開花！ '+NightCareerWorld.training[key]);
-  if(s.autoAllocate)for(let i=0;i<12&&allocate(w,key);i++){}
+  if(s.autoAllocate)for(let i=0;i<4&&allocate(w,key);i++){}
   if(w.stage==='school'&&mult>=2.5)w.scoutLevel=clamp(w.scoutLevel+1,0,95);
   s.goal={skill:key,label:goalLabels[key],day:w.day};
+  s.lastOutcome=outcome;
   const labels={strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'};
   mark(w,(hard?'実戦特訓':'通常練習')+' · '+NightCareerWorld.training[key],outcome+' · '+Object.entries(gain).map(([k,n])=>labels[k]+' +'+n).join(' / ')+(friend?' · 友情練習':''));
   return true;
@@ -330,6 +334,12 @@
  function afterGame(w,f,stats){
   if(!stats?.g)return;
   const s=state(w);
+  if(w.balanceRevision>=247&&s.matchXpWeek!==week(w)){
+   s.matchXpWeek=week(w);s.xp.mental+=1;s.xp.skill+=w.pitching?(stats.k>=3?2:1):(stats.h>=2?2:1);if(stats.hr||stats.k>=5)s.xp.strength+=1;
+  }
+  if(!s.milestones)s.milestones={};
+  const milestoneName=w.pitching?(stats.outs>0?'初登板':null):(stats.h>0?'初安打':null);
+  if(milestoneName&&!s.milestones[milestoneName]){s.milestones[milestoneName]=true;w.spotlight={day:w.day,message:milestoneName+'を記録！',kind:'gold'};}
   s.gameCount++;
   // The first big moments create an optional story, not just a stat increase.
   const milestone=w.pitching?stats.k>=5&&!s.seen['five-strikeouts']:

@@ -44,8 +44,8 @@
   const formScore=p.pos==='P'?s.outs>=12?clamp((4.6-era(s))*5,-17,18)*Math.min(1,s.outs/42):0:
    s.pa>=8?clamp((ops(s)-.68)*48,-19,19)*Math.min(1,s.pa/36):0;
   const glove=p.pos==='P'?0:p.pos===pos?7:p.positions.includes(pos)?3:pos==='DH'?-1:-16;
-  const schoolOpportunity=w.stage==='school'?[12,5,0][w.schoolTier]:w.stage==='amateur'?5:0;
-  const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+schoolOpportunity+({easy:8,normal:0,hard:-5})[w.difficulty]:0;
+  const schoolOpportunity=w.stage==='school'?([2,-2,-5][w.schoolTier]+(w.grade-1)*2):w.stage==='amateur'?2:0;
+  const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+schoolOpportunity+({easy:4,normal:0,hard:-4})[w.difficulty]:0;
   const firstTeamSample=p.pos==='P'?s.outs/45:s.pa/44;
   const promotion=p.id===w.player.id&&w.stage==='pro'?farmForm(w)*(1-Math.min(.88,firstTeamSample))+
    (w.ratings.coach-50)*.1:0;
@@ -159,8 +159,9 @@
     const s=mark(b.id);
     s.pa++;
     const u=rng(),bb=clamp(.08+(67-p.control)*.001,.035,.14);
-    const hit=clamp(.235+(b.contact-64)*.003-(p.control+p.movement-128)*.001,.095,.37);
-    const hr=clamp(.025+(b.power-63)*.0012-(p.velocity-144)*.0012,.006,.086);
+    const rookie=b.id===w.player.id&&w.stage==='school'&&w.grade===1;
+    const hit=clamp(.232+(b.contact-64)*.0041-(p.control+p.movement-128)*.0008-(rookie?.015:0),.055,.37);
+    const hr=clamp(.023+(b.power-63)*.00125-(p.velocity-144)*.00055,.001,.080);
     if(u>=bb+hit){
      s.ab++;outs++;q.outs++;
      if(rng()<clamp(.26+(p.movement-68)*.006-(b.contact-64)*.003,.11,.52)){s.k++;q.k++;}
