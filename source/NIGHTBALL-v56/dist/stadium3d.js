@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=243';
+} from './stadium-fx.js?v=244';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -363,22 +363,25 @@ export class StadiumRenderer {
     const seed=((Math.imul(id+193,2654435761)>>>0)%100003)/100003;
     const len=Math.hypot(pos.x,pos.z)||1;
     const x=pos.x-(seats.length?pos.x/len*.20:0),z=pos.z-(seats.length?pos.z/len*.20:0);
-    const y=pos.y-(seats.length?.28:/nightball crowd/i.test(mesh.name)?.40:.52);
+    const y=pos.y-(seats.length?.12:/nightball crowd/i.test(mesh.name)?.30:.42);
     sample.push({x,y,z,seed,yaw:Math.atan2(-x,-z),detail:Math.hypot(x,z)+Math.max(0,y)*2});
    }
   }
   if(!sample.length)return;
   for(const o of old)o.visible=false;
   sample.sort((a,b)=>a.detail-b.detail);
-  const detailed=software||this.hero?0:Math.min(small?700:1400,Math.floor(sample.length*.30));
+  const detailed=software||this.hero?0:Math.min(small?700:1400,Math.floor(sample.length*.22));
   for(const [list,rich] of [[sample.slice(0,detailed),true],[sample.slice(detailed),false]]){
    if(!list.length)continue;list.sort((a,b)=>a.seed-b.seed);
-   const geometry=this.supporterGeometry(rich),material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9});
+   const geometry=this.supporterGeometry(rich),material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9,side:T.DoubleSide});
    material.userData.fanModel=true;
    const sideAttr=new T.InstancedBufferAttribute(new Float32Array(list.length),1),seedAttr=new T.InstancedBufferAttribute(new Float32Array(list.length),1);
    geometry.setAttribute('fanSide',sideAttr);geometry.setAttribute('fanSeed',seedAttr);
-   const mesh=new T.InstancedMesh(geometry,material,list.length);mesh.name=rich?'Nightball crowd detailed':'Nightball crowd distant';mesh.userData.disposeMaterial=true;mesh.castShadow=false;mesh.receiveShadow=false;
-   enhanceCrowdMaterial(material,this.gl,this.vfx.crowdUniforms);
+   const mesh=new T.InstancedMesh(geometry,material,list.length);mesh.name=rich?'Nightball crowd detailed':'Nightball crowd distant';mesh.userData.disposeMaterial=true;mesh.castShadow=false;mesh.receiveShadow=false;mesh.frustumCulled=false;
+   // The main crowd uses a normal Three.js material, so a custom shader
+   // failure can never erase the whole stadium. Keep GPU arm/prop animation
+   // on the detailed fans only.
+   if(rich)enhanceCrowdMaterial(material,this.gl,this.vfx.crowdUniforms);
    park.add(mesh);this.supporterMeshes.push({mesh,list,sideAttr,seedAttr});
   }
   this.updateSupporters(null,true);

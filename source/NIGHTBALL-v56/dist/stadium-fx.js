@@ -458,7 +458,7 @@ export function enhanceCrowdMaterial(material, gl, crowdUniforms) {
   if (gl.isSoftwareRenderer || material.userData.crowdEnhanced) return;
   material.userData.crowdEnhanced = true;
   if(material.userData.fanModel){
-    material.customProgramCacheKey=()=> 'nb-fan-model-v243';
+    material.customProgramCacheKey=()=> 'nb-fan-model-v244';
     material.onBeforeCompile=(shader)=>{
       for(const [name,uniform] of Object.entries(crowdUniforms))shader.uniforms[name]=uniform;
       shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>
@@ -475,12 +475,12 @@ export function enhanceCrowdMaterial(material, gl, crowdUniforms) {
           float style=fanSide< -0.5?uCrowdAwayStyle:uCrowdHomeStyle;
           float phase=uCrowdTime*(style==1.0?5.8:style==2.0?7.0:style==3.0?6.4:4.7)+fanSeed*28.0;
           float stand=smoothstep(fanSeed*0.62+0.14,fanSeed*0.62+0.30,excite);
-          float wave=sin(phase),beat=abs(wave),active=smoothstep(0.20,0.82,excite);
-          transformed.y+=stand*(0.22+beat*0.12*active)-0.10;
-          transformed.x+=wave*0.035*active;
+          float wave=sin(phase),beat=abs(wave),fanActivity=smoothstep(0.20,0.82,excite);
+          transformed.y+=stand*(0.22+beat*0.12*fanActivity)-0.10;
+          transformed.x+=wave*0.035*fanActivity;
           if(fanPart>1.5&&fanPart<3.5){
             float signArm=fanPart<2.5?-1.0:1.0;
-            float raise=stand*(0.9+0.48*beat)*active+0.12*beat;
+            float raise=stand*(0.9+0.48*beat)*fanActivity+0.12*beat;
             vec2 pivot=vec2(signArm*0.25,0.78),rel=transformed.xy-pivot;
             float a=signArm*raise;transformed.xy=pivot+mat2(cos(a),sin(a),-sin(a),cos(a))*rel;
           }
@@ -491,7 +491,7 @@ export function enhanceCrowdMaterial(material, gl, crowdUniforms) {
             bool towel=fanPart>5.5&&fanPart<6.5&&style>0.5&&prop>=0.21&&prop<0.36;
             bool flag=fanPart>6.5&&prop>=0.36&&prop<0.43;
             if(!(stick||towel||flag)||abs(fanSide)<0.5)transformed=vec3(0.0,-0.12,0.0);
-            else{transformed.y+=stand*0.52+beat*active*0.18;transformed.x+=wave*active*0.15;}
+            else{transformed.y+=stand*0.52+beat*fanActivity*0.18;transformed.x+=wave*fanActivity*0.15;}
           }
         #endif
       `);
