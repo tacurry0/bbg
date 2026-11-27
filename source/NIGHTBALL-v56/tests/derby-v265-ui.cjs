@@ -15,9 +15,9 @@ assert.match(bracket,/winner-path/);assert.match(bracket,/user-path/);assert.mat
 assert.match(bracket,/ユニオル・セベリーノ/);assert(!bracket.includes('<details'));
 const hero=c.derbyResultHero({title:'準々決勝 突破',call:'ROUND CLEAR',round:'準々決勝',player:people[0].player.name,club:people[0].club,score:3,opponent:people[1].player.name,opClub:people[1].club,opScore:2,won:true,note:'サヨナラ勝利！'});
 const stats=c.derbyStats([{hr:true,x:37,y:120,distance:126,exitKmh:168,launchAngle:29},{hr:true,x:-43,y:133,distance:140,exitKmh:189,launchAngle:28},{hr:true,x:1,y:132,distance:132,exitKmh:176,launchAngle:32},{hr:false,x:20,y:50,distance:54,exitKmh:120,launchAngle:4}],{center:120});
-assert.match(stats,/width="340" height="/);assert.match(stats,/着弾マップ・全打球（4）/);
+assert.match(stats,/width="340" height="/);assert.match(stats,/全打球（4）/);assert(stats.indexOf('class="dr-map-frame"')<stats.indexOf('<details'));assert(!bracket.includes("ROAD TO CHAMPION"));
 if(process.env.DERBY_FIXTURE){
  const css=['style','arcade','game-hud','menu-polish','match-ui','pregame','nightball-brand'].map(f=>fs.readFileSync(dir+'/'+f+'.css','utf8')).join('\n');
  fs.writeFileSync(process.env.DERBY_FIXTURE,'<!doctype html><html lang="ja"><head><meta name="viewport" content="width=device-width, initial-scale=1"><style>'+css+'</style></head><body><div class="modal-backdrop"><div class="modal" id="modal-content" data-kind="derby-result">'+hero+'<div class="dr-result-actions"><button class="primary-button">次のラウンドへ ›</button><button class="secondary-button">相手の打撃を見る</button></div>'+bracket+stats+'</div></div></body></html>');
 }
-console.log('PASS v265: actual result markup — all seven bracket matches, player path, overtime, long names and chart dimensions');
+console.log('PASS v266: actual result markup — all seven bracket matches, player path, overtime, long names and chart dimensions');

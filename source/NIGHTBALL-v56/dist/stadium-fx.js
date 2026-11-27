@@ -540,12 +540,17 @@ export class DerbyStadiumShow{
   const c=document.createElement('canvas');c.width=96;c.height=192;const x=c.getContext('2d');
   if(smoke){const g=x.createRadialGradient(48,100,2,48,100,47);g.addColorStop(0,'rgba(180,182,188,.45)');g.addColorStop(.65,'rgba(110,113,125,.22)');g.addColorStop(1,'rgba(90,92,100,0)');x.fillStyle=g;x.fillRect(0,0,96,192);}
   else{
-   const flame=(cx,cy,rx,ry,hue)=>{
-    x.save();x.translate(cx,cy);x.scale(rx,ry);const g=x.createRadialGradient(0,.22,0,0,0,1);
-    g.addColorStop(0,'rgba(255,255,212,1)');g.addColorStop(.22,'rgba(255,223,94,1)');g.addColorStop(.52,'rgba(255,133,16,.96)');g.addColorStop(.80,'rgba(237,54,5,.78)');g.addColorStop(1,'rgba(255,40,0,0)');
-    x.fillStyle=g;x.beginPath();x.arc(0,0,1,0,Math.PI*2);x.fill();x.restore();
+   // Stage pyrotechnic column: tapered, irregular tongues, a white-hot
+   // core at the nozzle and orange-red tips, rather than floating ellipses.
+   const tongue=(inner=false)=>{
+    const g=x.createLinearGradient(0,183,0,8);
+    for(const [at,color] of (inner?[[0,'#fffdf1'],[.30,'#fff6ae'],[.64,'#ffc333'],[1,'rgba(255,91,6,0)']]:[[0,'#ffb527'],[.22,'#ffdb66'],[.55,'#ff8d12'],[.84,'#e94307'],[1,'rgba(255,59,0,0)']]))g.addColorStop(at,color);
+    x.fillStyle=g;x.beginPath();
+    if(inner){x.moveTo(35,189);x.bezierCurveTo(21,158,45,132,39,104);x.bezierCurveTo(34,76,57,60,54,25);x.bezierCurveTo(70,83,59,105,65,133);x.bezierCurveTo(75,159,63,177,59,189);}
+    else{x.moveTo(23,190);x.bezierCurveTo(3,156,14,134,29,117);x.bezierCurveTo(40,99,15,85,34,58);x.bezierCurveTo(49,40,35,26,51,3);x.bezierCurveTo(57,41,76,47,69,77);x.bezierCurveTo(66,98,91,115,79,141);x.bezierCurveTo(95,158,75,182,73,190);}
+    x.closePath();x.fill();
    };
-   x.globalCompositeOperation='source-over';flame(48,120,31,70);flame(37,73,20,57);flame(62,66,17,52);flame(46,39,12,40);
+   tongue();tongue(true);
   }
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;
  }
@@ -581,13 +586,13 @@ export class DerbyStadiumShow{
    root.position.set(x,y,z);return Number.isFinite(roof)?Math.max(1,roof-y):Infinity;
   };
   this.jets.forEach((jet,i)=>{
-   jet.root.visible=i<count&&age<1.25;
+   jet.root.visible=i<count&&age<1.45;
    if(!jet.root.visible)return;
-   const a=clamp(angle+(i-(count-1)/2)*.07,-.76,.76);const clearance=place(jet.root,a,2.0,.6);
-   const t=Math.max(0,age-i*.065),ramp=clamp(t/.15,0,1)*(1-clamp((t-.85)/.50,0,1)),base=(indoors?7.2:10.8)*(1+.14*(level-1));
+   const a=clamp(angle+(i-(count-1)/2)*.052,-.76,.76);const clearance=place(jet.root,a,2.0,.6);
+   const t=Math.max(0,age-i*.065),ramp=clamp(t/.10,0,1)*(1-clamp((t-.92)/.47,0,1)),base=(indoors?9.0:12.5)*(1+.14*(level-1));
    const height=Math.min(base,clearance*.72)*ramp*(.84+.16*Math.sin(t*38+i*2));
    for(let j=0;j<jet.flame.length;j++){
-    const spr=jet.flame[j],h=Math.max(.03,height*(.9-j*.17));spr.visible=ramp>.02;spr.material.opacity=ramp*(1-j*.19);spr.material.color.setHex(0xffffff);spr.position.set(Math.sin(t*20+i+j)*.30*(j+1),h*.48,Math.cos(t*16+j)*.13);spr.scale.set((indoors?2.0:2.65)*(1-j*.12)*Math.max(.3,ramp),h,1);
+    const spr=jet.flame[j],h=Math.max(.03,height*(.9-j*.17));spr.visible=ramp>.02;spr.material.opacity=Math.min(1,ramp*(1.14-j*.22));spr.material.color.setHex(0xffffff);spr.position.set(Math.sin(t*20+i+j)*.30*(j+1),h*.48,Math.cos(t*16+j)*.13);spr.scale.set((indoors?2.4:2.95)*(1-j*.12)*Math.max(.3,ramp),h,1);
    }
    jet.smoke.position.set(Math.sin(i*3+t)*.65,height+.75+t*1.8,0);jet.smoke.scale.setScalar(1.3+t*2.5);jet.smoke.material.opacity=.18*ramp;
   });
@@ -596,7 +601,7 @@ export class DerbyStadiumShow{
   this.bursts.forEach((b,i)=>{
     const t=age-i*.045-.04;b.root.visible=level>=2&&i<count&&t>=0&&t<1.13;
     if(!b.root.visible)return;
-    const a=clamp(angle+(i-(count-1)/2)*.07,-.76,.76);
+    const a=clamp(angle+(i-(count-1)/2)*.052,-.76,.76);
     const clearance=place(b.root,a,2.0,.85),fade=clamp(1-t/1.13,0,1);
     for(let j=0;j<b.count;j++){
      const phase=j/b.count,theta=j*2.399963,agej=Math.max(0,t-phase*.32),radial=(.7+(j%7)*.25)*agej;

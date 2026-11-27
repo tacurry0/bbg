@@ -288,10 +288,13 @@ export function drawVenueVision(renderer,id,game){
  const cut=game?.phase==='cinematic'?game.broadcastCut:null,k=cut?.kind==='strikeout'?cut:game?.phase==='result'?game.pitch?.strikeCelebration:null,hr=cut?.kind==='homer'?cut:game?.phase==='result'&&game.hit?.kind==='hr'?(game.field?.homerCelebration||{}):null;
  if(hr&&game.derby?.enhanced){
   const w=canvas.width,h=canvas.height,accent='#ffd57c';
-  gradient(c,w*.04,h*.045,w*.92,h*.89,'#172d47','#091626');rect(c,accent,w*.04,h*.045,w*.92,h*.02);
-  text(c,game.batter.name,w*.5,h*.22,h*.13,'#f0f7ff',w*.86);
-  text(c,game.derby.turnHR+' HR',w*.5,h*.55,h*.31,accent,w*.84);
-  text(c,(hr.distance||game.hit?.distance||0)+' m   ·   '+(game.hit?.exitKmh||0)+' km/h',w*.5,h*.82,h*.14,'#e0eaf7',w*.86);
+  gradient(c,w*.02,h*.04,w*.96,h*.92,'#0855a1','#06182f');
+  for(let i=0;i<8;i++){c.fillStyle=i%2?'#2261a2':'#14447d';c.globalAlpha=.35;c.beginPath();c.moveTo(w*(i*.15-.4),h*.96);c.lineTo(w*(i*.15+.03),h*.04);c.lineTo(w*(i*.15+.12),h*.04);c.lineTo(w*(i*.15-.31),h*.96);c.closePath();c.fill();}c.globalAlpha=1;
+  rect(c,accent,w*.02,h*.04,w*.96,Math.max(3,h*.025));
+  text(c,hr.walkoff?'WALK-OFF':hr.level>=3?'MONSTER SHOT':'HOME RUN',w*.5,h*.48,h*.31,'#fff1b9',w*.91);
+  text(c,game.batter.name+'   ·   '+game.derby.turnHR+' HR',w*.5,h*.69,h*.12,'#fff',w*.86);
+  text(c,(hr.distance||game.hit?.distance||0)+' m   ·   '+(game.hit?.exitKmh||0)+' km/h',w*.5,h*.86,h*.12,'#ffdc85',w*.86);
+
  }else if(k||hr){const w=canvas.width,h=canvas.height,side=k?k.side:game.side,club=game.teams[side],accent=typeof club?.color==='string'?club.color:k?'#57cfff':'#ffdc77',left=w*.24,top=h*.14,width=w*.52,height=h*.62;gradient(c,left,top,width,height,'#061321','#182b48');rect(c,accent,left,top,width,Math.max(3,h*.025));text(c,k?'STRIKEOUT':hr.tag||'HOME RUN',w*.5,top+height*.49,Math.min(height*.30,width*.10),'#fff',width*.93);text(c,k?`${k.ks||1} K`:(hr.distance||game.hit?.distance||0)+' m'+(game.derby?' · '+game.derby.turnHR+' HR':''),w*.5,top+height*.84,height*.20,k?'#85ddff':'#ffdf79',width*.9);}
  material.map.needsUpdate=true;
  if(id==='harbor'){

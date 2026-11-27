@@ -40,6 +40,21 @@ const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',we
  assert(D.recordTimed(state,0,hit,2,1));assert(D.finishTimed(state,0,2));
  assert(D.recordTimed(state,1,hit,3,1));assert(!D.isOver(state));assert(D.recordTimed(state,1,hit,3,2));assert(D.finishTimed(state,1,3));assert(D.isOver(state));assert.equal(D.winner(state),1);assert(state.walkOff);
 }
+// The same actual engine drives solo, online and CPU clips. Compare the
+// measured post-landing delays, and keep the moving-ball/timer guarantees.
+for(const [launch,spray,kind,limit] of [[2,0,'in-play',.60],[26,1.20,'foul',1.50],[22,0,'in-play',.60]]){
+ const g=make('record');g.beginHalf();const before=g.derby.remaining;g.startField(28,launch,spray,false);
+ let seconds=0,bounce=null;while(g.phase==='field'&&seconds<12){g.update(10);seconds+=.01;if(g.field.ball.bounces>0&&bounce===null)bounce=seconds;}
+ assert.equal(g.hit.kind,kind);assert.equal(g.derby.turnHR,0);
+ const wait=G.derbyResultDuration(g.field,g.hit)/1000;
+ assert(wait<=.22);if(bounce!==null)assert(seconds-bounce+wait<=limit+.04,{kind,seconds,bounce,wait});else assert(seconds+wait<=limit+.04);
+ assert(g.derby.remaining<before);const x=g.field.ball.x,y=g.field.ball.y;g.update(30);
+ assert(g.field.ball.x!==x||g.field.ball.y!==y,'ball remains in motion during short result');
+ for(let i=0;i<30&&g.phase==='result';i++)g.update(10);assert.notEqual(g.phase,'result','next pitch promptly');
+}
+assert.equal(G.derbyResultDuration({homerCelebration:{level:1}},{kind:'hr'}),1200);
+assert.equal(G.derbyResultDuration({homerCelebration:{level:3}},{kind:'hr'}),1900);
+assert.equal(G.derbyResultDuration(null,{kind:'hr'},true),3600);
 // Integration test the actual app's online derby block in two VM peers with a
 // queued reliable data channel, using the real game engine and score model.
 const app=read('app.js'),start=app.indexOf(' // v262: two-minute full turns'),end=app.indexOf(' function hideOnlineGuest()',start);

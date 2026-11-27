@@ -1978,13 +1978,18 @@ window.NightGame=class NightGame{
     if(this.derby.enhanced){
      if(b.bounces>0&&!f.derbyLanding){f.derbyLanding={x:b.x,y:b.y};f.derbyGroundAt=f.elapsed;}
      if(f.overFence&&b.bounces>0){this.finishDerbyBall(true);return;}
-     // No fielder is present in derby. Follow the first landing, roll or
-     // rebound for a readable interval, then keep rolling through the result.
-     // A foul stays live visually until it actually lands.
-     if(!f.overFence&&b.bounces>0){
-      const groundTime=f.elapsed-f.derbyGroundAt,wallTime=f.wallHit?f.elapsed-f.wallAt:Infinity;
-      if((Math.hypot(b.vx,b.vy)<2.5&&b.z<.2&&groundTime>.35||groundTime>=(f.trajectory==='ground'?1.55:f.foul?.80:1.05))&&wallTime>.6)this.finishDerbyBall(false);
-     }
+      // Derby is a rhythm game, not a fielding play. Keep the ball in motion
+      // during the result, but do not spend seconds watching harmless rolls.
+      // Only obviously foul airborne balls may be called before first bounce;
+      // use the already-computed physical landing for their spray chart.
+      if(!f.overFence&&f.foul&&!b.bounces&&f.elapsed>=1.15&&Math.abs(Math.atan2(b.x,b.y))>Math.PI/4+.13){
+       f.derbyLanding={x:f.landing.x,y:f.landing.y};this.finishDerbyBall(false);return;
+      }
+      if(!f.overFence&&b.bounces>0){
+       const groundTime=f.elapsed-f.derbyGroundAt,wallTime=f.wallHit?f.elapsed-f.wallAt:Infinity;
+       const tail=f.foul?.12:f.trajectory==='ground'?.30:.18;
+       if(groundTime>=tail&&wallTime>.20)this.finishDerbyBall(false);
+      }
     }else if(b.bounces>0)this.finishDerbyBall(f.overFence);
     return;
    }
@@ -2605,8 +2610,8 @@ window.NightGame=class NightGame{
  }
  static derbyResultDuration(field,hit,walkoff=false){
   if(walkoff)return 3600;
-  if(hit?.kind==='hr')return 1500;
-  return field?550:180;
+   if(hit?.kind==='hr')return (field?.homerCelebration?.level||1)>=2?1900:1200;
+   return field?(field.foul?180:220):180;
  }
  updateDerbyRoll(dt){
   const f=this.field;if(!f?.resolved||!f.ball||f.outcome==='hr')return;

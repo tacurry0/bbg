@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=263';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=265';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=266';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -1715,7 +1715,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const dots=hits.map(h=>'<circle cx="'+(cx+h.x*scale).toFixed(1)+'" cy="'+(cy-h.y*scale).toFixed(1)+'" r="'+(h.hr?4:2.6)+'" fill="'+(h.hr?'#ffd44d':'#aabbd0')+'" stroke="'+(h.hr?'#fff3bf':'#495b68')+'" stroke-width="1"><title>'+Math.round(h.distance)+'m / '+h.exitKmh+'km/h</title></circle>').join('');
   const height=Math.max(195,...hits.map(h=>Math.ceil(cy-h.y*scale+12)));
   const stats=[['本塁打',hrs.length,'本'],['平均飛距離',mean,'m'],['最長飛距離',max,'m'],['最高打球速度',velo,'km/h']];
-  return '<section class="derby-stat-card"><h3>'+title+'</h3><div class="derby-stat-grid">'+stats.map(([label,value,unit])=>'<div><small>'+label+'</small><b>'+value+'<em>'+unit+'</em></b></div>').join('')+'</div><details class="dr-shot-details" data-ui-section="derby-shot-map"><summary>着弾マップ・全打球（'+hits.length+'）</summary><div class="dr-map-frame"><svg class="derby-map" width="340" height="'+height+'" viewBox="0 0 340 '+height+'" aria-label="着弾マップ"><path d="M170 174 L'+fence.replaceAll(' ',' L')+' Z" fill="#28784f" stroke="#99dcab" stroke-width="2"/><path d="M170 174 L133 137 L170 100 L207 137 Z" fill="#b08a56"/><path d="M170 167 L143 137 L170 110 L197 137 Z" fill="#438b5f"/><path d="M170 174 L64 68 M170 174 L276 68" fill="none" stroke="#fff" opacity=".55"/>'+dots+'<circle cx="170" cy="174" r="3" fill="#fff"/></svg></div><div class="derby-map-legend"><span>● ホームラン</span><span>● その他の打球</span></div><div class="derby-shot-list">'+hits.map((h,i)=>'<div><b>'+String(i+1).padStart(2,'0')+'</b><span class="'+(h.hr?'hr':'')+'">'+(h.hr?'HR':h.kind==='foul'?'FOUL':'HIT')+'</span><b>'+h.distance+' m</b><small>'+h.exitKmh+' km/h · '+h.launchAngle+'°</small></div>').join('')+'</div></details></section>';
+  return '<section class="derby-stat-card"><h3>'+title+'</h3><div class="derby-stat-grid">'+stats.map(([label,value,unit])=>'<div><small>'+label+'</small><b>'+value+'<em>'+unit+'</em></b></div>').join('')+'</div><div class="dr-map-frame"><svg class="derby-map" width="340" height="'+height+'" viewBox="0 0 340 '+height+'" aria-label="着弾マップ"><path d="M170 174 L'+fence.replaceAll(' ',' L')+' Z" fill="#28784f" stroke="#99dcab" stroke-width="2"/><path d="M170 174 L133 137 L170 100 L207 137 Z" fill="#b08a56"/><path d="M170 167 L143 137 L170 110 L197 137 Z" fill="#438b5f"/><path d="M170 174 L64 68 M170 174 L276 68" fill="none" stroke="#fff" opacity=".55"/>'+dots+'<circle cx="170" cy="174" r="3" fill="#fff"/></svg></div><div class="derby-map-legend"><span>● ホームラン</span><span>● その他の打球</span></div><details class="dr-shot-details" data-ui-section="derby-shots"><summary>全打球（'+hits.length+'）</summary><div class="derby-shot-list">'+hits.map((h,i)=>'<div><b>'+String(i+1).padStart(2,'0')+'</b><span class="'+(h.hr?'hr':'')+'">'+(h.hr?'HR':h.kind==='foul'?'FOUL':'HIT')+'</span><b>'+h.distance+' m</b><small>'+h.exitKmh+' km/h · '+h.launchAngle+'°</small></div>').join('')+'</div></details></section>';
  }
  function derbyHud(g){
   const d=g.derby;if(!d)return;
@@ -1733,9 +1733,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const batterName=active?.name||watch?.entry.player.name||g.batter.name,oppName=other?.name||(watch?g.batter.name:d.matchup?.entrants[1-d.userIndex]?.player.name)||'自己ベスト';
   const activeClub=view.teams.home,oppClub=c?NightTeams.get(other.clubId):watch?g.teams.home:d.matchup?.entrants[1-d.userIndex]?.club;
   const goal=record?'自己ベストに挑戦':need===null?'先攻 · 本数を伸ばそう':need===0?'WALK-OFF':'勝利まであと '+need+' 本';
+  const best=Math.max(0,...history.filter(h=>h.hr).map(h=>h.distance||0)),latest=history.at(-1);
   const sb=$('scoreboard'),key=[d.round,d.extra,active?.name||batterName,!!watch,!!spectator].join('/');
   const previous=sb.querySelector('.dr-hud')?.dataset.key===key?Number(sb.querySelector('.dr-hud-active>b')?.dataset.hr):NaN;
-  const markup='<div class="dr-hud" data-key="'+uiEscape(key)+'"><div class="dr-hud-top"><span class="dr-live-dot"></span><strong>HOME RUN DERBY</strong><small>'+label+(order?' / '+order:'')+(spectator||watch?' / 観戦':'')+'</small></div><div class="dr-hud-match"><div class="dr-hud-side dr-hud-active"><span>'+derbyClubMark(activeClub)+'<small>'+uiEscape(batterName)+'</small></span><b data-hr="'+hr+'">'+hr+'<em>HR</em></b></div><div class="dr-hud-clock"><strong id="derby-clock"></strong><div class="derby-timer-track"><i id="derby-time-fill"></i></div></div><div class="dr-hud-side"><span>'+(oppClub?derbyClubMark(oppClub):'<i>★</i>')+'<small>'+uiEscape(oppName)+'</small></span><b>'+(record?personal:op??'—')+'<em>HR</em></b></div></div><div class="dr-hud-goal">'+goal+(streak>=3?' <em>'+streak+' HR STREAK</em>':'')+'</div></div>';
+  const markup='<div class="dr-hud" data-key="'+uiEscape(key)+'"><div class="dr-hud-top"><span class="dr-live-dot"></span><strong>HOME RUN DERBY</strong><small>'+label+(order?' / '+order:'')+(spectator||watch?' / 観戦':'')+'</small></div><div class="dr-hud-match"><div class="dr-hud-side dr-hud-active"><span>'+derbyClubMark(activeClub)+'<small>'+uiEscape(batterName)+'</small></span><b data-hr="'+hr+'">'+hr+'<em>HR</em></b></div><div class="dr-hud-clock"><small>残り時間</small><strong id="derby-clock"></strong><div class="derby-timer-track"><i id="derby-time-fill"></i></div></div><div class="dr-hud-side"><span>'+(oppClub?derbyClubMark(oppClub):'<i>★</i>')+'<small>'+uiEscape(oppName)+'</small></span><b>'+(record?personal:op??'—')+'<em>HR</em></b></div></div><div class="dr-hud-goal">'+goal+'</div><div class="dr-hud-metrics"><span><small>最長</small><b>'+(best||'—')+'<em>m</em></b></span><span'+(streak>=3?' class="hot"':'')+'><small>連続HR</small><b>'+streak+'</b></span><span><small>打球速度</small><b>'+(latest?.exitKmh||'—')+'<em>km/h</em></b></span></div></div>';
   if(!sb.querySelector('.dr-hud')||sb._derbyMarkup!==markup){sb.innerHTML=markup;sb._derbyMarkup=markup;if(hr>previous&&!matchMedia('(prefers-reduced-motion: reduce)').matches)sb.querySelector('.dr-hud-active>b')?.animate?.([{transform:'scale(1.3)',color:'#fff7ca'},{transform:'scale(1)'}],{duration:430,easing:'ease-out'});}
   updateDerbyClock(g,rem);
  }
@@ -1743,13 +1744,19 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(!result||(!result.hr&&!Number.isFinite(result.x)&&!walkoff&&!champion))return;
   let fx=$('derby-spectacle');if(!fx){fx=document.createElement('div');fx.id='derby-spectacle';fx.className='derby-spectacle';fx.setAttribute('aria-hidden','true');$('stage').append(fx);}
   const view=derbyWatch?.game||((game?.onlineDerby&&!onlineDerbyMyTurn())?online?.derbySpectator:game)||game;
-  const special=walkoff||champion||result.hr&&(result.distance>=140||streak>=3);
-  const personal=records.derbyBests?.[derbyBestKey(game)]?.distance||0;
-  const tag=champion?'CHAMPION':walkoff?'WALK-OFF':result.hr?'HOME RUN':result.kind==='foul'?'FOUL':'IN PLAY';
-  const note=champion?'トーナメント優勝':walkoff?'勝利確定':streak>=5?streak+' IN A ROW':streak>=3?streak+' IN A ROW':result.distance>=140?'MONSTER SHOT':'';
-  fx.className='derby-spectacle '+(result.hr||champion?'':'dr-other-shot ')+(special?'mega ':'')+(walkoff?' walkoff':'')+(champion?' champion':'');
-  fx.innerHTML='<div class="dr-hr-banner"><small>'+uiEscape(note||view?.batter?.name||'')+'</small><strong>'+tag+'</strong><div><b>'+(champion?'優勝':Math.round(result.distance||0)+' m')+'</b>'+(result.exitKmh?'<span>'+result.exitKmh+' km/h</span>':'')+(result.hr&&result.distance>personal&&personal>0?'<i>NEW RECORD</i>':'')+'</div></div>';
-  fx.hidden=false;fx.classList.remove('fire');void fx.offsetWidth;fx.classList.add('fire');clearTimeout(derbyFxTimer);derbyFxTimer=setTimeout(()=>{fx.hidden=true;},walkoff?3500:champion?2500:result.hr?1450:520);
+  const deep=result.distance>=140,level=walkoff||deep||streak>=5?3:streak>=3?2:1;
+  clearTimeout(derbyFxTimer);fx.hidden=true;fx.classList.remove('fire');
+  if(result.hr||champion){
+   // Use the actual match HOME RUN animation, never a duplicate text banner.
+   hideStageBanner();
+   const tag=walkoff?'WALK-OFF HOME RUN':deep?'MONSTER SHOT':streak>=3?streak+' IN A ROW':'HOME RUN';
+   showImpact({en:'HOME RUN',celebration:{tag,level,distance:result.distance,exitKmh:result.exitKmh}},{derby:true,duration:walkoff?2200:level>=2?1450:1080});
+  }else{
+   // Short feedback accompanies the still-moving ball; it does not gate play.
+   fx.className='derby-spectacle dr-other-shot';
+   fx.innerHTML='<div class="dr-hr-banner"><strong>'+(result.kind==='foul'?'FOUL':'打球')+'</strong><div><b>'+Math.round(result.distance||0)+' m</b></div></div>';
+   fx.hidden=false;void fx.offsetWidth;fx.classList.add('fire');derbyFxTimer=setTimeout(()=>{fx.hidden=true;},result.kind==='foul'?180:220);
+  }
   if(!champion&&result.hr&&(walkoff||result.distance>=130))djSay(game,(walkoff?'Walk-off home run!':'Home run!')+' '+djPlayer(view?.batter),3,'derby/'+(online?.derbyContest?.taken??game?.session?.pitches??0)+'/'+walkoff);
  }
  function renderDerbyIntro(view){
@@ -1775,7 +1782,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const b=$('derby-watch-bar');b.classList.remove('online');b.hidden=false;updateUI();
  }
  function endDerbyWatch(){
-  const w=derbyWatch;if(!w)return;derbyWatch=null;$('derby-watch-bar').hidden=true;const fx=$('derby-spectacle');if(fx)fx.hidden=true;renderDerbyIntro(null);
+  const w=derbyWatch;if(!w)return;derbyWatch=null;$('derby-watch-bar').hidden=true;const fx=$('derby-spectacle');if(fx)fx.hidden=true;hideImpact();renderDerbyIntro(null);
   if(game?.derby){if(w.preview)derbyRoundPreview(game);else derbyTurnResult(game);updateUI();}
  }
  function derbyWatchFrame(dt){
@@ -1815,13 +1822,13 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function derbyClubSelect(club){return '<select id="derby-club" class="field-select" aria-label="打者の所属">'+arcadeClubOptions(club.id)+(alumniClub()?'<option value="career-alumni" '+(club.id==='career-alumni'?'selected':'')+'>キャリアOB</option>':'')+'</select>';}
  function setupDerby(){
   const {club,batter,park,best}=derbySelection(),mode=settings.derbyMode;
-  const cards=[['tournament','国内大会','国内8選手','01'],['international','国際ダービー','3リーグ','02'],['record','記録挑戦','自己ベスト','03']];
-  const body='<section class="dr-hero"><span class="dr-event">NIGHTBALL / ALL-STAR EVENT</span><div class="dr-ball" aria-hidden="true"></div><div class="dr-hero-title">HOME RUN<br><strong>DERBY</strong></div><div class="dr-rule-chips"><span>2:00</span><span>150 km/h</span><span>満員</span></div></section>'+
-   '<section class="dr-section"><h3>大会形式</h3><div class="dr-mode-grid">'+cards.map(([v,l,sub,no])=>'<button data-derby-mode="'+v+'" class="dr-mode '+(mode===v?'active':'')+'" aria-pressed="'+(mode===v)+'"><small>'+no+'</small><b>'+l+'</b><span>'+sub+'</span></button>').join('')+'</div><button class="dr-online" data-action="derby-online"><span>ONLINE</span><b>オンライン対戦</b><i>›</i></button></section>'+
+  const cards=[['tournament','国内大会','8選手','trophy'],['international','国際大会','3リーグ','world'],['record','記録挑戦','自己ベスト','target']];
+  const body='<section class="dr-hero"><div class="dr-hero-title">HOME RUN <strong>DERBY</strong></div><div class="dr-ball" aria-hidden="true"></div><img class="dr-hero-trophy" src="./assets/menu/trophy.svg" alt=""><div class="dr-rule-chips"><span>2:00</span><span>150 km/h</span></div></section>'+
+   '<section class="dr-section"><h3>大会形式</h3><div class="dr-mode-grid">'+cards.map(([v,l,sub,icon])=>'<button data-derby-mode="'+v+'" class="dr-mode '+(mode===v?'active':'')+'" aria-pressed="'+(mode===v)+'"><span class="dr-mode-icon">'+('<svg viewBox="0 0 24 24" aria-hidden="true">'+(icon==='trophy'?'<path d="M7 3h10v8a5 5 0 0 1-10 0zM7 5H3v3a4 4 0 0 0 4 4M17 5h4v3a4 4 0 0 1-4 4M12 16v5m-4 0h8"/>':icon==='world'?'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c5 5 5 13 0 18-5-5-5-13 0-18Z"/>':'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>')+'</svg>')+'</span><b>'+l+'</b><span>'+sub+'</span></button>').join('')+'</div><button class="dr-online" data-action="derby-online"><span aria-hidden="true">●</span><b>オンライン対戦</b><i>›</i></button></section>'+
    '<section class="dr-section"><h3>出場打者</h3><button class="dr-selected-player" data-action="derby-player-open">'+derbySelectedPlayer(club,batter)+'<i>›</i></button></section>'+
    '<section class="dr-section"><h3>球場</h3><div class="dr-venue">'+parkMiniSVG(park)+'<div><select id="derby-park" class="field-select" aria-label="球場">'+parkOptions(park.id)+'</select><small>両翼 '+park.left+' / '+park.right+' m · 中堅 '+park.center+' m</small></div></div><div class="dr-light">'+pfChoice(GAME_LIGHTING_OPTIONS,settings.gameLighting,'data-derby-light')+'</div></section>'+
    (mode!=='record'?'<section class="dr-section dr-entrants">'+derbyEntrantOptions(club)+'</section>':'')+
-   '<section class="dr-best"><header>PERSONAL BEST</header><div><span><b>'+(best.hr||0)+'</b><small>本塁打</small></span><span><b>'+(best.distance||0)+'<em>m</em></b><small>最長飛距離</small></span><span><b>'+(best.exitKmh||0)+'<em>km/h</em></b><small>最高打球速度</small></span></div></section>'+
+   '<section class="dr-best"><header>自己ベスト</header><div><span><b>'+(best.hr||0)+'</b><small>本塁打</small></span><span><b>'+(best.distance||0)+'<em>m</em></b><small>最長飛距離</small></span><span><b>'+(best.exitKmh||0)+'<em>km/h</em></b><small>最高打球速度</small></span></div></section>'+
    '<details class="dr-rules"><summary>ルール</summary><p>1人120秒、球数無制限。打球中も残り時間は進みます。後攻は先攻の本数を超えればサヨナラ勝利。同数は1分延長、ボーナスタイムなし。</p></details>';
   pfScreen('ホームラン競争',body,'derby-setup','<button class="dr-start" data-action="start-derby"><span>'+pfIcon('play')+'</span><strong>'+(mode==='record'?'記録に挑戦':'大会を始める')+'</strong><i>›</i></button>','close');
  }
@@ -1851,14 +1858,14 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(!p)return '<div class="derby-entry pending"><span class="derby-player">未定</span><b class="dr-bracket-score">—</b></div>';
    const name=uiEscape(p.player.name);
    return `<div class="derby-entry${p.user?' user':''}${winner?' winner':''}" title="${name} ${uiEscape(derbyScoreText(match||{normal:[null,null],extra:[null,null]},i))}">
-    <span class="derby-entry-name">${clubBadge(p.club.id,true)}<span class="derby-player">${name}</span></span>
+    <span class="derby-entry-name"><span class="derby-player">${name}</span></span>
     <b class="dr-bracket-score">${score}${extra!=null?'<small>+'+extra+'</small>':''}</b>
-    <span class="dr-entry-status">${p.user?'YOU':''}${winner?'<i aria-label="勝ち">✓</i>':''}</span>
+    <span class="dr-entry-status">${clubBadge(p.club.id,true)}${p.user?'<em>自分</em>':''}${winner?'<i aria-label="勝ち">✓</i>':''}</span>
    </div>`;
   };
   const rounds=['準々決勝','準決勝','決勝'];
-  return `<section class="derby-bracket" role="region" aria-label="トーナメント表"><header class="dr-bracket-header"><span><strong>トーナメント表</strong><small>ROAD TO CHAMPION</small></span><span class="dr-bracket-key"><i></i> 自分の経路</span></header><div class="derby-tree">
-   ${rounds.map((name,round)=>`<section class="derby-tree-round"><h3><small>0${round+1}</small>${name}</h3><div class="derby-round-fixtures">${Array.from({length:4>>round},(_,slot)=>{
+  return `<section class="derby-bracket" role="region" aria-label="トーナメント表"><header class="dr-bracket-header"><span><strong>トーナメント表</strong></span><span class="dr-bracket-key"><i></i> 自分の勝ち上がり</span></header><div class="derby-tree">
+   ${rounds.map((name,round)=>`<section class="derby-tree-round"><h3>${name}</h3><div class="derby-round-fixtures">${Array.from({length:4>>round},(_,slot)=>{
     const match=d.rounds[round]?.[slot],projected=round?[d.rounds[round-1]?.[slot*2]?.winner,d.rounds[round-1]?.[slot*2+1]?.winner]:[],entries=match?.entrants??projected;
     const current=match&&match===d.matchup,route=!!match?.winner?.user,joined=entries.some(p=>p?.user);
     return `<div class="derby-pair${current?' current':''}${route?' winner-path':''}${joined?' user-path':''}${match?.complete?' complete':''}"${match?.reason?' title="'+uiEscape(match.reason)+'"':''}>
@@ -1868,8 +1875,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    </div></section>`;
  }
  function derbyResultHero({title,call,round,player,club,score,opponent,opClub,opScore,won=false,champion=false,note=''}){
-  const side=(name,c,n,isWin)=>`<div class="dr-result-side${isWin?' won':''}">${c?derbyClubMark(c):'<span class="dr-result-placeholder">★</span>'}<strong>${uiEscape(name)}</strong><b>${uiEscape(String(n))}</b></div>`;
-  return `<section class="dr-result-hero${won?' won':''}${champion?' champion':''}"><div class="dr-result-kicker"><span>HOME RUN DERBY</span><span>${uiEscape(round)}</span></div><div class="dr-result-title"><div class="dr-result-call">${champion?'<img class="dr-champion-trophy" src="./assets/menu/trophy.svg" alt="">':''}${call}</div><h2 id="modal-title">${uiEscape(title)}</h2></div><div class="dr-result-match">${side(player,club,score,won)}<span class="dr-result-vs">–</span>${side(opponent,opClub,opScore,false)}</div>${note?'<p>'+uiEscape(note)+'</p>':''}</section>`;
+  const side=(name,c,n,isWin)=>`<div class="dr-result-side${isWin?' won':''}">${c?derbyClubMark(c):'<span class="dr-result-placeholder">★</span>'}<strong>${uiEscape(name)}</strong><b>${uiEscape(String(n).split(' + ')[0])}${String(n).includes(' + ')?'<small> + '+uiEscape(String(n).split(' + ')[1])+'</small>':''}</b></div>`;
+  return `<section class="dr-result-hero${won?' won':''}${champion?' champion':''}"><div class="dr-result-kicker"><span>HOME RUN DERBY</span><span>${uiEscape(round)}</span></div><div class="dr-result-title"><h2 id="modal-title">${champion?'<img class="dr-champion-trophy" src="./assets/menu/trophy.svg" alt="">':''}${uiEscape(title)}</h2></div><div class="dr-result-match">${side(player,club,score,won)}<span class="dr-result-vs">–</span>${side(opponent,opClub,opScore,false)}</div>${note?'<p>'+uiEscape(note)+'</p>':''}</section>`;
  }
  function derbyRecordHero(g){
   const d=g.derby,best=records.derbyBests?.[derbyBestKey(g)]?.hr||0;
@@ -3240,7 +3247,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function showImpact(data,options={}){
   const el=$('impact-fx'), k=data.en==='STRIKEOUT',c=data.celebration||{};
-  if(!el||game?.fastForward||game?.spectate||game?.replayView||review.playback)return false;
+  if(!el||game?.fastForward||(!options.derby&&game?.spectate)||game?.replayView||review.playback)return false;
   if(!options.cut&&el.dataset.source==='cut'&&!el.hidden&&el.dataset.kind===(k?'k':'hr'))return true;
   const short=!!(game?.derby||game?.timeAttack),duration=options.duration??(short?650:k?1370:1950);
   const settled=k&&!options.pending&&!el.hidden&&el.dataset.kind==='k'&&(el.dataset.source==='abs'||el.dataset.settled==='true');
@@ -3251,9 +3258,9 @@ function start(mode,challengeId=null,fixedPark=null){
   const words=k?['STRIKEOUT']:['HOME','RUN'];
   for(const word of words){const part=document.createElement('span');part.className='impact-word';part.dataset.word=word;part.textContent=word;title.append(part);}
   const meta=el.querySelector('.impact-meta');
-  const tag=({'WALK-OFF HOME RUN':'WALK-OFF','GO-AHEAD HOME RUN':'GO-AHEAD','GAME-TYING HOME RUN':'GAME-TYING','GRAND SLAM':'GRAND SLAM'})[c.tag]||'';
+  const tag=({'WALK-OFF HOME RUN':'WALK-OFF','GO-AHEAD HOME RUN':'GO-AHEAD','GAME-TYING HOME RUN':'GAME-TYING','GRAND SLAM':'GRAND SLAM'})[c.tag]||(options.derby&&c.tag!=='HOME RUN'?c.tag:'');
   const distance=c.distance||Number((data.sub||'').match(/(\d+)\s*m/)?.[1]||0);
-  meta.textContent=k?[c.ks?c.ks+' K':'',c.speed?c.speed+' km/h':''].filter(Boolean).join('  ·  '):[tag,distance?distance+' m':''].filter(Boolean).join('  ·  ');
+  meta.textContent=k?[c.ks?c.ks+' K':'',c.speed?c.speed+' km/h':''].filter(Boolean).join('  ·  '):[tag,distance?distance+' m':'',options.derby&&c.exitKmh?c.exitKmh+' km/h':''].filter(Boolean).join('  ·  ');
   void el.offsetWidth;el.hidden=false;impactRemaining=duration;return true;
  }
  function hideStageBanner(){ $('stage-message').classList.remove('show'); }

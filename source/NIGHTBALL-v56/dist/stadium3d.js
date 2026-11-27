@@ -1,13 +1,13 @@
 import { jerseyUV, torsoGeometry, pantsTexture, capGeometry, visorGeometry, uniformTexture, helmetOrCap, contrast } from './uniform-render.js?v=228';
 import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=243';
-import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit, updateTokyoDerbyCrowd } from './tokyo-nightball.js?v=265';
+import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit, updateTokyoDerbyCrowd } from './tokyo-nightball.js?v=266';
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=263';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
 import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
-import { drawVenueVision } from './venue-vision.js?v=265';
+import { drawVenueVision } from './venue-vision.js?v=266';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=261';
 import {
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=265';
+} from './stadium-fx.js?v=266';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -1011,8 +1011,26 @@ export class StadiumRenderer {
  }
  followPlay(g,time){
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
-  // Derby uses the same ball-following camera through landing. Only exceptional
-  // home runs cut to the actual hitter after the landing is visible.
+  // Follow the live ball until it lands. Then frame the *actual fence sector*
+  // from the field side, so the wall, jets and packed stands fill the picture.
+  // This intentionally does not use the high, wide ordinary fielding camera.
+  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'&&!g.replayView){
+   const b=f.ball,park=g.park,portrait=this.camera.aspect<.95;
+   const a=clamp(Math.atan2(b.x,b.y),-.70,.70);
+   const r=NightPlayers.wallDistance(park,a),h=NightPlayers.fenceHeight(park,a);
+   const sx=Math.sin(a),sz=Math.cos(a),back=portrait?40:32;
+   const cx=sx*(r-back),cz=sz*(r-back);
+   const roof=NightPlayers.roofSurface(park,cx,cz);
+   const height=Math.min(h+11,Number.isFinite(roof)?roof-3.5:Infinity);
+   this.camera.position.set(cx,height,-cz);
+   this.cameraFocus.set(sx*(r+4),h+5.6,-sz*(r+4));
+   this.camera.lookAt(this.cameraFocus);
+   this.camera.fov=portrait?64:47;
+   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
+   this.cameraPlay=f;
+   if(this.keyLight){this.keyLight.target.position.set(sx*r,0,-sz*r);this.keyLight.target.updateMatrixWorld();}
+   return;
+  }
   const h=g.replayView&&g.replayHighlight,a=h&&f.fielders[h.fielder];
   if(a&&Math.abs(f.elapsed-h.time)<1.2){const side=a.x>0?-1:1;this.camera.position.set(a.x+side*5,5.8,-a.y+8);this.camera.lookAt(a.x,1.55,-a.y);this.camera.fov=this.camera.aspect<.85?48:40;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=null;return;}
   const moment=g.replayView?g.replayCloseMoment:null;
@@ -1365,7 +1383,7 @@ export class StadiumRenderer {
   }
   this.overviewMode=g?.phase==='intro'&&(g.derby?.enhanced?g.phaseTime<1700:g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
    const derbyHR=g?.derby?.enhanced&&g.phase==='result'&&g.field?.outcome==='hr',celebration=g?.field?.homerCelebration;
-   const derbyCutAt=celebration?.walkoff?1700:celebration?.level>=2?720:Infinity;
+   const derbyCutAt=celebration?.walkoff?1800:celebration?.level>=2?1050:Infinity;
    const derbyCut=derbyHR&&g.phaseTime>=derbyCutAt;
    const cameraView=derbyHR?(derbyCut?'derby-batter-celebration':'derby-landing'):g?.derby?.enhanced&&g.phase==='intro'&&!this.overviewMode?'derby-batter-intro':g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;
@@ -1448,7 +1466,7 @@ export class StadiumRenderer {
     this.ballShadow.scale.setScalar(.88);this.ballShadow.visible=true;
    }
   }
-   if(derbyCut){this.renderLiveCut(g,time,{kind:'homer',side:g.side,playerId:g.batter.id,level:celebration.level,variant:'standard',startAt:derbyCutAt,duration:celebration.walkoff?1900:780});}
+   if(derbyCut){this.renderLiveCut(g,time,{kind:'homer',side:g.side,playerId:g.batter.id,level:celebration.level,variant:'standard',startAt:derbyCutAt,duration:celebration.walkoff?1800:850});}
   else if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
   else if(g&&!g.replayView&&(g.absCalledStrikeout||g.phase==='result'&&g.pitch?.strikeCelebration)&&!g.fastForward&&!g.spectate&&!g.autoDefense&&!g.autoBatting){const k=g.pitch?.strikeCelebration,side=g.side==='home'?'away':'home';this.renderLiveCut(g,time,{kind:'strikeout',side,playerId:g.pitcher.id,level:k?.level||1,duration:1500,preview:g.phase==='abs-call'});}
   const wet=window.NightGame.rainLevel(g)/3;
