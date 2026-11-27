@@ -101,6 +101,8 @@
    <h2>${esc(w.name)}</h2>
    <p>${esc(w.club?w.clubName(w.club):w.path||w.school)} · ${NightCareer.positionNames[p.pos]||p.pos}${rank?' · '+rank+'位':''}</p>
    </div><div class="cw-date"><time datetime="${w.day}">${w.day.replaceAll('-','/')}</time><b>${esc(status)}</b></div></div>${w.stage==='school'?'<p class="cw-school-context">'+['弱小校：出場機会が多い','中堅校：育成と競争のバランス','強豪校：設備充実・競争激化'][w.schoolTier]+'</p>':''}</section>`;
+  const objective=w.stage==='school'?(w.grade===1?'ベンチ入り・レギュラーを狙う':w.grade===2?'全国大会への出場を目指す':'大会で結果を残しドラフトへ'):w.stage==='amateur'?'ドラフト指名を目指す':w.stage==='pro'?(w.selection?.level==='farm'?'一軍昇格を目指す':w.proYear<=3?'一軍定着・初タイトル':w.age<33?'タイトル・優勝・代表入り':'衰えに抗い現役を続ける'):w.stage==='draft'?'指名を待つ':w.stage==='offseason'?'来季の所属を決める':'';
+  const target=objective?'<div class="cw-objective"><b>次の目標</b><span>'+esc(objective)+'</span></div>':'';
   const action=w.stage==='draft'?draft(w):w.stage==='offseason'?market(w):w.stage==='retired'?retired(w):daily(w,f,next);
   const scores=w.club?w.playerYear:w.schoolTotals;
   const ability=(w.pitching?M.pitching:M.batting).map(key=>`<span>${NightCareerWorld.training[key]} <b>${Math.round(p[key])}${key==='velocity'?' km/h':''}</b></span>`).join('');
@@ -120,7 +122,7 @@
   const extras=`<div class="cw-details">${act('detail','日程・大会','schedule','cw-link')}${act('detail','フォーム・特殊能力','skills','cw-link')}
    ${w.club?act('detail','契約・生活','life','cw-link')+act('detail','国際大会','international','cw-link'):act('detail','生活・交流','life','cw-link')}
    ${act('music','応援歌設定','','cw-link')}</div>`;
-  return title('選手キャリア',legacy)+hero+action+extras+(w.stage==='retired'?'':state+news);
+  return title('選手キャリア',legacy)+hero+target+action+extras+(w.stage==='retired'?'':'<details class="cw-fold"><summary>成績・能力・ニュース</summary>'+state+news+'</details>');
  }
  function successPanel(w){
   const s=Z.state(w);
@@ -224,12 +226,16 @@
   const id=w.player.club,l=M.lineup(w,id,w.playingCountry,w.day);
   const pos=w.player.pos;
   const peers=w.members(id).filter(p=>p.positions.includes(pos)).sort((a,b)=>M.positionScore(w,b,pos,w.playingCountry)-M.positionScore(w,a,pos,w.playingCountry));
-  const cohort=w.people.filter(p=>p.school&&p.club!==id).sort((a,b)=>(w.rivalry[b.id]?.games||0)-(w.rivalry[a.id]?.games||0)).slice(0,12);
-  return archHTML+section('ポジション争い · '+NightCareer.positionNames[pos],`<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
+  const ownScore=M.positionScore(w,w.player,pos,w.playingCountry);
+   const peer=peers.find(p=>p.id!==w.player.id);
+   const gap=peer?Math.round(M.positionScore(w,peer,pos,w.playingCountry)-ownScore):0;
+   const competition=peer?'<p class="cw-competition">競争相手：'+esc(peer.name)+' · 評価差 '+(gap>0?'+':'')+gap+'（'+(gap>0?'能力・試合成績を伸ばそう':'評価でリード中')+'）</p>':'';
+   const cohort=w.people.filter(p=>p.school&&p.club!==id).sort((a,b)=>(w.rivalry[b.id]?.games||0)-(w.rivalry[a.id]?.games||0)).slice(0,12);
+  return archHTML+section('ポジション争い · '+NightCareer.positionNames[pos],`${competition}<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
    ${p.injury?' · 故障':''}${p.id===w.player.id?' · あなた':''} ${p.pos==='P'?(p.stats.outs?' · 防御率 '+fmt(M.era(p.stats),2):''):(p.stats.ab?' · 打率 '+fmt(M.rate(p.stats.h,p.stats.ab)):'')}</li>`).join('')}</ol>`)+
    section('今日の想定オーダー',`<ol class="cw-list">${Object.entries(l.assign).map(([p,id])=>`<li>${p} · ${esc(w.person(id)?.name)}</li>`).join('')}<li>先発 · ${esc(l.starter?.name)}</li></ol>`)+
    section('高校時代の選手',cohort.length?cohort.map(p=>`<details><summary>${esc(p.name)} · ${esc(p.stage==='retired'?'引退':p.club?w.clubName(p.club):p.amateur||'アマチュア')}</summary>
-    <p>${esc(p.school)} · ${esc(countries[p.nation]?.label||'海外')} · ${w.year-p.born}歳 · ${NightCareer.positionNames[p.pos]} · ${D.types[p.growth]}</p>
+    <p>${esc(p.school)} · ${esc(countries[p.nation]?.label||'海外')} · ${w.year-p.born}歳 · ${NightCareer.positionNames[p.pos]} · </p>
     <p>関係 ${Math.round(p.relationship||0)} · 能力評価 ${Math.round(w.ability(p))}
     ${w.rivalry[p.id]?' · 対戦 '+w.rivalry[p.id].games+'試合 '+w.rivalry[p.id].wins+'勝':''}</p>
     ${p.history.slice(-3).map(row=>`<p>${row[0]} · ${club(w,row[1])} · ${row[2]}試合 · ${p.pos==='P'?row[11]+'勝':row[5]+'本塁打'}</p>`).join('')}</details>`).join(''):blank);

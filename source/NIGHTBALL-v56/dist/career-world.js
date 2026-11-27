@@ -342,21 +342,25 @@
   }
   run(mode){
    if(this.currentGame||Z.state(this).pending)return 0;
-   const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1);
+   const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1),injuryAtStart=this.health.injury,initialLevel=this.selection?.level;
    const limit={day:1,week:7,month:30,game:370,event:370,season:420}[mode]||1;
    const batch=mode==='season'||mode==='month';
    let steps=0;
    const start=Date.parse(from);
    while(Date.parse(this.day)-start<limit*86400000&&steps<900&&
     !['draft','offseason','retired'].includes(this.stage)){
-    if(!this.queue&&batch)Z.autoWeek(this);
-    if(Z.state(this).breakthroughDay===this.day)break;
+    if(!this.queue&&batch){
+     const before=this.health.injury;
+     const trained=Z.autoWeek(this);
+     if(trained&&(Z.state(this).last?.summary.startsWith('覚醒')||this.health.injury>before+14)){steps++;break;}
+    }
     if(this.queue){
      const f=this.active;
      if(f&&(!batch||f.development||f.important||['post','asia','national'].includes(f.kind)))break;
      this.finishDay();
     }else if(!this.nextDay())break;
     steps++;
+    if(batch&&(this.health.injury>injuryAtStart+14||(initialLevel&&this.selection?.level!==initialLevel)))break;
     if(this.grade!==grade||this.year!==year&&stage==='pro'||mode==='event'&&this.timeline.at(-1)!==lastNote)break;
    }
    return steps;
@@ -623,7 +627,8 @@
    for(const key of k){
     const young=age<prime?Math.max(.1,(p.id===playerId&&this.proYear?2.45:1.6)-(age-16)*.055)+(key===training?.6:0):-(age-prime)*.3-.7;
     const scale=key==='velocity'?.43:1;
-    p[key]=clamp(p[key]+(young+(rng()-.44)*1.35+Math.min(.38,used/600)-(p.injury>0?.7:0))*scale,key==='velocity'?111:19,key==='velocity'?166:99);
+    const ceiling=p.id===playerId&&this.talent?Math.max(p[key],key==='velocity'?Math.min(164,137+Math.round((this.talent.ceiling-70)*.85)):this.talent.ceiling):key==='velocity'?166:99;
+    p[key]=clamp(p[key]+(young+(rng()-.44)*1.35+Math.min(.38,used/600)-(p.injury>0?.7:0))*scale,key==='velocity'?111:19,ceiling);
    }
   }
   standingsFor(country=this.playingCountry,split='all',division=null){

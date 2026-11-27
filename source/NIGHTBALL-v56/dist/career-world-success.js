@@ -143,13 +143,22 @@
    e.id!=='graduation'||w.stage!=='school'||w.grade===3)
    .filter(e=>e.id!=='entrance'||w.grade>=2)
    .filter(e=>e.id!=='trip'||w.grade>=2)
-   .filter(e=>!['summer','senior'].includes(e.id)||month>=5&&month<=9);
-  const unused=pool.filter(e=>!s.seen[e.id+'/'+(w.stage==='pro'?w.year:w.grade)]);
-  const picks=unused.length?unused:pool;
+   .filter(e=>!['summer','senior'].includes(e.id)||month>=5&&month<=9)
+   .filter(e=>e.id!=='slump'||w.health.slump>=1)
+   .filter(e=>e.id!=='loss'||(w.last&&w.last.score[0]<w.last.score[1]))
+   .filter(e=>!['festival','festival2'].includes(e.id)||month>=9&&month<=11)
+   .filter(e=>e.id!=='graduation'||month>=2&&month<=3)
+   .filter(e=>e.id!=='playoffs'||month>=8);
+  const leisure=pool.filter(e=>['friend','festival','festival2','study','trip','travel','media','former'].includes(e.id));
+  const eligible=kind==='outing'&&leisure.length?leisure:pool;
+  const unused=eligible.filter(e=>!s.seen[e.id+'/'+(w.stage==='pro'?w.year:w.grade)]);
+  const picks=unused.length?unused:eligible;
   const rng=w.random('success/story/'+kind+'/'+week(w));
   const event=picks[Math.floor(rng()*picks.length)];
   s.seen[event.id+'/'+(w.stage==='pro'?w.year:w.grade)]=true;
-  const fellow=w.members(w.player.club).find(p=>p.id!==w.player.id&&p.pos===w.player.pos)||
+  const fellow=(['rival','rivalpro','former','graduation'].includes(event.id)?w.archRivalPerson?.():null)||
+   (kind==='outing'?w.members(w.player.club).filter(p=>p.id!==w.player.id).sort((a,b)=>(b.relationship||0)-(a.relationship||0))[0]:null)||
+   w.members(w.player.club).find(p=>p.id!==w.player.id&&p.pos===w.player.pos)||
    w.members(w.player.club).find(p=>p.id!==w.player.id);
   const friend=fellow?.name||'チームメイト';
   return {type:'story',id:event.id,title:event.title,body:event.body.replaceAll('{friend}',friend),

@@ -93,3 +93,5 @@
 @media(min-width:660px){.cw-slot-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
 
 .cw-xp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0}.cw-xp span{background:#e5eff5;padding:7px 3px;text-align:center;border-radius:6px;font-size:.78rem;color:#25495d}.cw-xp b{display:block;font-size:1.1rem}.cw-training-settings{margin:8px 0;border:1px solid #c4dce7;border-radius:8px;padding:8px}.cw-training-settings summary{cursor:pointer;font-weight:700}.cw-school-context{margin:7px 0 0;font-size:.85rem;color:#36566c}
+
+.cw-objective{display:flex;align-items:center;gap:10px;background:#dbeaf3;color:#24465a;border-radius:9px;padding:10px 12px;margin:8px 0;font-size:.9rem}.cw-objective b{white-space:nowrap;color:#1c597b}.cw-fold{margin-top:12px}.cw-fold>summary{cursor:pointer;padding:10px;border-radius:8px;background:#e9f1f5;color:#25485c;font-weight:700}.cw-competition{padding:8px;border-radius:6px;background:#eef4df;color:#415527;font-weight:700}
