@@ -7,7 +7,7 @@ import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
 import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
-import { drawVenueVision } from './venue-vision.js?v=252';
+import { drawVenueVision } from './venue-vision.js?v=262';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=261';
 import {
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=260';
+} from './stadium-fx.js?v=262';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -665,7 +665,8 @@ export class StadiumRenderer {
    }
   }else{
    const call=g?.derby?'HOME RUN DERBY':g?.mode==='pitching'?'PITCHING PRACTICE':'BATTING PRACTICE';
-   c.fillStyle='#ffe89c';c.font='italic 900 70px Arial';c.fillText(label(call),512,252,950);
+   c.fillStyle='#ffe89c';c.font='italic 900 62px Arial';c.fillText(label(call),512,g?.derby?166:252,950);
+   if(g?.derby){c.fillStyle='#f1f9ff';c.font='900 95px Arial';c.fillText((g.derby.turnHR||0)+' HR',512,282,950);c.fillStyle='#abddfa';c.font='bold 34px Arial';c.fillText(g.batter.name,512,343,900);}
   }
   c.fillStyle='#3c8bc2';c.fillRect(28,382,968,2);
   const call=g?.phase==='result'?{hr:'HOME RUN!',single:'BASE HIT',double:'DOUBLE!',triple:'TRIPLE!'}[g.hit?.kind]:null;
@@ -1000,6 +1001,7 @@ export class StadiumRenderer {
  }
  followPlay(g,time){
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
+  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'&&(g.hit?.distance>=150||g.derby.pendingFinish)){const x=f.ball.x,z=f.ball.y;this.camera.position.set(x*.75,Math.min(34,g.park.roofHeight?18:34),-z+25);this.camera.lookAt(x,Math.max(2,f.ball.z*.75),-z);this.camera.fov=48;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);return;}
   const h=g.replayView&&g.replayHighlight,a=h&&f.fielders[h.fielder];
   if(a&&Math.abs(f.elapsed-h.time)<1.2){const side=a.x>0?-1:1;this.camera.position.set(a.x+side*5,5.8,-a.y+8);this.camera.lookAt(a.x,1.55,-a.y);this.camera.fov=this.camera.aspect<.85?48:40;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=null;return;}
   const moment=g.replayView?g.replayCloseMoment:null;
@@ -1335,7 +1337,7 @@ export class StadiumRenderer {
   this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);const introSide=g.broadcastIntro&&g.phaseTime>=4000&&g.phaseTime<7000?(g.phaseTime<5500?'away':'home'):null;const shownSide=introSide||def,shownPitcher=introSide?g.introStarter(introSide)||g.pitcher:g.pitcher;this.stylePlayer(this.pitcher,shownSide,shownPitcher.no,g.teams[shownSide],g.uniformKits?.[shownSide]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
-   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
+   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,g.derby?.turnHR,g.derby?.streak,
    ...((g.park.pro||VENUE_VISION_PARKS.has(g.park.id))?[g.balls,g.strikes,g.outs,g.batter.id,g.pitcher.id,
     g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
   const boardCall=g?.phase==='cinematic'?g.broadcastCut?.kind:g?.phase==='result'?(g.pitch?.strikeCelebration?'strikeout':g?.hit?.kind):g?.pitch?.speed?Math.round(g.pitch.speed):null;

@@ -33,12 +33,12 @@
   return {swingsPerPlayer:per,players:[entrant(host),entrant(guest)],taken:0};
  }
  function isOver(state){
-  return !!state&&state.players.every(p=>p.used>=state.swingsPerPlayer);
+  return !!state&&(state.timed?state.done:state.players.every(p=>p.used>=state.swingsPerPlayer));
  }
  /* Whose swing is next: players alternate, host (index 0) first. */
  function turnIndex(state){
   if(!state||isOver(state))return -1;
-  return state.taken%2;
+  return state.timed?state.active:state.taken%2;
  }
  function record(state,playerIndex,result){
   if(!state||isOver(state))return false;
@@ -57,10 +57,37 @@
     distance, else a draw. Returns 0, 1, 'draw', or null while playing. */
  function winner(state){
   if(!isOver(state))return null;
+  if(state.timed)return state.winner;
   const [a,b]=state.players;
   if(a.hr!==b.hr)return a.hr>b.hr?0:1;
   if(a.maxDistance!==b.maxDistance)return a.maxDistance>b.maxDistance?0:1;
   return 'draw';
  }
- window.NightOnlineDerby={SWINGS_PER_PLAYER,pickBatter,create,isOver,turnIndex,record,winner};
+ // v262 full timed turns (legacy alternating API retained for old saves/tests).
+ const VERSION=2;
+ function createTimed({host,guest,first=0}={}){
+  return {timed:true,players:[entrant(host),entrant(guest)],round:0,first:first===1?1:0,active:first===1?1:0,turn:0,taken:0,rounds:[[null,null]],done:false,winner:null,walkOff:false};
+ }
+ function duration(c){return c.round?60000:120000;}
+ function target(c){return c.active===c.first?null:c.rounds[c.round][c.first];}
+ function roundHR(c,i){return c.players[i].results.filter(r=>r.round===c.round&&r.hr).length;}
+ function recordTimed(c,i,r,turn,seq){
+  if(!c?.timed||c.done||i!==c.active||turn!==c.turn||seq!==c.players[i].results.length)return false;
+  const n=(v,min,max)=>Math.min(max,Math.max(min,Number(v)||0));
+  const kind=['hr','foul','in-play','take','miss','strike'].includes(r?.kind)?r.kind:'in-play';
+  const item={hr:kind==='hr',kind,distance:Math.round(n(r?.distance,0,300)),exitKmh:Math.round(n(r?.exitKmh,0,260)),launchAngle:Math.round(n(r?.launchAngle,-90,90)),sprayAngle:Math.round(n(r?.sprayAngle,-180,180)),x:n(r?.x,-300,300),y:n(r?.y,-300,300),round:c.round};
+  const p=c.players[i];p.results.push(item);p.used++;p.hr+=+item.hr;p.maxDistance=Math.max(p.maxDistance,item.hr?item.distance:0);c.taken++;return true;
+ }
+ function finishTimed(c,i,turn){
+  if(!c?.timed||c.done||i!==c.active||turn!==c.turn)return false;
+  const scores=c.rounds[c.round],hr=roundHR(c,i),t=target(c);scores[i]=hr;
+  if(i===c.first){c.active=1-i;c.turn++;return true;}
+  c.walkOff=Number.isFinite(t)&&hr>t;
+  if(scores[0]===scores[1]&&c.round===0){c.round=1;c.first=1-c.first;c.active=c.first;c.turn++;c.rounds.push([null,null]);return true;}
+  c.done=true;
+  if(scores[0]!==scores[1])c.winner=scores[0]>scores[1]?0:1;
+  else{const a=c.players[0].maxDistance,b=c.players[1].maxDistance;c.winner=a===b?'draw':a>b?0:1;}
+  return true;
+ }
+ window.NightOnlineDerby={SWINGS_PER_PLAYER,pickBatter,create,isOver,turnIndex,record,winner,VERSION,createTimed,duration,target,roundHR,recordTimed,finishTimed};
 })();

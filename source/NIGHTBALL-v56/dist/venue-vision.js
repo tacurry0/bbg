@@ -284,8 +284,9 @@ export function drawVenueVision(renderer,id,game){
   count(c,game,id,wing,liveHeight-99,mid,99);
   score(c,game,images,id,taoyuan?wing:0,liveHeight,taoyuan?mid:faceWidth,faceHeight-liveHeight);
  }
+ if(game?.derby?.enhanced){const w=canvas.width,h=canvas.height;gradient(c,w*.23,h*.12,w*.54,h*.65,'#061329','#163963');text(c,'HOME RUN DERBY',w*.5,h*.26,h*.09,'#9ddfff',w*.49);text(c,game.batter.name,w*.5,h*.39,h*.09,'#fff',w*.48);text(c,(game.derby.turnHR||0)+' HR',w*.5,h*.67,h*.22,'#ffdc6c',w*.49);}
  const cut=game?.phase==='cinematic'?game.broadcastCut:null,k=cut?.kind==='strikeout'?cut:game?.phase==='result'?game.pitch?.strikeCelebration:null,hr=cut?.kind==='homer'?cut:game?.phase==='result'&&game.hit?.kind==='hr'?(game.field?.homerCelebration||{}):null;
- if(k||hr){const w=canvas.width,h=canvas.height,side=k?k.side:game.side,club=game.teams[side],accent=typeof club?.color==='string'?club.color:k?'#57cfff':'#ffdc77',left=w*.24,top=h*.14,width=w*.52,height=h*.62;gradient(c,left,top,width,height,'#061321','#182b48');rect(c,accent,left,top,width,Math.max(3,h*.025));text(c,k?'STRIKEOUT':hr.tag||'HOME RUN',w*.5,top+height*.49,Math.min(height*.30,width*.10),'#fff',width*.93);text(c,k?`${k.ks||1} K`:(hr.distance||game.hit?.distance||0)+' m',w*.5,top+height*.84,height*.20,k?'#85ddff':'#ffdf79',width*.9);}
+ if(k||hr){const w=canvas.width,h=canvas.height,side=k?k.side:game.side,club=game.teams[side],accent=typeof club?.color==='string'?club.color:k?'#57cfff':'#ffdc77',left=w*.24,top=h*.14,width=w*.52,height=h*.62;gradient(c,left,top,width,height,'#061321','#182b48');rect(c,accent,left,top,width,Math.max(3,h*.025));text(c,k?'STRIKEOUT':hr.tag||'HOME RUN',w*.5,top+height*.49,Math.min(height*.30,width*.10),'#fff',width*.93);text(c,k?`${k.ks||1} K`:(hr.distance||game.hit?.distance||0)+' m'+(game.derby?' · '+game.derby.turnHR+' HR':''),w*.5,top+height*.84,height*.20,k?'#85ddff':'#ffdf79',width*.9);}
  material.map.needsUpdate=true;
  if(id==='harbor'){
   const secondary=venueVision(renderer,id,'auxiliary');

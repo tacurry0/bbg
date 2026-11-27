@@ -897,18 +897,19 @@ export class StadiumVFX {
       }
 
       // Home Run Stadium Fireworks!
-      if (isHR && !g.derby && !g.replayView && !g.park?.roofHeight) {
+      if (isHR && (!g.derby||g.derby.enhanced) && !g.replayView && (!g.park?.roofHeight||g.derby?.enhanced)) {
         const palettes = [
           [0xffdf59, 0xff7b39, 0xffffff],
           [0x6ce8ff, 0x4f9dff, 0xfff5c0],
           [0xff66a3, 0xffe46b, 0x9effb8]
         ];
-        const centerZ = g.park?.center || 122;
+        const indoors=!!g.park?.roofHeight, centerZ=(g.park?.center||122)-(indoors?20:0);
         if (this.hrCelebratedField !== f) {
           this.hrCelebratedField = f;
           this.lastFirework = tSec;
           this.burstFirework(-11, 17.5, centerZ + 7, palettes[0]);
           this.burstFirework(11, 19.5, centerZ + 9, palettes[1]);
+          if(g.derby?.enhanced)this.burstFirework(0,indoors?16:24,centerZ+6,palettes[2]);
         } else if ((f.homerCelebration?.level||1)>=2 && tSec - this.lastFirework > 0.65 && g.phaseTime<2600) {
           this.lastFirework = tSec;
           const fx = (Math.random() - 0.5) * 34;

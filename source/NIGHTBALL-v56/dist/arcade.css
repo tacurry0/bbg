@@ -231,3 +231,77 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 .bullpen-types{flex-wrap:wrap}
 .bullpen-types button{flex:1 1 30%}
 .bullpen-zone{cursor:crosshair;touch-action:manipulation}
+
+/* v262 Home Run Derby — compact live broadcast scoreboard and mobile results */
+.derby-mode-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;margin:8px 0 14px}
+.derby-mode-grid button,.derby-picked button{border:1px solid #7894b2;border-radius:10px;background:#eef5fe;color:#142d50;padding:10px 4px;font-weight:800;font-size:.85rem;min-height:42px}
+.derby-mode-grid button.active{color:#fff;background:linear-gradient(150deg,#2269b2,#0c2c56);border-color:#80dbff;box-shadow:0 0 0 2px #40a6ff50}
+.derby-custom{border:1px solid #92aac5;border-radius:11px;padding:12px;background:#edf4fc;color:#173655;margin:12px 0}
+.derby-custom summary,.derby-stat-card summary{font-weight:800;cursor:pointer}
+.derby-select-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px}
+.derby-select-row select{min-width:0;width:100%}
+.derby-select-row button{grid-column:1/-1;margin:0;min-height:42px}
+.derby-picked{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}
+.derby-picked button{min-height:32px;padding:4px 8px}
+.derby-best-preview{background:#142f55;color:#fff;border-radius:10px;padding:12px;text-align:center;font-weight:800}
+.derby-intro{display:flex;align-items:center;justify-content:space-between;gap:8px;background:linear-gradient(110deg,#0a244b,#154f8a,#0a244b);padding:15px;color:white;border-radius:12px;text-align:center;font-weight:800;margin:8px 0}
+.derby-intro span{flex:1;min-width:0;display:flex;align-items:center;gap:6px;justify-content:center;flex-wrap:wrap}
+.derby-intro>b{color:#ffe48c;font-size:1.5rem}
+.derby-intro img{width:30px;height:30px;object-fit:contain}
+.game-screen .game-stage>.scoreboard:has(.derby-score-v262){width:min(280px,65%);max-width:min(280px,calc(100% - 16px));z-index:10}
+.derby-score-v262{border:1px solid #96c9f3;border-radius:10px;background:linear-gradient(150deg,#0c2749f7,#041327f7);box-shadow:0 4px 15px #0009}
+.derby-score-v262 .derby-round{padding:4px 8px;background:linear-gradient(90deg,#143f6f,#226494);font-size:clamp(.64rem,2.2vw,.8rem);line-height:1.1}
+.derby-score-v262 .derby-round strong{font-size:1.35rem;font-variant-numeric:tabular-nums;white-space:nowrap}
+.derby-score-v262 .derby-round strong.low{color:#ff9393}
+.derby-timer-track{height:4px;background:#ffffff2b}
+.derby-timer-track i{height:100%;display:block;background:#64ddff;transition:width .2s linear}
+.derby-timer-track i.low{background:#ff5151}
+.derby-score-v262 .derby-names span{padding:4px 5px;color:#deedfe;font-size:.7rem}
+.derby-score-v262 .derby-names b{font-size:1.55rem;color:#f6fbff;line-height:1.1}
+.derby-score-v262 .derby-names span:first-child b{color:#7ef4ff}
+.derby-score-v262 .derby-names b small{font-size:.56rem;color:#a6defb;margin-left:3px}
+.derby-hud-detail{display:flex;align-items:center;justify-content:space-between;gap:4px;margin:0 5px 3px;padding:4px 2px;border-top:1px solid #7fc7fb46;font-size:clamp(.54rem,1.9vw,.7rem);white-space:nowrap}
+.derby-hud-detail strong{color:#ffda65;font-size:.72rem;white-space:normal;line-height:1.1}
+.derby-ball-trace{display:flex;gap:3px;min-height:12px;margin:2px 7px 4px;justify-content:center}
+.derby-ball-trace i{display:grid;place-items:center;width:10px;height:10px;border-radius:50%;background:#69819d60;color:#d0deed;font-style:normal;font-size:9px}
+.derby-ball-trace i.hr{background:#ffcf42;color:#9c5800;box-shadow:0 0 4px #ffbd44}
+.derby-latest{display:block;padding:1px 8px 4px;color:#abdaf3;text-align:center;font-size:.65rem}
+.game-screen:has(.derby-score-v262) #pitcher-card{visibility:hidden}
+.game-screen.derby-viewing .controls,.game-screen.derby-viewing #player-card,.game-screen.derby-viewing #pitcher-card,.game-screen.derby-viewing #bat-options,.game-screen.derby-viewing #thumb-hint{visibility:hidden!important;pointer-events:none!important}
+.derby-watch-bar{position:absolute;z-index:22;bottom:12%;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;white-space:nowrap;padding:8px 10px;background:#071d35eb;border:1px solid #87dbff;border-radius:12px;color:white;font-size:.82rem;font-weight:800}
+.derby-watch-bar[hidden]{display:none!important}.derby-watch-bar button{color:white;border:1px solid #82c5f6;background:#1e6196;border-radius:8px;min-height:38px;padding:5px 12px;font-weight:800}
+.derby-watch-bar.online button{display:none}
+.derby-spectacle{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:17}
+.derby-spectacle[hidden]{display:none!important}
+.derby-spectacle i{position:absolute;left:var(--origin);top:30%;width:5px;height:5px;border-radius:50%;background:hsl(var(--h) 100% 72%);box-shadow:0 0 7px 2px hsl(var(--h) 100% 56%);opacity:0;will-change:transform,opacity}
+.derby-spectacle.fire i{animation:derby-firework .72s var(--delay) cubic-bezier(.07,.55,.28,1) both}
+.derby-spectacle.mega.fire i{animation-duration:1.12s}
+@keyframes derby-firework{0%{opacity:0;transform:translate(0,0) scale(.2)}12%{opacity:1}70%{opacity:.95}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(.23)}}
+.derby-flame{position:absolute;bottom:6%;width:19%;height:48%;opacity:0;filter:blur(1px);transform-origin:50% 100%;clip-path:polygon(0 100%,9% 68%,23% 76%,18% 34%,41% 48%,51% 0,67% 45%,77% 31%,81% 71%,100% 100%);background:radial-gradient(ellipse at 50% 95%,#fffcef 2%,#ffdb4e 35%,#ff6625 62%,#f21500 80%,transparent 100%);mix-blend-mode:screen}
+.derby-flame.left{left:1%}.derby-flame.right{right:1%}
+.derby-spectacle.fire .derby-flame{animation:derby-flames .76s ease-out both}.derby-spectacle.mega.fire .derby-flame{animation-duration:1.18s}
+@keyframes derby-flames{0%{transform:scaleY(.05);opacity:0}20%{transform:scaleY(1.1);opacity:1}40%{transform:scaleY(.8);opacity:.9}65%{transform:scaleY(1);opacity:.75}100%{transform:scaleY(.03);opacity:0}}
+.derby-impact-copy{position:absolute;top:37%;left:50%;width:92%;text-align:center;transform:translate(-50%,-50%);opacity:0}
+.derby-impact-copy b{display:block;font-weight:1000;font-size:clamp(27px,8vw,66px);line-height:1;letter-spacing:-.04em;font-style:italic;color:#fff7b6;text-shadow:0 2px 0 #ab5c00,0 4px 0 #6e3300,0 0 18px #ffac19,0 0 44px #ff413a,2px 5px 8px #000}
+.derby-impact-copy small{color:white;background:#10152ddf;display:inline-block;border-radius:20px;margin-top:8px;padding:4px 14px;font-size:clamp(.8rem,3vw,1.3rem);font-weight:900}
+.derby-spectacle.fire .derby-impact-copy{animation:derby-impact .82s ease-out both}.derby-spectacle.mega.fire .derby-impact-copy{animation-duration:1.3s}
+@keyframes derby-impact{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}13%{opacity:1;transform:translate(-50%,-50%) scale(1.06)}30%,70%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-58%) scale(.99)}}
+.derby-stat-card{border:1px solid #7594ba;border-radius:13px;background:#0c2442;color:#edf6ff;padding:12px;margin:10px 0}
+.derby-stat-card h3{color:#edf6ff;margin:0 0 10px;font-size:1rem;text-align:center}
+.derby-stat-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+.derby-stat-grid>div{background:#1b426a;border-radius:8px;padding:8px;text-align:center}
+.derby-stat-grid small{font-size:.7rem;color:#cce1f5;display:block}
+.derby-stat-grid b{font-size:1.4rem;color:#fff;line-height:1.1}
+.derby-stat-grid em{font-size:.65rem;font-style:normal;color:#ffe09b;margin-left:3px}
+.derby-map{width:100%;max-height:210px;background:#071b2e;border-radius:9px;margin:10px 0 3px}
+.derby-map-legend{display:flex;justify-content:center;gap:12px;font-size:.72rem;color:#cad7e6;margin:0 0 12px}
+.derby-map-legend span:first-child{color:#ffdf6e}
+.derby-shot-list{max-height:220px;overflow-y:auto;margin-top:8px}
+.derby-shot-list>div{display:grid;grid-template-columns:26px 45px 1fr 1.4fr;gap:6px;align-items:center;border-top:1px solid #53769a;padding:7px 2px;font-size:.8rem}
+.derby-shot-list small{color:#cde5fd;font-size:.7rem}.derby-shot-list .hr{color:#ffe179;font-weight:900}
+@media (prefers-reduced-motion:reduce){.derby-spectacle i,.derby-flame{display:none}.derby-spectacle.fire .derby-impact-copy{animation:none;opacity:1}}
+.derby-best-preview small{display:block;font-size:.75rem;color:#bfe6ff;margin-top:4px}
+.derby-champion{position:relative;overflow:hidden;isolation:isolate}
+.derby-confetti{pointer-events:none;position:absolute;inset:0;z-index:-1;background-image:radial-gradient(ellipse,#ffe969 0 2px,transparent 3px),radial-gradient(ellipse,#6be7ff 0 2px,transparent 3px),radial-gradient(ellipse,#ff78b0 0 2px,transparent 3px);background-size:29px 43px,41px 31px,53px 39px;background-position:0 -40px,13px -31px,16px -39px;opacity:.65;animation:derby-confetti-fall 2s linear infinite}
+@keyframes derby-confetti-fall{to{background-position:14px 46px,28px 31px,35px 39px}}
+@media(prefers-reduced-motion:reduce){.derby-confetti{animation:none}}
