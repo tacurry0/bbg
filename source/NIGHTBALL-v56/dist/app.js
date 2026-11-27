@@ -156,6 +156,64 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  // updated without pushing. Match screens keep their own stronger
  // double-entry guard from v167 and stay out of this stack.
  let screenStack=['home'],navPop=false;
+ // The bottom navigation is shared by the home and four real page views.
+ // Reuse the content element so existing delegated controls and IDs survive.
+ let utilityTab='',utilityHomeScroll=0;
+ const utilityKinds=Object.freeze({'directory-teams':'players','directory-roster':'players','directory-player':'players',records:'records',trophies:'trophies',settings:'settings','record-room':'records',totals:'records'});
+ const utilityRoots=new Set(['directory-teams','records','trophies','settings']);
+ function selectUtilityNav(tab){
+  const ids={home:'menu-home',players:'clubhouse',records:'records',trophies:'menu-trophies',settings:'menu-settings'};
+  Object.entries(ids).forEach(([k,id])=>{if(k===tab)$(id).setAttribute('aria-current','page');else $(id).removeAttribute('aria-current');});
+ }
+ function leaveUtilityPage(){
+  if(!utilityTab)return false;
+  const page=$('utility-page'),content=$('modal-content'),backdrop=$('modal');
+  utilityTab='';modalKind='';ballparkMusic.stop('preview');
+  backdrop.append(content);
+  content.classList.remove('utility-content');content.setAttribute('role','dialog');content.setAttribute('aria-modal','true');
+  $('utility-nav-home').append($('utility-nav'));
+  page.hidden=true;$('home').hidden=false;selectUtilityNav('home');
+  document.body.style.overflow=page.dataset.previousOverflow||'';
+  restorePageScroll(utilityHomeScroll);
+  return true;
+ }
+ function utilityBack(){
+  if(modalKind==='directory-player'){directoryRoster(directoryClub,directoryRosterScroll);return;}
+  if(modalKind==='directory-roster'){directoryTeams();return;}
+  if(['record-room','totals'].includes(modalKind)){recordModal();return;}
+  leaveUtilityPage();
+ }
+ function utilityPage(html,kind){
+  const tab=utilityKinds[kind],page=$('utility-page'),content=$('modal-content'),backdrop=$('modal');
+  if(!utilityTab){
+   if(!backdrop.hidden)closeModal(false);
+   utilityHomeScroll=window.scrollY;
+   page.dataset.previousOverflow=document.body.style.overflow;
+   $('utility-page-body').append(content);$('utility-page-nav').append($('utility-nav'));
+   $('home').hidden=true;page.hidden=false;backdrop.hidden=true;
+   document.body.style.overflow='hidden';window.scrollTo(0,0);
+  }
+  const same=utilityTab===tab&&modalKind===kind,scroll=same?content.scrollTop:0;
+  const openDetails=same?new Set([...content.querySelectorAll('details[data-ui-section][open]')].map(d=>d.dataset.uiSection)):new Set();
+  utilityTab=tab;modalKind=kind;selectUtilityNav(tab);
+  content.getAnimations?.().forEach(a=>a.cancel());
+  content.classList.remove('preflight');backdrop.classList.remove('preflight-backdrop');
+  content.classList.add('utility-content');content.dataset.kind=kind;
+  content.setAttribute('role','region');content.removeAttribute('aria-modal');
+  content.innerHTML=html;
+  if(same)content.querySelectorAll('details[data-ui-section]').forEach(d=>d.open=openDetails.has(d.dataset.uiSection));
+  const root=utilityRoots.has(kind);
+  const close=content.querySelector('.modal-top .close-button');
+  if(close){
+   if(root)close.remove();
+   else{close.textContent='‹';close.setAttribute('aria-label','戻る');}
+  }
+  if(root)content.querySelectorAll(':scope > button[data-action="close"]').forEach(b=>b.remove());
+  content.scrollTop=scroll;
+ }
+ function utilityDestination(kind){
+  return screen==='home'&&!!utilityKinds[kind]&&(kind!=='record-room'&&kind!=='totals'||utilityTab==='records');
+ }
  const screenScrollPositions=new Map();
  let scrollView='home',modalScrollOrigin=null;
  if('scrollRestoration' in history)history.scrollRestoration='manual';
@@ -176,6 +234,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  function trackHome(){screenStack=['home'];}
  function backToPreviousScreen(){
+  if(utilityTab){utilityBack();try{history.pushState({nightball:'screen',screen:'home'},'',location.href);}catch{}return;}
   navPop=true;
   try{
    if(modalKind){if(returnFromEditModal()){try{history.pushState({nightball:'screen',screen},'',location.href);}catch{}return;}if(['online-teams','online-park','online-pitchers','online-options'].includes(modalKind)||(modalKind==='lineup'&&lineupContext==='online')){if(lineupContext==='online'&&modalKind==='lineup')saveLineup('online');onlineModal();}else if(modalKind==='online'&&online){onlineCleanup();closeModal(false);}else if(['match-teams','park-picker','match-pitchers','match-options','match-presets'].includes(modalKind)||(modalKind==='lineup'&&lineupContext==='match')||(modalKind==='roster'&&pregameRoster))setupMatch();else if(modalKind==='directory-player')directoryRoster(directoryClub,directoryRosterScroll);else if(modalKind==='directory-roster')directoryTeams();else closeModal(false);try{history.pushState({nightball:'screen',screen},'',location.href);}catch{}return;}
@@ -190,6 +249,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }finally{navPop=false;}
  }
  function modal(html,kind){
+  if(utilityDestination(kind)){utilityPage(html,kind);return;}
+  if(utilityTab)leaveUtilityPage();
   const backdrop=$('modal'),content=$('modal-content');
   if(modalKind==='stadium-editor')disposeStadiumPreview();
   if(modalKind==='uniform'&&kind!=='uniform'){disposeUniformPreview();uniformDraft=null;}
@@ -224,6 +285,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  let pregameRoster=false;
  function closeModal(resume=true){
+  if(utilityTab){if(resume)utilityBack();else leaveUtilityPage();return;}
   if(resume&&returnFromEditModal())return;
   if(resume&&onlineMatchActive()){
    if(online.sync.disconnected||modalKind==='online-gone')return;
@@ -3957,6 +4019,7 @@ function start(mode,challengeId=null,fixedPark=null){
  // Keyboard support also makes the game playable on a computer.
  $('swing').addEventListener('click',e=>{if(e.detail===0)swing();});
  document.addEventListener('keydown',e=>{
+   if(utilityTab&&e.key==='Escape'){e.preventDefault();utilityBack();return;}
    if(!$('modal').hidden){if(e.key==='Escape'&&!['result','derby-result','career-result'].includes(modalKind)){e.preventDefault();closeModal();}if(e.key==='Tab'){const b=[...$('modal-content').querySelectorAll('button:not([disabled]):not([hidden]),select,input,summary')].filter(el=>el.getClientRects().length);if(e.shiftKey&&document.activeElement===b[0]){e.preventDefault();b.at(-1)?.focus();}else if(!e.shiftKey&&document.activeElement===b.at(-1)){e.preventDefault();b[0]?.focus();}}return;}
    if(screen==='game'&&game?.phase==='change'){if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(!e.repeat)continueHalf();}else if(e.key==='Escape')pause();return;}
    if(screen==='game'&&(e.code==='Space'||e.code==='Enter')&&(e.target===document.body||e.target===$('aim-pad')||e.target===$('game-canvas'))){e.preventDefault();if(!e.repeat)swing();}
@@ -4011,7 +4074,7 @@ function start(mode,challengeId=null,fixedPark=null){
   );
  }
  window.setInterval(()=>{
-  if(screen!=='home'||document.hidden||modalKind||reduceAbsMotion.matches||performance.now()<nextNoticeAt||noticeGesture)return;
+  if(screen!=='home'||utilityTab||document.hidden||modalKind||reduceAbsMotion.matches||performance.now()<nextNoticeAt||noticeGesture)return;
   if(noticeRegion.matches(':focus-within')||(hoverNotices.matches&&noticeRegion.matches(':hover')))return;
   const bounds=noticeCard.getBoundingClientRect();
   const visibleHeight=Math.min(window.innerHeight,bounds.bottom)-Math.max(0,bounds.top);
@@ -4032,11 +4095,11 @@ function start(mode,challengeId=null,fixedPark=null){
  $('ibb').onclick=()=>{if(game&&!game.umpireMode){const g=game;hostDelay(()=>{if(g.intentionalWalk()){sound('tap');updateUI();}});}};
  $('contact').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
- $('settings').onclick=settingsModal;$('pause').onclick=pause;$('react').onclick=()=>{const p=$('react-panel');p.hidden=!p.hidden;};$('react-panel').innerHTML=REACTIONS.map(e=>`<button type="button" data-react="${e}" aria-label="リアクション ${e}">${e}</button>`).join('')+`<div class="chat-list">${NightOnline.QUICK_CHATS.map((t,i)=>`<button type="button" data-chat="${i}">${t}</button>`).join('')}</div>`;$('react-panel').addEventListener('click',ev=>{const b=ev.target.closest('[data-react]');if(b){sendReaction(b.dataset.react);return;}const c=ev.target.closest('[data-chat]');if(c)sendQuickChat(Number(c.dataset.chat));});$('brand').onclick=()=>screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('records').onclick=recordModal;$('menu-settings').onclick=settingsModal;
+ $('settings').onclick=settingsModal;$('pause').onclick=pause;$('react').onclick=()=>{const p=$('react-panel');p.hidden=!p.hidden;};$('react-panel').innerHTML=REACTIONS.map(e=>`<button type="button" data-react="${e}" aria-label="リアクション ${e}">${e}</button>`).join('')+`<div class="chat-list">${NightOnline.QUICK_CHATS.map((t,i)=>`<button type="button" data-chat="${i}">${t}</button>`).join('')}</div>`;$('react-panel').addEventListener('click',ev=>{const b=ev.target.closest('[data-react]');if(b){sendReaction(b.dataset.react);return;}const c=ev.target.closest('[data-chat]');if(c)sendQuickChat(Number(c.dataset.chat));});$('brand').onclick=()=>utilityTab?leaveUtilityPage():screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('records').onclick=()=>recordModal();$('menu-settings').onclick=settingsModal;
  document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>b.dataset.mode==='apbc'?apbcHub():b.dataset.mode==='match'?setupMatch():b.dataset.mode==='tournament'?customTourneyHub():b.dataset.mode==='online'?onlineModal():b.dataset.mode==='derby'?setupDerby():b.dataset.mode==='career'?worldDashboard():b.dataset.mode==='umpire'?umpireSetup():b.dataset.mode==='timeattack'?setupTimeAttack():b.dataset.mode==='survival'?survivalSetup():b.dataset.mode==='draft'?draftSetup():b.dataset.mode==='conquest'?conquestSetup():b.dataset.mode==='bullpen'?setupBullpen():b.dataset.mode==='scrimmage'?scrimmageModal('match'):setupTraining(b.dataset.mode));
  $('clubhouse').onclick=directoryTeams;
  $('menu-team-edit').onclick=editHubModal;
- $('menu-home').onclick=()=>{if(screen!=='home')home();};
+ $('menu-home').onclick=()=>{if(utilityTab)leaveUtilityPage();else if(screen!=='home')home();};
  $('menu-trophies').onclick=()=>recordModal('trophies');
  $('resume-game').onclick=resumeFromMenu;
  $('menu-notices').onclick=homeNoticesModal;

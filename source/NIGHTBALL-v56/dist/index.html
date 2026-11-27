@@ -27,6 +27,7 @@
   <link rel="stylesheet" href="./half-break.css?v=224">
   <link rel="stylesheet" href="./nightball-brand.css?v=226">
   <link rel="stylesheet" href="./settings-mode.css?v=227">
+  <link rel="stylesheet" href="./utility-pages.css?v=234">
   <link rel="stylesheet" href="./uniform-editor.css?v=228">
   <title>NIGHTBALL — ポケット野球</title>
 </head>
@@ -124,14 +125,19 @@
           <button type="button" data-notice-index="2" aria-label="お知らせ 3" aria-current="false"></button>
         </div>
       </section>
-      <nav class="menu-utilities" aria-label="ホームナビゲーション">
+      <div id="utility-nav-home"><nav id="utility-nav" class="menu-utilities" aria-label="ホームナビゲーション">
         <button id="menu-home" type="button" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-home"></use></svg><span>ホーム</span></button>
         <button id="clubhouse" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-shirt"></use></svg><span>選手</span></button>
         <button id="records" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-chart"></use></svg><span>記録</span></button>
         <button id="menu-trophies" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-trophy"></use></svg><span>トロフィー</span></button>
         <button id="menu-settings" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-gear"></use></svg><span>設定</span></button>
-      </nav>
+      </nav></div>
     </div>
+  </main>
+
+  <main id="utility-page" class="stadium-menu utility-page" hidden>
+    <div id="utility-page-body" class="utility-page-body"></div>
+    <footer id="utility-page-nav" class="utility-page-nav"></footer>
   </main>
 
   <main id="pennant" class="pennant-screen" hidden></main>
@@ -210,7 +216,7 @@
 </div>
   <button id="replay-skip" class="replay-skip" data-replay-hint="タップで走塁をスキップ" aria-label="リプレイをスキップ" type="button" hidden></button>
 <script defer src="./i18n-catalog.js?v=228"></script>
-<script defer src="./release-notes.js?v=233"></script>
+<script defer src="./release-notes.js?v=234"></script>
 <script defer src="./i18n.js?v=1"></script>
 <script defer src="./ratings-data.js?v=56"></script>
 <script defer src="./pitching-expansion-2026.js?v=196"></script>
@@ -266,6 +272,6 @@
 <script defer src="./pwa-update.js?v=2"></script>
 <script defer src="./online.js?v=2"></script>
 <script defer src="./online-derby.js?v=1"></script>
-<script type="module" src="./app.js?v=233"></script>
+<script type="module" src="./app.js?v=234"></script>
 </body>
 </html>
