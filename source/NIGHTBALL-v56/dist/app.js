@@ -2583,7 +2583,7 @@ function start(mode,challengeId=null,fixedPark=null){
  const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,baseVerdicts:[],umpireLast:null,umpireShownAt:0};
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
-  hideImpact();
+  hideImpact();$('stage').dataset.absStrikeout='false';
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
@@ -2592,7 +2592,7 @@ function start(mode,challengeId=null,fixedPark=null){
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
  function tickPlayFeedback(dt){
-  if(impactRemaining>0){impactRemaining=Math.max(0,impactRemaining-dt);if(!impactRemaining&&$('impact-fx')?.dataset.source!=='cut')hideImpact();}
+  if(impactRemaining>0){impactRemaining=Math.max(0,impactRemaining-dt);if(!impactRemaining&&!['cut','abs'].includes($('impact-fx')?.dataset.source))hideImpact();}
   playFeedback.scoreTime=Math.max(0,playFeedback.scoreTime-dt);
   // The base OUT/SAFE panel takes visual priority over the result banner.
   // Only count time during which the final result can actually be read.
@@ -2628,11 +2628,17 @@ function start(mode,challengeId=null,fixedPark=null){
  function updateAbsUI(g,draw=false){
   const interactive=g.absCanChallenge&&!g.paused&&$('modal').hidden&&onlineDecisionVisible('abs');
   const actor=$('abs-actor'),panel=$('abs-review'),call=g.absCall;
+  const calledK=g.phase==='abs-call'&&!!call?.umpireStrike&&g.inMatch&&g.strikes>=2;
+  $('stage').dataset.absStrikeout=String(calledK);
+  if(!calledK&&$('impact-fx')?.dataset.source==='abs')hideImpact();
   actor.hidden=!interactive;
   if(g.phase==='abs-call'&&call!==absShownCall){
    absShownCall=call;absLastTap=null;
    const en=call.umpireStrike?'STRIKE':'BALL',speech=call.umpireStrike?'ストライク':'ボール';
-   onEvent('message',{en,ja:'',speech});
+   if(calledK){
+    // Preview the umpire's third strike; the actual ABS decision is pending.
+    hideStageBanner();showImpact({en:'STRIKEOUT',celebration:{speed:g.pitch?.speed||g.lastPitch?.speed||0}},{pending:true});
+   }else onEvent('message',{en,ja:'',speech});
    const role=g.defending?'投手':'打者';
    actor.setAttribute('aria-label',role+'でABSチャレンジ 残り'+g.absRemaining+'回');
   }
@@ -2666,7 +2672,7 @@ function start(mode,challengeId=null,fixedPark=null){
    absShownResult=call;
    hideStageBanner();
    result.dataset.strike=String(call.strike);
-   $('abs-word').textContent=call.strike?'STRIKE':'BALL';
+   $('abs-word').textContent=call.strike?(g.inMatch&&g.strikes>=2?'STRIKEOUT':'STRIKE'):'BALL';
    $('abs-gap').textContent=(call.strike?'好球帶內 ':'距離好球帶 ')+(Math.abs(call.gap)*100).toFixed(1)+' 公分';
    $('abs-change').textContent=call.strike===call.umpireStrike?'判定維持':'判定変更';
   }
@@ -2863,13 +2869,14 @@ function start(mode,challengeId=null,fixedPark=null){
  // Keep the current tone and layout until opacity finishes fading out.
  // Resetting every class immediately briefly repaints the legacy banner.
  var impactRemaining=0;
- function hideImpact(){impactRemaining=0;const el=$('impact-fx');if(el){el.hidden=true;delete el.dataset.source;}}
+ function hideImpact(){impactRemaining=0;const el=$('impact-fx');if(el){el.hidden=true;delete el.dataset.source;delete el.dataset.settled;}}
  function showImpact(data,options={}){
   const el=$('impact-fx'), k=data.en==='STRIKEOUT',c=data.celebration||{};
   if(!el||game?.fastForward||game?.spectate||game?.replayView||review.playback)return false;
   if(!options.cut&&el.dataset.source==='cut'&&!el.hidden&&el.dataset.kind===(k?'k':'hr'))return true;
   const short=!!(game?.derby||game?.timeAttack),duration=options.duration??(short?650:k?1370:1950);
-  el.hidden=true;el.dataset.kind=k?'k':'hr';el.dataset.level=String(c.level||1);el.dataset.source=options.cut?'cut':'result';
+  const settled=k&&!options.pending&&!el.hidden&&el.dataset.kind==='k'&&(el.dataset.source==='abs'||el.dataset.settled==='true');
+  el.hidden=true;el.dataset.kind=k?'k':'hr';el.dataset.level=String(c.level||1);el.dataset.source=options.pending?'abs':options.cut?'cut':'result';el.dataset.settled=String(settled);
   el.style.setProperty('--impact-duration',duration+'ms');
   const glyph=el.querySelector('.impact-glyph');glyph.dataset.glyph=k?'K':'HR';glyph.textContent=k?'K':'';
   const title=el.querySelector('.impact-title');title.replaceChildren();
@@ -2892,6 +2899,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(type==='message'){
      // ABS already presented this exact pitch verdict in the review layer.
      if(game?.phase==='abs-review'&&absShownResult&&['STRIKE','BALL'].includes(data.en))return;
+     if(data.en==='STRIKE'&&game?.phase==='abs-call'&&game.absCall?.umpireStrike&&game.inMatch&&game.strikes>=2)return;
      // The base ruling has already shown OUT. Suppress only the redundant
      // single-out result; preserve fly outs, strikeouts, sacrifices, hits,
      // double plays and both the initial and reviewed challenge decisions.

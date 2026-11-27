@@ -221,3 +221,33 @@
 @media(orientation:portrait){#impact-fx[data-kind="hr"] .impact-title{flex-direction:column;gap:.07em;font-size:clamp(62px,min(24vw,19vh),138px);letter-spacing:-.055em}}
 @media(max-height:520px) and (orientation:landscape){#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(42px,min(14vw,23vh),108px)}}
 @media(prefers-reduced-motion:reduce){#impact-fx .impact-ring,#impact-fx .impact-word::before{display:none!important}}
+
+/* v255: third called strike uses the K graphic during the actual ABS window. */
+#stage[data-abs-strikeout="true"] #stage-message {visibility:hidden!important}
+#stage > #impact-fx[data-source="abs"]:not([hidden]) {animation:none;opacity:1}
+#impact-fx[data-source="abs"] .impact-title,
+#impact-fx[data-source="abs"] .impact-meta {animation-name:abs-k-caption}
+#impact-fx[data-source="abs"] .impact-core {transform:translateY(-7%)}
+#stage[data-abs-strikeout="true"]:has(#abs-challenge:not([hidden])) #impact-fx .impact-core {transform:translateY(-14%)}
+#stage[data-abs-strikeout="true"] #abs-challenge:not([hidden]) {
+ z-index:98;bottom:clamp(10px,6%,36px);min-height:44px;padding:9px 18px;
+ border-color:#9be8ff;background:linear-gradient(180deg,#1b63b6,#0a2b63);
+ box-shadow:0 4px 18px #020d24bb,0 0 10px #70d8ff40;
+}
+#stage > #impact-fx[data-settled="true"]:not([hidden]) {animation:none;opacity:1}
+#impact-fx[data-settled="true"] .impact-glyph,
+#impact-fx[data-settled="true"] .impact-shade,
+#impact-fx[data-settled="true"] .impact-title,
+#impact-fx[data-settled="true"] .impact-meta {animation:none;opacity:1}
+#impact-fx[data-settled="true"] .impact-streaks,
+#impact-fx[data-settled="true"] .impact-flash,
+#impact-fx[data-settled="true"] .impact-glyph::before,
+#impact-fx[data-settled="true"] .impact-glyph::after {display:none}
+@keyframes abs-k-caption{0%,12%{opacity:0;transform:translateY(18px)}32%,100%{opacity:1;transform:translateY(0)}}
+@media(max-height:520px) and (orientation:landscape){
+ #stage[data-abs-strikeout="true"]:has(#abs-challenge:not([hidden])) #impact-fx .impact-glyph {font-size:clamp(64px,23vh,125px)}
+ #stage[data-abs-strikeout="true"] #abs-challenge:not([hidden]) {bottom:8px}
+}
+@media(prefers-reduced-motion:reduce){
+ #impact-fx[data-source="abs"] .impact-title,#impact-fx[data-source="abs"] .impact-meta {animation:none!important;opacity:1}
+}
