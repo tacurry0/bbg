@@ -70,6 +70,7 @@
   w.tournament={event:e,own,clubs,round:0,draw,results:[],finished:false,
    table:Object.fromEntries(clubs.map(id=>[id,{all:{w:0,l:0,t:0,rf:0,ra:0},first:{w:0,l:0,t:0,rf:0,ra:0}}]))};
   w.note(e.name+'が開幕');
+  if(e.format>0&&w.stage==='school')NightCareerWorldSuccess.queueEvent(w,'tournament/'+w.academicYear+'/'+e.index,'大会前のメンバー発表',e.name+'が始まる。監督は能力と成績から起用を決める。',[{label:'大会に臨む',text:'チームのために準備する。',morale:3}]);
  }
  function fixtures(w,t){
   if(!t||t.finished)return [];

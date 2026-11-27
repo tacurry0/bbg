@@ -127,6 +127,78 @@
   return s;
  }
  const usable=w=>isPlaying(w)&&!w.currentGame&&!w.queue;
+ const days=(a,b)=>Math.round((Date.parse(a)-Date.parse(b))/86400000);
+ function cast(w){
+  const s=state(w),c=s.cast||={};
+  const peers=w.members(w.player.club).filter(p=>p.id!==w.player.id);
+  if(!c.friend){const p=peers.find(p=>p.born===w.player.born&&p.pos!==w.player.pos)||peers.find(p=>p.pos!==w.player.pos);if(p)c.friend=p.id;}
+  if(!c.rival){const p=peers.filter(p=>p.pos===w.player.pos).sort((a,b)=>w.ability(b)-w.ability(a))[0];if(p)c.rival=p.id;}
+  if(c.rival&&!w.archRivalId)w.archRivalId=c.rival;
+  return c;
+ }
+ function coach(w){
+  const s=state(w),club=w.player.club||'none';s.coaches||={};
+  if(!s.coaches[club]){const r=w.random('coach/'+club),keys=w.pitching?arms:bats;s.coaches[club]={style:['育成重視','実力主義','技術重視'][Math.floor(r()*3)],specialty:keys[Math.floor(r()*keys.length)],bond:30};}
+  return s.coaches[club];
+ }
+ const ch=(label,text,e={})=>({label,text,...e});
+ function queueEvent(w,id,title,body,choices,meta={}){
+  const s=state(w);if(!s.storyMode)return false;s.eventSeen||={};s.eventQueue||=[];
+  if(s.eventSeen[id])return false;s.eventSeen[id]=true;
+  s.eventQueue.push({type:'story',id,title,body,choices:choices.map(c=>({energy:0,morale:0,manager:0,bond:0,...c})),forced:true,optional:true,...meta});return true;
+ }
+ function activate(w){const s=state(w);s.storyMode=true;refresh(w);return s;}
+ function mission(w){
+  const s=state(w),school=w.stage==='school',pro=w.stage==='pro',stats=school?w.schoolTotals:pro?w.playerYear:null;
+  if(!stats)return null;
+  const key=school?'school-'+w.grade:'pro-'+w.proYear;
+  if(s.mission?.key!==key){const goal=school?[3,8,12][w.grade-1]:w.proYear<=2?5:w.proYear<=5?12:18;s.mission={key,label:(w.pitching?'奪三振 ':'安打 ')+goal,target:goal,base:school?(w.pitching?stats.k:stats.h):0,done:false};}
+  const x=s.mission;x.value=Math.max(0,(w.pitching?stats.k:stats.h)-x.base);
+  if(!x.done&&x.value>=x.target){x.done=true;s.xp.mental+=5;s.xp.skill+=5;queueEvent(w,'mission/'+key,'目標達成！',x.label+'を達成。経験点を獲得した。',[ch('次の目標へ','次のステップへ進もう。',{morale:5,manager:2})]);}
+  return x;
+ }
+ function refresh(w){
+  const s=state(w);if(!s.storyMode||w.currentGame)return false;
+  const c=cast(w),friend=c.friend&&w.person(c.friend),rival=c.rival&&w.person(c.rival),fn=friend?.name||'同期の仲間',rn=rival?.name||'ライバル',staff=coach(w);
+  const school=w.stage==='school',pro=w.stage==='pro';s.arc||={};
+  if(school){
+   if(w.grade===1&&w.schoolCursor===0)queueEvent(w,'entrance','入部式','監督は'+staff.style+'。同期の'+fn+'、ライバルの'+rn+'と出会った。',[ch('レギュラーを目指す','監督に目標を伝えた。',{manager:3,coachBond:3}),ch('仲間と成長する','同期と練習する約束をした。',{bond:8,morale:4})],{friendId:friend?.id,arc:'entry'});
+   if(w.grade>=2)queueEvent(w,'grade/'+w.grade,'新学年のスタート','新入生が加わり、競争が変わる。',[ch('自分の課題に集中','新しい目標を立てた。',{coachBond:4}),ch('後輩を支える','チームの信頼が増した。',{bond:6,manager:2})],{friendId:friend?.id});
+   if(w.grade===1&&w.schoolCursor>=1)queueEvent(w,'assessment','実力測定・背番号発表','監督が現在の実力を確認した。'+(w.ability(w.player)>=45?'上級生との競争に加われそうだ。':'まだ基礎を磨く必要がある。'),[ch('弱点を鍛える','指導を受けることにした。',{coachBond:7,manager:2}),ch('得意なプレーを伸ばす','武器を磨く。',{morale:5})]);
+   if(friend&&friend.club===w.player.club&&friend.relationship>=65)queueEvent(w,'friendship/'+friend.id,'友情練習の始まり',fn+'と一緒に練習すると成長しやすくなった。',[ch('一緒に強くなる','絆が深まった。',{bond:7,morale:5})],{friendId:friend.id,arc:'friendship'});
+   if(w.grade>=2&&rival)queueEvent(w,'rival-2','ライバルとの約束',rn+'との能力差は'+Math.round(w.ability(rival)-w.ability(w.player))+'。最後の大会まで競い合う。',[ch('一緒に自主練習','互いに教え合った。',{bond:9,coachBond:2}),ch('必ず追い越す','競争心が高まった。',{morale:8,manager:2})],{friendId:rival.id,arc:'rival2'});
+   if(w.grade===3&&w.schoolCursor>=1)queueEvent(w,'rival-3','最後の一年',rn+'と卒業後の進路を語り合った。',[ch('プロで再会しよう','将来の対戦を約束した。',{bond:8,morale:6}),ch('今の大会を優先','最後までチームに尽くす。',{manager:4})],{friendId:rival?.id,arc:'rival3'});
+   if(w.grade===3&&w.scoutLevel>=10)queueEvent(w,'scout-meeting','スカウトの視察','プロのスカウトが練習を見に来た。',[ch('武器を見せる','印象を残した。',{scout:3,morale:3}),ch('普段どおり','落ち着いてプレーした。',{coachBond:5})]);
+  }
+  if(pro){
+   if(w.proYear===1)queueEvent(w,'pro-entry','プロ入団会見','新しい球団でプロ野球人生が始まる。',[ch('一軍定着を宣言','決意を伝えた。',{fans:4,manager:2}),ch('実力を磨く','コーチと目標を確認した。',{coachBond:7})]);
+   if(rival?.club&&w.clubCountry(rival.club)&&s.arc.rival3!==undefined)queueEvent(w,'rival-reunion','プロでの再会',rn+'もプロの世界でプレーしている。あの約束を思い出した。',[ch('連絡を取る','交流が続いた。',{bond:8,morale:4}),ch('グラウンドで勝負','競争を意識した。',{morale:7})],{friendId:rival.id,arc:'reunion'});
+   if(w.ratings.fans>=35)queueEvent(w,'sponsor','スポンサーからの誘い','成績と人気が評価され、企業から契約の話が来た。',[ch('契約する','年間の副収入が増える。',{sponsor:true,fans:3}),ch('競技に集中','今回は見送った。',{coachBond:4})]);
+   if(w.age>=20&&!w.life.partner&&w.ratings.fans>=15)queueEvent(w,'partner','新しい出会い','知人の紹介で野球を応援してくれる人と知り合った。',[ch('交流を続ける','少しずつ距離を縮めていく。',{partner:true,morale:6}),ch('今は野球に集中','友人として付き合う。',{coachBond:3})]);
+   if(w.life.partner&&!w.life.married&&w.life.relationship>=6)queueEvent(w,'marriage','将来について','支えてくれた相手と将来を話し合う時が来た。',[ch('結婚する','新しい生活が始まった。',{marry:true,morale:10}),ch('もう少し待つ','互いの時間を大切にする。',{morale:3})]);
+   if(w.age>=35)queueEvent(w,'veteran','世代交代','若い選手の台頭を感じる。',[ch('後輩を育てる','チームに貢献する。',{manager:4,coachBond:5}),ch('現役で結果を残す','競争を続ける決意をした。',{morale:8})]);
+  }
+  if(w.stage==='draft')queueEvent(w,'draft-prep/'+w.year,'進路を決める日','これまでの成績と評価がドラフトにつながる。',[ch('次へ','努力を信じよう。')]);
+  if(w.stage==='offseason')queueEvent(w,'review/'+w.year,'シーズン総括',w.history?.at(-1)?.awards?.length?'タイトルを獲得した一年。来季の目標を考えよう。':'今季の結果を振り返り、来季の進路を考えよう。',[ch('来季へ向けて準備','新しい目標を決めた。',{morale:4})]);
+  if(w.health.injury>=14&&!s.injuryAnnounced){s.injuryAnnounced=true;queueEvent(w,'injury/'+w.day,'長期離脱','故障で'+w.health.injury+'日ほど離脱する見込み。',[ch('治療に専念','回復を優先する。',{energy:8,morale:2}),ch('気持ちを切り替える','復帰後を見据える。',{morale:5})]);}
+  if(!w.health.injury)s.injuryAnnounced=false;
+  if(w.health.slump>=2&&!s.slumpAnnounced){s.slumpAnnounced=true;queueEvent(w,'slump/'+w.day,'不振が続く','コーチから助言を受けた。',[ch('基礎に戻る','フォームを見直した。',{slump:-1,coachBond:4}),ch('休養を取る','心身をリセットした。',{energy:12,morale:6,slump:-.7})]);}
+  if(w.health.slump<.6)s.slumpAnnounced=false;
+  mission(w);
+  if(!s.pending&&s.eventQueue?.length){s.pending=s.eventQueue.shift();s.menu=null;}
+  return !!s.pending;
+ }
+ function randomStory(w){
+  const s=state(w);if(!s.storyMode||!isPlaying(w)||s.pending||s.eventQueue?.length)return;
+  const r=w.random('forced-event/'+week(w)),gap=days(w.day,s.lastForcedDay||'2000-01-01'),school=w.stage!=='pro';
+  if(gap<(school?12:19)||r()>(school?.48:.36))return;
+  const roll=r();
+  if(roll<.13){const keys=w.pitching?arms:bats,key=keys[Math.floor(r()*keys.length)];queueEvent(w,'growth/'+week(w),'練習の手応え',trainingNames[key]+'に手応えを感じた。',[ch('さらに伸ばす','成長のきっかけをつかんだ。',{skill:key,bonus:2}),ch('焦らず続ける','自信がついた。',{morale:7})]);}
+  else if(roll<.25)queueEvent(w,'bad-form/'+week(w),'フォームの乱れ','いつも通りの動きができない。',[ch('コーチに相談','助言を受けて修正した。',{coachBond:6,energy:-6,slump:.5}),ch('自分で修正','試行錯誤を始めた。',{slump:1.2,morale:-3})]);
+  else if(roll<.31){const c=coach(w);c.style=c.style==='実力主義'?'育成重視':'実力主義';c.bond=Math.max(20,c.bond-8);queueEvent(w,'staff/'+week(w),'指導方針の変化','指導者の方針が'+c.style+'に変わった。',[ch('方針に合わせる','信頼を築き直す。',{coachBond:6}),ch('持ち味を守る','自分のスタイルを大切にした。',{morale:5})]);}
+  else{const e=scene(w,'ambient');queueEvent(w,'random/'+week(w),e.title,e.body,e.choices,{friendId:e.friendId});}
+ }
+
  const available=w=>usable(w)&&!state(w).pending&&state(w).actionWeek!==week(w);
  function mark(w,title,summary,consume=true){
   const s=state(w);
@@ -226,15 +298,21 @@
   if(!mix||!(w.pitching?arms:bats).includes(key))return null;
   const rng=w.random('weekly-environment/'+week(w)+'/'+key);
   const r=rng(),event=r<.21?'coach':r<.38?'rival':r<.53?'light':r<.60?'heavy':'normal';
-  const friend=w.members(w.player.club).some(p=>p.id!==w.player.id&&(p.relationship||0)>=70);
-  const multiplier=(event==='coach'?1.5:event==='rival'?1.3:event==='heavy'?1.2:1)*(friend?1.25:1);
+  const peers=w.members(w.player.club).filter(p=>p.id!==w.player.id&&!p.injury);
+  const partner=peers.length?peers[Math.floor(rng()*peers.length)]:null,staff=s.storyMode?coach(w):null;
+  const coachPresent=staff&&(event==='coach'||key===staff.specialty&&rng()<.32);
+  const friendship=!!partner&&(partner.relationship||0)>=65;
+  const friend=s.storyMode?friendship:peers.some(p=>(p.relationship||0)>=70);
+  const level=Math.min(5,1+Math.floor((s.trainingCounts?.[key]||0)/8));
+  const facility=w.stage==='school'?[.91,1,1.12][w.schoolTier]||1:1.05;
+  const multiplier=(coachPresent?1.12+staff.bond*.004:event==='coach'?1.5:event==='rival'?1.3:event==='heavy'?1.2:1)*(friend?1.35:1)*(s.storyMode?facility*(1+(level-1)*.10):1);
   const baseEnergy=hard?30:['power','velocity','stamina'].includes(key)?20:key==='run'?12:15;
   const energy=Math.max(8,baseEnergy+(event==='light'?-5:event==='heavy'?4:0));
   const environment=w.stage==='school'?(w.schoolTier-1)*.035:(w.ratings.coach-50)*.001;
   const condition=clamp((s.energy-65)*.002+(s.morale-50)*.001+environment-(w.health.fatigue||0)*.0007,-.20,.14);
   const risk=clamp((.02+(s.energy<40?(40-s.energy)*.003:0)+(hard?.025:0)+(event==='heavy'?.018:0)-(event==='light'?.008:0)+(key==='run'?-.008:0))/ (w.talent?.durability||1),.005,.22);
   const gains=Object.fromEntries(Object.entries(mix).map(([k,n])=>[k,Math.round(n*1.8*multiplier*(hard?1.45:1)*(w.talent?.learning||1))]));
-  return {key,label:trainingNames[key],event,badge:{coach:'コーチ指導',rival:'ライバル練習',light:'体力消費↓',heavy:'高負荷',normal:''}[event],energy,risk,gains,condition,multiplier,friend,enabled:available(w)&&s.energy>=energy&&!w.health.injury};
+  return {key,label:trainingNames[key],event,level,partnerId:partner?.id,partnerName:partner?.name,friendship,coachPresent,badge:{coach:'コーチ指導',rival:'ライバル練習',light:'体力消費↓',heavy:'高負荷',normal:''}[event]+(friendship?' · 友情':'')+(coachPresent&&event!=='coach'?' · コーチ':''),energy,risk,gains,condition,multiplier,friend,enabled:available(w)&&s.energy>=energy&&!w.health.injury};
  }
  function direct(w,key,hard=false){
   const p=preview(w,key,hard);
@@ -283,10 +361,15 @@
   if(s.autoAllocate)for(let i=0;i<4&&allocate(w,key);i++){}
   if(w.stage==='school'&&mult>=2.5)w.scoutLevel=clamp(w.scoutLevel+1,0,95);
   s.goal={skill:key,label:goalLabels[key],day:w.day};
+  s.trainingCounts||={};s.trainingCounts[key]=(s.trainingCounts[key]||0)+1;
+  if(s.storyMode&&p.partnerId){const partner=w.person(p.partnerId);if(partner)partner.relationship=clamp((partner.relationship||40)+(mult>=1?3:1),0,100);}
+  if(s.storyMode&&p.coachPresent)coach(w).bond=clamp(coach(w).bond+(mult>=1?3:1),0,100);
   s.lastOutcome=outcome;
   const labels={strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'};
   mark(w,(hard?'実戦特訓':'通常練習')+' · '+NightCareerWorld.training[key],outcome+' · '+Object.entries(gain).map(([k,n])=>labels[k]+' +'+n).join(' / ')+(p.badge?' · '+p.badge:'')+(friend?' · 友情練習':''));
   s.trainingResult={day:w.day,key,label:p.label,outcome,gain,energy:costEnergy,badge:p.badge};
+  if(s.storyMode&&outcome==='覚醒'){w.talent||={};w.talent.breakthrough||={};w.talent.breakthrough[key]=Math.min(8,(w.talent.breakthrough[key]||0)+2);queueEvent(w,'awakening/'+w.day,'才能が開花！',p.label+'の成長限界が広がった。',[ch('さらに上を目指す','新しい可能性を感じた。',{morale:4})]);}
+  if(s.storyMode)refresh(w);
   return true;
  }
  function autoWeek(w){
@@ -303,7 +386,7 @@
  }
  function choose(w,value){
   const s=state(w),e=s.pending;
-  if(!usable(w)||!e)return false;
+  if(!e||w.currentGame||(!e.forced&&!usable(w)))return false;
   const number=Number(value);
   if(!Number.isInteger(number)||number<0)return false;
   if(e.type==='drill'){
@@ -346,10 +429,20 @@
    w.ratings.trust=clamp(w.ratings.trust+choice.bond*.35,0,100);
    const friend=e.friendId&&w.person(e.friendId);
    if(friend)friend.relationship=clamp((friend.relationship||40)+choice.bond,0,100);
-   if(choice.skill&&Object.hasOwn(w.player,choice.skill))w.improve(choice.skill,.5);
+   if(choice.skill&&Object.hasOwn(w.player,choice.skill))w.improve(choice.skill,choice.bonus||.5);
+   if(choice.coachBond)coach(w).bond=clamp(coach(w).bond+choice.coachBond,0,100);
+   if(choice.scout)w.scoutLevel=clamp(w.scoutLevel+choice.scout,0,95);
+   if(choice.fans)w.ratings.fans=clamp(w.ratings.fans+choice.fans,0,100);
+   if(choice.slump)w.health.slump=clamp(w.health.slump+choice.slump,0,4);
+   if(choice.sponsor)w.life.sponsor=true;
+   if(choice.partner){w.life.partner=true;w.life.relationship=Math.max(1,w.life.relationship||0);}
+   if(choice.marry)w.life.married=true;
+   if(e.arc){s.arc||={};s.arc[e.arc]=number;}
+   if(e.forced)s.lastForcedDay=w.day;
    w.experience+=1;
    if(e.id==='scout'&&w.stage==='school')w.scoutLevel=clamp(w.scoutLevel+1.5,0,95);
    mark(w,e.title,choice.text,!e.optional);
+   if(s.storyMode)refresh(w);
    return true;
   }
   return false;
@@ -357,6 +450,7 @@
  function afterGame(w,f,stats){
   if(!stats?.g)return;
   const s=state(w);
+  if(s.storyMode){observePerks(w,stats);mission(w);}
   if(w.balanceRevision>=247&&s.matchXpWeek!==week(w)){
    s.matchXpWeek=week(w);s.xp.mental+=1;s.xp.skill+=w.pitching?(stats.k>=3?2:1):(stats.h>=2?2:1);if(stats.hr||stats.k>=5)s.xp.strength+=1;
   }
@@ -370,7 +464,7 @@
   if(milestone){
    const id=w.pitching?'five-strikeouts':'first-home-run';
    s.seen[id]=true;
-   if(!s.inbox){
+   if(!s.inbox||s.storyMode){
     s.inbox={type:'story',id,title:w.pitching?'初めての大奪三振':'記念すべき一発',
      body:w.pitching?'5つ以上の三振を奪った。試合後、チームメイトが声をかけてくれた。':
       'ホームランでチームを沸かせた。試合後、監督が笑顔で待っていた。',
@@ -378,6 +472,7 @@
       {label:'みんなで喜ぶ',text:'仲間に祝福され、また頑張ろうと思えた。',energy:-2,morale:10,manager:2,bond:7,skill:null},
       {label:'次の試合に集中する',text:'余韻を胸に、次の練習目標を決めた。',energy:2,morale:5,manager:3,bond:2,skill:null}
      ]};
+    if(s.storyMode){const e=s.inbox;queueEvent(w,'milestone/'+id,e.title,e.body,e.choices);s.inbox=null;}
    }
   }
   if(f.kind==='school'&&s.gameCount===1){
@@ -407,11 +502,13 @@
   const now=week(w);
   if(s.storyWeek!==now){
    s.storyWeek=now;
-   if(isPlaying(w)&&!s.inbox&&!s.pending&&w.random('success/ambient/'+now)()<.17){
+   if(s.storyMode)randomStory(w);
+   else if(isPlaying(w)&&!s.inbox&&!s.pending&&w.random('success/ambient/'+now)()<.17){
     s.inbox=scene(w,'ambient');
     w.note('新しいイベント · '+s.inbox.title);
    }
   }
+  if(s.storyMode)refresh(w);
   if(s.morale<50)s.morale=Math.min(50,s.morale+.2);
   w.player.form=clamp(Math.round((s.morale-50)/7),-7,7);
  }
@@ -423,9 +520,24 @@
   s.stories.push(s.last);
   if(s.stories.length>90)s.stories.shift();
  }
+ const perkDefs={
+ clutch:['チャンス',12,'contact',3],discipline:['選球眼',12,'contact',2],bunt:['バント',8,'field',1],speed:['走塁',12,'run',3],
+ average:['巧打職人',18,'contact',5],slugger:['長距離砲',18,'power',6],opposite:['広角打法',16,'contact',3],glove:['守備職人',16,'field',5],strongArm:['強肩',14,'arm',4],leadoff:['出塁職人',16,'run',3],
+ pressure:['対ピンチ',12,'control',3],lateLife:['球威',12,'velocity',2],recovery:['回復',12,'stamina',4],strikeout:['奪三振',18,'movement',5],command:['精密制球',18,'control',5],breaking:['キレ',16,'movement',4],endurance:['尻上がり',16,'stamina',5],fastball:['ノビ',16,'velocity',3],
+ strikeoutWeak:['三振癖',0,'contact',-4],wild:['四球癖',0,'control',-4]
+ };
+ const perkKeys=w=>w.pitching?['pressure','lateLife','recovery','strikeout','command','breaking','endurance','fastball','wild']:['clutch','discipline','bunt','speed','average','slugger','opposite','glove','strongArm','leadoff','strikeoutWeak'];
+ function perkInfo(w,key){const d=perkDefs[key];if(!d)return null;const owned=w.perks.includes(key),negative=d[3]<0,unlocked=negative?owned:(d[1]<=12||w.player[d[2]]>=40||(state(w).trainingCounts?.[d[2]]||0)>=8||state(w).perkHints?.[key]);return {key,label:d[0],cost:negative?18:d[1],skill:d[2],effect:d[3],negative,owned,unlocked};}
+ function observePerks(w,stats){
+  const s=state(w);s.perkSample||={pa:0,k:0,h:0,hr:0,outs:0,walks:0,er:0,bb:0,sb:0};for(const k of Object.keys(s.perkSample))s.perkSample[k]+=Number(stats[k])||0;
+  const q=s.perkSample;s.perkHints||={};w.perks||=[];const hint=(k,on)=>{if(on)s.perkHints[k]=true;};
+  if(w.pitching){hint('strikeout',q.k>=25);hint('command',q.outs>=60&&q.walks/q.outs<.12);hint('endurance',stats.outs>=18);hint('fastball',q.k>=15);if(q.outs>=75&&q.walks/q.outs>.20&&!w.perks.includes('wild')){w.perks.push('wild');queueEvent(w,'weak/wild','課題：四球癖','制球の乱れが続き、四球癖が付いた。能力画面で克服できる。',[ch('課題に取り組む','制球練習を意識する。')]);}}
+  else{hint('average',q.h>=20);hint('slugger',q.hr>=5);hint('leadoff',q.bb>=10);hint('glove',stats.errors===0&&q.pa>=50);if(q.pa>=60&&q.k/q.pa>.32&&!w.perks.includes('strikeoutWeak')){w.perks.push('strikeoutWeak');queueEvent(w,'weak/k','課題：三振癖','三振が多く、打撃に課題が出ている。能力画面で克服できる。',[ch('課題に取り組む','打撃練習を意識する。')]);}}
+ }
+ function learnPerk(w,key){if(!perkKeys(w).includes(key)||w.currentGame||state(w).pending)return false;const p=perkInfo(w,key);if(!p||!p.unlocked||w.experience<p.cost||(!p.negative&&p.owned))return false;if(p.negative){w.perks=w.perks.filter(x=>x!==key);if(state(w).perkSample)for(const k of Object.keys(state(w).perkSample))state(w).perkSample[k]=0;}else w.perks.push(key);w.experience-=p.cost;w.note(p.label+(p.negative?'を克服':'を習得'));return true;}
  const currentQuestion=w=>{
   const e=state(w).pending;
   return e?.type==='drill'?[challengeTexts[e.skill]?.[e.index]||'集中してプレーを決めよう',tactics.map(t=>t[0])]:null;
  };
- window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost,preview,direct};
+ window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost,preview,direct,activate,refresh,queueEvent,cast,coach,mission,perkDefs,perkKeys,perkInfo,learnPerk};
 })();

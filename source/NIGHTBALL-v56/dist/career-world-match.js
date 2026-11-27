@@ -45,7 +45,8 @@
    s.pa>=8?clamp((ops(s)-.68)*48,-19,19)*Math.min(1,s.pa/36):0;
   const glove=p.pos==='P'?0:p.pos===pos?7:p.positions.includes(pos)?3:pos==='DH'?-1:-16;
   const schoolOpportunity=w.stage==='school'?([2,-2,-5][w.schoolTier]+(w.grade-1)*2):w.stage==='amateur'?2:0;
-  const trust=p.id===w.player.id?(w.ratings.manager-50)*.12+schoolOpportunity+({easy:4,normal:0,hard:-4})[w.difficulty]:0;
+  const staff=p.id===w.player.id&&w.success?.storyMode?NightCareerWorldSuccess.coach(w):null;
+  const trust=p.id===w.player.id?(w.ratings.manager-50)*(staff?.style==='育成重視'?.17:.12)+schoolOpportunity+({easy:4,normal:0,hard:-4})[w.difficulty]:0;
   const firstTeamSample=p.pos==='P'?s.outs/45:s.pa/44;
   const promotion=p.id===w.player.id&&w.stage==='pro'?farmForm(w)*(1-Math.min(.88,firstTeamSample))+
    (w.ratings.coach-50)*.1:0;
@@ -122,7 +123,9 @@
   const partner=player?w.members(p.club||'school-player').find(q=>q.id!==p.id&&q.relationship>=65&&
    (p.pos==='P'&&q.pos==='C'||p.pos==='SS'&&q.pos==='2B'||p.pos==='2B'&&q.pos==='SS')):null;
   const pressure=player?w.health.fatigue*.05+w.health.slump*2+w.adaptation-(partner?2:0):0;
-  const calibrated=Object.fromEntries(keys.map(k=>[k,clamp(p[k]+quality-pressure+dayLuck+yearLuck,k==='velocity'?111:18,k==='velocity'?166:99)]));
+  const bonus=Object.fromEntries(keys.map(k=>[k,0]));
+  if(player)for(const key of w.perks){const d=NightCareerWorldSuccess.perkDefs[key];if(d&&Object.hasOwn(bonus,d[2]))bonus[d[2]]+=d[3];}
+  const calibrated=Object.fromEntries(keys.map(k=>[k,clamp(p[k]+quality-pressure+dayLuck+yearLuck+clamp(bonus[k],-8,9),k==='velocity'?111:18,k==='velocity'?166:99)]));
   return {...p,...calibrated,careerPerks:player?Object.fromEntries(w.perks.map(key=>[key,1])):{},careerForm:player?w.ratings.coach:50};
  }
  function team(w,l,country){

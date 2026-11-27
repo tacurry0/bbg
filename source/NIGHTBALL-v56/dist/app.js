@@ -861,6 +861,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(game?.worldFixture||game?.career){stadiumAudio.stopEffects();game=null;}
   const y=changeScreen('career',worldPickerOpen?'career-slots':'career-world');
   for(const id of ['home','game','pennant','apbc-cup','pause'])$(id).hidden=true;
+  if(world&&!worldPickerOpen){NightCareerWorldSuccess.activate(world);saveWorld();}
   $('career').innerHTML=worldPickerOpen?NightCareerWorldView.slots(NightCareerWorldSlots.list(),!!career):
    world?NightCareerWorldView.dashboard(world,!!career):NightCareerWorldView.setup(worldCountry,!!career,worldAlumni);
   $('career').hidden=false;
@@ -912,6 +913,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='country'){worldCountry=v;worldDashboard();return;}
   const w=world;
   if(!w)return;
+  if(w.success?.pending&&action!=='success-choice'&&action!=='result-next'){toast('先にイベントを確認してください');return;}
   if(action==='tab'){NightCareerWorldView.setTab(v);worldDashboard();return;}
   if(action==='progress-menu'||action==='career-options'||action==='training-open'){
    const key=action==='progress-menu'?'progressMenu':action==='career-options'?'careerOptions':'trainingDeck';

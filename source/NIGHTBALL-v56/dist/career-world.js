@@ -256,7 +256,7 @@
     const own=fixtures[selected];
     const role=this.usage(own);
     this.selectionChange(own,role);
-    if(role==='inactive'&&this.health.injury===0){
+    if((Z.state(this).storyMode?this.selection?.level==='farm':role==='inactive')&&this.health.injury===0){
      const opponent=own.home===this.club?own.away:own.home;
      fixtures.push({...own,id:own.id+'/farm',name:(this.leagueLabel==='KBO'?'フューチャーズリーグ':'二軍公式戦'),
       kind:'farm',farm:true,otherClub:opponent});
@@ -269,7 +269,14 @@
   }
   selectionChange(f,role){
    if(this.health.injury)return;
-   const level=role==='inactive'?'farm':'first';
+   let level=role==='inactive'?'farm':'first';
+   if(Z.state(this).storyMode&&this.selection){
+    const d=(Date.parse(f.day)-Date.parse(this.selection.day))/86400000;
+    if(d<14)return;
+    const stats=this.playerYear,poor=this.pitching?stats.outs>=30&&M.era(stats)>6.2:stats.pa>=35&&M.ops(stats)<.52;
+    if(this.selection.level==='first'&&level==='farm'&&!poor&&this.ratings.manager>=25)return;
+    if(this.selection.level==='farm'&&level==='first'&&M.farmForm(this)<1&&this.ratings.manager<45)return;
+   }
    if(this.selection?.level===level)return;
    const previous=this.selection?.level;
    const peer=this.members(this.club).filter(p=>p.id!==playerId&&p.positions.includes(this.player.pos))
@@ -282,6 +289,7 @@
     '二軍で開幕。出場を重ねて昇格を目指します。';
    this.selection={level,day:f.day,reason};
    this.note(reason);
+   if(previous&&Z.state(this).storyMode)Z.queueEvent(this,'roster/'+f.day,level==='first'?'一軍昇格':'二軍降格',reason,[{label:'次へ',text:'新しい役割に向けて準備する。',morale:level==='first'?6:-3}]);
   }
   get schoolPlayKey(){return this.academicYear+'/'+this.grade;}
   protectSchoolFixture(f){
@@ -353,6 +361,7 @@
   }
   run(mode){
    if(this.currentGame||Z.state(this).pending)return 0;
+   if(Z.state(this).storyMode&&Z.refresh(this))return 0;
    const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1),injuryAtStart=this.health.injury,initialLevel=this.selection?.level;
    const limit={day:1,week:7,month:30,game:370,event:370,season:420,'training-week':7}[mode]||1;
    const startWeek=Z.week(this),trainingWeek=mode==='training-week';
@@ -365,6 +374,7 @@
     if(!this.queue&&!trainingWeek){
      const before=this.health.injury;
      const trained=Z.autoWeek(this);
+     if(Z.state(this).pending){steps++;break;}
      if(trained&&(Z.state(this).last?.summary.startsWith('覚醒')||this.health.injury>before+14)){steps++;break;}
     }
     if(this.queue){
@@ -373,6 +383,7 @@
      this.finishDay();
     }else if(!this.nextDay())break;
     steps++;
+    if(Z.state(this).storyMode&&Z.refresh(this))break;
     if(batch&&(this.health.injury>injuryAtStart+14||(initialLevel&&this.selection?.level!==initialLevel)))break;
     if(trainingWeek&&Z.week(this)!==startWeek&&!this.queue)break;
     if(this.grade!==grade||this.year!==year&&stage==='pro'||mode==='event'&&this.timeline.at(-1)!==lastNote)break;
@@ -380,7 +391,7 @@
    return steps;
   }
   finishDay(live=null){
-   if(!this.queue||live&&this.active?.id!==live.id||!live&&this.currentGame)return false;
+   if(!this.queue||live&&this.active?.id!==live.id||!live&&(this.currentGame||Z.state(this).pending))return false;
    const {games,kind}=this.queue;
    const affiliateAppearance=this.active?.kind==='regular'&&this.usage(this.active)!=='inactive';
    const events=games.map(f=>{
@@ -550,13 +561,17 @@
    this.note('ドラフト'+offer.round+'巡目指名 · '+this.clubName(offer.club)+'に入団');
    return true;
   }
+  skillPotential(key){
+   const ceiling=this.talent?.ceiling??99,r=this.random('ability-potential/'+key),variety=this.talent?Math.round((r()-.5)*22):0,extra=this.talent?.breakthrough?.[key]||0;
+   return {cap:key==='velocity'?clamp(137+Math.round((ceiling-70)*.85+variety*.48+extra*.5),132,164):clamp(ceiling+variety+extra,55,99),rate:this.talent?.ceiling?(.78+r()*.44):1};
+  }
   improve(key,amount){
    if(!Object.hasOwn(this.player,key))return false;
    const scale=[this.age<24?1.45:.65,1,this.age<24?.8:1.35,1.38,.95,this.age<27?.67:1.63][this.player.growth];
    const difficulty={easy:1.15,normal:1,hard:.88}[this.difficulty];
    const ceiling=this.talent?.ceiling??99;
-   const cap=Math.max(this.player[key],key==='velocity'?Math.min(164,137+Math.round((ceiling-70)*.85)):ceiling);
-   this.player[key]=clamp(this.player[key]+amount*scale*difficulty*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
+   const profile=this.skillPotential(key),cap=Math.max(this.player[key],profile.cap);
+   this.player[key]=clamp(this.player[key]+amount*scale*difficulty*profile.rate*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
    this.lastGrowth={day:this.day,text:training[key]+'を強化'};
    return true;
   }
@@ -592,7 +607,9 @@
    return true;
   }
   learn(key){
-   if(this.currentGame||this.stage==='retired'||this.experience<12)return false;
+   if(this.currentGame||this.stage==='retired'||Z.state(this).pending)return false;
+   if(Z.perkDefs[key])return Z.learnPerk(this,key);
+   if(this.experience<12)return false;
    if(this.pitching&&NightGame.TYPES.some(t=>t.id===key)){
     if(this.player.pitches.length>=5||this.player.pitches.includes(key))return false;
     this.player.pitches.push(key);
@@ -610,9 +627,10 @@
    const cost=this.costs;
    const account=this.currency;
    const wallet=this.life.budget[account]||0;
-   const spending={hobby:cost[0],move:cost[1],house:cost[2]};
+   const spending={hobby:cost[0],move:cost[1],house:cost[2],car:Math.round(cost[2]*.10)};
    if(Object.hasOwn(spending,action)&&wallet<spending[action])return false;
    if(action==='move'||action==='house')this.life.housing=action==='house'?'持ち家':'賃貸';
+   else if(action==='car'){if(this.life.car)return false;this.life.car=true;}
    else if(action==='social'){
     const friend=this.person(id);
     if(!friend||friend.club!==this.player.club)return false;
@@ -620,8 +638,9 @@
     this.ratings.trust=clamp(this.ratings.trust+1.7,0,100);
     if(friend.relationship>=70)this.improve(this.trainingPlan,.35);
    }else if(action==='family'&&this.age>=18){
+    if(Z.state(this).storyMode&&!this.life.partner)return false;
     this.life.relationship+=1;
-    if(this.life.relationship===6&&this.age>=20){this.life.married=true;this.note('結婚を報告');}
+    if(!Z.state(this).storyMode&&this.life.relationship===6&&this.age>=20){this.life.married=true;this.note('結婚を報告');}
    }else if(action==='rehab'){
     if(!this.health.injury)return false;
     this.health.injury=Math.max(0,this.health.injury-3);
@@ -641,8 +660,8 @@
    const training=p.id===this.player.id?this.trainingPlan:k[Math.floor(rng()*k.length)];
    for(const key of k){
     const young=age<prime?Math.max(.1,(p.id===playerId&&this.proYear?1.25:1.6)-(age-16)*.055)+(key===training?.6:0):-(age-prime)*.3-.7;
-    const scale=key==='velocity'?.43:1;
-    const ceiling=p.id===playerId&&this.talent?Math.max(p[key],key==='velocity'?Math.min(164,137+Math.round((this.talent.ceiling-70)*.85)):this.talent.ceiling):key==='velocity'?166:99;
+    const scale=(key==='velocity'?.43:1)*(age>=prime?(['run','velocity','arm'].includes(key)?1.4:['contact','control','field'].includes(key)?.75:1):1);
+    const ceiling=p.id===playerId&&this.talent?Math.max(p[key],this.skillPotential(key).cap):key==='velocity'?166:99;
     p[key]=clamp(p[key]+(young+(rng()-.44)*1.35+Math.min(.38,used/600)-(p.injury>0?.7:0))*scale,key==='velocity'?111:19,ceiling);
    }
   }
@@ -745,7 +764,7 @@
    this.past.push({year,ranking,champions,halves:this.post.halves,asia:asia.winner});
    this.asia.push({year,host:asia.host,clubs:asia.clubs.slice(),winner:asia.winner,mvp:this.person(asia.mvp)?.name||null,games:asia.games.slice()});
    const salary=this.contract?.annual||0,currency=this.currency;
-   this.life.budget[currency]=(this.life.budget[currency]||0)+Math.max(0,salary-this.costs[1]*4);
+   this.life.budget[currency]=(this.life.budget[currency]||0)+Math.max(0,salary-this.costs[1]*4+(this.life.sponsor?Math.round(salary*.08):0));
    this.history.push({year,age:this.age,league,currency,salary,club:this.club,stats:{...this.playerYear},farm:{...this.farmStats},post:{...this.playerPost},
     champion:champions[league]===this.club,asia:asia.winner===this.club,awards});
    if(this.daysPlayed>=Math.ceil(this.seasonDays*.68))this.service++;
@@ -945,11 +964,11 @@
   }
   get lifetime(){return this.history.reduce((total,row)=>merge(total,row.stats),blank());}
   canPlay(f=this.active){
-   return !!f&&!this.health.injury&&!['inactive','bench'].includes(this.usage(f));
+   return !!f&&!Z.state(this).pending&&!this.health.injury&&!['inactive','bench'].includes(this.usage(f));
   }
   liveOptions(format=this.format){
    const f=this.active;
-   if(!f||format==='auto'||this.health.injury||!formats[format])return null;
+   if(!f||format==='auto'||Z.state(this).pending||this.health.injury||!formats[format])return null;
    const role=this.usage(f);
    if(['inactive','bench'].includes(role))return null;
    const own=this.owningClub(f);

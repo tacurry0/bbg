@@ -111,7 +111,7 @@
  function pendingPanel(w){
   const s=Z.state(w),e=s.pending;if(!e)return '';
   if(e.type==='drill'){const q=Z.currentQuestion(w);return '<div class="cw-event-panel"><b>'+esc(e.title)+'</b><p>'+esc(q?.[0])+'</p><div class="cw-grid">'+(q?.[1]||[]).map((label,i)=>act('success-choice',label,i)).join('')+'</div></div>';}
-  return '<div class="cw-event-panel"><b>'+esc(e.title)+'</b><p>'+esc(e.body)+'</p><div class="cw-choices">'+e.choices.map((option,i)=>act('success-choice',option.label,i)).join('')+'</div></div>';
+  return '<div class="cw-event-panel '+(e.forced?'cw-forced-event':'')+'" role="group" aria-label="キャリアイベント">'+(e.forced?'<span class="cw-event-kicker">EVENT · '+esc(w.day.replaceAll('-','/'))+'</span>':'')+'<b>'+esc(e.title)+'</b><p>'+esc(e.body)+'</p><div class="cw-choices">'+e.choices.map((option,i)=>act('success-choice',option.label,i,i===0?'primary-button':'secondary-button')).join('')+'</div></div>';
  }
  function trainingDeck(w,compact=false){
   const s=Z.state(w);if(s.pending)return pendingPanel(w);
@@ -119,7 +119,7 @@
   const icons={contact:'打',power:'長',run:'走',field:'守',arm:'肩',velocity:'速',control:'制',movement:'変',stamina:'持'};
   const cards=keys.map(k=>{
    const p=Z.preview(w,k,s.specialTraining);
-   return button('train-direct',k,p.label+'練習','<div class="cw-tr-head"><i>'+icons[k]+'</i><strong>'+p.label+'</strong><small>−'+p.energy+'</small></div><div class="cw-tr-gains">'+Object.entries(p.gains).map(([x,n])=>'<span data-xp="'+x+'">'+xpShort[x]+'+'+n+'</span>').join('')+'</div><div class="cw-tr-foot"><span>'+esc(p.badge||'通常')+'</span><span>故障 '+(p.risk*100).toFixed(1)+'%</span></div>','cw-tr-card '+(p.event==='normal'?'':'cw-bonus-'+p.event),!p.enabled);
+   return button('train-direct',k,p.label+'練習','<div class="cw-tr-head"><i>'+icons[k]+'</i><strong>'+p.label+' <em>Lv.'+p.level+'</em></strong><small>−'+p.energy+'</small></div><div class="cw-tr-gains">'+Object.entries(p.gains).map(([x,n])=>'<span data-xp="'+x+'">'+xpShort[x]+'+'+n+'</span>').join('')+'</div><div class="cw-tr-foot"><span title="'+esc(p.partnerName||'')+'">'+esc(p.badge||p.partnerName||'通常')+'</span><span>故障 '+(p.risk*100).toFixed(1)+'%</span></div>','cw-tr-card '+(p.event==='normal'?'':'cw-bonus-'+p.event),!p.enabled);
   }).join('');
   const rest=button('rest-direct','','休養','<div class="cw-tr-head"><i>休</i><strong>休養</strong><small>+31</small></div><div class="cw-tr-gains"><span>体力回復</span></div><div class="cw-tr-foot"><span>故障なし</span></div>','cw-tr-card cw-rest',!Z.available(w));
   const event=s.inbox?act('success-event','イベント：'+s.inbox.title,'','cw-event-button'):'';
@@ -145,7 +145,8 @@
   const tabs='<nav class="cw-board-tabs" aria-label="キャリアメニュー">'+[['home','⌂','ホーム'],['skills','↗','能力'],['stats','▥','成績'],['team','♟','チーム'],['schedule','▦','日程'],['history','★','記録']].map(([id,icon,label])=>'<button type="button" data-world-action="tab" data-value="'+id+'" aria-selected="'+(boardTab===id)+'"><span>'+icon+'</span>'+label+'</button>').join('')+'</nav>';
   const overview='<div class="cw-pro-overview">'+summary+target+(w.last?'<div class="cw-last-game"><span>前回 '+esc(w.last.opponent)+'</span><b>'+w.last.score.join(' – ')+'</b>'+act('last-result','結果','','cw-text-button')+'</div>':'')+'<div class="cw-pro-actions">'+act('training-open','練習・休養','','cw-pro-train')+act('detail','契約・生活','life','cw-pro-train')+'</div></div>';
   const gameplay=s.pending?pendingPanel(w):f?gameDeck(w,f):pro?overview:trainingDeck(w);
-  const home=hero+(pro?'':target)+highlight+(playing?gameplay:w.stage==='draft'?draft(w):w.stage==='offseason'?market(w):retired(w));
+  const ms=s.mission,missionLine=ms&&playing?'<div class="cw-mission-line"><span>目標：'+esc(ms.label)+'</span><b>'+Math.min(ms.value||0,ms.target)+' / '+ms.target+(ms.done?' ✓':'')+'</b></div>':'';
+  const home=hero+(s.pending?pendingPanel(w):(pro?'':target)+missionLine+highlight+(playing?gameplay:w.stage==='draft'?draft(w):w.stage==='offseason'?market(w):retired(w)));
   const body=boardTab==='home'?home:boardTab==='skills'?'<div class="cw-board-abilities standalone">'+bars(w)+'</div>'+trainingSettings(w)+skills(w):boardTab==='stats'?stats(w):boardTab==='team'?squad(w):boardTab==='schedule'?schedule(w)+(w.club?international(w):''):history(w)+life(w);
   const progress=playing?'<div class="cw-fixed-progress">'+(s.pending?'<span class="cw-dock-note">イベントを選択してください</span>':w.currentGame?act('play','試合を再開','','cw-main-progress'):f?act('simulate','試合を自動進行','','cw-main-progress')+button('tab','home','試合画面','試合画面','cw-alt-progress'):act('advance',pro?'次の試合へ':'次の週へ',pro?'game':'week','cw-main-progress')+act('advance',pro?'1か月':'次の試合',pro?'month':'game','cw-alt-progress')+act('progress-menu','⋯','','cw-more-progress'))+'</div>':'';
   const head='<div class="cw-mini-head">'+act('home','‹ 戻る','','career-back')+'<strong>選手キャリア</strong>'+act('slots','選手切替','','career-back')+act('career-options','⚙','','career-back')+'</div>';
@@ -193,7 +194,9 @@
    const gap=peer?Math.round(M.positionScore(w,peer,pos,w.playingCountry)-ownScore):0;
    const competition=peer?'<p class="cw-competition">競争相手：'+esc(peer.name)+' · 評価差 '+(gap>0?'+':'')+gap+'（'+(gap>0?'能力・試合成績を伸ばそう':'評価でリード中')+'）</p>':'';
    const cohort=w.people.filter(p=>p.school&&p.club!==id).sort((a,b)=>(w.rivalry[b.id]?.games||0)-(w.rivalry[a.id]?.games||0)).slice(0,12);
-  return archHTML+section('ポジション争い · '+NightCareer.positionNames[pos],`${competition}<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
+  const c=Z.cast(w),staff=Z.coach(w),friend=c.friend&&w.person(c.friend),rival=c.rival&&w.person(c.rival);
+  const castHTML=section('仲間・指導者','<p>監督：'+esc(staff.style)+' · コーチ信頼 '+Math.round(staff.bond)+'</p>'+[friend,rival].filter(Boolean).map((p,i)=>'<p>'+ (i?'ライバル':'同期')+'：'+esc(p.name)+' · 絆 '+Math.round(p.relationship||0)+'/100</p>').join(''));
+  return castHTML+archHTML+section('ポジション争い · '+NightCareer.positionNames[pos],`${competition}<ol class="cw-list">${peers.map(p=>`<li><strong>${esc(p.name)}</strong> · ${w.year-p.born}歳 · 評価 ${Math.round(M.positionScore(w,p,pos,w.playingCountry))}
    ${p.injury?' · 故障':''}${p.id===w.player.id?' · あなた':''} ${p.pos==='P'?(p.stats.outs?' · 防御率 '+fmt(M.era(p.stats),2):''):(p.stats.ab?' · 打率 '+fmt(M.rate(p.stats.h,p.stats.ab)):'')}</li>`).join('')}</ol>`)+
    section('今日の想定オーダー',`<ol class="cw-list">${Object.entries(l.assign).map(([p,id])=>`<li>${p} · ${esc(w.person(id)?.name)}</li>`).join('')}<li>先発 · ${esc(l.starter?.name)}</li></ol>`)+
    section('高校時代の選手',cohort.length?cohort.map(p=>`<details><summary>${esc(p.name)} · ${esc(p.stage==='retired'?'引退':p.club?w.clubName(p.club):p.amateur||'アマチュア')}</summary>
@@ -205,10 +208,10 @@
  function skills(w){
   const keys=w.pitching?M.pitching:M.batting;
   const forms=w.pitching?['オーバー','スリークォーター','サイド']:['基本','振り子','ノーステップ','長打重視'];
-  const perks=w.pitching?{pressure:'対ピンチ',lateLife:'球威',recovery:'回復'}:{clutch:'チャンス',discipline:'選球眼',bunt:'バント',speed:'走塁'};
+  const perks=Z.perkKeys(w).map(k=>Z.perkInfo(w,k)).filter(p=>!p.negative||p.owned);
   return section('練習・能力',`<p>成長タイプ：非公開 · 疲労 ${Math.round(w.health.fatigue)} · スランプ ${w.health.slump>=1?'あり':'なし'}</p><p class="cw-note">練習はメイン画面の「今週の行動」から実行します。</p>${pills('能力',keys.map(k=>'<span>'+NightCareerWorld.training[k]+' '+Math.round(w.player[k])+'</span>').join(''))}`)+
    section('フォーム・転向',`<p>現在のフォーム ${esc(w.form)}</p><div class="cw-grid">${forms.map(x=>act('form',x,x)).join('')}${(w.pitching?['SP','RP','CP']:D.positions).map(x=>act('convert',NightCareer.positionNames[x]||({SP:'先発',RP:'中継ぎ',CP:'抑え'})[x],x)).join('')}</div>`)+
-   section('特殊能力・球種',`<p>経験値 ${Math.floor(w.experience)} · 習得に12必要</p><div class="cw-grid">${Object.entries(perks).map(([k,v])=>act('learn',v+(w.perks.includes(k)?' ✓':''),k)).join('')}${w.pitching?NightGame.TYPES.filter(t=>!w.player.pitches.includes(t.id)).map(t=>act('learn',t.name,t.id)).join(''):''}</div>`);
+   section('特殊能力・球種',`<p>経験値 ${Math.floor(w.experience)} · 習得条件・費用</p><div class="cw-grid">${perks.map(p=>button('learn',p.key,p.label,'<strong>'+esc(p.label)+'</strong><small>'+(!p.negative&&p.owned?'習得済み':p.negative?'克服 '+p.cost+'pt':p.unlocked?p.cost+'pt':'未解放')+'</small>','cw-perk-card '+(p.negative?'negative':''),!p.unlocked||(!p.negative&&p.owned)||w.experience<p.cost)).join('')}${w.pitching?NightGame.TYPES.filter(t=>!w.player.pitches.includes(t.id)).map(t=>act('learn',t.name,t.id)).join(''):''}</div>`);
  }
  function stats(w){
   return section('個人成績',[['今季',w.club?w.playerYear:w.schoolTotals],['二軍',w.farmStats],['ポストシーズン',w.playerPost],['通算（一軍公式戦）',w.lifetime]].map(([label,s])=>`<h3>${label}</h3>`+pills(label,stat(s,w.pitching))).join(''))+
@@ -275,9 +278,9 @@
  function life(w){
   const wallet=w.money(w.life.budget[w.currency]||0);
   const peer=w.members(w.player.club).find(p=>p.id!==w.player.id);
-  return section('私生活',`<p>${w.life.housing} · ${wallet} · ${w.life.married?'既婚':'未婚'}</p><div class="cw-grid">
+  return section('私生活',`<p>${w.life.housing} · ${wallet} · ${w.life.married?'既婚':w.life.partner?'交際中':'未婚'}</p><div class="cw-grid">
    ${act('life','休養','rest')}${act('life','趣味 '+w.money(w.costs[0]),'hobby')}${act('life','引っ越し '+w.money(w.costs[1]),'move')}
-   ${act('life','住居購入 '+w.money(w.costs[2]),'house')}${act('life','家族・恋愛','family')}${act('life','リハビリ','rehab')}
+   ${act('life','住居購入 '+w.money(w.costs[2]),'house')}${w.life.car?'<p>自家用車あり</p>':act('life','車を購入 '+w.money(Math.round(w.costs[2]*.10)),'car')}${w.life.partner?act('life','家族と過ごす','family'):''}${w.life.sponsor?'<p>スポンサー契約中</p>':''}${act('life','リハビリ','rehab')}
    ${peer?act('social',peer.name+'と交流',peer.id):''}</div>`)+
    section('人気・評価',Object.entries({fans:'ファン人気',media:'メディア',scout:'海外スカウト',coach:'コーチ',manager:'監督',trust:'信頼'}).map(([k,label])=>`<p>${label} <strong>${Math.round(w.ratings[k])}</strong></p>`).join(''));
  }
@@ -289,7 +292,7 @@
  function retired(w){
   return section('現役引退 · '+w.retirement.age+'歳',`<p>${countries[w.country].label} · ${esc(w.school)} · ドラフト${w.draftRecord?.round||'—'}巡目</p>
    <p>国内王者 ${w.history.filter(x=>x.champion).length}回 · アジア王者 ${w.history.filter(x=>x.asia).length}回 · 代表 ${w.national.length}回</p>
-   <p>最終年俸 ${w.money(w.retirement.annual)} · 特殊能力 ${esc(w.perks.join('、')||'—')}</p>`+
+   <p>最終年俸 ${w.money(w.retirement.annual)} · 特殊能力 ${esc(w.perks.map(k=>Z.perkDefs[k]?.[0]||k).join('、')||'—')}</p><p class="cw-career-award">${w.titles.length>=5?'レジェンド':w.titles.length>=1?'タイトルホルダー':w.lifetime.g>=100?'一軍経験者':'挑戦の記録'} · タイトル ${w.titles.length}回 · プロ ${w.proYear}年</p>`+
    '<h3>通算成績</h3>'+pills('通算成績',stat(w.lifetime,w.pitching))+
    w.moves.map(x=>`<p>${x.day} · ${club(w,x.from)} → ${club(w,x.to)} · ${esc(x.type)}</p>`).join('')+
    act('new','OB記録を保存して新しいキャリアへ','','primary-button'))+history(w);
