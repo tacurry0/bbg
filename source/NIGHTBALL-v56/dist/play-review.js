@@ -4,7 +4,7 @@ const copyField=f=>({
  throw:f.throw?{...f.throw,to:{...f.throw.to}}:null,
  manual:f.manual?{secured:f.manual.secured,holder:f.manual.holder,selection:null,userControlled:false}:null,
  trail:f.trail.slice(-14),foul:f.foul,resolved:f.resolved,wallHit:f.wallHit,trajectory:f.trajectory,
- maxTravel:f.maxTravel,landing:f.landing,landingTime:f.landingTime,elapsed:f.elapsed,impact:f.impact
+ maxTravel:f.maxTravel,landing:f.landing,landingTime:f.landingTime,elapsed:f.elapsed,impact:f.impact,reviewMoment:f.reviewMoment?{...f.reviewMoment}:null
 });
 const mix=(a,b,u)=>a+(b-a)*u;
 const position=(a,b,u,ball=false)=>a?{...a,x:mix(a.x,b?.x??a.x,u),y:mix(a.y,b?.y??a.y,u),
@@ -32,15 +32,21 @@ export class PlayReview {
   return this.clip;
  }
  save(game,recording){
-  this.clip={game,...recording,teams:game.teams,lineups:game.lineups,bases:game.bases.slice(),
+  this.clip={game,closeMoment:game.field?.reviewMoment?{...game.field.reviewMoment}:null,...recording,teams:game.teams,lineups:game.lineups,bases:game.bases.slice(),
    half:game.half,inning:game.inning,outs:game.outs,homeScore:game.homeScore,awayScore:game.awayScore};
  }
  // Persist the in-progress play's frames as a reviewable clip even when it did
  // not score (used by base-call challenges, which review non-scoring plays).
  saveCurrentPlay(game){
   const rec=this.record;
-  if(!rec||rec.field!==game.field||rec.frames.length<2)return false;
-  this.save(game,{frames:rec.frames.slice(),hit:game.hit?{...game.hit}:undefined});
+  if(!rec||rec.field!==game.field||!rec.frames.length)return false;
+  const pose=copyField(game.field),frames=rec.frames.slice(),last=frames.at(-1);
+  if(last&&pose.elapsed-last.elapsed<.001)frames[frames.length-1]=pose;else frames.push(pose);
+  const call=game.baseCall,closeMoment=call?.pending?{base:call.base,time:call.time,runnerId:call.runnerId}:game.field.reviewMoment;
+  const near=closeMoment?frames.filter(f=>f.elapsed>=closeMoment.time-1.35&&f.elapsed<=closeMoment.time+.35):frames;
+  const clipFrames=near.length>=2?near:frames;
+  if(clipFrames.length<2)return false;
+  this.save(game,{frames:clipFrames,closeMoment,challenge:true,hit:game.hit?{...game.hit}:undefined});
   return true;
  }
  captureWalk(game){
@@ -51,11 +57,11 @@ export class PlayReview {
   if(!clip||clip.game!==game)return false;
   const {pitch,frames}=clip;
   const projected=Object.create(game);
-  Object.assign(projected,{phase:pitch?'pitch':'field',replayView:view,hit:clip.hit,teams:clip.teams,lineups:clip.lineups,
+  Object.assign(projected,{phase:pitch?'pitch':'field',replayView:view,replayCloseMoment:clip.closeMoment||null,replayChallenge:!!clip.challenge,hit:clip.hit,teams:clip.teams,lineups:clip.lineups,
    field:pitch?null:{...frames[0]},pitch:pitch?{...pitch}:game.pitch,phaseTime:0,inning:clip.inning,half:clip.half,outs:clip.outs,
    homeScore:clip.homeScore,awayScore:clip.awayScore,bases:clip.bases,paused:true});
   const span=pitch?0:frames.at(-1).elapsed-frames[0].elapsed;
-  this.playback={clip,projected,clock:0,index:0,wasPaused:game.paused,rate:Math.max(.82,span/3.4)};
+  this.playback={clip,projected,clock:0,index:0,wasPaused:game.paused,rate:clip.challenge?.52:Math.max(.82,span/3.4)};
   this.clip=null;
   game.paused=true;
   return true;
@@ -68,7 +74,8 @@ export class PlayReview {
   const replay=this.playback;
   if(!replay)return null;
   const {clip,projected}=replay;
-  replay.clock+=Math.max(0,Math.min(200,dt))*.001*replay.rate;
+  const moment=clip.closeMoment,near=moment&&clip.frames&&Math.abs(clip.frames[0].elapsed+replay.clock-moment.time)<1.1;
+  replay.clock+=Math.max(0,Math.min(200,dt))*.001*(near?Math.min(.52,replay.rate):replay.rate);
   if(clip.pitch){
    const duration=clip.pitch.duration/1000,progress=replay.clock/duration;
    if(progress>1.24+.4/duration)return null;

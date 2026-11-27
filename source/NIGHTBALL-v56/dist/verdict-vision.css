@@ -123,3 +123,23 @@
   #stage-message.vision-call .stage-call,
   #umpire-call { min-height: 38px; }
 }
+
+/* v233: a single verdict layer for base challenges and ABS. */
+#stage:has(#umpire-call:not([hidden])) #stage-message,
+#game.replay-active #stage-message,
+#game.replay-active #umpire-call,
+#stage:has(#abs-review:not([hidden])) #stage-message { visibility:hidden !important; }
+#umpire-call[data-review="true"] { flex-wrap:wrap; gap:4px 12px; padding:5px 14px; }
+#umpire-call[data-review="true"] small { color:#f2f6f8; letter-spacing:.04em; font-weight:800; }
+#abs-verdict {
+  --abs-color:#80efb0;
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  min-width:0; width:max-content; max-width:92%; gap:5px; padding:8px 18px;
+  border:0; border-block:1px solid var(--abs-color); border-radius:0;
+  background:rgba(0,0,0,.48); box-shadow:none; text-shadow:0 1px 3px #071019,0 0 8px color-mix(in srgb,var(--abs-color) 48%,transparent);
+}
+#abs-verdict[data-strike="true"] { --abs-color:#ffe179; }
+#abs-verdict strong { font:900 clamp(24px,7vw,36px)/1.1 system-ui,sans-serif; letter-spacing:.06em; }
+#abs-verdict #abs-change { color:#f2f6f8; font:800 clamp(11px,3.3vw,14px)/1.2 system-ui,sans-serif; opacity:1; }
+#abs-verdict #abs-gap { display:none; }
+#abs-verdict[hidden] { display:none; }

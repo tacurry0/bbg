@@ -37,6 +37,9 @@ const BASES=[{x:0,y:0},{x:19.4,y:19.4},{x:0,y:38.8},{x:-19.4,y:19.4},{x:0,y:0}];
 const COVER=[[],[2,0,3],[3,4,0],[5,4,0],[1,0,2]];
 const BAG_REACH=.48;
 const BASE_PATH=27.44;
+// Review only genuinely tight arrivals; error chance falls to zero at 0.16 s.
+const BASE_REVIEW_WINDOW=.16;
+const baseErrorRate=gap=>.16*Math.max(0,1-Math.abs(gap)/BASE_REVIEW_WINDOW);
 const FIELD_READ_DELAY=.20;
 const legSpeed=(runner,target)=>runner.speed*(runner.batter&&target===2?1.10:1);
 const runTime=(runner,base,progress=runner.progress)=>Math.abs(base-progress)*BASE_PATH/legSpeed(runner,base);
@@ -772,7 +775,7 @@ window.NightGame=class NightGame{
    if(!ta.remaining&&!['field','miss'].includes(this.phase)){this.finishTimeAttack();return;}
   }
   if((this.fastForward||this.spectate)&&this.defending&&!this.autoDefense)this.autoDefense=true;
-   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&this.phase!=='abs-call'&&this.phase!=='abs-review')dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
+   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&!['abs-call','abs-review','play-call','play-review'].includes(this.phase))dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
   if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
   else if(this.phase==='abs-call'&&this.absCall?.cpu&&!this.absCall.remote&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
    this.setPhase('abs-review');this.notify();
@@ -1369,7 +1372,7 @@ window.NightGame=class NightGame{
   this.pitchingStats=s.ps||{};this.box=s.box||{};
   this.absRemaining=s.absCpu;this.absCpuRemaining=s.absU;
   this.playChallenges=s.playCpu;this.playCpuChallenges=s.playU;
-  if(s.baseCall)this.baseCall={...s.baseCall,cpu:s.baseCall.batSide!==this.userSide};else if(this.baseCall)this.baseCall=null;
+  if(s.baseCall)this.baseCall={...s.baseCall,cpu:(s.baseCall.challenger||s.baseCall.batSide)!==this.userSide};else if(this.baseCall)this.baseCall=null;
   this.weather=s.weather;this.weatherLabel=s.weatherLabel;this.wind=s.wind;this.next=s.next;
   if(s.umpireLabel!==undefined)this.umpireLabel=s.umpireLabel;
   this.halfBreak=s.halfBreak||null;this.hit=s.hit||null;
@@ -1976,21 +1979,54 @@ window.NightGame=class NightGame{
    r.contestedBase=null;
   }else r.contestedBase=base;
  }
- manualOut(r,type,base=r.target??Math.ceil(r.progress),truthOverride=null){
+ manualOut(r,type,base=r.target??Math.ceil(r.progress)){
   if(!r||r.out||this.outs>=this.outsNeeded)return;
   if(r.batter&&r.furthest<1&&type!=='catch')type='batter';
-  // Snapshot the pre-out state so a challenged close call can be overturned.
-  const m0=this.field?.manual;
-  const snap=m0&&!m0.closeCall&&this.playChallenges!==undefined&&this.inMatch?{outs:this.outs,pitcherId:this.pitcher.id,pitcherOuts:this.pitcherRecord().outs,next:this.next,mOutsLen:m0.outs.length,playEventsLen:this.playEvents.length,score:this.homeScore+this.awayScore}:null;
+  // A close throw is adjudicated before committing an out (see reviewBaseArrival).
   r.out=true;r.running=false;r.waiting=false;r.target=r.progress;r.scored=false;
   const m=this.field.manual;m.outs.push({id:r.id,type,time:this.field.elapsed});m.lastOut=m.outs.at(-1);
   this.playEvents.push({type:'out',runnerId:r.id,method:type,time:this.field.elapsed});if(this.inMatch)this.addOut();this.emit('sound','out');
-  if(type!=='catch')this.playCall('out',Number.isInteger(base)?base:null);
-  if(snap&&Number.isInteger(base)&&base>=1&&base<=3&&['tag','force','batter','appeal'].includes(type)){
-   const margin=base-r.progress;
-   if(truthOverride||margin<=(type==='tag'?.22:.30))m0.closeCall={runnerId:r.id,base,type,called:'out',truth:truthOverride||(Math.random()<.35?'safe':'out'),done:false,snapshot:snap};
-  }
+  if(type!=='catch'&&!this._committingBaseReview)this.playCall('out',Number.isInteger(base)?base:null);
   this.notify();
+ }
+ // Evaluate arrival using the same simulation clock as runner and throw.
+ // A positive gap means the ball/tag got there first; negative means safe.
+ reviewBaseArrival(r,th,receiver,onBag){
+  const f=this.field,m=f.manual,base=th.base;
+  if(!Number.isInteger(base)||base<1||base>3||th.appeal||!onBag||r.needsTag||r.scored)return false;
+  const force=!m.fly&&base===r.start+1&&(r.batter||m.initialBases.slice(0,r.start).every(Boolean)&&!f.runners.some(p=>p.start<r.start&&p.out));
+  const touch=r.touchedAt?.[base];
+  if(Math.abs(r.progress-base)>.085||!force&&dist(receiver,r)>1.35)return false;
+  if(touch!=null&&r.progress>base+.015)return false;
+  if(touch==null&&(r.command!==base||r.progress>=base))return false;
+  const arrival=f.elapsed-Math.max(0,th.t-th.duration);
+  const gap=(touch??(f.elapsed+runTime(r,base)))-arrival;
+  if(!Number.isFinite(gap)||Math.abs(gap)>BASE_REVIEW_WINDOW)return false;
+  const type=force?(r.batter?'batter':'force'):'tag';
+  const truth=gap>0?'out':'safe';
+  f.reviewMoment={base,time:arrival,runnerId:r.id,gap};
+  // In unsupported modes the physical ruling is still used, without a challenge.
+  const eligible=this.inMatch&&this.playChallenges!==undefined&&!this.runningDemo;
+  const called=eligible&&!this.umpireMode&&Math.random()<baseErrorRate(gap)?(truth==='out'?'safe':'out'):truth;
+  const challenger=called==='out'?this.side:this.side==='home'?'away':'home';
+  const call={runnerId:r.id,base,type,called,truth,gap,time:arrival,batSide:this.side,challenger,pending:true,done:false};
+  m.closeCall=call;
+  if(eligible&&this.beginPlayCall())return true;
+  this.commitBaseArrival(call,called);return true;
+ }
+ commitBaseArrival(call,verdict){
+  const f=this.field,m=f?.manual,r=f?.runners.find(x=>x.id===call.runnerId);
+  if(!r||!m)return;
+  if(m.closeCall)m.closeCall.done=true;
+  if(verdict==='out'){
+   this._committingBaseReview=true;
+   try{this.manualOut(r,call.type,call.base);}finally{this._committingBaseReview=false;}
+  }else{
+   r.out=false;r.scored=false;r.base=call.base;r.command=call.base;r.progress=call.base;r.target=call.base;
+   r.waiting=true;r.running=false;r.contestedBase=null;r.blocked=false;
+   r.furthest=Math.max(r.furthest||0,call.base);r.touchedAt||={};r.touchedAt[call.base]??=call.time??f.elapsed;
+   this.projectRunner(r);
+  }
  }
  updateAutoTargets(){
   const f=this.field,m=f.manual,b=f.ball;
@@ -2196,10 +2232,11 @@ window.NightGame=class NightGame{
     this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.85:.22;m.outfield=false;
     if(runner&&!runner.out&&!runner.scored){
      const onBag=dist(receiver,BASES[th.base])<=BAG_REACH;
+     if(this.reviewBaseArrival(runner,th,receiver,onBag)){if(this.phase!=='play-call')this.playCall(m.closeCall.called,th.base);this.notify();return;}
      if(onBag&&th.appeal&&runner.needsTag&&runner.progress>runner.start+.04)this.manualOut(runner,'appeal',th.base);
      else if(onBag&&this.manualForceBase(runner)===th.base&&runner.progress<th.base+.25)this.manualOut(runner,runner.batter?'batter':'force',th.base);
      else if(runner.progress<th.base-.03&&Math.abs(runner.progress-Math.round(runner.progress))>.001&&dist(receiver,runner)<1.35)this.manualOut(runner,'tag',th.base);
-     else if(runner.running&&runner.progress>th.base-.03&&runner.progress<th.base+.22&&!m.closeCall&&this.playChallenges!==undefined&&this.inMatch&&Math.random()<.3)this.manualOut(runner,'tag',th.base,'safe');
+     // Clear safe arrivals cannot be turned into fictitious outs.
     }
     this.safeOnThrow(runner,th.base);
     this.notify();
@@ -2426,17 +2463,18 @@ window.NightGame=class NightGame{
  beginPlayCall(){
   const m=this.field?.manual,call=m?.closeCall;
   if(!call||this.baseCall)return false;
-  const snap=call.snapshot;
-  // The window only opens when the close call is still the play's last word:
-  // no extra outs and no runs may have been recorded after it.
-  if(!snap||m.outs.length!==snap.mOutsLen+1||this.homeScore+this.awayScore!==snap.score){call.done=true;return false;}
-  const batSide=this.side,userSideCall=batSide===this.userSide;
+  if(!call.pending){
+   const snap=call.snapshot;
+   if(!snap||m.outs.length!==snap.mOutsLen+1||this.homeScore+this.awayScore!==snap.score){call.done=true;return false;}
+  }
+  const batSide=this.side,challenger=call.challenger||batSide,userSideCall=challenger===this.userSide;
   const remaining=userSideCall?this.playChallenges:this.playCpuChallenges;
-  if(!(remaining>0)){call.done=true;return false;}
-  this.baseCall={...call,batSide,cpu:!userSideCall,auto:!this.onlineGame&&!userSideCall&&!this.umpireMode,willChallenge:false};
-  if(this.baseCall.auto)this.baseCall.willChallenge=Math.random()<.55;
+  if(!this.umpireMode&&!(remaining>0)){call.done=true;return false;}
+  this.baseCall={...call,batSide,challenger,cpu:!userSideCall,auto:!this.onlineGame&&!userSideCall&&!this.umpireMode,willChallenge:false};
+  // CPU has an imperfect estimate, not direct access to the correct verdict.
+  if(this.baseCall.auto)this.baseCall.willChallenge=Math.random()<.42*Math.max(.2,1-Math.abs(call.gap||0)/.20);
   this.setPhase('play-call');
-  this.message('CLOSE CALL','際どい判定',call.base+'塁のプレー · チャレンジ可能');
+  if(!this.umpireMode)this.playCall(call.called,call.base);
   this.notify();return true;
  }
  get playCanChallenge(){return this.phase==='play-call'&&!!this.baseCall&&!this.baseCall.cpu&&this.playChallenges>0&&!this.paused;}
@@ -2450,6 +2488,17 @@ window.NightGame=class NightGame{
  resolvePlayCall(reviewed){
   const call=this.baseCall;if(!call)return;this.baseCall=null;
   const m=this.field?.manual;if(m?.closeCall)m.closeCall.done=true;
+  if(call.pending){
+   const verdict=reviewed?call.truth:call.called,overturn=verdict!==call.called;
+   if(reviewed&&!overturn&&!this.umpireMode){
+    if(call.challenger===this.userSide)this.playChallenges=Math.max(0,(this.playChallenges||0)-1);
+    else this.playCpuChallenges=Math.max(0,(this.playCpuChallenges||0)-1);
+   }
+   this.setPhase('field');
+   this.commitBaseArrival(call,verdict);
+   if(reviewed&&!this.umpireMode)this.emit('challenge-result',{verdict,base:call.base,overturn});
+   this.notify();return;
+  }
   if(reviewed){
    const overturn=call.truth!==call.called;
    if(overturn)this.applyPlayOverturn(call);
@@ -2568,7 +2617,8 @@ window.NightGame=class NightGame{
   const stats=this.umpireStats;stats.playCalls++;if(correct)stats.playCorrect++;stats.score+=points;
   stats.lastPlay={verdict,truth,correct,points,base:call.base};
   stats.last={kind:'play',...stats.lastPlay};
-  if(verdict!==call.called){call.truth=verdict;this.resolvePlayCall(true);}
+  if(call.pending){call.called=verdict;this.resolvePlayCall(false);}
+  else if(verdict!==call.called){call.truth=verdict;this.resolvePlayCall(true);}
   else this.resolvePlayCall(false);
   return true;
  }

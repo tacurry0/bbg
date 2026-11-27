@@ -1,13 +1,13 @@
 import { CustomParkPreview } from './custom-park3d.js?v=219';
 import { AbsReview, absActorBounds } from './abs-review.js?v=3';
-import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=56';
+import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=233';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=232';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=233';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -688,7 +688,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    game.absRemaining??=2;
    game.absCpuRemaining??=2;
   }
-  if(game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'&&!game.competition&&!game.apbcFixtureId){
+  if(game.isFixture||game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'){
    game.playChallenges??=2;
    game.playCpuChallenges??=2;
   }
@@ -2427,7 +2427,7 @@ function start(mode,challengeId=null,fixedPark=null){
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
-  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.resultTime=0;playFeedback.pendingReplay=false;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
+  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.resultTime=0;playFeedback.pendingReplay=false;playFeedback.reviewVerdict=null;playCallSeen=null;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
@@ -2441,11 +2441,12 @@ function start(mode,challengeId=null,fixedPark=null){
   if(!playFeedback.scoreTime)$('scoring-chip').hidden=true;
   if(!playFeedback.callTime)$('umpire-call').hidden=true;
  }
- function showPlayCall({verdict,base}){
-  const panel=$('umpire-call'),label=verdict==='out'?'OUT':'SAFE';
-  panel.dataset.verdict=verdict;
-  panel.innerHTML=`<strong>${label}</strong>`;
-  panel.hidden=false;playFeedback.callTime=verdict==='out'?1800:1500;
+ function showPlayCall({verdict,base,overturn}){
+  const panel=$('umpire-call'),label=verdict==='out'?'OUT':'SAFE',reviewed=typeof overturn==='boolean';
+  panel.dataset.verdict=verdict;panel.dataset.review=String(reviewed);
+  panel.innerHTML=`<strong>${label}</strong>${reviewed?`<small>${overturn?'判定変更':'判定維持'}</small>`:''}`;
+  if(reviewed){hideStageBanner();stageResultKey='';playFeedback.resultTime=0;playFeedback.reviewVerdict=verdict;}else playFeedback.reviewVerdict=null;
+  panel.hidden=false;playFeedback.callTime=reviewed?2000:verdict==='out'?1800:1500;
   if(typeof panel.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
    panel.getAnimations().forEach(animation=>animation.cancel());
    panel.animate([{opacity:0,transform:'translateY(7px) scale(.86)'},{opacity:1,transform:'translateY(0) scale(1)'}],
@@ -2491,8 +2492,9 @@ function start(mode,challengeId=null,fixedPark=null){
   const result=$('abs-verdict');
   if(showResult&&absShownResult!==call){
    absShownResult=call;
+   hideStageBanner();
    result.dataset.strike=String(call.strike);
-   $('abs-word').textContent=call.strike?'好球':'壞球';
+   $('abs-word').textContent=call.strike?'STRIKE':'BALL';
    $('abs-gap').textContent=(call.strike?'好球帶內 ':'距離好球帶 ')+(Math.abs(call.gap)*100).toFixed(1)+' 公分';
    $('abs-change').textContent=call.strike===call.umpireStrike?'判定維持':'判定変更';
   }
@@ -2543,7 +2545,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function updatePlayCallUI(g){
   const btn=$('play-challenge');if(!btn)return;
   if(g.phase==='play-call'&&g.baseCall){
-   if(playCallSeen!==g.baseCall){playCallSeen=g.baseCall;try{review.saveCurrentPlay(g);}catch{}}
+   if(!playCallSeen||playCallSeen.base!==g.baseCall.base||playCallSeen.time!==g.baseCall.time||playCallSeen.runnerId!==g.baseCall.runnerId){playCallSeen=g.baseCall;try{if(!g.mirror)review.saveCurrentPlay(g);}catch{}}
    btn.hidden=!g.playCanChallenge||!$('modal').hidden||!!g.umpireMode||!onlineDecisionVisible('play');
    if(!btn.hidden)btn.textContent='チャレンジ（残り'+g.playChallenges+'）';
   }else{
@@ -2589,7 +2591,8 @@ function start(mode,challengeId=null,fixedPark=null){
  function launchReplay(){if(onlineMatchActive()){if(online.role==='host')onlineStartReplay();return;}launchReplayLocal();}
  function launchReplayLocal(){
   if(!game||review.playback||!$('modal').hidden||!review.open(game))return;
-  $('game').classList.add('replay-active');$('replay-label').hidden=false;updatePlaySkip();
+  $('game').classList.add('replay-active');$('replay-label').textContent=review.playback.clip.challenge?'CHALLENGE':'REPLAY';$('replay-label').hidden=false;updatePlaySkip();
+  if(review.playback.clip.challenge){$('umpire-call').hidden=true;playFeedback.callTime=0;hideStageBanner();}
   updatePlayTools();updateChallenge();return true;
  }
  function stopReplay(){
@@ -2694,8 +2697,13 @@ function start(mode,challengeId=null,fixedPark=null){
    hideStageBanner();stageResultKey='';playFeedback.resultTime=0;
  }
  function onEvent(type,data){
-   if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
+   if(online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='play-call'||type==='challenge-result')online.session.send({t:type,d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
    if(type==='message'){
+     // ABS already presented this exact pitch verdict in the review layer.
+     if(game?.phase==='abs-review'&&absShownResult&&['STRIKE','BALL'].includes(data.en))return;
+     // Keep the challenge result as the single OUT verdict; distinct hits,
+     // double plays and other subsequent calls still get their own display.
+     if(playFeedback.reviewVerdict==='out'&&data.en==='OUT'){playFeedback.reviewVerdict=null;return;}
      const resultSig=resultSignature(data);
      if(resultSig&&stageResultShown.has(resultSig))return;
      if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
@@ -2745,7 +2753,7 @@ function start(mode,challengeId=null,fixedPark=null){
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
-   else if(type==='field'){review.capture(game);updatePlayTools();}
+   else if(type==='field'){playFeedback.reviewVerdict=null;review.capture(game);updatePlayTools();}
    else if(type==='update')updateUI();
    else if(type==='timing'){
      // Contact feedback is sound/vibration only; no text over the field.
@@ -2755,7 +2763,7 @@ function start(mode,challengeId=null,fixedPark=null){
      if(review.capture(game,true))playFeedback.pendingReplay=true;
      updatePlayTools();closeChallengeResult();
      $('distance').textContent=data.distance?data.distance+' m':'';
-   }else if(type==='play-call')showPlayCall(data);
+   }else if(type==='play-call'||type==='challenge-result')showPlayCall(data);
    else if(type==='scoring-walk'){
      review.captureWalk(game);playFeedback.pendingReplay=true;
    }else if(type==='career-ready')careerAppearance(data);
@@ -2946,7 +2954,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=219,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=233,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
  const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
  const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected);
@@ -3020,7 +3028,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const frames=clip.frames,step=frames?Math.max(1,Math.ceil(frames.length/105)):1;
   const sampled=frames?frames.filter((_,i)=>i%step===0||i===frames.length-1):undefined;
   if(!onlineAcquire('replay','both'))return false;
-  o.session?.send({t:'sync-replay',id:o.sync.lock.id,clip:clip.pitch?{pitch:clip.pitch}:{frames:sampled,hit:clip.hit}});
+  o.session?.send({t:'sync-replay',id:o.sync.lock.id,clip:clip.pitch?{pitch:clip.pitch}:{frames:sampled,hit:clip.hit,closeMoment:clip.closeMoment,challenge:clip.challenge}});
   playFeedback.pendingReplay=false;
   if(!launchReplayLocal())onlineFinishLocalLock();
   return true;
@@ -3515,9 +3523,9 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  // Full render state for the guest's mirror game (see NightGame.applyMirror).
  function onlineState(g,o){
-   const fieldPhase=['field','result'].includes(g.phase)&&g.field;
+   const fieldPhase=['field','result','play-call','play-review'].includes(g.phase)&&g.field;
    let field=null;
-   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual}:g.field.manual};}
+   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,closeCall:undefined}:g.field.manual};}
    let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
      epoch:o.sync?.epoch??0,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
@@ -3530,7 +3538,7 @@ function start(mode,challengeId=null,fixedPark=null){
     abp:(g.atBatPitches||[]).map(p=>({i:p.id,n:p.name,x:p.x,y:p.y,r:p.result})),
      field,fs:g.fieldSpeed,fsq,hit:g.hit?{kind:g.hit.kind,distance:g.hit.distance}:null,swingAge:g.swingAge,
      absCall:g.absCall||null,absU:g.absRemaining,absCpu:g.absCpuRemaining,halfBreak:g.halfBreak||null,
-     baseCall:g.baseCall?{base:g.baseCall.base,type:g.baseCall.type,batSide:g.baseCall.batSide}:null,playU:g.playChallenges,playCpu:g.playCpuChallenges,
+     baseCall:g.baseCall?{base:g.baseCall.base,type:g.baseCall.type,batSide:g.baseCall.batSide,challenger:g.baseCall.challenger,called:g.baseCall.called,time:g.baseCall.time,runnerId:g.baseCall.runnerId}:null,playU:g.playChallenges,playCpu:g.playCpuChallenges,
      weather:g.weather,weatherLabel:g.weatherLabel,wind:g.wind,next:g.next,umpireLabel:g.umpireLabel,
      batId:g.batter?.id||'',pitId:g.pitcher?.id||'',lat:o.latency?o.latency.oneWayMs():0
    };
@@ -3586,6 +3594,7 @@ function start(mode,challengeId=null,fixedPark=null){
    else if(m.t==='chat'){const t=NightOnline.quickChatText(m.i);if(t)showQuickChat(t,false);}
    else if(m.t==='walk-replay'){/* host sends the canonical replay clip under a lock */}
    else if(m.t==='msg')onEvent('message',m.d);
+   else if(m.t==='play-call'||m.t==='challenge-result')onEvent(m.t,m.d);
    else if(m.t==='clear')onEvent('clear');
    else if(m.t==='snd')onEvent('sound',m.d);
    else if(m.t==='cue')onEvent('cue',m.d);

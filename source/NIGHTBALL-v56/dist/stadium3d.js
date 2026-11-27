@@ -898,6 +898,25 @@ export class StadiumRenderer {
  }
  followPlay(g,time){
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
+  const moment=g.replayView?g.replayCloseMoment:null;
+  const close=moment&&NightGame.BASES[moment.base]&&(g.replayChallenge||Math.abs(f.elapsed-moment.time)<1.1);
+  if(close){
+   const base=NightGame.BASES[moment.base],r=f.runners.find(p=>p.id===moment.runnerId);
+   const sign=moment.base===3?1:-1,portrait=this.camera.aspect<.95;
+   const rx=r?clamp(r.x-base.x,-3,3):0,ry=r?clamp(r.y-base.y,-3,3):0;
+   const target=this.fieldFocus.set(base.x+rx*.25,.8,-base.y-ry*.25);
+   const camera=this.fieldPosition.set(base.x+sign*(portrait?7:6),portrait?6.8:5.8,-base.y+7.6);
+   const fresh=this.cameraPlay!==f||!this.closeReplay;
+   const dt=clamp((time-this.lastTime)/1000,0,.07);
+   this.cameraPlay=f;this.closeReplay=true;
+   // Cut to the base for the review; subsequent frames ease with the runner.
+   this.camera.position.lerp(camera,fresh?1:1-Math.exp(-dt*12));
+   this.cameraFocus.lerp(target,fresh?1:1-Math.exp(-dt*12));
+   this.camera.fov=portrait?48:42;this.camera.lookAt(this.cameraFocus);
+   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
+   return;
+  }
+  if(this.closeReplay){this.closeReplay=false;this.cameraPlay=null;}
   const th=trot?null:f.throw,manual=f.manual;
   const selected=manual?.selection;
   const runner=f.runners.find(r=>r.id===selected&&!r.out&&!r.scored)
@@ -1146,7 +1165,7 @@ export class StadiumRenderer {
   if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
-  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def],g.uniformKits?.[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
+  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def],g.uniformKits?.[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
