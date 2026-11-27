@@ -1452,10 +1452,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const level=NightGame.conditionForSeed(seed,p),info=NightGame.conditionInfo(level);
   return `<svg class="lineup-condition-face" data-condition="${level}" role="img" aria-label="${info.label}" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10.6" fill="${info.color}" stroke="#173452" stroke-width=".7"/><circle cx="8.4" cy="9.6" r="1.35" fill="#18243b"/><circle cx="15.6" cy="9.6" r="1.35" fill="#18243b"/><path d="${info.mouth}" fill="${level>=2?'#18243b':'none'}" stroke="#18243b" stroke-width="1.6" stroke-linecap="round"/></svg>`;
  }
- function lineupPreview(p,seed){
+ const positionNames={P:'投手',C:'捕手','1B':'一塁手','2B':'二塁手','3B':'三塁手',SS:'遊撃手',LF:'左翼手',CF:'中堅手',RF:'右翼手',DH:'指名打者'};
+ const positionBadge=pos=>`<span class="lineup-pos-badge tone-${NightSquad.tone(pos)}">${positionNames[pos]||NightSquad.label(pos)}</span>`;
+ function lineupPreview(p,seed,assigned=null){
   const pitcher=p.pos==='P',info=seed==null?null:NightGame.conditionInfo(NightGame.conditionForSeed(seed,p));
   const ratings=pitcher?rankTile('制球',p.control)+rankTile('スタミナ',p.stamina)+rankTile('変化量',p.movement):batRatings(p);
-  return `<section class="editor-preview lineup-live-preview" data-preview-player="${uiEscape(p.id)}" aria-live="polite"><div class="lineup-preview-heading"><span class="lineup-preview-identity">${lineupConditionFace(seed,p)}${fittedName(p.name,'strong','editor-selected-name')}${info?`<small class="lineup-condition-label">${info.label}</small>`:''}</span><small>#${p.no} ${NightSquad.label(p.pos)} · ${p.hand==='S'?'両':p.hand==='L'?'左':'右'}${pitcher?'投':'打'}${pitcher?' '+p.velocity+'km/h':''}</small></div><span class="rating-tiles">${ratings}</span></section>`;
+  return `<section class="editor-preview lineup-live-preview" data-preview-player="${uiEscape(p.id)}" aria-live="polite"><div class="lineup-preview-heading"><span class="lineup-preview-identity">${lineupConditionFace(seed,p)}${fittedName(p.name,'strong','editor-selected-name')}${info?`<small class="lineup-condition-label">${info.label}</small>`:''}</span><small class="lineup-preview-number">#${p.no} · ${p.hand==='S'?'両':p.hand==='L'?'左':'右'}${pitcher?'投':'打'}${pitcher?' '+p.velocity+'km/h':''}</small></div><div class="lineup-pos-strip">${assigned?`<span class="lineup-pos-caption">守備位置</span>${positionBadge(assigned)}`:''}<span class="lineup-pos-caption">${assigned?'本職':'適性'}</span>${positionBadge(p.pos)}${[...new Set(p.positions||[])].filter(pos=>pos!==p.pos&&positionNames[pos]).map(positionBadge).join('')}</div><span class="rating-tiles">${ratings}</span></section>`;
  }
  let editorSelection=null,editorDetail=null;
  function fittedName(name,tag='span',className='squad-name'){
@@ -1481,9 +1483,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(modalKind!=='lineup'||lineupContext!==kind){editorSelection=null;editorDetail=null;}
   lineupContext=kind;const shared=kind==='match'||kind==='online',done=kind==='online'?'online-lineup-done':'ui-lineup-done';const {club,config,players}=lineupConfig(kind),starter=club.pitchers[config.pitcher],bench=club.batters.filter(p=>!config.order.includes(p.id));
   const seed=lineupConditionSeed(kind),selected=[...club.batters,...club.pitchers].find(p=>p.id===(selectedId||editorDetail||editorSelection))||players[0];editorDetail=selected.id;
-  const preview=lineupPreview(selected,seed);
-  const rows=players.map((p,i)=>`<div class="squad-starter-row"><b class="squad-slot">${i+1}</b><span class="ui-drag-handle" data-editor-handle="${p.id}" aria-hidden="true">⠿</span>${playerTile(p,{club,slot:i,conditionSeed:seed,selected:editorSelection===p.id,attrs:`data-editor-player="${p.id}" draggable="true"`})}<select class="squad-position tone-${NightSquad.tone(p.fieldPos)}" data-editor-position="${p.id}" aria-label="${p.name}の守備位置">${positionOptions.map(pos=>`<option value="${pos}" ${pos===p.fieldPos?'selected':''}>${NightSquad.label(pos)}</option>`).join('')}</select></div>`).join('');
-  const lineupBody=`<div class="editor-toolbar">${kind==='edit'?`<select id="editor-club" class="field-select" aria-label="編成する球団">${NightTeams.matchTeams.map(c=>`<option value="${c.id}" ${c.id===club.id?'selected':''}>${c.short}</option>`).join('')}</select>`:`<span class="editor-club">${clubBadge(club.id,true)}<b>${club.short}</b></span>`}<button class="arcade-go" data-action="${kind==='edit'?'editor-done':shared?done:'lineup-play'}">${kind==='edit'||shared?'決定':'試合開始'}</button></div>${kind==='apbc'?`<p class="apbc-roster-status">${club.rosterStatus}</p>`:''}<p class="editor-hint" role="status">${editorSelection?`${([...players,...bench].find(p=>p.id===editorSelection)?.name||'選択した選手')}を選択中。入れ替える相手をタップ` :'選手を2人タップ、またはつまみをドラッグして交換'}</p><div class="squad-board"><section class="squad-column"><h3>スタメン</h3><div class="squad-list">${rows}</div></section><section class="squad-column reserves"><h3>控え <small>${bench.length}人</small></h3><div class="squad-list">${bench.map(p=>`<div class="ui-bench-row"><span class="ui-drag-handle" data-editor-handle="${p.id}" aria-hidden="true">⠿</span>${playerTile(p,{club,conditionSeed:seed,selected:editorSelection===p.id,attrs:`data-editor-player="${p.id}" draggable="true"`})}</div>`).join('')}</div></section></div><div class="editor-actions"><button data-editor-auto>おまかせ</button><button data-editor-reset>リセット</button></div><details class="editor-pitchers" data-ui-section="pitchers"><summary>先発投手 ${lineupConditionFace(seed,starter)}${fittedName(starter.name,'b','editor-starter-name')}<span>${starter.velocity}km/h　▼</span></summary><div class="editor-pitcher-grid">${club.pitchers.map((p,i)=>`<button class="squad-player tone-pitcher ${config.pitcher===i?'chosen':''}" data-lineup-pitcher="${i}" aria-pressed="${config.pitcher===i}"><span class="lineup-pitcher-name">${lineupConditionFace(seed,p)}${fittedName(p.name)}</span><small>${p.velocity}km/h · ${pitchRole(p)}${p.pitchingEstimated?' · 推定':''}</small></button>`).join('')}</div></details><details class="editor-player-detail" data-ui-section="player-detail"><summary>${fittedName(selected.name+'の能力','span','editor-detail-name')}</summary>${abilityHTML(selected,false)}</details>${shared?'':'<button class="secondary-button" data-action="lineup-back">戻る</button>'}`;
+  const preview=lineupPreview(selected,seed,players.find(p=>p.id===selected.id)?.fieldPos);
+  const rows=players.map((p,i)=>`<div class="squad-starter-row"><span class="ui-order-grip" data-editor-handle="${p.id}" aria-label="${i+1}番の選手を移動"><b class="squad-slot">${i+1}</b><span class="ui-drag-handle" aria-hidden="true">⠿</span></span>${playerTile(p,{club,slot:i,conditionSeed:seed,selected:editorSelection===p.id,attrs:`data-editor-player="${p.id}" draggable="false"`})}<select class="squad-position tone-${NightSquad.tone(p.fieldPos)}" data-editor-position="${p.id}" aria-label="${p.name}の守備位置">${positionOptions.map(pos=>`<option value="${pos}" ${pos===p.fieldPos?'selected':''}>${NightSquad.label(pos)}</option>`).join('')}</select></div>`).join('');
+  const lineupBody=`<div class="editor-toolbar">${kind==='edit'?`<select id="editor-club" class="field-select" aria-label="編成する球団">${NightTeams.matchTeams.map(c=>`<option value="${c.id}" ${c.id===club.id?'selected':''}>${c.short}</option>`).join('')}</select>`:`<span class="editor-club">${clubBadge(club.id,true)}<b>${club.short}</b></span>`}<button class="arcade-go" data-action="${kind==='edit'?'editor-done':shared?done:'lineup-play'}">${kind==='edit'||shared?'決定':'試合開始'}</button></div>${kind==='apbc'?`<p class="apbc-roster-status">${club.rosterStatus}</p>`:''}<p class="editor-hint" role="status">${editorSelection?`${([...players,...bench].find(p=>p.id===editorSelection)?.name||'選択した選手')}を選択中。入れ替える相手をタップ` :'選手を2人タップ、またはつまみをドラッグして交換'}</p><div class="squad-board"><section class="squad-column"><h3>スタメン</h3><div class="squad-list">${rows}</div></section><section class="squad-column reserves"><h3>控え <small>${bench.length}人</small></h3><div class="squad-list">${bench.map(p=>`<div class="ui-bench-row"><span class="ui-drag-handle" data-editor-handle="${p.id}" aria-hidden="true">⠿</span>${playerTile(p,{club,conditionSeed:seed,selected:editorSelection===p.id,attrs:`data-editor-player="${p.id}" draggable="false"`})}</div>`).join('')}</div></section></div><div class="editor-actions"><button data-editor-auto>おまかせ</button><button data-editor-reset>リセット</button></div><details class="editor-pitchers" data-ui-section="pitchers"><summary>先発投手 ${lineupConditionFace(seed,starter)}${fittedName(starter.name,'b','editor-starter-name')}<span>${starter.velocity}km/h　▼</span></summary><div class="editor-pitcher-grid">${club.pitchers.map((p,i)=>`<button class="squad-player tone-pitcher ${config.pitcher===i?'chosen':''}" data-lineup-pitcher="${i}" aria-pressed="${config.pitcher===i}"><span class="lineup-pitcher-name">${lineupConditionFace(seed,p)}${fittedName(p.name)}</span><small>${p.velocity}km/h · ${pitchRole(p)}${p.pitchingEstimated?' · 推定':''}</small></button>`).join('')}</div></details><details class="editor-player-detail" data-ui-section="player-detail"><summary>${fittedName(selected.name+'の能力','span','editor-detail-name')}</summary>${abilityHTML(selected,false)}</details>${shared?'':'<button class="secondary-button" data-action="lineup-back">戻る</button>'}`;
   if(shared)pfScreen('オーダー編成',lineupBody,'lineup',`<button class="pf-primary pf-wide" data-action="${done}">決定</button>`,done,`<div class="lineup-preview-fixed">${preview}</div>`);else modal(modalTitle('',kind.startsWith('apbc')?'APBC オーダー編成':'オーダー編成')+preview+lineupBody,'lineup');
   if(scroll!==null&&!shared)$('modal-content').scrollTop=scroll;
   $('modal-content').querySelectorAll('.squad-list').forEach((e,i)=>e.scrollTop=listScroll[i]||0);
@@ -1749,12 +1751,20 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const parks=NightPlayers.parks.filter(p=>parkGroup(p)===parkPickerGroup);
   pfScreen('球場選択',`<div class="pf-sticky-filter">${pfChoice(groups,parkPickerGroup,isOnline?'data-online-park-group':'data-ui-park-group')}</div><div class="pf-park-grid">${parks.map(p=>`<button type="button" class="pf-park-tile ${p.id===selected?'selected':''}" data-${isOnline?'online':'ui'}-park="${uiEscape(p.id)}" aria-pressed="${p.id===selected}">${parkMiniSVG(p)}<span><b>${uiEscape(p.name)}</b><small>${p.left??p.corner} / ${p.center} / ${p.right??p.corner} m</small></span>${p.id===selected?`<span class="pf-check">${pfIcon('check')}</span>`:''}</button>`).join('')}</div>${isOnline?'<p class="modal-note">カスタム球場の設定は対戦相手へ自動で送信されます。</p>':'<button class="pf-secondary pf-wide" data-action="stadium-editor">球場エディタ（カスタム球場を作成）</button>'}`,isOnline?'online-park':'park-picker','',isOnline?'online-lobby-back':'ui-park-back');
  }
- function matchPitchers(kind='match'){
-  const isOnline=kind==='online',{club,config}=lineupConfig(kind);
-  const row=(p,i)=>`<button type="button" class="pf-pitcher-row ${config.pitcher===i?'selected':''}" data-${isOnline?'online':'ui'}-pitcher="${i}" aria-pressed="${config.pitcher===i}"><span class="pf-pitcher-no">${uiEscape(p.no??'—')}</span><span class="pf-pitcher-name"><b>${uiEscape(p.name)}</b><small>${p.hand==='L'?'左投':'右投'} · ${pitchRole(p)}</small></span><span class="pf-pitcher-speed"><b>${p.velocity??'—'}</b><small>km/h</small></span><span class="pf-pitcher-grade grade-${NightPlayers.grade(NightSquad.overall(p))}">${NightPlayers.grade(NightSquad.overall(p))}</span><span class="pf-pitcher-check">${config.pitcher===i?pfIcon('check'):''}</span></button>`;
-  const groups=[['先発',p=>p.role==='SP'||!['RP','CP'].includes(p.role)],['中継ぎ',p=>p.role==='RP'],['抑え',p=>p.role==='CP']];
-  pfScreen('先発投手',`<div class="pf-current">${clubBadge(club.id,true)}<b>${uiEscape(club.name)}</b></div>${groups.map(([label,filter])=>{const list=club.pitchers.map((p,i)=>({p,i})).filter(({p})=>filter(p));return list.length?`<h3 class="pf-section-label">${label}</h3><div class="pf-pitcher-list">${list.map(({p,i})=>row(p,i)).join('')}</div>`:'';}).join('')}`,isOnline?'online-pitchers':'match-pitchers','',isOnline?'online-lobby-back':'ui-park-back');
+ function pitcherMetric(label,value){
+  const v=Number(value),grade=Number.isFinite(v)?NightPlayers.grade(v):'—';
+  return `<span class="pf-pitch-metric"><small>${label}</small><b class="grade-${grade}">${grade}</b><span>${Number.isFinite(v)?Math.round(v):'—'}</span></span>`;
  }
+ function matchPitchers(kind='match'){
+  const isOnline=kind==='online',{club,config}=lineupConfig(kind),seed=lineupConditionSeed(kind);
+  const selected=club.pitchers[config.pitcher]||club.pitchers[0];
+  const summary=selected?`<div class="pf-pitch-selected"><span class="pf-pitch-selected-label">選択中の先発投手</span><div class="pf-pitch-selected-name">${lineupConditionFace(seed,selected)}<strong>${uiEscape(selected.name)}</strong><b>#${uiEscape(selected.no??'—')}</b></div><div class="pf-pitch-selected-stats"><span><small>球速</small><b>${selected.velocity??'—'} <i>km/h</i></b></span>${pitcherMetric('制球',selected.control)}${pitcherMetric('スタミナ',selected.stamina)}${pitcherMetric('変化量',selected.movement)}</div></div>`:'';
+  const row=(p,i)=>`<button type="button" class="pf-pitcher-row pf-pitch-card ${config.pitcher===i?'selected':''}" data-${isOnline?'online':'ui'}-pitcher="${i}" aria-pressed="${config.pitcher===i}"><span class="pf-pitcher-no">${uiEscape(p.no??'—')}</span><span class="pf-pitcher-name"><b>${uiEscape(p.name)}</b><small>${p.hand==='L'?'左投':'右投'} · ${pitchRole(p)}</small></span>${lineupConditionFace(seed,p)}<span class="pf-pitcher-speed"><b>${p.velocity??'—'}</b><small>km/h</small></span><span class="pf-pitcher-grade grade-${NightPlayers.grade(NightSquad.overall(p))}">${NightPlayers.grade(NightSquad.overall(p))}</span><span class="pf-pitcher-check">${config.pitcher===i?pfIcon('check'):''}</span><span class="pf-pitch-card-metrics">${pitcherMetric('制球',p.control)}${pitcherMetric('スタミナ',p.stamina)}${pitcherMetric('変化量',p.movement)}</span></button>`;
+  const groups=[['先発',p=>p.role==='SP'||!['RP','CP'].includes(p.role)],['中継ぎ',p=>p.role==='RP'],['抑え',p=>p.role==='CP']];
+  const done=isOnline?'online-lobby-back':'ui-park-back';
+  pfScreen('先発投手',`<div class="pf-current">${clubBadge(club.id,true)}<b>${uiEscape(club.name)}</b></div>${groups.map(([label,filter])=>{const list=club.pitchers.map((p,i)=>({p,i})).filter(({p})=>filter(p));return list.length?`<h3 class="pf-section-label">${label} <small>${list.length}人</small></h3><div class="pf-pitcher-list">${list.map(({p,i})=>row(p,i)).join('')}</div>`:'';}).join('')}`,isOnline?'online-pitchers':'match-pitchers',`<button class="pf-primary pf-wide" data-action="${done}">決定</button>`,done,summary);
+ }
+
  function matchRuleCount(){
   return ['randomRoster','variantFullCount','variantMetalBat','variantLowReboundBat','variantNoBreaking','variantTwoOuts','hardcore'].filter(k=>settings[k]).length+(settings.handicapUserRuns>0?1:0)+(settings.handicapCpuRuns>0?1:0)+(settings.handicapUserOuts===4?1:0)+(settings.handicapCpuOuts===2?1:0);
  }
@@ -4148,7 +4158,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(b.hasAttribute('data-editor-auto')||b.hasAttribute('data-editor-reset')){const {club,config}=lineupConfig(lineupContext);NightSquad[b.hasAttribute('data-editor-auto')?'auto':'reset'](club,config);editorSelection=null;saveLineup(lineupContext);lineupModal(lineupContext,null,$('modal-content').scrollTop);return;}
    if(Object.hasOwn(CHALLENGES,b.dataset.challenge||'')){start('practice',b.dataset.challenge);return;}
    if(b.dataset.matchPreset){applyMatchPreset(b.dataset.matchPreset);return;}
-   if(b.dataset.uiPitcher!==undefined){const {club,config}=lineupConfig('match'),n=Number(b.dataset.uiPitcher);if(Number.isInteger(n)&&club.pitchers[n]){config.pitcher=n;saveLineup('match');setupMatch();}return;}
+   if(b.dataset.uiPitcher!==undefined){const {club,config}=lineupConfig('match'),n=Number(b.dataset.uiPitcher);if(Number.isInteger(n)&&club.pitchers[n]){config.pitcher=n;saveLineup('match');matchPitchers('match');}return;}
    if(b.dataset.stadiumSection){stadiumSetSection(b.dataset.stadiumSection);return;}
    if(b.dataset.uiLight){settings.gameLighting=gameLightingMode(b.dataset.uiLight);save();setupMatch();return;}
    if(b.dataset.uiTeamSide){matchPickSide=b.dataset.uiTeamSide;matchClubGroup=matchPickerGroup(matchPickSide==='home'?settings.matchTeam:settings.matchOpponent);setupMatchTeams();return;}
@@ -4198,7 +4208,7 @@ function start(mode,challengeId=null,fixedPark=null){
        onlineSendClub();if(online.role==='guest')online.status='編成を確認して準備完了を押してください。';onlineModal();
      }return;
    }
-   if(b.dataset.onlinePitcher!==undefined&&online?.myClub){const {club,config}=lineupConfig('online'),i=Number(b.dataset.onlinePitcher);if(club.pitchers[i]){config.pitcher=i;saveLineup('online');onlineModal();}return;}
+   if(b.dataset.onlinePitcher!==undefined&&online?.myClub){const {club,config}=lineupConfig('online'),i=Number(b.dataset.onlinePitcher);if(club.pitchers[i]){config.pitcher=i;saveLineup('online');matchPitchers('online');}return;}
    if(b.dataset.onlineParkGroup){parkPickerGroup=b.dataset.onlineParkGroup;parkPicker(false,'online');return;}
    if(b.dataset.onlineInnings){if(online?.role==='host'){settings.innings=Number(b.dataset.onlineInnings);online.innings=settings.innings;save();onlineSendLobbyConfig();onlineModal();}return;}
    if(b.dataset.onlineSide){if(online?.role==='host'){online.hostHome=b.dataset.onlineSide==='home';onlineSendLobbyConfig();onlineModal();}return;}
@@ -4468,46 +4478,79 @@ function start(mode,challengeId=null,fixedPark=null){
  $('modal-content').addEventListener('change',e=>{if(e.target.id==='apbc-club-filter'){apbcSelection.clubFilter=e.target.value;apbcSelectionModal();$('apbc-club-filter').focus({preventScroll:true});return;}if(e.target.id==='editor-club'){settings.matchTeam=e.target.value;if(settings.matchOpponent===settings.matchTeam)settings.matchOpponent=NightTeams.matchTeams.find(c=>c.id!==settings.matchTeam).id;editorSelection=null;editorDetail=null;save();lineupModal('edit');return;}if(e.target.dataset.editorPosition){editorSelection=null;const {club,config}=lineupConfig(lineupContext);NightSquad.position(club,config,e.target.dataset.editorPosition,e.target.value);saveLineup(lineupContext);lineupModal(lineupContext,e.target.dataset.editorPosition,$('modal-content').scrollTop);return;}if(e.target.id==='lineup-replace-target'){pregameTarget=e.target.value;}if(e.target.dataset.lineupPosition){const {config}=lineupConfig(lineupContext),id=e.target.dataset.lineupPosition,previous=positionOptions.find(pos=>config.fielding[pos]===id),other=config.fielding[e.target.value];config.fielding[previous]=other;config.fielding[e.target.value]=id;lineupModal(lineupContext,id,$('modal-content').scrollTop);}if(e.target.dataset.benchPosition){if(game.mirror){onlineRequestSub({kind:'defense',id:e.target.dataset.benchPosition,pos:e.target.value});}else{game.swapFieldPosition(e.target.dataset.benchPosition,e.target.value);checkpoint();benchModal('defense');}}if(e.target.id==='derby-park'){settings.derbyPark=e.target.value;save();$('derby-dimensions').innerHTML=parkDimensions(NightPlayers.parks.find(p=>p.id===settings.derbyPark));}if(e.target.id==='derby-club'){settings.derbyClub=e.target.value;settings.derbyBatter=null;setupDerby();}if(e.target.id==='park-select'){settings.park=e.target.value;save();$('match-park-dimensions').innerHTML=parkDimensions(NightPlayers.parks.find(p=>p.id===settings.park));const wf=document.querySelector('[data-weather-forecast]');if(wf)wf.outerHTML=weatherForecastHTML(ensureMatchForecast());}if(e.target.id==='starter-select'){lineupConfig('match').config.pitcher=Number(e.target.value);saveLineup('match');}if(e.target.id==='match-team'){settings.matchTeam=e.target.value;if(settings.matchOpponent===settings.matchTeam)settings.matchOpponent=NightTeams.all.find(c=>c.id!==settings.matchTeam).id;settings.park=NightTeams.get(settings.matchUserHome?settings.matchTeam:settings.matchOpponent).park;lineupConfig('match');save();setupMatchTeams();}if(e.target.id==='match-opponent'){settings.matchOpponent=e.target.value;save();setupMatchTeams();}});
  $('modal-content').addEventListener('input',e=>{if(e.target.id==='ui-directory-search'){directoryQuery=e.target.value;refreshDirectoryRows();}});
  $('modal-content').addEventListener('change',e=>{if(e.target.id==='ui-directory-sort'){directorySort=e.target.value;refreshDirectoryRows();}});
- let draggedEditorPlayer=null;
- $('modal-content').addEventListener('dragstart',e=>{const b=e.target.closest('[data-editor-player]');if(!b)return;draggedEditorPlayer=b.dataset.editorPlayer;e.dataTransfer.setData('text/plain',draggedEditorPlayer);e.dataTransfer.effectAllowed='move';});
- $('modal-content').addEventListener('dragover',e=>{if(draggedEditorPlayer&&e.target.closest('[data-editor-player]'))e.preventDefault();});
- $('modal-content').addEventListener('drop',e=>{const b=e.target.closest('[data-editor-player]');if(!b||!draggedEditorPlayer)return;e.preventDefault();const {club,config}=lineupConfig(lineupContext);if(NightSquad.swap(club,config,draggedEditorPlayer,b.dataset.editorPlayer)){editorSelection=null;saveLineup(lineupContext);lineupModal(lineupContext,b.dataset.editorPlayer,$('modal-content').scrollTop);}draggedEditorPlayer=null;});
- $('modal-content').addEventListener('dragend',()=>draggedEditorPlayer=null);
- // Touch drag is restricted to a dedicated handle; ordinary row swipes scroll.
- let touchEditorDrag=null;
+ // One pointer-based drag system for mouse, pen and touch. Handles capture
+ // the pointer; the rest of each card remains available for tap and scrolling.
+ let editorDrag=null;
  const editorContent=$('modal-content');
  function clearEditorTouch(){
-  if(!touchEditorDrag)return;
-  touchEditorDrag.ghost?.remove();touchEditorDrag.target?.classList.remove('ui-drop-target');
-  touchEditorDrag.source?.classList.remove('ui-drag-source');touchEditorDrag=null;
+  const d=editorDrag;if(!d)return;editorDrag=null;
+  cancelAnimationFrame(d.raf);
+  d.ghost?.remove();d.target?.classList.remove('ui-drop-target');
+  d.row.classList.remove('ui-drag-source');
+ }
+ function editorDropAt(x,y,d){
+  const el=document.elementFromPoint(x,y);
+  const list=el?.closest('.squad-list')||[...editorContent.querySelectorAll('.squad-list')].find(l=>{const r=l.getBoundingClientRect();return x>=r.left-8&&x<=r.right+8&&y>=r.top-20&&y<=r.bottom+20;});
+  let row=el?.closest('.squad-starter-row,.ui-bench-row');
+  if(!row&&list){
+   const rows=[...list.querySelectorAll('.squad-starter-row,.ui-bench-row')];
+   row=rows.find(row=>{const r=row.getBoundingClientRect();return y>=r.top-3&&y<=r.bottom+3;});
+  }
+  const target=row?.querySelector('[data-editor-player]');
+  const valid=target&&target!==d.source&&(row.classList.contains('squad-starter-row')||d.row.classList.contains('squad-starter-row'))?row:null;
+  if(d.target!==valid){d.target?.classList.remove('ui-drop-target');d.target=valid;valid?.classList.add('ui-drop-target');}
+  return list;
+ }
+ function editorDragFrame(){
+  const d=editorDrag;if(!d)return;
+  if(modalKind!=='lineup'||!d.row.isConnected){clearEditorTouch();return;}
+  if(d.active){
+   d.ghost.style.transform='translate3d('+Math.max(4,Math.min(innerWidth-d.width-4,d.x-d.width*.5))+'px,'+Math.max(4,d.y-d.height-13)+'px,0)';
+   const list=editorDropAt(d.x,d.y,d),outer=editorContent.querySelector('.pf-body')||editorContent;
+   const scrollNear=(el)=>{if(!el)return false;const r=el.getBoundingClientRect(),edge=42,top=d.y-r.top,bottom=r.bottom-d.y;
+    if(d.x<r.left-20||d.x>r.right+20)return false;
+    const delta=top<edge?-Math.min(17,(edge-top)*.32):bottom<edge?Math.min(17,(edge-bottom)*.32):0;
+    const before=el.scrollTop;if(delta)el.scrollTop+=delta;return before!==el.scrollTop;};
+   if(!scrollNear(list))scrollNear(outer);
+   editorDropAt(d.x,d.y,d);
+  }
+  d.raf=requestAnimationFrame(editorDragFrame);
  }
  editorContent.addEventListener('pointerdown',e=>{
-  const handle=e.target.closest('[data-editor-handle]');if(!handle||modalKind!=='lineup'||e.pointerType==='mouse'||!e.isPrimary)return;
-  const source=handle.parentElement.querySelector('[data-editor-player]');if(!source)return;
-  e.preventDefault();clearEditorTouch();handle.setPointerCapture(e.pointerId);
-  const ghost=document.createElement('div');ghost.className='ui-editor-ghost';ghost.textContent=source.querySelector('.squad-name')?.textContent||'';
-  document.body.append(ghost);source.classList.add('ui-drag-source');
-  touchEditorDrag={id:e.pointerId,player:handle.dataset.editorHandle,source,ghost,target:null};
-  ghost.style.transform='translate('+ (e.clientX+12)+'px,'+(e.clientY-36)+'px)';
+  const handle=e.target.closest('[data-editor-handle]');
+  const card=e.pointerType==='mouse'?e.target.closest('[data-editor-player]'):null;
+  if((!handle&&!card)||modalKind!=='lineup'||!e.isPrimary||e.button!==0)return;
+  const row=(handle||card).closest('.squad-starter-row,.ui-bench-row'),source=row?.querySelector('[data-editor-player]');
+  if(!source)return;
+  clearEditorTouch();
+  // Keep ordinary mouse clicks intact; touch handles own their gesture.
+  if(handle)e.preventDefault();
+  const capture=handle||source;capture.setPointerCapture(e.pointerId);
+  const rect=source.getBoundingClientRect();
+  editorDrag={id:e.pointerId,player:source.dataset.editorPlayer,source,row,capture,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,width:Math.min(190,Math.max(110,rect.width)),height:rect.height,active:false,target:null,raf:0};
  });
  editorContent.addEventListener('pointermove',e=>{
-  const d=touchEditorDrag;if(!d||d.id!==e.pointerId)return;e.preventDefault();
-  d.ghost.style.transform='translate('+(Math.max(0,Math.min(innerWidth-120,e.clientX+12)))+'px,'+Math.max(0,e.clientY-36)+'px)';
-  const el=document.elementFromPoint(e.clientX,e.clientY),target=el?.closest('[data-editor-player]')||el?.closest('.squad-starter-row,.ui-bench-row')?.querySelector('[data-editor-player]');
-  if(d.target!==target){d.target?.classList.remove('ui-drop-target');d.target=target===d.source?null:target;d.target?.classList.add('ui-drop-target');}
-  const scroll=el?.closest('.squad-list')||editorContent.querySelector('.pf-body')||editorContent,rect=scroll.getBoundingClientRect();
-  if(e.clientY>rect.bottom-24)scroll.scrollTop+=9;else if(e.clientY<rect.top+24)scroll.scrollTop-=9;
+  const d=editorDrag;if(!d||d.id!==e.pointerId)return;
+  d.x=e.clientX;d.y=e.clientY;
+  if(!d.active&&Math.hypot(d.x-d.startX,d.y-d.startY)>=5){
+   d.active=true;const ghost=d.source.cloneNode(true);ghost.removeAttribute('id');ghost.removeAttribute('data-editor-player');ghost.classList.add('ui-editor-ghost');ghost.style.width=d.width+'px';ghost.style.height=d.height+'px';ghost.setAttribute('aria-hidden','true');document.body.append(ghost);d.ghost=ghost;d.row.classList.add('ui-drag-source');editorDragFrame();
+  }
+  if(d.active)e.preventDefault();
  },{passive:false});
+ let editorSuppressClickUntil=0;
+ editorContent.addEventListener('click',e=>{if(performance.now()<editorSuppressClickUntil&&e.target.closest('[data-editor-player],[data-editor-handle]')){e.stopImmediatePropagation();e.preventDefault();}},true);
  editorContent.addEventListener('pointerup',e=>{
-  const d=touchEditorDrag;if(!d||d.id!==e.pointerId)return;
-  const target=d.target?.dataset.editorPlayer,from=d.player;clearEditorTouch();
-  if(modalKind!=='lineup'||!target||target===from)return;
+  const d=editorDrag;if(!d||d.id!==e.pointerId)return;
+  if(d.active){editorDropAt(e.clientX,e.clientY,d);editorSuppressClickUntil=performance.now()+300;}
+  const target=d.target?.querySelector('[data-editor-player]')?.dataset.editorPlayer,from=d.player,active=d.active;
+  clearEditorTouch();
+  if(!active||modalKind!=='lineup'||!target||target===from)return;
   const {club,config}=lineupConfig(lineupContext);
   if(NightSquad.swap(club,config,from,target)){editorSelection=null;saveLineup(lineupContext);sound('tap');lineupModal(lineupContext,target,editorContent.scrollTop);}
-  else toast('入れ替えるスタメンを選んでください');
  });
  editorContent.addEventListener('pointercancel',clearEditorTouch);
  editorContent.addEventListener('lostpointercapture',clearEditorTouch);
+ window.addEventListener('blur',clearEditorTouch);
 
  window.addEventListener('pagehide',checkpoint);
  document.addEventListener('visibilitychange',()=>{if(document.hidden&&screen==='game'&&game&&!['ended','career-pregame'].includes(game.phase)&&$('modal').hidden)pause();});
