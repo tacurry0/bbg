@@ -62,6 +62,21 @@ try{
  assert(framing.filter(Boolean).length>=3,'at least three flame jets must be in the frame: '+framing);
  
  await page.screenshot({path:'tests/screenshots/derby-homer-v267.png',timeout:90000});
+ // Also shoot a normal home run in an outdoor stadium, the configuration
+ // where three flat flames were originally reported. Use the real ball physics.
+ await page.evaluate(()=>{
+  const {g,r}=window.derbyTest;g.park=NightPlayers.parks.find(p=>p.id==='river');g.paused=true;
+  for(let speed=43;speed<=57;speed+=2){
+   g.derby.streak=0;g.beginHalf();g.startField(speed,28,.28,false,true);
+   while(g.phase==='field')g.updateField(1/120);
+   if(g.hit.kind==='hr'&&g.field.homerCelebration?.level===1)break;
+  }
+  if(g.hit.kind!=='hr'||g.field.homerCelebration?.level!==1)throw Error('Expected normal outdoor HR');
+  g.phaseTime=510;g.paused=true;const impact=document.querySelector('#impact-fx');void impact.offsetWidth;
+  for(const a of impact.getAnimations({subtree:true})){a.pause();a.currentTime=510;}
+  r.render(g,g.time);
+ });
+ await page.screenshot({path:'tests/screenshots/derby-outdoor-v267.png',timeout:90000});
  // Actual tournament result, not just interpolated test markup.
  await page.reload({waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.querySelector('#game-canvas')?.dataset.graphics,null,{timeout:30000});
