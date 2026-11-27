@@ -579,6 +579,10 @@ window.NightGame=class NightGame{
  get opponentScore(){return this[this.opponentSide+'Score'];}
  get battingScore(){return this[this.side+'Score'];}
  get isFixture(){return this.mode==='match'||this.mode==='pennant';}
+ get broadcastIntro(){return this.phase==='intro'&&this.isFixture&&!this.career&&!this.derby&&!this.timeAttack&&!this.fastForward;}
+ get introDuration(){return this.broadcastIntro?10500:this.career?(this.career.shortIntro?160:1100):1400;}
+ introStarter(side){const index=side===this.userSide?this.homePitcherIndex:this.awayPitcherIndex;return this.pitchingStaff[side]?.[index]||this.pitchingStaff[side]?.[0];}
+ skipIntro(){if(!this.broadcastIntro||this.mirror||this.paused)return false;this.beginHalf();return true;}
  get batter(){return (['practice','derby'].includes(this.mode)||this.mode==='career-bat'&&!this.career?.continuous)?this.teams.home.batters.find(p=>p.id===this.practiceBatter)||this.lineups.home[0]:this.lineups[this.side][this.battingIndex[this.side]%9];}
  get pitcher(){return this.pitchingStaff[this.side==='home'?'away':'home'][this.defending?this.homePitcherIndex:this.awayPitcherIndex];}
  get battingHand(){return this.batter.hand==='S'?(this.pitcher.hand==='L'?'R':'L'):this.batter.hand;}
@@ -775,8 +779,8 @@ window.NightGame=class NightGame{
    if(!ta.remaining&&!['field','miss'].includes(this.phase)){this.finishTimeAttack();return;}
   }
   if((this.fastForward||this.spectate)&&this.defending&&!this.autoDefense)this.autoDefense=true;
-   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&!['abs-call','abs-review','play-call','play-review'].includes(this.phase))dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
-  if(this.phase==='intro'&&this.phaseTime>(this.career?(this.career.shortIntro?160:1100):1400)){this.beginHalf();}
+   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&!['intro','abs-call','abs-review','play-call','play-review'].includes(this.phase))dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
+  if(this.phase==='intro'&&this.phaseTime>=this.introDuration){this.beginHalf();}
   else if(this.phase==='abs-call'&&this.absCall?.cpu&&!this.absCall.remote&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
    this.setPhase('abs-review');this.notify();
   }

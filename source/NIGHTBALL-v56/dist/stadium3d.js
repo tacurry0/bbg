@@ -1017,6 +1017,17 @@ export class StadiumRenderer {
    this.keyLight.target.updateMatrixWorld();
   }
  }
+ broadcastCamera(g){
+  this.overviewCamera(g.park);
+  const t=g.phaseTime;if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const smooth=x=>{x=clamp(x,0,1);return x*x*(3-2*x);};
+  const overview=this.camera.position.clone(),focus=new T.Vector3(0,1.1,-(g.park.pro?proOverview(g.park):OVERVIEW_FRAMES[g.park.id]||DEFAULT_OVERVIEW).target),fov=this.camera.fov;
+  if(t<4000){const p=smooth(t/4000);this.camera.position.x+=-5+10*p;this.camera.position.y*=1-.08*p;this.camera.lookAt(focus);}
+  else if(t<7000){const p=smooth(((t-4000)%1500)/1500),side=t<5500?-1:1;this.camera.position.set(side*(4.8-.9*p),2.45,12.0+.5*p);this.camera.lookAt(0,1.25,18.4);this.camera.fov=this.camera.aspect<.85?46:38;}
+  else if(t<9000){this.camera.position.x=4*(1-smooth((t-7000)/2000));this.camera.lookAt(focus);}
+  else{const p=smooth((t-9000)/1500);this.camera.position.copy(overview.lerp(new T.Vector3(.18,3.6,8.8),p));this.camera.lookAt(focus.lerp(new T.Vector3(0,1.05,-18.4),p));this.camera.fov=fov+((g.park.id==='dome'?54:49)-fov)*p;}
+  this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld();
+ }
  overviewCamera(park){
   const frame=park.pro?proOverview(park):OVERVIEW_FRAMES[park.id]||DEFAULT_OVERVIEW;
   this.camera.position.set(.1,frame.height,frame.behind);
@@ -1176,10 +1187,11 @@ export class StadiumRenderer {
   if(this.boardKey!==boardKey||this.boardCall!==boardCall||this.boardLanguage!==language){
    this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
   }
-  this.overviewMode=g?.phase==='intro'&&(g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
+  this.overviewMode=g?.phase==='intro'&&(g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
   const cameraView=this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;
   if(field)this.followPlay(g,time);
+  else if(g?.broadcastIntro)this.broadcastCamera(g);
   else if(this.overviewMode)this.overviewCamera(g.park);
   else if(this.fieldMode||!this.hero){this.camera.fov=g?.park.id==='dome'?54:49;this.camera.updateProjectionMatrix();this.resetCamera();}
   this.lastTime=time;
@@ -1236,6 +1248,7 @@ export class StadiumRenderer {
    this.pitcher.throwHand=g?.pitch?.throwHand||g?.pitcher.hand||'R';this.pitcher.releaseProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:null;
    this.pitcher.pitchForm=g?.pitch?.form||(g?.pitch?'overhand':g?.derby?'overhand':window.NightGame?.pitchingForm(g?.pitcher))||'overhand';
    this.pitcher.fromSet=g?.pitch?.fromSet??!!(g?.inMatch&&g?.bases?.some(Boolean));
+   if(g?.broadcastIntro&&g.phaseTime>=4000&&g.phaseTime<7000){const side=g.phaseTime<5500?'away':'home',p=g.introStarter(side);if(p)this.stylePlayer(this.pitcher,side,p.no,g.teams[side],g.uniformKits?.[side]);}
    this.animatePlayer(this.pitcher,0,18.4,Math.PI,time,false,g?.phase==='windup'?Math.min(1,g.phaseTime/(g.pitch?.windupMs??(g.derby?270:700))):0);
    this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:0;this.batter.batForm=window.NightGame.battingForm(g?.batter);this.batter.swingActive=!!g&&g.swingAge<380;this.batter.bunting=!!g?.bunt;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);
    this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
