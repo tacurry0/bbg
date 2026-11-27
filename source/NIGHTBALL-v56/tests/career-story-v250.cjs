@@ -15,7 +15,7 @@ for(const country of ['jp','tw','kr']){
  drain();
  for(let i=0;i<100&&w.grade===1;i++){w.run('season');drain();if(w.queue)assert(w.finishDay());drain();}
  assert.equal(w.grade,2);assert(w.success.eventSeen['grade/2']);assert(w.success.eventSeen['rival-2']);
- w.player.contact=50;w.experience=60;assert(Z.learnPerk(w,'average'));assert(w.perks.includes('average'));
+ w.player.contact=50;w.experience=60;w.success.xp.skill=100;assert(Z.learnPerk(w,'average'));assert(w.perks.includes('average'));
  assert(Number.isFinite(w.skillPotential('contact').cap));
  console.log('PASS forced story progression, save, queue blocking, relationship training and perks:',country);
 }

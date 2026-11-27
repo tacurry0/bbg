@@ -565,13 +565,17 @@
    const ceiling=this.talent?.ceiling??99,r=this.random('ability-potential/'+key),variety=this.talent?Math.round((r()-.5)*22):0,extra=this.talent?.breakthrough?.[key]||0;
    return {cap:key==='velocity'?clamp(137+Math.round((ceiling-70)*.85+variety*.48+extra*.5),132,164):clamp(ceiling+variety+extra,55,99),rate:this.talent?.ceiling?(.78+r()*.44):1};
   }
-  improve(key,amount){
-   if(!Object.hasOwn(this.player,key))return false;
+  previewImprovement(key,amount){
+   if(!Object.hasOwn(this.player,key))return NaN;
    const scale=[this.age<24?1.45:.65,1,this.age<24?.8:1.35,1.38,.95,this.age<27?.67:1.63][this.player.growth];
    const difficulty={easy:1.15,normal:1,hard:.88}[this.difficulty];
    const ceiling=this.talent?.ceiling??99;
    const profile=this.skillPotential(key),cap=Math.max(this.player[key],profile.cap);
-   this.player[key]=clamp(this.player[key]+amount*scale*difficulty*profile.rate*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
+   return clamp(this.player[key]+amount*scale*difficulty*profile.rate*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
+  }
+  improve(key,amount){
+   if(!Object.hasOwn(this.player,key))return false;
+   this.player[key]=this.previewImprovement(key,amount);
    this.lastGrowth={day:this.day,text:training[key]+'を強化'};
    return true;
   }
@@ -609,6 +613,7 @@
   learn(key){
    if(this.currentGame||this.stage==='retired'||Z.state(this).pending)return false;
    if(Z.perkDefs[key])return Z.learnPerk(this,key);
+   if(Z.state(this).storyMode)return Z.learnPitch(this,key);
    if(this.experience<12)return false;
    if(this.pitching&&NightGame.TYPES.some(t=>t.id===key)){
     if(this.player.pitches.length>=5||this.player.pitches.includes(key))return false;

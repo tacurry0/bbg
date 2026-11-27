@@ -115,7 +115,8 @@ try{
   assert.equal((await state()).success.goal.skill,drill);
   assert.equal(await page.locator('[data-world-action="tab"]').count(),6);
   await press('tab','skills');
-  assert(await page.getByText('育成方針・経験点',{exact:true}).isVisible());
+  assert(await page.locator('.cw-up-list').isVisible());
+  assert(await page.locator('.cw-wallet').isVisible());
   await press('tab','home');
   await press('tab','schedule');
   if(country==='tw')assert.match(await page.locator('#career').innerText(),/黑豹旗/);

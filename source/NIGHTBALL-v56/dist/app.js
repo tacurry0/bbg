@@ -914,7 +914,8 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const w=world;
   if(!w)return;
   if(w.success?.pending&&action!=='success-choice'&&action!=='result-next'){toast('先にイベントを確認してください');return;}
-  if(action==='tab'){NightCareerWorldView.setTab(v);worldDashboard();return;}
+  if(action==='tab'){NightCareerWorldView.setTab(v);if(v==='skills')NightCareerWorldView.setAbilityTab('basic');worldDashboard();return;}
+  if(action==='ability-tab'){NightCareerWorldView.setAbilityTab(v);worldDashboard();return;}
   if(action==='progress-menu'||action==='career-options'||action==='training-open'){
    const key=action==='progress-menu'?'progressMenu':action==='career-options'?'careerOptions':'trainingDeck';
    modal(modalTitle('',action==='progress-menu'?'日程進行':action==='career-options'?'キャリア設定':'練習・休養')+NightCareerWorldView[key](w),'career-world-detail');return;
@@ -960,7 +961,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(change[action]?.()){
    if(action!=='new'){
     const reopenTraining=screen==='career'&&b.closest('#modal-content')&&action==='success-action'&&['quick-toggle','intensity-toggle'].includes(v);
+    const keepAbilityScroll=action==='learn'||action==='success-action'&&v?.startsWith('boost:');
+    const abilityScroll=window.scrollY;
     saveWorld();worldDashboard();
+    if(keepAbilityScroll)restorePageScroll(abilityScroll);
     if(reopenTraining)modal(modalTitle('','練習・休養')+NightCareerWorldView.trainingDeck(w),'career-world-detail');
     if(action==='simulate'&&w.last)showWorldResult();
    }

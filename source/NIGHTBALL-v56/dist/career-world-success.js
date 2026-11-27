@@ -123,7 +123,7 @@
   const s=w.success ||= {energy:76,morale:58,actionWeek:null,menu:null,pending:null,seen:{},stories:[],last:null,gameCount:0};
   s.energy=clamp(Number.isFinite(s.energy)?s.energy:76,0,100);
   s.morale=clamp(Number.isFinite(s.morale)?s.morale:58,0,100);
-  s.seen ||= {};s.stories ||= [];s.xp ||= {strength:0,skill:0,speed:0,mental:0};s.autoAllocate ??= true;s.autoTrain ??= false;s.quickAdvance ??= true;s.specialTraining ??= false;s.plan ||= w.trainingPlan||(w.pitching?'control':'contact');
+  s.seen ||= {};s.stories ||= [];s.xp ||= {strength:0,skill:0,speed:0,mental:0};s.autoAllocate ??= false;s.autoTrain ??= false;s.quickAdvance ??= true;s.specialTraining ??= false;s.plan ||= w.trainingPlan||(w.pitching?'control':'contact');
   return s;
  }
  const usable=w=>isPlaying(w)&&!w.currentGame&&!w.queue;
@@ -147,7 +147,7 @@
   if(s.eventSeen[id])return false;s.eventSeen[id]=true;
   s.eventQueue.push({type:'story',id,title,body,choices:choices.map(c=>({energy:0,morale:0,manager:0,bond:0,...c})),forced:true,optional:true,...meta});return true;
  }
- function activate(w){const s=state(w);s.storyMode=true;if(w.life?.married)w.life.partner=true;refresh(w);return s;}
+ function activate(w){const s=state(w);s.storyMode=true;syncExperience(w);if(w.life?.married)w.life.partner=true;refresh(w);return s;}
  function mission(w){
   const s=state(w),school=w.stage==='school',pro=w.stage==='pro',stats=school?w.schoolTotals:pro?w.playerYear:null;
   if(!stats)return null;
@@ -321,16 +321,44 @@
   return skill(w,key);
  }
  const cost=(w,key)=>Math.max(6,Math.round((key==='velocity'?(w.player[key]-110)*.20:w.player[key]*.115)+4));
+ const xpNames={strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'};
+ const canSpend=w=>!w.currentGame&&!state(w).pending&&w.stage!=='retired';
+ function syncExperience(w){
+  const s=state(w);
+  // Legacy experience and fractional game rewards are converted once as they accrue.
+  if(!s.storyMode)return s;
+  const n=Math.max(0,Math.floor(Number(w.experience)||0));
+  if(n){s.xp.mental+=n;w.experience-=n;}
+  return s;
+ }
+ function feesFor(mix,price){
+  const sum=Object.values(mix).reduce((a,b)=>a+b,0);
+  return Object.fromEntries(Object.entries(mix).map(([k,n])=>[k,Math.max(1,Math.ceil(price*n/sum))]));
+ }
+ function payment(w,fees){const s=state(w);return {fees,missing:Object.fromEntries(Object.entries(fees).filter(([k,n])=>s.xp[k]<n).map(([k,n])=>[k,n-s.xp[k]])),affordable:Object.entries(fees).every(([k,n])=>s.xp[k]>=n)};}
+ function spend(w,fees){for(const [k,n] of Object.entries(fees))state(w).xp[k]-=n;}
+ function boostInfo(w,key){
+  if(!xpMap[key]||!(w.pitching?arms:bats).includes(key))return null;
+  const current=w.player[key],amount=w.balanceRevision>=247?.85:1;
+  const next=typeof w.previewImprovement==='function'?w.previewImprovement(key,amount):current+amount;
+  const p=payment(w,feesFor(xpMap[key],cost(w,key)));
+  return {key,current,next,...p,max:next<=current+1e-9,enabled:canSpend(w)&&next>current+1e-9&&p.affordable};
+ }
  function allocate(w,key){
-  const s=state(w),mix=xpMap[key];
-  if(!mix||!(w.pitching?arms:bats).includes(key)||!usable(w))return false;
-  const sum=Object.values(mix).reduce((a,b)=>a+b,0),price=cost(w,key);
-  const fees=Object.entries(mix).map(([k,n])=>[k,Math.max(1,Math.ceil(price*n/sum))]);
-  if(fees.some(([k,n])=>s.xp[k]<n))return false;
-  const old=w.player[key];w.improve(key,w.balanceRevision>=247?.85:1.0);
-  if(w.player[key]<=old)return false;
-  for(const [k,n] of fees)s.xp[k]-=n;
+  const p=boostInfo(w,key);if(!p?.enabled)return false;
+  w.improve(key,w.balanceRevision>=247?.85:1.0);
+  if(w.player[key]<=p.current)return false;
+  spend(w,p.fees);
   return true;
+ }
+ function pitchInfo(w,key){
+  const p=payment(w,{skill:9,mental:3});
+  const valid=w.pitching&&globalThis.NightGame?.TYPES?.some(t=>t.id===key)&&!w.player.pitches.includes(key)&&w.player.pitches.length<5;
+  return {...p,enabled:!!valid&&canSpend(w)&&p.affordable,valid:!!valid};
+ }
+ function learnPitch(w,key){
+  syncExperience(w);const p=pitchInfo(w,key);
+  if(!p.enabled)return false;spend(w,p.fees);w.player.pitches.push(key);w.note('新球種を習得');return true;
  }
  function skill(w,key){
   if(!available(w)||!Object.hasOwn(xpMap,key))return false;
@@ -350,7 +378,7 @@
   for(const [k,n] of Object.entries(xpMap[key])){
    gain[k]=Math.round(n*1.8*mult*multiplier*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
   }
-  w.trainingPlan=key;s.plan=key;
+  w.trainingPlan=key;
   if(outcome==='怪我')w.health.injury=Math.max(w.health.injury,5+Math.floor(rng()*24));
   s.energy=clamp(s.energy-costEnergy,0,100);
   s.morale=clamp(s.morale+({'覚醒':12,'大成功':7,'成功':2,'不調':-2,'失敗':-6,'怪我':-10}[outcome]),0,100);
@@ -527,17 +555,17 @@
  strikeoutWeak:['三振癖',0,'contact',-4],wild:['四球癖',0,'control',-4]
  };
  const perkKeys=w=>w.pitching?['pressure','lateLife','recovery','strikeout','command','breaking','endurance','fastball','wild']:['clutch','discipline','bunt','speed','average','slugger','opposite','glove','strongArm','leadoff','strikeoutWeak'];
- function perkInfo(w,key){const d=perkDefs[key];if(!d)return null;const owned=w.perks.includes(key),negative=d[3]<0,unlocked=negative?owned:(d[1]<=12||w.player[d[2]]>=40||(state(w).trainingCounts?.[d[2]]||0)>=8||state(w).perkHints?.[key]);return {key,label:d[0],cost:negative?18:d[1],skill:d[2],effect:d[3],negative,owned,unlocked};}
+ function perkInfo(w,key){const d=perkDefs[key];if(!d)return null;const owned=w.perks.includes(key),negative=d[3]<0,unlocked=negative?owned:(d[1]<=12||w.player[d[2]]>=40||(state(w).trainingCounts?.[d[2]]||0)>=8||state(w).perkHints?.[key]);const price=negative?18:d[1],mix={...xpMap[d[2]]};mix.mental=(mix.mental||0)+2;const p=payment(w,feesFor(mix,price));return {key,label:d[0],cost:price,skill:d[2],effect:d[3],negative,owned,unlocked,...p,enabled:canSpend(w)&&unlocked&&(negative||!owned)&&(state(w).storyMode?p.affordable:w.experience>=price)};}
  function observePerks(w,stats){
   const s=state(w);s.perkSample||={pa:0,k:0,h:0,hr:0,outs:0,walks:0,er:0,bb:0,sb:0};for(const k of Object.keys(s.perkSample))s.perkSample[k]+=Number(stats[k])||0;
   const q=s.perkSample;s.perkHints||={};w.perks||=[];const hint=(k,on)=>{if(on)s.perkHints[k]=true;};
   if(w.pitching){hint('strikeout',q.k>=25);hint('command',q.outs>=60&&q.walks/q.outs<.12);hint('endurance',stats.outs>=18);hint('fastball',q.k>=15);if(q.outs>=75&&q.walks/q.outs>.20&&!w.perks.includes('wild')){w.perks.push('wild');queueEvent(w,'weak/wild/'+w.day,'課題：四球癖','制球の乱れが続き、四球癖が付いた。能力画面で克服できる。',[ch('課題に取り組む','制球練習を意識する。')]);}}
   else{hint('average',q.h>=20);hint('slugger',q.hr>=5);hint('leadoff',q.bb>=10);hint('glove',stats.errors===0&&q.pa>=50);if(q.pa>=60&&q.k/q.pa>.32&&!w.perks.includes('strikeoutWeak')){w.perks.push('strikeoutWeak');queueEvent(w,'weak/k/'+w.day,'課題：三振癖','三振が多く、打撃に課題が出ている。能力画面で克服できる。',[ch('課題に取り組む','打撃練習を意識する。')]);}}
  }
- function learnPerk(w,key){if(!perkKeys(w).includes(key)||w.currentGame||state(w).pending)return false;const p=perkInfo(w,key);if(!p||!p.unlocked||w.experience<p.cost||(!p.negative&&p.owned))return false;if(p.negative){w.perks=w.perks.filter(x=>x!==key);if(state(w).perkSample)for(const k of Object.keys(state(w).perkSample))state(w).perkSample[k]=0;}else w.perks.push(key);w.experience-=p.cost;w.note(p.label+(p.negative?'を克服':'を習得'));return true;}
+ function learnPerk(w,key){if(!perkKeys(w).includes(key)||!canSpend(w))return false;syncExperience(w);const p=perkInfo(w,key);if(!p?.enabled)return false;if(p.negative){w.perks=w.perks.filter(x=>x!==key);if(state(w).perkSample)for(const k of Object.keys(state(w).perkSample))state(w).perkSample[k]=0;}else w.perks.push(key);if(state(w).storyMode)spend(w,p.fees);else w.experience-=p.cost;w.note(p.label+(p.negative?'を克服':'を習得'));return true;}
  const currentQuestion=w=>{
   const e=state(w).pending;
   return e?.type==='drill'?[challengeTexts[e.skill]?.[e.index]||'集中してプレーを決めよう',tactics.map(t=>t[0])]:null;
  };
- window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost,preview,direct,activate,refresh,queueEvent,cast,coach,mission,perkDefs,perkKeys,perkInfo,learnPerk};
+ window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost,preview,direct,activate,refresh,queueEvent,cast,coach,mission,perkDefs,perkKeys,perkInfo,learnPerk,boostInfo,pitchInfo,learnPitch,syncExperience,xpNames};
 })();
