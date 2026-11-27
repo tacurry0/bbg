@@ -1,0 +1,36 @@
+name: Derby v268 visual QA
+on:
+  push:
+    branches: [derby-v268-qa]
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Chromium and Japanese fonts
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install chromium
+          sudo apt-get update -qq
+          sudo apt-get install -y fonts-noto-cjk
+      - name: Derby engine and mobile screen tests
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          node tests/derby-v262.cjs
+          node tests/derby-v265-ui.cjs
+          node tests/derby-stadium-v263.mjs
+          node tests/derby-browser.mjs
+      - name: Keep screenshots
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: derby-v268-visual-qa
+          path: source/NIGHTBALL-v56/tests/screenshots/
+          if-no-files-found: ignore
