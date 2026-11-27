@@ -123,14 +123,14 @@
   const s=w.success ||= {energy:76,morale:58,actionWeek:null,menu:null,pending:null,seen:{},stories:[],last:null,gameCount:0};
   s.energy=clamp(Number.isFinite(s.energy)?s.energy:76,0,100);
   s.morale=clamp(Number.isFinite(s.morale)?s.morale:58,0,100);
-  s.seen ||= {};s.stories ||= [];
+  s.seen ||= {};s.stories ||= [];s.xp ||= {strength:0,skill:0,speed:0,mental:0};s.autoAllocate ??= true;s.autoTrain ??= false;s.plan ||= w.trainingPlan||(w.pitching?'control':'contact');
   return s;
  }
  const usable=w=>isPlaying(w)&&!w.currentGame&&!w.queue;
  const available=w=>usable(w)&&!state(w).pending&&state(w).actionWeek!==week(w);
- function mark(w,title,summary){
+ function mark(w,title,summary,consume=true){
   const s=state(w);
-  s.actionWeek=week(w);s.menu=null;s.pending=null;
+  if(consume)s.actionWeek=week(w);s.menu=null;s.pending=null;
   s.last={day:w.day,title,summary};
   s.stories.push(s.last);
   if(s.stories.length>90)s.stories.shift();
@@ -158,8 +158,12 @@
    }))};
  }
  function action(w,kind){
-  if(!available(w))return false;
   const s=state(w);
+  if(kind==='allocate-toggle'){s.autoAllocate=!s.autoAllocate;return true;}
+  if(kind==='auto-toggle'){s.autoTrain=!s.autoTrain;return true;}
+  if(kind.startsWith('boost:'))return allocate(w,kind.slice(6));
+  if(kind.startsWith('plan:')){const key=kind.slice(5);if(!(w.pitching?arms:bats).includes(key))return false;s.plan=key;return true;}
+  if(!available(w))return false;
   if(kind==='practice'||kind==='special'){
    if(s.energy<(kind==='special'?32:12))return false;
    s.menu=kind;return true;
@@ -203,46 +207,63 @@
   ['普段どおり挑む（バランス重視）',.61,2],
   ['大胆に挑戦（失敗しやすい・大成長）',.40,3.6]
  ];
- function skill(w,key){
-  if(!available(w)||!Object.hasOwn(goalLabels,key))return false;
-  const s=state(w),menu=s.menu;
-  if(!['practice','special'].includes(menu))return false;
-  if(!(w.pitching?arms:bats).includes(key))return false;
-  const hard=menu==='special';
-  if(s.energy<(hard?32:12))return false;
-  if(hard){
-   s.pending={type:'drill',title:'実戦特訓 · '+NightCareerWorld.training[key],
-    skill:key,hard:true,index:0,correct:0,points:0,results:[]};
-   s.menu=null;return true;
-  }
-  // Normal practice is a single meaningful weekly choice. Talent, fatigue and
-  // luck produce excellent days, ordinary growth, stalls and rare setbacks.
-  const rng=w.random('success/weekly-practice/'+week(w)+'/'+key);
-  const condition=clamp((s.energy-60)*.0018+(s.morale-50)*.001, -.09,.09);
-  const chance=rng()+condition;
-  const outcome=chance<.07?'失敗':chance<.24?'不調':chance<.81?'成功':'大成功';
-  const delta={失敗:-.28,不調:.32,成功:1.08,大成功:2.45}[outcome];
-  w.improve(key,delta);
-  w.trainingPlan=key;
-  const injuryRisk=s.energy<35&&rng()<.11;
-  if(injuryRisk)w.health.injury=Math.max(w.health.injury,3+Math.floor(rng()*7));
-  s.energy=clamp(s.energy-18,0,100);
-  s.morale=clamp(s.morale+(outcome==='大成功'?7:outcome==='失敗'?-6:outcome==='不調'?-2:2),0,100);
-  w.health.fatigue=clamp(w.health.fatigue+9,0,100);
-  w.ratings.coach=clamp(w.ratings.coach+(delta>0?1.2:-.4),0,100);
-  w.experience+=outcome==='大成功'?3:outcome==='成功'?1:0;
-  if(w.stage==='school'&&outcome==='大成功')w.scoutLevel=clamp(w.scoutLevel+.75,0,95);
-  s.goal={skill:key,label:goalLabels[key],day:w.day};
-  mark(w,'通常練習 · '+NightCareerWorld.training[key],outcome+' · '+
-   (outcome==='大成功'?'思いがけない手応えがあった。':outcome==='失敗'?'調子が合わず、修正点が見えた。':
-    outcome==='不調'?'伸び悩んだが、課題が残った。':'着実に手応えを積み重ねた。')+
-   (injuryRisk?' 軽い故障が発生。':''));
+ const xpMap={contact:{skill:3,mental:1},power:{strength:4,skill:1},run:{speed:4},field:{skill:2,speed:2},arm:{strength:2,skill:2},velocity:{strength:4,skill:1},control:{skill:3,mental:2},movement:{skill:4},stamina:{strength:3,mental:2}};
+ const cost=(w,key)=>Math.max(3,Math.round((key==='velocity'?(w.player[key]-110)*.24:w.player[key]*.15)-2));
+ function allocate(w,key){
+  const s=state(w),mix=xpMap[key];
+  if(!mix||!(w.pitching?arms:bats).includes(key)||!usable(w))return false;
+  const sum=Object.values(mix).reduce((a,b)=>a+b,0),price=cost(w,key);
+  const fees=Object.entries(mix).map(([k,n])=>[k,Math.max(1,Math.ceil(price*n/sum))]);
+  if(fees.some(([k,n])=>s.xp[k]<n))return false;
+  const old=w.player[key];w.improve(key,1.15);
+  if(w.player[key]<=old)return false;
+  for(const [k,n] of fees)s.xp[k]-=n;
   return true;
+ }
+ function skill(w,key){
+  if(!available(w)||!Object.hasOwn(xpMap,key))return false;
+  const s=state(w),menu=s.menu;
+  if(!['practice','special'].includes(menu)||!(w.pitching?arms:bats).includes(key))return false;
+  const hard=menu==='special',costEnergy=hard?30:['power','velocity','stamina'].includes(key)?20:15;
+  if(s.energy<costEnergy||w.health.injury>0)return false;
+  const rng=w.random('success/weekly-practice/'+week(w)+'/'+key+'/'+menu);
+  const environment=w.stage==='school'?(w.schoolTier-1)*.035:(w.ratings.coach-50)*.001;
+  const condition=clamp((s.energy-65)*.002+(s.morale-50)*.001+environment-(w.health.fatigue||0)*.0007,-.20,.14);
+  const risk=clamp((.02+(s.energy<40?(40-s.energy)*.003:0)+(hard?.025:0))/(w.talent?.durability||1),.005,.22);
+  const roll=rng(),q=clamp(rng()+condition,0,1);
+  const outcome=roll<risk?'怪我':q<.0816?'失敗':q<.2857?'不調':q<.898?'成功':q<.9898?'大成功':'覚醒';
+  const mult={'怪我':0,'失敗':0,'不調':.5,'成功':1,'大成功':2.5,'覚醒':5}[outcome];
+  const friend=w.members(w.player.club).find(p=>p.id!==w.player.id&&(p.relationship||0)>=70);
+  const gain={};
+  for(const [k,n] of Object.entries(xpMap[key])){
+   gain[k]=Math.round(n*2*mult*(friend?1.25:1)*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
+  }
+  w.trainingPlan=key;s.plan=key;
+  if(outcome==='怪我')w.health.injury=Math.max(w.health.injury,5+Math.floor(rng()*24));
+  s.energy=clamp(s.energy-costEnergy,0,100);
+  s.morale=clamp(s.morale+({'覚醒':12,'大成功':7,'成功':2,'不調':-2,'失敗':-6,'怪我':-10}[outcome]),0,100);
+  w.health.fatigue=clamp(w.health.fatigue+(hard?17:9),0,100);
+  w.ratings.coach=clamp(w.ratings.coach+(mult>=1?1.2:-.4),0,100);
+  if(mult>=1)w.experience+=Math.round(mult);
+  if(outcome==='覚醒')w.note('才能が開花！ '+NightCareerWorld.training[key]);
+  if(s.autoAllocate)for(let i=0;i<12&&allocate(w,key);i++){}
+  if(w.stage==='school'&&mult>=2.5)w.scoutLevel=clamp(w.scoutLevel+1,0,95);
+  s.goal={skill:key,label:goalLabels[key],day:w.day};
+  const labels={strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'};
+  mark(w,(hard?'実戦特訓':'通常練習')+' · '+NightCareerWorld.training[key],outcome+' · '+Object.entries(gain).map(([k,n])=>labels[k]+' +'+n).join(' / ')+(friend?' · 友情練習':''));
+  return true;
+ }
+ function autoWeek(w){
+  const s=state(w);
+  if(!s.autoTrain||!available(w)||s.menu)return false;
+  if(w.health.injury||s.energy<45||w.health.fatigue>65)return action(w,'rest');
+  const key=(w.pitching?arms:bats).includes(s.plan)?s.plan:(w.pitching?'control':'contact');
+  return action(w,'practice')&&skill(w,key);
  }
  function openEvent(w){
   const s=state(w);
   if(!usable(w)||s.pending||!s.inbox)return false;
-  s.pending=s.inbox;s.inbox=null;return true;
+  s.pending={...s.inbox,optional:true};s.inbox=null;return true;
  }
  function choose(w,value){
   const s=state(w),e=s.pending;
@@ -292,7 +313,7 @@
    if(choice.skill&&Object.hasOwn(w.player,choice.skill))w.improve(choice.skill,.5);
    w.experience+=1;
    if(e.id==='scout'&&w.stage==='school')w.scoutLevel=clamp(w.scoutLevel+1.5,0,95);
-   mark(w,e.title,choice.text);
+   mark(w,e.title,choice.text,!e.optional);
    return true;
   }
   return false;
@@ -364,5 +385,5 @@
   const e=state(w).pending;
   return e?.type==='drill'?[challengeTexts[e.skill]?.[e.index]||'集中してプレーを決めよう',tactics.map(t=>t[0])]:null;
  };
- window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion};
+ window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost};
 })();

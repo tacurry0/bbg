@@ -37,8 +37,14 @@
    if(!['easy','normal','hard'].includes(difficulty))throw Error('難易度を選択してください');
    this.version=2;
    this.seed=seed||Date.now().toString(36)+Math.random().toString(36).slice(2,10);
-   this.country=country;this.region=region;this.schoolIndex=clamp(+schoolIndex||0,0,D.schools[country].length-1);
-   this.schoolTier=clamp(+schoolTier||0,0,2);this.school=D.schools[country][this.schoolIndex];
+   this.country=country;this.region=region;
+   const entry=this.random('enrollment/'+country+'/'+region),roll=entry();
+   this.schoolTier=seed&&Number.isInteger(schoolTier)?clamp(schoolTier,0,2):roll<.25?0:roll<.85?1:2;
+   this.schoolIndex=seed&&Number.isInteger(schoolIndex)?clamp(schoolIndex,0,D.schools[country].length-1):Math.floor(entry()*D.schools[country].length);
+   this.school=D.schools[country][this.schoolIndex];
+   const talent=this.random('hidden-talent'),t=talent();
+   const hiddenGrowth=t<.19?0:t<.60?1:t<.76?2:t<.80?3:t<.94?4:5;
+   this.talent={ceiling:Math.round(77+talent()*21),durability:.75+talent()*.65,learning:.83+talent()*.40};
    this.style=style;this.difficulty=difficulty;this.short=short!==false;this.format='self';this.stage='school';
    this.academicYear=startYear;this.grade=1;this.year=startYear;this.day=date(this.year,c.start);
    this.trainingPlan=profile.pos==='P'?'control':'contact';
@@ -46,7 +52,7 @@
     hand:(profile.pos==='P'?throwHand:hand)==='L'?'L':'R',batHand:hand==='L'?'L':'R',throwHand:throwHand==='L'?'L':'R',no:18,
     born:startYear-15,nation:country,origin:country,club:'school-player',school:this.school,stage:'school',
     role:profile.pos==='P'?'SP':null,pitches:profile.pitches?.slice()||null,
-    stats:blank(),growth:Number.isInteger(growth)&&D.types[growth]?growth:1,form:0,injury:0,history:[],
+    stats:blank(),growth:hiddenGrowth,form:0,injury:0,history:[],
     ...Object.fromEntries(Object.entries(profile.skills).map(([key,num])=>[key,num+(key==='velocity'?1:5)]))};
    this.player.positions=[this.player.pos];
    this.people=[];this.schoolClubs={};this.schoolEvents={};this.schoolHistory=[];
@@ -61,7 +67,7 @@
    this.queue=null;this.offers=[];this.salaryDemand=null;this.acquired=null;this.lastWin=null;this.marketChoice=null;
    this.ensureSchoolClub('school-player',this.school,this.schoolTier,this.region);
    this.ensureSchoolClub('region-player',this.region+'代表',2,this.region);
-   this.note(this.school+'に入学');
+   this.note(this.region+'の'+this.school+'に入学（'+['弱小校','中堅校','強豪校'][this.schoolTier]+'）');
    Z.state(this);
   }
   static restore(data){
@@ -337,14 +343,17 @@
   run(mode){
    if(this.currentGame||Z.state(this).pending)return 0;
    const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1);
-   const limit={day:1,week:7,game:370,event:370,season:420}[mode]||1;
+   const limit={day:1,week:7,month:30,game:370,event:370,season:420}[mode]||1;
+   const batch=mode==='season'||mode==='month';
    let steps=0;
    const start=Date.parse(from);
    while(Date.parse(this.day)-start<limit*86400000&&steps<900&&
     !['draft','offseason','retired'].includes(this.stage)){
+    if(!this.queue&&batch)Z.autoWeek(this);
+    if(Z.state(this).breakthroughDay===this.day)break;
     if(this.queue){
      const f=this.active;
-     if(f&&(mode!=='season'||f.development||f.important||['post','asia','national'].includes(f.kind)))break;
+     if(f&&(!batch||f.development||f.important||['post','asia','national'].includes(f.kind)))break;
      this.finishDay();
     }else if(!this.nextDay())break;
     steps++;
@@ -526,7 +535,8 @@
    if(!Object.hasOwn(this.player,key))return false;
    const scale=[this.age<24?1.45:.65,1,this.age<24?.8:1.35,1.38,.95,this.age<27?.67:1.63][this.player.growth];
    const difficulty={easy:1.3,normal:1,hard:.85}[this.difficulty];
-   const cap=key==='velocity'?164:99;
+   const ceiling=this.talent?.ceiling??99;
+   const cap=Math.max(this.player[key],key==='velocity'?Math.min(164,137+Math.round((ceiling-70)*.85)):ceiling);
    this.player[key]=clamp(this.player[key]+amount*scale*difficulty*(this.health.injury>0?.34:1),key==='velocity'?115:22,cap);
    this.lastGrowth={day:this.day,text:training[key]+'を強化'};
    return true;

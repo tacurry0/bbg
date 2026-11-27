@@ -62,7 +62,7 @@ try{
   await press('country',country);
   assert.match(await page.locator('#career h1').innerText(),new RegExp(label));
   await page.locator('[name="name"]').fill(name);
-  await page.locator('[name="schoolTier"]').selectOption('2');
+  assert.equal(await page.locator('[name="schoolTier"],[name="schoolIndex"],[name="growth"]').count(),0);
   await page.locator('[name="style"]').selectOption(style);
   await page.locator('#world-create [type="submit"]').click();
   if(country==='jp'){

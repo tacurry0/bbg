@@ -91,3 +91,5 @@
 .cw-success-inbox p{margin:0 0 4px;font-size:.87rem;flex-basis:100%}
 .cw-success-inbox button{margin:2px 0;min-height:42px}
 @media(min-width:660px){.cw-slot-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.cw-xp{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin:8px 0}.cw-xp span{background:#e5eff5;padding:7px 3px;text-align:center;border-radius:6px;font-size:.78rem;color:#25495d}.cw-xp b{display:block;font-size:1.1rem}.cw-training-settings{margin:8px 0;border:1px solid #c4dce7;border-radius:8px;padding:8px}.cw-training-settings summary{cursor:pointer;font-weight:700}.cw-school-context{margin:7px 0 0;font-size:.85rem;color:#36566c}

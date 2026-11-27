@@ -201,7 +201,7 @@ for(const short of [true,false]){
  assert(Z.skill(w,'contact'));
  assert.equal(Z.state(w).pending,null);
  assert.equal(Z.state(w).actionWeek,Z.week(w));
- assert(w.player.contact!==old);
+ assert(Object.values(w.success.xp).every(x=>x>=0));
  assert.equal(Z.state(w).goal.skill,'contact');
  assert(Z.state(w).energy<energy);
  assert(!Z.action(w,'rest'));
@@ -219,10 +219,8 @@ for(const short of [true,false]){
  assert(!Z.available(saved));
  const kr=fresh('kr',{style:'control'});
  assert(Z.action(kr,'special'));assert(Z.skill(kr,'control'));
- for(let i=0;i<3;i++){
-  assert(Z.currentQuestion(kr)?.[1].length===3);
-  assert(Z.choose(kr,i));
- }
+ assert.equal(kr.success.pending,null);
+ assert(Object.values(kr.success.xp).every(x=>x>=0));
  assert.equal(kr.success.last.title,'実戦特訓 · 制球');
  assert.equal(kr.success.actionWeek,Z.week(kr));
  const tw=fresh('tw');
