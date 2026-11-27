@@ -536,7 +536,8 @@ const MAX_PARTICLES = 120;
 // Sprite flame/smoke textures and line trails also render in CanvasSceneRenderer.
 export class DerbyStadiumShow{
  constructor(renderer){this.r=renderer;this.group=null;this.last=null;}
- makeTexture(seed=0,smoke=false){
+ makeTexture(seed=0,smoke=false,color=0xff7a20){
+  const rgb=new T.Color(color).getHex(T.SRGBColorSpace),cr=(rgb>>16)&255,cg=(rgb>>8)&255,cb=rgb&255;
   // Irregular soft turbulent gas puffs, not a fixed flame silhouette.
   const c=document.createElement('canvas');c.width=c.height=96;const ctx=c.getContext('2d'),im=ctx.createImageData(96,96);
   const hash=(x,y)=>{const v=Math.sin(x*127.1+y*311.7+seed*19.1)*43758.5453;return v-Math.floor(v);};
@@ -546,85 +547,146 @@ export class DerbyStadiumShow{
    const n=.52*noise(x*.059,y*.059)+.30*noise(x*.12,y*.12)+.18*noise(x*.29,y*.29);
    const edge=clamp((.86-r+(n-.47)*.63)*3.8,0,1),density=Math.pow(edge,1.3);
    const heat=clamp((.87-r)*1.9+(n-.49)*1.55,0,1),i=(y*96+x)*4;
-   im.data[i]=smoke?123:255;im.data[i+1]=smoke?123:Math.round(28+heat*219);im.data[i+2]=smoke?124:Math.round(3+Math.pow(heat,3.4)*207);
+   const core=Math.pow(heat,2.1),radiance=.66+.34*heat;
+   im.data[i]=smoke?123:Math.round(cr*radiance+(255-cr*radiance)*core);im.data[i+1]=smoke?123:Math.round(cg*radiance+(255-cg*radiance)*core);im.data[i+2]=smoke?124:Math.round(cb*radiance+(255-cb*radiance)*core);
    im.data[i+3]=Math.round(density*(smoke?63:255)*(1-.08*n));
   }
   ctx.putImageData(im,0,0);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;return tex;
  }
  init(){
   this.group=new T.Group();this.group.name='Derby stadium gas jets';this.group.userData.dynamic=true;this.group.visible=false;this.r.scene.add(this.group);
-  this.flameTex=Array.from({length:4},(_,i)=>this.makeTexture(i+2));this.smokeTex=this.makeTexture(7,true);
+  this.flameTex=Array.from({length:4},(_,i)=>this.makeTexture(i+2));this.paletteTextures=new Map();this.smokeTex=this.makeTexture(7,true);
   const baseGeo=new T.BoxGeometry(.92,.36,.92),baseMat=new T.MeshStandardMaterial({color:0x30363a,metalness:.65,roughness:.55});
   const tubeGeo=new T.CylinderGeometry(.19,.25,.32,8),tubeMat=new T.MeshStandardMaterial({color:0x171c20,metalness:.45});
-  this.jets=Array.from({length:9},(_,i)=>{
+  this.jets=Array.from({length:11},(_,i)=>{
    const root=new T.Group(),base=new T.Mesh(baseGeo,baseMat),tube=new T.Mesh(tubeGeo,tubeMat);base.position.y=.12;tube.position.y=.43;root.add(base,tube);
    const flame=Array.from({length:17},(_,j)=>{const f=new T.Sprite(new T.SpriteMaterial({map:this.flameTex[(i*3+j)%4],transparent:true,depthWrite:false,blending:T.NormalBlending,fog:false,toneMapped:false,opacity:0}));f.visible=false;root.add(f);return f;});
    const smoke=new T.Sprite(new T.SpriteMaterial({map:this.smokeTex,transparent:true,depthWrite:false,opacity:0}));root.add(smoke);
    this.group.add(root);return {root,flame,smoke};
   });
-  const palettes=[0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333];
-  this.bursts=Array.from({length:9},(_,i)=>{
-   const count=56,geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3));
-   const mat=new T.LineBasicMaterial({color:palettes[i],transparent:true,opacity:1,depthWrite:false,blending:T.AdditiveBlending,fog:false});
-   const lines=new T.LineSegments(geo,mat);lines.frustumCulled=false;lines.visible=false;const root=new T.Group();root.add(lines);
-   const stars=new T.InstancedMesh(new T.SphereGeometry(.10,5,4),new T.MeshBasicMaterial({color:palettes[i],transparent:true,opacity:1,blending:T.NormalBlending,depthWrite:false,fog:false}),count);stars.frustumCulled=false;root.add(stars);
-   const glow=new T.Sprite(new T.SpriteMaterial({map:this.r.glowTexture(),color:palettes[i],transparent:true,depthWrite:false,blending:T.AdditiveBlending,opacity:.8}));root.add(glow);
-   this.group.add(root);return {root,lines,glow,stars,count,dummy:new T.Object3D()};
+  // Pooled multi-layer trails and luminous heads, real 3D directions and
+  // gravity. No per-frame creation of meshes or particle objects.
+  this.bursts=Array.from({length:5},(_,i)=>{
+   const count=72,root=new T.Group();root.name='Derby aerial shell '+i;
+   const makeLines=(opacity=1)=>{const geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3));const lines=new T.LineSegments(geo,new T.LineBasicMaterial({color:0xffffff,transparent:true,opacity,depthWrite:false,fog:false,toneMapped:false,blending:T.NormalBlending}));lines.frustumCulled=false;root.add(lines);return lines;};
+   const lines=makeLines(),cores=makeLines(),glow=new T.Sprite(new T.SpriteMaterial({map:this.r.glowTexture(),transparent:true,depthWrite:false,blending:T.AdditiveBlending,opacity:0}));root.add(glow);
+   const stars=new T.InstancedMesh(new T.SphereGeometry(.105,4,3),new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:1,depthWrite:false,fog:false,toneMapped:false}),count);stars.frustumCulled=false;root.add(stars);
+   this.group.add(root);return {root,lines,cores,glow,stars,count,dummy:new T.Object3D()};
   });
  }
+ colors(g,plan){
+  const club=g?.teams?.home||{},hsl={h:0,s:0,l:0};
+  const brighten=value=>{const col=new T.Color(value||'#fdaf39');col.getHSL(hsl,T.SRGBColorSpace);return new T.Color().setHSL(hsl.h,hsl.s<.16?.08:Math.max(.66,hsl.s),Math.max(.52,Math.min(.68,hsl.l)),T.SRGBColorSpace).getHex(T.SRGBColorSpace);};
+  const primary=brighten(club.color),accent=brighten(club.accent||club.color);
+  return plan.theme==='rainbow'?[0xff424b,0xffb43c,0xffff57,0x3cfba6,0x4ccaff,0xa979ff,0xff63c7]:plan.theme==='gold'?[0xffac29,0xffe58a,0xff883a]:[primary,accent,primary,0xfff1ce,primary];
+ }
+ texture(color,i){
+  const key=color+'/'+(i%3);let tex=this.paletteTextures.get(key);
+  if(!tex){tex=this.makeTexture(i%3+2,false,color);this.paletteTextures.set(key,tex);
+   // This is shared across all puffs. Keep the small cache bounded when
+   // switching teams repeatedly; active materials remain valid.
+   if(this.paletteTextures.size>108){const oldest=this.paletteTextures.keys().next().value;this.paletteTextures.get(oldest)?.dispose();this.paletteTextures.delete(oldest);}
+  }return tex;
+ }
+ visionAnchor(park){
+  const r=this.r,key=(r.parkKey||park.id)+'/'+(r.canvas?.dataset?.parkModel||'')+'/'+(r.scene.userData.staticRevision||0);
+  if(this.visionKey===key)return this.vision;
+  this.visionKey=key;let [x,y,z,w,h]=park.board||[0,15,park.center+12,32,10],visible=[];
+  r.scene.updateMatrixWorld(true);
+  const good=o=>{for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;};
+  r.parkDecor?.traverse(o=>{if(o.isMesh&&o.name==='LED steel cabinet'&&good(o))visible.push(o);});
+  const actual=r.scene.getObjectByName('Live scoreboard');if(actual&&good(actual))visible.unshift(actual);
+  if(visible.length){const chosen=visible.sort((a,b)=>Math.abs(a.getWorldPosition(new T.Vector3()).x)-Math.abs(b.getWorldPosition(new T.Vector3()).x))[0],box=new T.Box3().setFromObject(chosen),c=box.getCenter(new T.Vector3()),size=box.getSize(new T.Vector3());if(size.x>4&&size.y>2){x=c.x;y=c.y;z=Math.abs(c.z);w=size.x;h=size.y;}}
+  else if(r.board?.visible){x=r.board.position.x;y=r.board.position.y;z=r.board.position.z;w=30*r.board.scale.x;h=14*r.board.scale.y;}
+  this.vision={x,y:y+h/2+.45,z:z-1.0,w};return this.vision;
+ }
+ standAnchor(park,a){
+  // Put launchers on the stand's top concourse (not in the seat rows).
+  // Explicit terrace geometry is used when a detailed stadium provides it.
+  const r=this.r,key=(r.parkKey||park.id)+'/'+(r.scene.userData.staticRevision||0)+'/'+(r.canvas?.dataset?.parkModel||'');
+  if(this.standKey!==key){
+   this.standKey=key;this.standPoints=[];r.scene.updateMatrixWorld(true);
+   const v=new T.Vector3();
+   r.parkDecor?.traverse(o=>{if(!o.isMesh||!/(top concourse|top walkway|terrace top)/i.test(o.name)||!o.geometry?.attributes?.position)return;const attr=o.geometry.attributes.position;for(let i=0;i<attr.count;i++){v.fromBufferAttribute(attr,i).applyMatrix4(o.matrixWorld);let z=Math.abs(v.z),angle=Math.atan2(v.x,z);if(z>55&&Math.abs(angle)<.84&&Math.hypot(v.x,z)>NightPlayers.wallDistance(park,angle)+2)this.standPoints.push([angle,v.x,v.y+.36,z]);}});
+  }
+  const points=this.standPoints.filter(p=>Math.abs(p[0]-a)<.12).sort((p,q)=>Math.abs(p[0]-a)-Math.abs(q[0]-a)||q[2]-p[2]);
+  if(points.length)return {x:points[0][1],y:points[0][2],z:points[0][3]};
+  const range=(park.stands||[]).find(([l,r])=>a>=l&&a<=r);
+  const distance=NightPlayers.wallDistance(park,a),h=NightPlayers.fenceHeight(park,a);
+  // The rendered generic terraces use the 129m arc and a 29m rise/run.
+  const detailed=park.pro||['tokyo-dome','taipei-dome','night','sky','harbor','dome','brick','toyama'].includes(park.id);
+  const radius=!detailed&&range?129+29*range[2]+.5:distance+9;
+  const y=!detailed&&range?15*range[2]+.32:h+1.4;
+  return {x:Math.sin(a)*radius,y,z:Math.cos(a)*radius};
+ }
+ layout(g,plan=NightGame.derbyShowPlan(g)){
+  const park=g.park,board=plan.lanes.some(l=>l.site==='vision')?this.visionAnchor(park):null,colors=this.colors(g,plan);
+  const anchors=plan.lanes.map((lane,i)=>{
+   const a=lane.angle,h=NightPlayers.fenceHeight(park,a),d=NightPlayers.wallDistance(park,a),site=lane.site;
+   const p=site==='vision'?{x:board.x+board.w*.42*lane.fraction,y:board.y,z:board.z}:site==='stands'?this.standAnchor(park,a):
+      site==='field'?{x:Math.sin(a)*(d-11),y:.15,z:Math.cos(a)*(d-11)}:{x:Math.sin(a)*(d+2),y:h+.6,z:Math.cos(a)*(d+2)};
+   const roof=NightPlayers.roofSurface(park,p.x,p.z);p.y=Math.min(p.y,Number.isFinite(roof)?roof-3:p.y);
+   return {...p,lane,color:colors[i%colors.length],clearance:Number.isFinite(roof)?Math.max(1,roof-p.y):Infinity};
+  });
+  // At least two shells for EVERY home run, including a single normal HR.
+  const fireCount=plan.victory?5:plan.wide?3:2;
+  const shells=Array.from({length:fireCount},(_,i)=>{
+   const idx=Math.round((i+.25)/(fireCount-.5)*(anchors.length-1)),p=anchors[Math.min(anchors.length-1,idx)],outdoor=!Number.isFinite(p.clearance);
+   const maxH=outdoor?24:Math.max(2,p.clearance-2.5),radius=Math.min(plan.wide?9.8:7.2,outdoor?12:Math.max(1.1,maxH*.35));
+   const lift=Math.min(plan.wide?16:11,Math.max(1.4,maxH-radius-0.7)),x=p.x,z=p.z-2;
+   return {x,y:p.y+lift,z,launchY:p.y+.4,radius,delay:.10+i*.065,color:colors[(i*2+1)%colors.length],shape:(i+(plan.kind==='fan'?1:plan.kind==='vision'?2:0))%3};
+  });
+  return {anchors,shells,plan};
+ }
  update(g){
-  const f=g?.field,show=!!g?.derby?.enhanced&&g.phase==='result'&&f?.outcome==='hr'&&!g.replayView;
+  const f=g?.field,v=g?.derbyVictory,show=!!g?.derby?.enhanced&&(v||g.phase==='result'&&f?.outcome==='hr')&&!g.replayView;
   if(!show){if(this.group)this.group.visible=false;this.last=null;return;}
   if(!this.group)this.init();
-  const park=g.park,indoors=park.theme==='dome'||!!park.roofHeight,age=Math.max(0,g.phaseTime/1000),celebration=f.homerCelebration||{},level=celebration.level||1;
-  const plan=NightGame.derbyShowPlan(g),count=plan.count;this.group.visible=age<(plan.kind==='finale'?2.2:1.8);this.kind=plan.kind;
-  const place=(root,a,off,lift)=>{
-   const r=NightPlayers.wallDistance(park,a)+off,x=Math.sin(a)*r,z=Math.cos(a)*r,h=NightPlayers.fenceHeight(park,a);
-   const roof=NightPlayers.roofSurface(park,x,z),y=Math.min(h+lift,Number.isFinite(roof)?roof-3:h+lift);
-   root.position.set(x,y,z);return Number.isFinite(roof)?Math.max(1,roof-y):Infinity;
-  };
+  const park=g.park,indoors=park.theme==='dome'||!!park.roofHeight,age=Math.max(0,(v?.elapsed??g.phaseTime)/1000),layout=this.layout(g),{anchors,shells,plan}=layout,level=plan.level;
+  this.group.visible=age<(v?3:plan.kind==='finale'?2.2:1.8);this.kind=plan.kind;this.anchorSites=anchors.map(a=>a.lane.site);
   this.jets.forEach((jet,i)=>{
-   const lane=plan.lanes[i];
-   jet.root.visible=!!lane&&age<(plan.kind==='finale'?2.05:1.55);
-   if(!jet.root.visible)return;
-   const clearance=place(jet.root,lane.angle,2.0,.6);
-   // Each puff is born at the nozzle and rises/expands before extinguishing.
-   // The slight timing differences avoid five identical candle shapes.
-   const t=age-lane.delay,burstDuration=plan.kind==='sweep'?.45:plan.kind==='finale'?.76:lane.pulses===2?.64:level>=3?.77:.66,life=indoors?.55:.61;
-   const travel=Math.min((indoors?6.7:8.5)*lane.height*(1+.08*(level-1)),clearance*.68);
-   const cycle=plan.kind==='finale'&&t>1.1?t-1.1:t;
+   const p=anchors[i],lane=p?.lane;jet.root.visible=!!p&&age<(v?2.8:plan.kind==='finale'?2.05:1.55);
+   if(!jet.root.visible)return;jet.root.position.set(p.x,p.y,p.z);
+   const t=age-lane.delay,burstDuration=plan.kind==='sweep'?.45:level>=3?.77:.66,life=indoors?.55:.61;
+   const travel=Math.min((indoors?6.7:8.5)*lane.height*(1+.08*(level-1)),p.clearance*.68);
+   const cycle=(v||plan.kind==='finale')&&t>1.1?t-1.1:t;
    for(let j=0;j<jet.flame.length;j++){
     const spr=jet.flame[j],birth=j*.045,elapsed=cycle-birth,progress=elapsed/life;
-    const pulseOn=lane.pulses!==2||birth<.22||birth>.35;
-    const active=pulseOn&&birth<=burstDuration&&progress>=0&&progress<1;
+    const active=(lane.pulses!==2||birth<.22||birth>.35)&&birth<=burstDuration&&progress>=0&&progress<1;
     spr.visible=active;if(!active)continue;
-    const flow=clamp(progress,0,1),spread=.93+2.05*Math.pow(flow,.82);
-    const yy=.54+travel*(flow*.77+flow*flow*.23);
+    spr.material.map=this.texture(p.color,j);const flow=clamp(progress,0,1),spread=.93+2.05*Math.pow(flow,.82),yy=.54+travel*(flow*.77+flow*flow*.23);
     const wx=(Math.sin(i*2.2+j*4.73)*.22+Math.sin(t*9+j*1.9)*.16)*flow+Math.cos(lane.angle)*lane.tilt*flow;
     const wz=Math.cos(i*1.5+j*3.49)*.24*flow-Math.sin(lane.angle)*lane.tilt*flow;
-    spr.position.set(wx,Math.min(yy,clearance*.82),wz);
+    spr.position.set(wx,Math.min(yy,p.clearance*.82),wz);
     spr.scale.set(spread*(.8+.25*Math.sin(j*2.3+i)),(1.32+spread*.98)*(1-.12*flow),1);
     spr.material.opacity=clamp(Math.min(1,flow*18)*(1-Math.pow(flow,3.4)),0,1);
    }
-   jet.smoke.visible=t>.80&&t<1.35;
-   jet.smoke.position.set(Math.sin(i*3+t)*.45,Math.min(clearance*.80,travel*.62+Math.max(0,t-.45)*1.8),-.2);
+   jet.smoke.visible=t>.80&&t<1.35;jet.smoke.position.set(Math.sin(i*3+t)*.45,Math.min(p.clearance*.80,travel*.62+Math.max(0,t-.45)*1.8),-.2);
    jet.smoke.scale.setScalar(1.2+Math.max(0,t-.4)*1.9);jet.smoke.material.opacity=.12*clamp(1-Math.abs(t-.86)/.55,0,1);
   });
-   // Only big hits and streaks get low warm sparks. No floating white lines,
-   // no sky-wide explosions, and no fireworks above the dome roof.
   this.bursts.forEach((b,i)=>{
-    const lane=plan.lanes[i],t=age-(lane?.delay||0)-.04;b.root.visible=(level>=2||plan.kind==='finale')&&!!lane&&t>=0&&t<1.13;
-    if(!b.root.visible)return;
-    const clearance=place(b.root,lane.angle,2.0,.85),fade=clamp(1-t/1.13,0,1);
-    for(let j=0;j<b.count;j++){
-     const phase=j/b.count,theta=j*2.399963,agej=Math.max(0,t-phase*.32),radial=(.7+(j%7)*.25)*agej;
-     const y=Math.min(clearance*.78,(5.5+(j%9)*.55)*agej-4.4*agej*agej);
-     b.dummy.position.set(Math.cos(theta)*radial,Math.max(0,y),Math.sin(theta)*radial);
-     b.dummy.scale.setScalar((agej>0&&y>0)?(.6+fade*.6):0);b.dummy.updateMatrix();b.stars.setMatrixAt(j,b.dummy.matrix);
-    }
-    b.stars.instanceMatrix.needsUpdate=true;b.stars.material.opacity=fade;b.glow.visible=false;b.lines.visible=false;
-   });
+   const p=shells[i],elapsed=age-(p?.delay??0),t=v&&elapsed>1.42?elapsed-1.42:elapsed;
+   b.root.visible=!!p&&t>=0&&t<1.38;if(!b.root.visible)return;
+   b.root.position.set(p.x,p.y,p.z);const launched=t<.18;
+   const u=clamp((t-.18)/1.2,0,1),fade=clamp(1-Math.pow(u,1.45),0,1);
+   b.lines.visible=b.cores.visible=b.stars.visible=!launched;b.glow.visible=true;
+   b.glow.position.set(0,launched?(p.launchY-p.y)*(1-t/.18):0,0);
+   b.glow.scale.setScalar(launched?.85:Math.max(.1,p.radius*(.42-u)*1.8));b.glow.material.color.setHex(p.color,T.SRGBColorSpace);b.glow.material.opacity=launched?.85:Math.max(0,.8-u*2.5);
+   if(launched)return;
+   b.lines.material.color.setHex(p.color,T.SRGBColorSpace);b.lines.material.opacity=.94*fade;b.cores.material.opacity=.88*fade;b.stars.material.opacity=fade;
+   const trail=b.lines.geometry.attributes.position,core=b.cores.geometry.attributes.position;
+   const at=(age,dx,dy,dz,speed)=>{const k=1-Math.exp(-age*3.4);return [dx*p.radius*k*speed,dy*p.radius*k*speed-age*age*(p.shape===2?7:3.7),dz*p.radius*k*speed];};
+   for(let j=0;j<b.count;j++){
+    const q=(j+.5)/b.count,phi=j*2.399963+i*.61;
+    const dy=p.shape===1?Math.sin(phi*3)*.13:1-2*q,rad=Math.sqrt(Math.max(0,1-dy*dy)),dx=Math.cos(phi)*rad,dz=Math.sin(phi)*rad,speed=.80+.22*Math.sin(j*5.23+i)+.14*(j%3===0);
+    const head=at(u,dx,dy,dz,speed),tail=at(Math.max(0,u-(p.shape===2?.28:.18)),dx,dy,dz,speed),near=at(Math.max(0,u-.055),dx,dy,dz,speed);
+    trail.setXYZ(j*2,...tail);trail.setXYZ(j*2+1,...head);core.setXYZ(j*2,...near);core.setXYZ(j*2+1,...head);
+    b.dummy.position.set(...head);b.dummy.scale.setScalar((.75+.38*Math.sin(14*t+j*3.1))*fade+.22);b.dummy.updateMatrix();b.stars.setMatrixAt(j,b.dummy.matrix);
+   }
+   trail.needsUpdate=core.needsUpdate=true;b.stars.instanceMatrix.needsUpdate=true;
+  });
  }
+
 }
 
 export class StadiumVFX {
@@ -1094,3 +1156,4 @@ export class StadiumVFX {
     }
   }
 }
+

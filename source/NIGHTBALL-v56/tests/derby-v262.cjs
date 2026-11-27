@@ -6,21 +6,23 @@ const c=context(),G=c.NightGame,D=c.NightOnlineDerby;
 const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',weather:'clear',crowdAttendance:'full',...opts,derby:{enhanced:true,mode,...opts.derby}});
 {
  const g=make('record');g.setPhase('intro');const full=g.derby.remaining;
+ for(let i=0;i<39;i++)g.update(50);assert.equal(g.derbyCountdownActive,false);g.update(50);assert.equal(g.derbyCountdownActive,true);g.setCursor(.33,-.42);
  for(let i=0;i<59;i++)g.update(50);
- assert.equal(g.phase,'intro');assert.equal(g.phaseTime,2950);assert.equal(g.derby.remaining,full);
- g.update(50);assert.equal(g.phase,'windup');assert.equal(g.derby.remaining,full);assert.equal(g.pitch.speed,150);assert.equal(g.pitch.windupMs,380);
+ assert.equal(g.phase,'intro');assert.equal(g.phaseTime,4950);assert.equal(g.derby.remaining,full);
+ g.update(50);assert.equal(g.cursor.x,.33);assert.equal(g.cursor.y,-.42);assert.equal(g.phase,'windup');assert.equal(g.derby.remaining,full);assert.equal(g.pitch.speed,150);assert.equal(g.pitch.windupMs,380);
  for(let i=0;i<7;i++)g.update(50);
  assert.equal(g.phase,'windup');g.update(50);assert.equal(g.phase,'pitch');
  g.power=false;g.bunt=true;g.attempt({x:g.pitch.targetX,y:g.pitch.targetY},false,0,false);
  assert.equal(g.power,true);assert.equal(g.bunt,false);
- const kinds=['landing','outfield','sweep','fan'];
+ const kinds=['landing','outfield','sweep','fan','vision','stands','field','sideline'];
  const plans=kinds.map((kind,i)=>G.derbyShowPlan({derby:{turnHR:i+1},field:{ball:{x:20,y:120},homerCelebration:{level:1}}}));
  assert.deepEqual(Array.from(plans,p=>p.kind),kinds);
  assert.equal(plans[1].count,7);assert(plans[1].lanes[0].angle<-.65&&plans[1].lanes.at(-1).angle>.65);
  assert(plans[2].lanes.at(-1).delay-plans[2].lanes[0].delay>.3);
  assert(plans[3].lanes[0].tilt<0&&plans[3].lanes.at(-1).tilt>0);
+ assert(plans[4].lanes.every(p=>p.site==='vision'));assert(plans[5].lanes.every(p=>p.site==='stands'));assert(plans[6].lanes.every(p=>p.site==='field'));assert.equal(plans[1].theme,'rainbow');
  assert.equal(G.derbyShowPlan({derby:{turnHR:1},field:{homerCelebration:{walkoff:true},ball:{x:0,y:120}}}).kind,'finale');
- console.log('PASS v268: three-second uncharged countdown, 380ms windup, forced power swing and four deterministic stadium plans');
+ console.log('PASS v269: uncharged pre-pitch countdown, preserved aim, 380ms windup, eight deterministic camera plans');
 }
 {
  const g=make('record');g.beginHalf();assert.equal(g.pitch.speed,150);assert.equal(g.derby.remaining,120000);assert.equal(g.crowdAttendanceMode,'full');
@@ -37,7 +39,7 @@ const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',we
  assert(npb&&kbo);const choice=npb.batters[0];
  const g=make('international',{homeTeamId:cp.id,derby:{entrants:[{clubId:npb.id,playerId:choice.id}]}});
  const list=g.derby.rounds[0].flatMap(m=>m.entrants);
- assert.equal(list.length,8);assert.equal(new Set(list.map(e=>e.club.id+'/'+e.player.id)).size,8);
+ assert.equal(list.length,8);assert.equal(g.derby.drawSlot,list.findIndex(e=>e.user));assert.equal(new Set(list.map(e=>e.club.id+'/'+e.player.id)).size,8);
  assert(list.some(e=>e.player.id===choice.id&&e.club.id===npb.id));assert(list.some(e=>e.club.id.startsWith('kbo-')));
  const d=g.derby;if(!d.userBatsSecond){d.turnHR=99;g.finishDerbyTurn();}
  const clips=d.matchup.normalClips;assert(clips?.length);assert.equal(clips.filter(x=>x.result.hr).length,d.matchup.normal[1-d.userIndex]);assert(clips.every(x=>x.result&&Number.isFinite(x.speed)));
@@ -80,7 +82,7 @@ assert(start>=0&&end>start);
 const block=app.slice(start,end);
 function peer(amHost){
  const cc=context(),out=[],el={hidden:false,classList:{toggle(){}},textContent:'',style:{}};
- Object.assign(cc,{console,online:{role:amHost?'host':'guest',session:{open:true,send(m){out.push(JSON.parse(JSON.stringify(m)));return true;},canSendState(){return true;}}},game:null,settings:{difficulty:'standard'},modalKind:'',saved:false,lastMode:'',derbyCountdown:-1,NightUniforms:{resolvedKit(){return {};}},closeModal(){},unlockAudio(){},activateGame(){},updateStyle(){},updateUI(){},derbyHud(){},updateDerbyClock(){},derbySpark(){},sound(){},derbyRecord(){},recordOnlineResult(){},onlineParkDefinition(){return null;},modal(){},modalTitle(){return '';},derbyResultHero(){return '';},derbyStats(){return '';},uiEscape:s=>String(s),$:()=>el,records:{hr:0,hits:0,maxDistance:0}});
+ Object.assign(cc,{console,online:{role:amHost?'host':'guest',session:{open:true,send(m){out.push(JSON.parse(JSON.stringify(m)));return true;},canSendState(){return true;}}},game:null,settings:{difficulty:'standard'},modalKind:'',saved:false,lastMode:'',derbyCountdown:-1,NightUniforms:{resolvedKit(){return {};}},closeModal(){},unlockAudio(){},activateGame(){},updateStyle(){},updateUI(){},derbyHud(){},updateDerbyClock(){},derbySpark(){},derbyVictory(g,c,done){done();},sound(){},derbyRecord(){},recordOnlineResult(){},onlineParkDefinition(){return null;},modal(){},modalTitle(){return '';},derbyResultHero(){return '';},derbyStats(){return '';},uiEscape:s=>String(s),$:()=>el,records:{hr:0,hits:0,maxDistance:0}});
  vm.runInContext(block,cc);cc.onEvent=(t,d)=>{if(t==='hit')cc.onlineDerbyOnHit(d);else if(t==='derby-ball')cc.onlineDerbyRecord(d);else if(t==='derby-online-turn')cc.onlineDerbyEndTurn();};
  const m={contestId:'test',hostClub:'owls',guestClub:'foxes',hostBatter:cc.NightTeams.get('owls').batters[0].id,guestBatter:cc.NightTeams.get('foxes').batters[0].id,first:0,park:'tokyo-dome',difficulty:'standard'};
  cc.setupOnlineDerby(m,amHost);return {cc,out};
@@ -97,3 +99,4 @@ assert(a.cc.game.derby.pendingFinish);
 for(let i=0;i<80;i++)a.cc.game.update(50);transfer(a,h);
 assert(h.cc.online.derbyContest.done);assert(a.cc.online.derbyContest.done);assert.equal(h.cc.online.derbyContest.winner,1);assert.equal(a.cc.online.derbyContest.winner,1);assert(h.cc.online.derbyContest.walkOff);assert.equal(h.cc.game.phase,'ended');assert.equal(a.cc.game.phase,'ended');
 console.log('PASS v262: enhanced derby, league selection, real-physics CPU clips, timed spectator frames, synchronized records and walk-off');
+

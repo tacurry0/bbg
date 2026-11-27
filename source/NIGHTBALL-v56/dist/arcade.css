@@ -613,3 +613,42 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 .dr-count-bars i.lit{background:#fcd374;border-color:#fff0bf;box-shadow:0 0 6px #ffcb5880}
 @keyframes dr-count-pop{from{opacity:0;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.dr-start-count>b{animation:none}}
+
+
+/* v269: pre-pitch countdown leaves the strike zone open; draw and victory
+   use the same broadcast navy/gold style as the live derby scoreboard. */
+.game-screen.derby-active .derby-intro-overlay{padding:0 12px 33%;background:radial-gradient(ellipse at 50% 38%,#06172b66,transparent 56%)}
+.dr-start-count>b{font-size:clamp(66px,23vw,118px)}
+.dr-start-count{gap:5px;transform:none}
+.modal[data-kind="derby-draw"]{width:min(94vw,420px);max-width:420px;border:2px solid #8ed5f1;border-radius:13px;background:linear-gradient(165deg,#143a60,#071a31);color:#f5f9ff;box-shadow:0 0 0 2px #067bbb,0 16px 44px #001c45a3;padding:13px}
+.dr-draw{display:grid;gap:12px;text-align:center;justify-items:center}
+.dr-draw header{display:grid;gap:3px}.dr-draw header small{font:900 italic 12px Arial;letter-spacing:.14em;color:#fad27b}
+.dr-draw header h2{color:#fff!important;margin:0;font-size:23px}.dr-draw header p{color:#b8d7ea;font-size:12px;margin:0}
+.dr-draw-player{display:flex;align-items:center;justify-content:center;gap:8px;color:#eff9ff;font-size:15px}.dr-draw-player img{width:29px;height:29px;object-fit:contain;border-radius:5px;background:#fff;padding:2px}
+.dr-wheel-box{position:relative;width:min(61vw,235px);aspect-ratio:1;margin:5px auto 0;display:grid;place-items:center}
+.dr-wheel{position:absolute;inset:0;border:4px solid #f0c772;border-radius:50%;box-shadow:0 0 0 2px #315d83,inset 0 0 18px #001b36,0 4px 18px #0008;background:repeating-conic-gradient(from -22.5deg,#2974ab 0deg 43.5deg,#e1ba66 43.5deg 45deg,#123858 45deg 88.5deg,#e1ba66 88.5deg 90deg)}
+.dr-wheel>span{position:absolute;inset:0;transform:rotate(var(--a));display:flex;justify-content:center;padding-top:10%;align-items:flex-start}
+.dr-wheel>span>b{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#092643b0;color:#fff6d6;font:950 21px Arial;text-shadow:0 1px 2px #102331;transform:rotate(calc(-1 * var(--a)))}
+.dr-wheel-hub{position:relative;z-index:2;width:30%;aspect-ratio:1;display:grid;place-items:center;border-radius:50%;border:2px solid #f5d17d;background:radial-gradient(circle at 50% 27%,#316f99,#09233e 72%);box-shadow:0 2px 9px #0009;color:#fff1c3;font:900 italic 13px Arial}
+.dr-wheel-pointer{position:absolute;z-index:3;top:-3px;left:50%;transform:translateX(-50%);width:28px;height:30px;background:linear-gradient(90deg,#b87e21,#fff0b0,#db9d31);clip-path:polygon(0 0,100% 0,50% 100%);filter:drop-shadow(0 2px 2px #0009)}
+.dr-draw-status{min-height:40px;display:grid;place-items:center;align-content:center;font-weight:800;color:#e5f1fa;font-size:14px}.dr-draw-status strong{color:#ffdf91;font-size:25px;line-height:1}.dr-draw-status span{font-size:11px;margin-top:4px}
+.dr-draw-slots{width:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.dr-draw-slots>div{display:grid;gap:4px;grid-template-columns:1fr 1fr;padding:5px;background:#0d243b;border:1px solid #3c6283;border-radius:6px}
+.dr-draw-slots small{grid-column:1/-1;color:#c5deef;font-size:10px}
+.dr-draw-slots span{min-width:0;background:#214764;border:1px solid #3d6689;border-radius:4px;padding:5px 0;font:900 13px Arial;color:#f2f6fb}
+.dr-draw-slots span.selected{background:#ffe29d;border-color:#fff0ba;box-shadow:0 0 9px #f9cb6b90;color:#433117}
+.dr-draw>.primary-button{width:100%;font-size:13px}
+.derby-victory-overlay{position:absolute;inset:0;z-index:30;display:grid;grid-template-rows:auto 1fr auto;align-items:center;text-align:center;pointer-events:none;color:#fff;padding:clamp(82px,19vh,164px) 12px 18px;background:linear-gradient(0deg,#061627ef,transparent 54%)}
+.derby-victory-overlay[hidden]{display:none}
+.dr-victory-glow{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 67%,#ffcb552c,transparent 65%);animation:dr-victory-glow .6s ease-out both}
+.dr-victory-head{display:grid;gap:4px;justify-items:center;color:#fff4c9;font:900 italic 12px Arial;letter-spacing:.14em;text-shadow:0 2px 4px #0b1928}
+.dr-victory-head small{font:800 11px Arial;letter-spacing:.03em}
+.dr-victory-copy{align-self:end;display:grid;justify-items:center;gap:4px;margin-bottom:9%;animation:dr-victory-in .55s cubic-bezier(.15,.8,.25,1) both;text-shadow:0 2px 6px #07182b}
+.dr-victory-copy img{height:54px;width:54px;object-fit:contain;filter:drop-shadow(0 3px 8px #0008)}
+.dr-victory-copy strong{font:1000 italic clamp(36px,12.5vw,74px)/1.04 Arial,sans-serif;letter-spacing:-.04em;color:#ffecac;-webkit-text-stroke:1px #fff4c7;text-shadow:0 3px #b97a24,0 6px #7d4d13,0 8px 10px #091a29}
+.dr-victory-copy b{font-size:23px;color:#fff7d9}.dr-victory-copy>span{color:#deecf9;font-size:16px;font-weight:850}
+.dr-victory-skip{pointer-events:auto;justify-self:center;min-height:42px;min-width:150px;padding:8px 16px;border:1px solid #eacb85;border-radius:7px;background:#0c2a46dd;color:#fff5d7;font-weight:800}
+.derby-victory-overlay.champion .dr-victory-copy img{width:83px;height:83px}.derby-victory-overlay.champion .dr-victory-copy strong{font-size:clamp(32px,11vw,64px)}
+@keyframes dr-victory-in{from{opacity:0;transform:translateY(16px) scale(.9)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes dr-victory-glow{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.dr-victory-copy,.dr-victory-glow{animation:none}}

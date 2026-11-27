@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=268';
+} from './stadium-fx.js?v=269';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -1013,40 +1013,7 @@ export class StadiumRenderer {
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
   // Keep the live ball camera until landing. Each confirmed homer uses a
   // distinct planned stadium shot; wider views fit actual emitter positions.
-  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'&&!g.replayView){
-   const plan=NightGame.derbyShowPlan(g),park=g.park,portrait=this.camera.aspect<.95;
-   const a=plan.center,r=NightPlayers.wallDistance(park,a),h=NightPlayers.fenceHeight(park,a);
-   const sx=Math.sin(a),sz=Math.cos(a),lx=Math.cos(a),lz=-Math.sin(a);
-   let cx,cz,height,tx,tz,ty,baseFov;
-   if(plan.wide){
-    const frame=park.pro?proOverview(park):OVERVIEW_FRAMES[park.id]||DEFAULT_OVERVIEW;
-    cx=0;cz=-(frame.behind+4);height=frame.height+3;
-    tx=0;tz=park.center*.76;ty=h+3.8;baseFov=portrait?91:64;
-   }else{
-    const sweep=plan.kind==='sweep',fan=plan.kind==='fan',side=sweep?plan.direction*14:fan?-plan.direction*19:0;
-    const back=fan?53:sweep?49:portrait?41:32;
-    cx=sx*(r-back)+lx*side;cz=sz*(r-back)+lz*side;
-    height=h+(fan?22:sweep?10:5.5);tx=sx*(r+3);tz=sz*(r+3);ty=h+(fan?2.6:6.8);
-    if(sweep){const slide=clamp(g.phaseTime/1200,0,1)*8-4;tx+=lx*slide*plan.direction;tz+=lz*slide*plan.direction;}
-    baseFov=portrait?(fan?64:sweep?62:plan.level>=3?62:55):47;
-   }
-   const roof=NightPlayers.roofSurface(park,cx,cz);
-   height=Math.min(height,Number.isFinite(roof)?roof-3.5:Infinity);
-   this.camera.position.set(cx,height,-cz);this.cameraFocus.set(tx,ty,-tz);
-   this.camera.lookAt(this.cameraFocus);this.camera.updateMatrixWorld(true);
-   // Fit all lane anchors into the true portrait/landscape frustum, rather
-   // than using one vertical FOV for both. Leave space at the sides.
-   let required=0;
-   for(const lane of plan.lanes){
-    const d=NightPlayers.wallDistance(park,lane.angle)+2,x=Math.sin(lane.angle)*d,z=Math.cos(lane.angle)*d,y=NightPlayers.fenceHeight(park,lane.angle)+4.5;
-    const v=new T.Vector3(x,y,-z).applyMatrix4(this.camera.matrixWorldInverse),depth=-v.z;
-    if(depth>1)required=Math.max(required,Math.abs(v.x)/(depth*this.camera.aspect*.83),Math.abs(v.y)/(depth*.78));
-   }
-   this.camera.fov=clamp(Math.max(baseFov,T.MathUtils.radToDeg(2*Math.atan(required))),40,112);
-   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=f;
-   if(this.keyLight){this.keyLight.target.position.set(sx*r,0,-sz*r);this.keyLight.target.updateMatrixWorld();}
-   return;
-  }
+  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'&&!g.replayView){this.derbyCamera(g);this.cameraPlay=f;return;}
   const h=g.replayView&&g.replayHighlight,a=h&&f.fielders[h.fielder];
   if(a&&Math.abs(f.elapsed-h.time)<1.2){const side=a.x>0?-1:1;this.camera.position.set(a.x+side*5,5.8,-a.y+8);this.camera.lookAt(a.x,1.55,-a.y);this.camera.fov=this.camera.aspect<.85?48:40;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=null;return;}
   const moment=g.replayView?g.replayCloseMoment:null;
@@ -1167,6 +1134,43 @@ export class StadiumRenderer {
    this.keyLight.target.position.set(0,0,0);
    this.keyLight.target.updateMatrixWorld();
   }
+ }
+ // Frame the actual jets and the entire aerial burst envelope, not just
+ // the point of landing.  Eight distinct shots work in both aspect ratios.
+ derbyCamera(g){
+  const plan=NightGame.derbyShowPlan(g),park=g.park,portrait=this.camera.aspect<.95;
+  const {anchors,shells}=this.vfx.derbyShow.layout(g,plan),a=plan.center,r=NightPlayers.wallDistance(park,a),h=NightPlayers.fenceHeight(park,a);
+  const sx=Math.sin(a),sz=Math.cos(a),lx=Math.cos(a),lz=-Math.sin(a);
+  const average=(list,k)=>list.reduce((n,p)=>n+p[k],0)/list.length;
+  const tx=average(anchors,'x'),tz=average(anchors,'z')-1,ty=(average(anchors,'y')+average(shells,'y'))*.5+2;
+  let cx,cz,height,baseFov;const kind=plan.kind;
+  if(plan.wide){
+   // Elevated infield shot keeps the entire outfield in frame; no net or
+   // empty seats in the foreground. The taller jets remain visible.
+   cx=0;cz=portrait?-9:8;height=kind==='victory'?21:17;baseFov=portrait?89:63;
+  }else if(kind==='vision'){
+   cx=tx-6;cz=tz-(portrait?56:43);height=Math.max(3,average(anchors,'y')-8);baseFov=portrait?60:45;
+  }else if(kind==='stands'){
+   cx=tx-sx*49-lx*plan.direction*19;cz=tz-sz*49-lz*plan.direction*19;height=Math.max(13,average(anchors,'y')+7);baseFov=portrait?65:49;
+  }else if(kind==='field'){
+   cx=tx-sx*43;cz=tz-sz*43;height=2.6;baseFov=portrait?61:48;
+  }else if(kind==='sideline'){
+   cx=tx-sx*47+lx*plan.direction*30;cz=tz-sz*47+lz*plan.direction*30;height=h+7;baseFov=portrait?65:49;
+  }else{
+   const sweep=kind==='sweep',fan=kind==='fan',side=sweep?plan.direction*14:fan?-plan.direction*19:0;
+   const back=fan?57:sweep?52:portrait?46:37;
+   cx=sx*(r-back)+lx*side;cz=sz*(r-back)+lz*side;height=h+(fan?23:sweep?11:6);baseFov=portrait?60:46;
+  }
+  const roof=NightPlayers.roofSurface(park,cx,cz);height=Math.min(height,Number.isFinite(roof)?roof-3.5:Infinity);
+  this.camera.position.set(cx,height,-cz);this.cameraFocus.set(tx,ty,-tz);
+  this.camera.lookAt(this.cameraFocus);this.camera.updateMatrixWorld(true);
+  let required=0;
+  const fit=(x,y,z)=>{const v=new T.Vector3(x,y,-z).applyMatrix4(this.camera.matrixWorldInverse),depth=-v.z;if(depth>1)required=Math.max(required,Math.abs(v.x)/(depth*this.camera.aspect*.87),Math.abs(v.y)/(depth*.66));};
+  for(const p of anchors){fit(p.x,p.y,p.z);fit(p.x,p.y+Math.min(8*p.lane.height,p.clearance*.72),p.z);}
+  for(const p of shells){fit(p.x-p.radius,p.y,p.z);fit(p.x+p.radius,p.y,p.z);fit(p.x,p.y+p.radius,p.z);fit(p.x,p.y-p.radius,p.z);}
+  this.camera.fov=clamp(Math.max(baseFov,T.MathUtils.radToDeg(2*Math.atan(required))),40,114);
+  this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
+  if(this.keyLight){this.keyLight.target.position.set(sx*r,0,-sz*r);this.keyLight.target.updateMatrixWorld();}
  }
  // Camera coordinates are world-space; actors use reflected local Z.
  renderLiveCut(g,time,cut=g.broadcastCut){
@@ -1315,7 +1319,7 @@ export class StadiumRenderer {
   // whole aiming overlay is suppressed while a pitch is live; the zone is
   // drawn only for the post-call reveal window (umpireCallReveal).
   const umpireReveal=g.umpireMode?g.umpireCallReveal?.():null;
-  const aiming=!g.replayView&&((['aim','windup','pitch','miss','intro'].includes(g.phase)&&!g.umpireMode)||!!umpireReveal);if(!aiming)return;
+  const aiming=!g.derbyVictory&&!(g.derby?.enhanced&&g.phase==='intro'&&!g.derbyCountdownActive)&&!g.replayView&&((['aim','windup','pitch','miss','intro'].includes(g.phase)&&!g.umpireMode)||!!umpireReveal);if(!aiming)return;
   const corners=[[-1,-1],[1,-1],[1,1],[-1,1]].map(([x,y])=>this.aimPoint(x,y));
   const left=Math.min(...corners.map(p=>p.x)),right=Math.max(...corners.map(p=>p.x));
   const top=Math.min(...corners.map(p=>p.y)),bottom=Math.max(...corners.map(p=>p.y));
@@ -1398,13 +1402,14 @@ export class StadiumRenderer {
    this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
   }
   this.overviewMode=g?.phase==='intro'&&(g.derby?.enhanced?g.phaseTime<1000:g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
-   const derbyHR=g?.derby?.enhanced&&g.phase==='result'&&g.field?.outcome==='hr',celebration=g?.field?.homerCelebration;
+   const victory=g?.derbyVictory,derbyHR=g?.derby?.enhanced&&g.phase==='result'&&g.field?.outcome==='hr',celebration=g?.field?.homerCelebration;
    const derbyPlan=derbyHR?NightGame.derbyShowPlan(g):null;
    const derbyCutAt=celebration?.walkoff&&(g.derby.round===2||g.derby.mode==='online')?2450:Infinity;
    const derbyCut=derbyHR&&g.phaseTime>=derbyCutAt;
-   const cameraView=derbyHR?(derbyCut?'derby-batter-celebration':'derby-'+derbyPlan.kind):g?.derby?.enhanced&&g.phase==='intro'&&!this.overviewMode?(g.phaseTime<2000?'derby-batter-intro':'derby-ready'):g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
+   const cameraView=victory?'derby-victory':derbyHR?(derbyCut?'derby-batter-celebration':'derby-'+derbyPlan.kind):g?.derby?.enhanced&&g.phase==='intro'&&!this.overviewMode?(g.phaseTime<2000?'derby-batter-intro':'derby-ready'):g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;
-  if(field)this.followPlay(g,time);
+  if(victory)this.derbyCamera(g);
+  else if(field)this.followPlay(g,time);
   else if(g?.broadcastIntro)this.broadcastCamera(g);
   else if(this.overviewMode)this.overviewCamera(g.park);
   else if(g?.derby?.enhanced&&g.phase==='intro'){
@@ -1486,7 +1491,8 @@ export class StadiumRenderer {
     this.ballShadow.scale.setScalar(.88);this.ballShadow.visible=true;
    }
   }
-   if(derbyCut){this.renderLiveCut(g,time,{kind:'homer',side:g.side,playerId:g.batter.id,level:celebration.level,variant:'standard',startAt:derbyCutAt,duration:1150});}
+   if(victory){this.ball.visible=this.ballHalo.visible=this.ballShadow.visible=this.trail.visible=this.landing.visible=this.landingInner.visible=false;}
+   else if(derbyCut){this.renderLiveCut(g,time,{kind:'homer',side:g.side,playerId:g.batter.id,level:celebration.level,variant:'standard',startAt:derbyCutAt,duration:1150});}
   else if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
   else if(g&&!g.replayView&&(g.absCalledStrikeout||g.phase==='result'&&g.pitch?.strikeCelebration)&&!g.fastForward&&!g.spectate&&!g.autoDefense&&!g.autoBatting){const k=g.pitch?.strikeCelebration,side=g.side==='home'?'away':'home';this.renderLiveCut(g,time,{kind:'strikeout',side,playerId:g.pitcher.id,level:k?.level||1,duration:1500,preview:g.phase==='abs-call'});}
   const wet=window.NightGame.rainLevel(g)/3;
@@ -1550,3 +1556,4 @@ export class UniformPreview {
   r.gl.dispose?.();r.gl.forceContextLoss?.();
  }
 }
+

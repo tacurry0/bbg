@@ -22,7 +22,10 @@
    let cpu=pool;
    if(this.enhanced){const selected=(options.entrants||[]).map(e=>{const team=clubs.find(c=>c.id===e.clubId),player=team?.batters.find(p=>p.id===e.playerId);return player?{club:team,player}:null;}).filter(Boolean).filter(e=>e.club.id!==club.id||e.player.id!==batter.id);const used=new Set();cpu=[];for(const e of selected){const key=e.club.id+'/'+e.player.id;if(!used.has(key)&&cpu.length<7){used.add(key);cpu.push(e);}}const shortlist=pool.slice(0,Math.max(35,Math.ceil(pool.length*.08))).filter(e=>!used.has(e.club.id+'/'+e.player.id));if(this.mode==='international'){for(const league of ['npb','cpbl','kbo']){if(cpu.length>=7||leagueOf(club)===league||cpu.some(e=>leagueOf(e.club)===league))continue;const choices=pool.filter(e=>leagueOf(e.club)===league&&!used.has(e.club.id+'/'+e.player.id)).slice(0,24);if(choices.length){const e=choices[Math.floor(Math.random()*choices.length)];cpu.push(e);used.add(e.club.id+'/'+e.player.id);}}}while(cpu.length<7&&shortlist.length){const e=shortlist.splice(Math.floor(Math.random()*shortlist.length),1)[0];if(!used.has(e.club.id+'/'+e.player.id)){cpu.push(e);used.add(e.club.id+'/'+e.player.id);}}for(const e of pool){if(cpu.length>=7)break;if(!cpu.some(p=>p.club.id===e.club.id&&p.player.id===e.player.id))cpu.push(e);}}
    const seeds=[{club,player:batter,user:true},...cpu].sort((a,b)=>numberOfHomers(b.player)-numberOfHomers(a.player)||b.player.power-a.player.power||a.player.id.localeCompare(b.player.id));
-   const draw=pairOrder.map(i=>({...seeds[i],seed:i+1,user:seeds[i].user===true}));
+   const order=pairOrder.slice();
+   if(this.enhanced)for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+   const draw=order.map(i=>({...seeds[i],seed:i+1,user:seeds[i].user===true}));
+   this.drawSlot=draw.findIndex(e=>e.user);
    this.rounds=[Array.from({length:4},(_,i)=>this.match(0,draw[i*2],draw[i*2+1])),[],[]];
    this.round=0;this.matchup=null;this.over=false;
    this.advance();
@@ -143,3 +146,4 @@
   }
  };
 })();
+
