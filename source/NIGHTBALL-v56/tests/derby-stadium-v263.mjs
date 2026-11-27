@@ -23,3 +23,12 @@ for(let i=0;i<4000;i++){mat.makeTranslation((i%100)-50,3+Math.floor(i/100)*.6,90
 r.prepareSupporters(true);assert(Number(r.canvas.dataset.spectators)>1000);const g=new NightGame('derby','standard',()=>{},{park:'tokyo-dome',crowdAttendance:'empty',derby:{enhanced:true,mode:'record'}});r.updateSupporters(g);assert.equal(Number(r.canvas.dataset.spectators),r.supporterMeshes[0].list.length);
 r.prepareSupporters(false);assert(Number(r.canvas.dataset.spectators)<1000);
 console.log('PASS v263: 3D stadium firework geometry outdoors and indoors, full crowd batch rebuild and fallback');
+
+// Decode the actual shipped Tokyo model, not only the hidden fallback stand.
+const {decodeTokyoDome}=await import('../dist/tokyo-model.js');
+const {tokyoDerbyCrowd}=await import('../dist/tokyo-nightball.js');
+globalThis.Image=class {async decode(){}};
+const raw=fs.readFileSync(new URL('../dist/assets/3d/tokyo-dome-real.glb',import.meta.url));
+const model=await decodeTokyoDome(raw.buffer.slice(raw.byteOffset,raw.byteOffset+raw.byteLength));
+const live=tokyoDerbyCrowd(r,model);assert(live.rows.length>20000);assert.equal(live.mesh.parent,model);assert.equal(live.mesh.count,live.rows.length);assert(live.rows.every(f=>Number.isFinite(f.y)&&f.y>2));
+console.log('PASS actual Tokyo Dome GLB seat rows: '+live.rows.length+' visible audience instances');

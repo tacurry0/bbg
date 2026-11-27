@@ -564,7 +564,7 @@ export class DerbyStadiumShow{
    const count=56,geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3));
    const mat=new T.LineBasicMaterial({color:palettes[i],transparent:true,opacity:1,depthWrite:false,blending:T.AdditiveBlending,fog:false});
    const lines=new T.LineSegments(geo,mat);lines.frustumCulled=false;const root=new T.Group();root.add(lines);
-   const stars=new T.InstancedMesh(new T.SphereGeometry(.22,5,4),new T.MeshBasicMaterial({color:palettes[i],transparent:true,opacity:1,blending:T.AdditiveBlending,depthWrite:false,fog:false}),count);stars.frustumCulled=false;root.add(stars);
+   const stars=new T.InstancedMesh(new T.SphereGeometry(.13,5,4),new T.MeshBasicMaterial({color:palettes[i],transparent:true,opacity:1,blending:T.AdditiveBlending,depthWrite:false,fog:false}),count);stars.frustumCulled=false;root.add(stars);
    const glow=new T.Sprite(new T.SpriteMaterial({map:this.r.glowTexture(),color:palettes[i],transparent:true,depthWrite:false,blending:T.AdditiveBlending,opacity:.8}));root.add(glow);
    this.group.add(root);return {root,lines,glow,stars,count,dummy:new T.Object3D()};
   });
@@ -594,7 +594,7 @@ export class DerbyStadiumShow{
   this.bursts.forEach((b,i)=>{
    const t=age-(i%3)*.14-.06;b.root.visible=i<count&&t>=0&&t<1.58;
    if(!b.root.visible)return;
-   const a=clamp(angle+(i-(count-1)/2)*.125,-.76,.76);
+   const a=clamp(angle+(i-(count-1)/2)*(this.r.camera?.aspect<.85?.089:.125),-.76,.76);
    // Indoor celebrations use low cold-spark fountains above the rail;
    // outdoors the same rigs are aerial bursts, safely clear of the stands.
    const clearance=place(b.root,a,indoors?4.5:9,indoors?6.5+(i%2)*2:16+(i%3)*6);

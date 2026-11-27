@@ -1,6 +1,6 @@
 import { jerseyUV, torsoGeometry, pantsTexture, capGeometry, visorGeometry, uniformTexture, helmetOrCap, contrast } from './uniform-render.js?v=228';
 import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=243';
-import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
+import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit, updateTokyoDerbyCrowd } from './tokyo-nightball.js?v=264';
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=263';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=263';
+} from './stadium-fx.js?v=264';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -1013,10 +1013,10 @@ export class StadiumRenderer {
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
   if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'){
    const a=clamp(Math.atan2(f.ball.x,f.ball.y),-.67,.67),r=NightPlayers.wallDistance(g.park,a),h=NightPlayers.fenceHeight(g.park,a),inside=!!g.park.roofHeight||g.park.theme==='dome';
-   const cy=inside?Math.min(19,h+12):h+17,dist=r-(this.camera.aspect<.85?40:34);
-   const camera=this.fieldPosition.set(Math.sin(a)*dist,cy,-Math.cos(a)*dist),target=this.fieldFocus.set(Math.sin(a)*(r+6),h+(inside?7:11),-Math.cos(a)*(r+6));
+   const cy=inside?Math.min(19,h+12):h+17,dist=r-(this.camera.aspect<.85?52:38);
+   const camera=this.fieldPosition.set(Math.sin(a)*dist,cy,-Math.cos(a)*dist),target=this.fieldFocus.set(Math.sin(a)*(r+6),h+(inside?11:13),-Math.cos(a)*(r+6));
    camera.y=Math.min(camera.y,domeCameraLimit(this,camera,NightPlayers.roofSurface(g.park,camera.x,-camera.z)-3));
-   this.camera.position.copy(camera);this.camera.lookAt(target);this.camera.fov=this.camera.aspect<.85?70:58;
+   this.camera.position.copy(camera);this.camera.lookAt(target);this.camera.fov=this.camera.aspect<.85?74:60;
    if(g.hit?.distance>=150&&g.phaseTime>500)this.camera.fov-=Math.min(5,(g.phaseTime-500)/180);
    this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=f;return;
   }
@@ -1353,6 +1353,7 @@ export class StadiumRenderer {
  }
  render(g,time){
   this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.derbyCrowdWanted=!!g.derby;this.setPark(g.park,window.nightSettings?.gameLighting);if(this.supporterDerby!==this.derbyCrowdWanted)this.prepareSupporters(this.derbyCrowdWanted);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);const introSide=g.broadcastIntro&&g.phaseTime>=4000&&g.phaseTime<7000?(g.phaseTime<5500?'away':'home'):null;const shownSide=introSide||def,shownPitcher=introSide?g.introStarter(introSide)||g.pitcher:g.pitcher;this.stylePlayer(this.pitcher,shownSide,shownPitcher.no,g.teams[shownSide],g.uniformKits?.[shownSide]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
+  updateTokyoDerbyCrowd(this,g);
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,g.derby?.turnHR,g.derby?.streak,g.derby?.enhanced&&g.phase==='result'&&g.hit?.kind==='hr'?Math.floor(g.phaseTime/200):0,

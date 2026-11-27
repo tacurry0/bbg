@@ -1,5 +1,6 @@
 import { decodeTokyoDome } from './tokyo-model.js';
-import { venueVision } from './venue-vision.js?v=74';
+import * as T from './vendor/three.module.min.js';
+import { venueVision } from './venue-vision.js?v=263';
 
 // Instances are per renderer. A title-screen preview and a live game can coexist.
 const instances = new WeakMap();
@@ -50,6 +51,7 @@ export function leaveTokyoDome(renderer) {
   const state = instances.get(renderer);
   if (!state) return;
   state.serial++;
+  delete renderer.canvas.dataset.spectatorModel;
   if (state.model) state.model.visible = false;
   for (const [mesh, visible] of state.hidden) mesh.visible = visible;
   state.hidden.clear();
@@ -114,4 +116,52 @@ export function domeCameraLimit(renderer, position, defaultLimit) {
   // Lower envelope of the quilted roof. Leave clearance for suspended equipment.
   const membrane = 35.7 - 3 * d + 24.93 * Math.max(0, 1 - r2);
   return Math.min(defaultLimit, membrane - 4);
+}
+
+// The real Tokyo model replaces (hides) the procedural park completely.
+// Its seat-pan quads describe full rows, not individual chairs: subdivide
+// each actual row and attach the fans to the displayed GLB itself.
+export function tokyoDerbyCrowd(renderer,model){
+  const rows=[],v=new T.Vector3(),a=new T.Vector3(),b=new T.Vector3(),c=new T.Vector3(),d=new T.Vector3(),left=new T.Vector3(),right=new T.Vector3();
+  model.getObjectByName('Stands')?.traverse(mesh=>{
+    if(!mesh.isMesh||!/seat pans/i.test(mesh.name))return;
+    const p=mesh.geometry.attributes.position,idx=mesh.geometry.index;
+    if(!p||!idx)return;
+    for(let i=0;i+5<idx.count;i+=6){
+      a.fromBufferAttribute(p,idx.getX(i));b.fromBufferAttribute(p,idx.getX(i+1));
+      c.fromBufferAttribute(p,idx.getX(i+2));d.fromBufferAttribute(p,idx.getX(i+5));
+      left.copy(a).add(d).multiplyScalar(.5);right.copy(b).add(c).multiplyScalar(.5);
+      const width=left.distanceTo(right),count=Math.max(1,Math.round(width/.80));
+      for(let n=0;n<count;n++){
+        v.copy(left).lerp(right,(n+.5)/count);
+        rows.push({x:v.x,y:v.y,z:v.z,width:width/count,seed:((Math.imul(rows.length+193,2654435761)>>>0)%100003)/100003});
+      }
+    }
+  });
+  if(!rows.length)return null;
+  const geometry=renderer.supporterGeometry(false),material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:1,side:T.DoubleSide});
+  const mesh=new T.InstancedMesh(geometry,material,rows.length);mesh.name='Tokyo Dome full derby audience';mesh.castShadow=false;mesh.receiveShadow=false;mesh.frustumCulled=false;model.add(mesh);
+  const dummy=new T.Object3D();
+  for(let i=0;i<rows.length;i++){
+    const f=rows[i],yaw=Math.atan2(-f.x,-51-f.z);dummy.position.set(f.x+Math.sin(yaw)*.06,f.y+.04,f.z+Math.cos(yaw)*.06);dummy.rotation.set(0,yaw,0);
+    dummy.scale.set(Math.min(2.1,Math.max(1.18,f.width/.48)),.85+f.seed*.23,.90);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+  }
+  mesh.instanceMatrix.needsUpdate=true;mesh.computeBoundingSphere();
+  return {mesh,rows,key:null};
+}
+export function updateTokyoDerbyCrowd(renderer,g){
+  const state=instances.get(renderer);
+  if(!state?.model?.visible||renderer.parkKey!=='tokyo-dome')return;
+  if(!g?.derby){if(state.derbyCrowd)state.derbyCrowd.mesh.visible=false;delete renderer.canvas.dataset.spectatorModel;return;}
+  state.derbyCrowd||=tokyoDerbyCrowd(renderer,state.model);const crowd=state.derbyCrowd;if(!crowd)return;
+  crowd.mesh.visible=true;renderer.canvas.dataset.spectators=String(crowd.rows.length);
+  renderer.canvas.dataset.spectatorModel='tokyo-dome-real';
+  const home=g.teams.home,away=g.teams.away,key=home.id+'/'+away.id;
+  if(crowd.key===key)return;crowd.key=key;
+  const colors=[0xf6df9c,0xe9e8df,0xe18c58,0x3f485c,0xa1cce4,0xc1a7d2],col=new T.Color(),hc=new T.Color(home.color||0xffd349),ac=new T.Color(away.color||0x79b5dc);
+  crowd.rows.forEach((f,i)=>{
+    col.setHex(colors[Math.floor(f.seed*colors.length)]);
+    if(f.seed<.48)col.lerp(hc,.76);else if(f.seed>.70)col.lerp(ac,.55);
+    crowd.mesh.setColorAt(i,col);
+  });crowd.mesh.instanceColor.needsUpdate=true;
 }

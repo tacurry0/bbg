@@ -33,18 +33,18 @@ try{
  await page.locator('.dr-roster-player').first().tap();await page.locator('[data-action="derby-menu-back"].dr-start').tap();
  await page.locator('[data-derby-mode="record"]').tap();
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=263');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=264');
   const render=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(g,t){if(g?.derby)window.derbyTest={g,r:this};return render.apply(this,arguments);};
  });
  await page.locator('[data-action="start-derby"]').tap();
  await page.locator('#modal-content [data-action="close"]').tap();
  await page.locator('#modal').waitFor({state:'hidden'});
- await page.waitForFunction(()=>window.derbyTest?.g.derby&&Number(document.querySelector('#game-canvas').dataset.spectators)>500,null,{timeout:45000});
+ await page.waitForFunction(()=>window.derbyTest?.g.derby&&document.querySelector('#game-canvas').dataset.spectatorModel==='tokyo-dome-real'&&Number(document.querySelector('#game-canvas').dataset.spectators)>20000,null,{timeout:45000});
  await page.evaluate(()=>{const {g,r}=window.derbyTest;g.beginHalf();g.startField(62,29,.10,false,true);while(g.phase==='field')g.updateField(1/120);assertDriver();function assertDriver(){if(g.hit.kind!=='hr')throw Error('Expected HR');}g.phaseTime=650;g.paused=true;r.render(g,g.time);});
  await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.cameraView==='derby-fireworks',null,{timeout:10000});
  const scene=await page.evaluate(()=>{const {g,r}=window.derbyTest,show=r.vfx.derbyShow;return {clock:g.derby.remaining,show:show.group.visible,jets:show.jets.filter(j=>j.root.visible).length,bursts:show.bursts.filter(b=>b.root.visible).length,spectators:Number(r.canvas.dataset.spectators)};});
- assert(scene.show&&scene.jets>=3&&scene.bursts>=3&&scene.spectators>500,JSON.stringify(scene));
+ assert(scene.show&&scene.jets>=3&&scene.bursts>=3&&scene.spectators>20000,JSON.stringify(scene));
  assert.equal(await page.locator('#modal').isVisible(),false);
  assert(await page.locator('.dr-hud').isVisible());
  await page.screenshot({path:'tests/screenshots/derby-homer-v263.png',timeout:90000});
