@@ -1,0 +1,15 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const src=fs.readFileSync(__dirname+'/../dist/game.js','utf8');
+const get=(a,b)=>src.slice(src.indexOf(a),src.indexOf(b,src.indexOf(a)));
+const test=new Function('const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));'+get('const SPECIAL_LABELS=','const RUNNER_SPEED=')+'return specialFieldChance;')();
+assert(Math.abs(test({fieldRating:90,runRating:70})-.75)<.001);
+assert(Math.abs(test({fieldRating:60,runRating:70})-.30)<.001);
+assert(test({fieldRating:90},1,true)<test({fieldRating:90},1,false));
+const NightGame=new Function('return class NightGame{'+get('static isIndoorPark(park){','static weatherLabelFor(weather){')+'static weatherLabelFor(w){return w;}}')();
+assert(NightGame.isIndoorPark({id:'tokyo-dome'}));
+assert(!NightGame.isIndoorPark({id:'dome',theme:'night'}));
+assert(NightGame.isIndoorPark({customSpec:{venue:'retractable',roofOpen:'closed'}}));
+assert(!NightGame.isIndoorPark({theme:'dome',customSpec:{venue:'retractable',roofOpen:'open'}}));
+const g=new NightGame();g.park={id:'tokyo-dome'};g.weather='rain';g.wind=5;g.field={ball:{wetField:true}};g.normalizeWeather();assert(g.weather==='clear'&&g.wind===0&&!g.field.ball.wetField&&NightGame.rainLevel(g)===0);
+assert(src.includes('play?.confirmed&&this.resultCutsEnabled'));
+console.log('Defense chance and indoor weather checks passed');

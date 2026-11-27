@@ -266,6 +266,7 @@ export function enhanceGrassMaterial(material, gl) {
     uStraightFence: { value: 0.0 },
     uIsSchool: { value: 0.0 },
     uIsDome: { value: 0.0 },
+    uWet: { value: 0.0 },
     uVenueMow: { value: new T.Vector2(0, 1) },
     uPhotoTurf: { value: 0 },
     uTurfNear: { value: new T.Color() },
@@ -287,6 +288,7 @@ export function enhanceGrassMaterial(material, gl) {
         uniform float uStraightFence;
         uniform float uIsSchool;
         uniform float uIsDome;
+        uniform float uWet;
         uniform vec2 uVenueMow;
         uniform float uPhotoTurf;
         uniform vec3 uTurfNear;
@@ -386,11 +388,11 @@ export function enhanceGrassMaterial(material, gl) {
         float grid = (1.0 - smoothstep(0.0, 0.08, abs(fract(fp.x * 0.16) - 0.5))) * 0.06;
         vec3 apronCol = uConcourseColor * (0.94 + grid + (nbNoise(fp * 0.8) - 0.5) * 0.05);
 
-        diffuseColor.rgb = mix(turfCol, apronCol, apronMask);
+        diffuseColor.rgb = mix(turfCol, apronCol, apronMask) * (1.0 - uWet * 0.18);
         float nbMowRough = mix(0.90, 0.74, mow);
       `)
       .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
-        roughnessFactor = mix(nbMowRough, 0.92, apronMask);
+        roughnessFactor = mix(nbMowRough, 0.92, apronMask) * (1.0 - uWet * 0.42);
       `)
       .replace('#include <tonemapping_fragment>', `#include <tonemapping_fragment>
         if (uPhotoTurf > 0.5) {

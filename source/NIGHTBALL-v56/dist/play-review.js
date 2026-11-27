@@ -40,9 +40,9 @@ export class PlayReview {
   if(final&&last&&frame.elapsed-last.elapsed<.001)frames[frames.length-1]=frame;
   else frames.push(frame);
   if(frames.length>385)frames.shift();
-  const highlight=final&&game.liveCutsEnabled&&['flyout','groundout','forceout','doubleplay'].includes(f.outcome)?(game.playEvents||[]).find(e=>e.type==='jump'||e.type==='dive'):null;
+  const highlight=final&&game.resultCutsEnabled&&f.greatPlay?.confirmed&&['robbery','laser'].includes(f.greatPlay.type)?f.greatPlay:null;
   if(final&&frames.length>1&&(game.homeScore+game.awayScore>this.record.score||highlight)){
-   this.save(game,{frames,hit:{...game.hit},highlight:highlight?{fielder:highlight.fielder,time:highlight.time}:null});
+   this.save(game,{frames,hit:{...game.hit},highlight:highlight?{fielder:highlight.fielder,time:highlight.time,type:highlight.type}:null});
   }
   return this.clip;
  }
@@ -89,7 +89,7 @@ export class PlayReview {
   const replay=this.playback;
   if(!replay)return null;
   const {clip,projected}=replay;
-  const moment=clip.closeMoment,near=moment&&clip.frames&&Math.abs(clip.frames[0].elapsed+replay.clock-moment.time)<1.1;
+  const moment=clip.closeMoment||clip.highlight,near=moment&&clip.frames&&Math.abs(clip.frames[0].elapsed+replay.clock-moment.time)<1.1;
   if(Number.isFinite(replay.syncStart)){
    const relative=moment&&clip.frames?moment.time-clip.frames[0].elapsed:NaN;
    replay.clock=replayClock((now-replay.syncStart)/1000,replay.rate,relative-1.1,relative+1.1);

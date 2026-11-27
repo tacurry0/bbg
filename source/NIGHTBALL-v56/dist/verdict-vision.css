@@ -268,3 +268,13 @@ html.nightball-playing :is(input,textarea,[contenteditable]:not([contenteditable
 }
 #game #game-canvas {touch-action:none;-webkit-user-drag:none;-webkit-touch-callout:none}
 #game :is(img,svg) {-webkit-user-drag:none}
+
+/* v260: defender-specific impact, above the closeup. */
+#impact-fx[data-kind="great"] .impact-core{width:95%;gap:6px;transform:translateY(-22%)}
+#impact-fx[data-kind="great"] .impact-glyph{display:none}
+#impact-fx[data-kind="great"] .impact-title{font-size:clamp(26px,7.5vw,68px);color:#eaffff;text-shadow:0 3px 0 #126d5c,0 0 16px #43fdd3;flex-wrap:wrap;justify-content:center}
+#impact-fx[data-kind="great"] .impact-word{animation:impact-great-in .48s cubic-bezier(.18,.8,.2,1) both}
+#impact-fx[data-kind="great"] .impact-meta{color:#afffea;letter-spacing:.16em}
+#impact-fx[data-kind="great"] .impact-shade{background:linear-gradient(0deg,transparent 10%,#03261a66 100%)}
+@keyframes impact-great-in{from{transform:translateY(-20px) scale(1.24);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+@media(prefers-reduced-motion:reduce){#impact-fx[data-kind="great"] .impact-word{animation:none}}

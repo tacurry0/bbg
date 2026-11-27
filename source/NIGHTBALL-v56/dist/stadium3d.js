@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=252';
+} from './stadium-fx.js?v=260';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -454,7 +454,7 @@ export class StadiumRenderer {
   this.dirtTextures||={outdoor:this.dirt.map};
   if(broadcast)this.dirtTextures.broadcast||=this.noiseTexture('dirt','broadcast');
   this.dirt.map=this.dirtTextures[broadcast?'broadcast':'outdoor'];
-  this.dirt.color.setHex(park.clay??(broadcast?0xb38e76:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c));
+  this.dirt.color.setHex(park.clay??(broadcast?0xb38e76:indoors?0xc49e88:park.school?0xc0a182:0xd8b18c));this.dryDirtColor=this.dirt.color.clone();
   this.scene.userData.venueClay=park.clay!==undefined;
   if(this.mowing)this.mowing.opacity=park.school ? .20 : .14*(park.mowing?.[1]??1);
   if(this.boardPillars)for(const p of this.boardPillars)p.visible=!indoors;
@@ -941,7 +941,16 @@ export class StadiumRenderer {
   const distance=Math.hypot(player.root.position.x-b.x,player.root.position.z-b.y);
   const model=f.fielders[index],action=model.action,age=action?elapsed-action.time:-1,glove=player.hands[0];
   const motion=player.motionStyle||window.NightGame.movementStyle({no:player.no});
-  if(action&&age>=0&&age<.43&&['jump','dive','bobble'].includes(action.type)){
+  
+  if(action&&age>=0&&age<.92&&['jump','dive','wall','robbery','stop','bobble'].includes(action.type)){
+   const kind=action.type,jump=['jump','wall','robbery'].includes(kind),dive=['dive','stop'].includes(kind);
+   if(jump||dive){
+    const t=clamp(age/.92,0,1),launch=Math.min(1,t*5),land=clamp((t-.39)/.61,0,1),extend=launch*(1-land),reach=Math.sin(Math.PI*clamp(t*1.65,0,1));
+    if(Math.hypot(action.dx||0,action.dy||0)>.03)player.root.rotation.y=Math.atan2(action.dx,action.dy);
+    if(jump){player.root.position.y+=(kind==='robbery'?1.0:.72)*reach;player.body.rotation.x=-.16*extend;glove.position.set(-.29,1.14+.86*extend,.26+.18*extend);}
+    else{player.body.rotation.x=1.45*extend;player.body.position.y=-.55*extend;player.root.position.y+=.16*reach;glove.position.set(-.26,.28+.20*(1-extend),.46+.76*extend);const support=player.hands[1];support.position.set(.30,.37,.52*extend);this.poseArm(player,1,[.245,.94,0],support.toArray());}
+    this.poseArm(player,0,[-.245,.94,0],glove.toArray());return;
+   }
    const extension=window.NightGame.actionEnvelope(age,.43);
    if(action.type==='jump'){
     player.root.position.y+=.68*extension;
@@ -1122,8 +1131,11 @@ export class StadiumRenderer {
     if(p>.58){tx=b.x;tz=b.y;}}
   }else if(cut.kind==='strikeout'){x=tx=0;z=tz=18.4;this.pitcher.throwHand=pitcher.hand||'R';this.pitcher.releaseProgress=null;this.pitcher.fromSet=false;place(this.pitcher,pitcher,x,z,Math.PI);const i=pitcher.hand==='L'?0:1,sign=i?1:-1,beat=cut.preview?0:Math.sin(Math.PI*clamp(p*1.2,0,1)),lift=cut.level>=3?.73:.43,hand=[sign*(.28+.17*beat),.86+lift*beat,.18+.12*beat];this.pitcher.hands[i].position.set(...hand);this.poseArm(this.pitcher,i,[sign*.245,.94,0],hand);this.pitcher.body.rotation.x=-.08*beat;
    }else if(cut.kind==='catch'){
-   x=cut.x||0;z=cut.z||35;tx=x;tz=z;const a=this.fielders[0];place(a,batter,x,z,Math.PI);
-   a.hands[0].position.set(-.42,1.28,.20);this.poseArm(a,0,[-.245,.94,0],a.hands[0].position.toArray());
+   
+   x=cut.x??0;z=cut.z??35;tx=x;tz=z;const a=this.fielders[cut.fielder??0]||this.fielders[0];
+   const profile=club.batters.find(b=>b.id===cut.playerId)||club.pitchers.find(b=>b.id===cut.playerId)||g.fielder(cut.pos||'CF',cut.side);
+   place(a,profile,x,z,Math.PI);const beat=Math.sin(Math.PI*clamp(p*1.2,0,1));a.hands[0].position.set(-.42,1.25+.52*beat,.20);this.poseArm(a,0,[-.245,.94,0],a.hands[0].position.toArray());
+   a.hands[1].position.set(.38,.91+.38*beat,.18);this.poseArm(a,1,[.245,.94,0],a.hands[1].position.toArray());a.body.rotation.y=.18*beat;
   }else if(cut.kind==='walkoff'){
    x=tx=0;z=tz=3;wide=true;const a=this.runners[0];place(a,batter,0,3,Math.PI);
    const teammates=g.lineups[cut.side].filter(b=>b.id!==batter.id).slice(0,5);
@@ -1135,7 +1147,7 @@ export class StadiumRenderer {
    const a=cut.kind==='homer'?this.runners[0]:this.batter;
    a.swingActive=false;a.bunting=false;a.batHand=batter.hand||'R';place(a,batter,x,z,cut.kind==='homer'?Math.PI/4:Math.PI,cut.kind==='homer'||cut.kind==='pinch-hit');if(cut.kind==='homer'){const beat=Math.sin(Math.PI*p),i=batter.hand==='L'?0:1,sign=i?1:-1,hand=[sign*.36,.9+(cut.level>=2?.62:.35)*beat,.28];a.hands[i].position.set(...hand);this.poseArm(a,i,[sign*.245,.94,0],hand);a.head.rotation.y=.35*beat;}
   }
-  const side=cut.kind==='strikeout'?(pitcher.hand==='L'?-1:1):cut.kind==='homer'&&cut.variant==='liner'?-1:tx>10?-1:1,dist=wide?13:cut.kind==='homer'&&cut.variant==='deep'?8:6.2;
+  const side=cut.kind==='strikeout'?(pitcher.hand==='L'?-1:1):cut.kind==='homer'&&cut.variant==='liner'?-1:tx>10?-1:1,dist=wide?13:cut.kind==='homer'&&cut.variant==='deep'?8:cut.kind==='catch'?4.5:6.2;
   this.camera.position.set(tx+side*(wide?5:2.4-.8*p),wide?6.2:cut.kind==='strikeout'?1.65:cut.variant==='tower'?3.6:2.6,-tz+(cut.kind==='strikeout'?4.7:dist));
   this.camera.lookAt(tx-(cut.preview?.65:0),wide?1.4:1.65,-tz);this.camera.fov=wide?53:this.camera.aspect<.85?47:38;
   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
@@ -1407,6 +1419,9 @@ export class StadiumRenderer {
   }
   if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
   else if(g&&!g.replayView&&(g.absCalledStrikeout||g.phase==='result'&&g.pitch?.strikeCelebration)&&!g.fastForward&&!g.spectate&&!g.autoDefense&&!g.autoBatting){const k=g.pitch?.strikeCelebration,side=g.side==='home'?'away':'home';this.renderLiveCut(g,time,{kind:'strikeout',side,playerId:g.pitcher.id,level:k?.level||1,duration:1500,preview:g.phase==='abs-call'});}
+  const wet=window.NightGame.rainLevel(g)/3;
+  if(this.grassUniforms?.uWet)this.grassUniforms.uWet.value=wet;
+  if(this.dryDirtColor)this.dirt.color.copy(this.dryDirtColor).multiplyScalar(1-wet*.26);
   this.vfx?.update(g,time,field);
   if(this.lightGlows?.length&&this.lightsLit){
    const hrShow=g&&(g.hit?.kind==='hr'||g.field?.outcome==='hr');
