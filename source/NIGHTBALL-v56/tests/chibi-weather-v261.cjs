@@ -1,0 +1,13 @@
+const fs=require('node:fs'),assert=require('node:assert/strict');
+const app=fs.readFileSync(__dirname+'/../dist/app.js','utf8');
+const face=fs.readFileSync(__dirname+'/../dist/stadium3d.js','utf8');
+const premium=fs.readFileSync(__dirname+'/../dist/stadium-premium.js','utf8');
+const code=app.slice(app.indexOf('const MATCH_WEATHER_CHOICES='),app.indexOf('let matchForecast=null'));
+const result=new Function('const settings={matchWeather:"rain"};const NightGame={isIndoorPark:p=>p?.theme==="dome",rollForecast:p=>({park:p.id,weather:"clear",weatherLabel:"晴れ",wind:p.theme==="dome"?0:2}),weatherLabelFor:w=>w};'+code+'return {selectedMatchWeather,matchWeatherForecast};')();
+assert(result.matchWeatherForecast({id:'outside'}).weather==='rain');
+assert(result.matchWeatherForecast({id:'inside',theme:'dome'}).weather==='clear');
+assert(result.matchWeatherForecast({id:'outside'},'cloudy').weather==='cloudy');
+assert(result.matchWeatherForecast({id:'outside'},'auto').weather==='clear');
+assert(app.includes('weatherChoice(park)')&&app.includes('matchWeather:m.matchWeather')&&app.includes('data-online-weather'));
+assert(face.includes('eyes.push(eye)')&&face.includes('eye.scale.y=blink')&&!premium.includes('premiumEyes'));
+console.log('Chibi face and match weather tests passed');

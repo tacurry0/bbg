@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=260';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=261';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -24,7 +24,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>'
  };
  function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.ball}</svg>`;}
- const defaults={crowdAttendance:'full',gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:NightPlayers.defaultPitcherIndex?.(NightTeams.get('owls'))??0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,bullpenClub:'owls',bullpenPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false,hardcore:false,handicapUserRuns:0,handicapCpuRuns:0,handicapUserOuts:3,handicapCpuOuts:3,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,stadiumDJ:true,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
+ const defaults={matchWeather:'auto',crowdAttendance:'full',gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:NightPlayers.defaultPitcherIndex?.(NightTeams.get('owls'))??0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,bullpenClub:'owls',bullpenPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false,hardcore:false,handicapUserRuns:0,handicapCpuRuns:0,handicapUserOuts:3,handicapCpuOuts:3,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,stadiumDJ:true,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
  const recordDefaults={games:0,wins:0,draws:0,hr:0,hits:0,maxDistance:0,bestTimedDerby:0,bestTimedDerbyDistance:0,perfect:0,grandSlam:false,ks:0,thrown:0,practicePitches:0,practiceHits:0,practiceHr:0,practiceMaxDistance:0,practiceThrown:0,practiceKs:0,achievements:{},winStreak:0,bestStreak:0};
  let settings,records;
  try{settings={...defaults,...JSON.parse(localStorage.getItem('nightball.settings')||'{}')};records={...recordDefaults,...JSON.parse(localStorage.getItem('nightball.records')||'{}')};}catch{settings={...defaults};records={...recordDefaults};}
@@ -47,6 +47,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  records.winStreak??=0;records.bestStreak??=0;
  settings.soundVolume=Math.max(0,Math.min(100,Number.isFinite(Number(settings.soundVolume))?Number(settings.soundVolume):78));
  if(!NightGame.crowdOptions.includes(settings.crowdAttendance))settings.crowdAttendance='full';
+ if(!['auto','clear','cloudy','rain'].includes(settings.matchWeather))settings.matchWeather='auto';
  settings.crowdVolume=Math.max(0,Math.min(100,Number.isFinite(Number(settings.crowdVolume))?Number(settings.crowdVolume):50));
  settings.music=musicSettings(settings.music);
  for(const name of ['hudScale','controlsScale'])settings[name]=Math.max(75,Math.min(120,Number(settings[name])||100));
@@ -1801,10 +1802,19 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   lineupConfig('match').config.pitcher=values.pitcher;
   save();setupMatch();toast(`プリセット「${preset.name}」を呼び出しました`);
  }
+ const MATCH_WEATHER_CHOICES=[['auto','おまかせ'],['clear','晴れ'],['cloudy','曇り'],['rain','雨']];
+ function selectedMatchWeather(park,choice=settings.matchWeather){
+  return NightGame.isIndoorPark(park)?'clear':MATCH_WEATHER_CHOICES.some(([id])=>id===choice)?choice:'auto';
+ }
+ function matchWeatherForecast(park,choice=settings.matchWeather){
+  const selected=selectedMatchWeather(park,choice),forecast=NightGame.rollForecast(park);
+  if(selected!=='auto'){forecast.weather=selected;forecast.weatherLabel=NightGame.weatherLabelFor(selected);}
+  return {...forecast,choice:selected};
+ }
  let matchForecast=null,pennantForecast=null;
  function ensureMatchForecast(){
-  const park=NightPlayers.parks.find(p=>p.id===settings.park)||NightPlayers.parks[0];
-  if(!matchForecast||matchForecast.park!==park.id)matchForecast=NightGame.rollForecast(park);
+  const park=NightPlayers.parks.find(p=>p.id===settings.park)||NightPlayers.parks[0],choice=selectedMatchWeather(park);
+  if(!matchForecast||matchForecast.park!==park.id||matchForecast.choice!==choice)matchForecast=matchWeatherForecast(park);
   return matchForecast;
  }
  function ensurePennantForecast(fixture){
@@ -1866,6 +1876,11 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  const CROWD_CHOICES=[['full','満員'],['high','75%'],['medium','50%'],['low','25%'],['empty','無観客'],['auto','おまかせ']];
  function crowdChoice(onlineMode=false){return '<div class="pf-light"><label>観客数</label>'+pfChoice(CROWD_CHOICES,settings.crowdAttendance,onlineMode?'data-online-crowd':'data-match-crowd')+'</div>';}
+ function weatherChoice(park,onlineMode=false,readonly=false,choice=settings.matchWeather){
+  if(NightGame.isIndoorPark(park))return '<div class="pf-light"><label>天候</label><b>屋内（固定）</b></div>';
+  const selected=selectedMatchWeather(park,choice);
+  return '<div class="pf-light"><label>天候</label>'+(readonly?'<b>'+uiEscape(MATCH_WEATHER_CHOICES.find(([id])=>id===selected)?.[1]||'おまかせ')+'</b>':pfChoice(MATCH_WEATHER_CHOICES,selected,onlineMode?'data-online-weather':'data-match-weather'))+'</div>';
+ }
  function setupMatch(){
   matchContext='match';pregameRoster=false;
   const pending=$('resume-game').dataset.saveKind==='match',{club,config,players}=lineupConfig('match');
@@ -1875,7 +1890,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const pitcherValue=pitcher?`${uiEscape(pitcher.name)} <small class="pf-inline-stat">${pitcher.velocity} km/h</small>`:'—';
   const orderPreview=`<span class="pf-order-preview">${players.map((p,i)=>`<span><i>${i+1}</i><b>${uiEscape(p.name)}</b><small>${NightSquad.label(p.fieldPos||p.pos)}</small></span>`).join('')}</span>`;
   const body=`${matchTeamsHTML()}<div class="pf-conditions"><div><label>先攻・後攻</label>${pfChoice([[false,'先攻'],[true,'後攻']],settings.matchUserHome,'data-match-home')}</div><div><label>イニング</label>${pfChoice([3,5,9].map(n=>[n,n+'回']),settings.innings,'data-innings')}</div></div>
-  <section class="pf-venue"><button type="button" class="pf-venue-main" data-action="ui-park-open">${parkMiniSVG(park)}<span><b>${uiEscape(park.name)}</b><small>${icon} ${forecast.weatherLabel} · ${windText}</small></span><span class="pf-chevron">${pfIcon('chevron')}</span></button><div class="pf-light"><label>時間帯</label>${pfChoice(GAME_LIGHTING_OPTIONS,settings.gameLighting,'data-ui-light')}</div>${crowdChoice()}</section>
+  <section class="pf-venue"><button type="button" class="pf-venue-main" data-action="ui-park-open">${parkMiniSVG(park)}<span><b>${uiEscape(park.name)}</b><small>${icon} ${forecast.weatherLabel} · ${windText}</small></span><span class="pf-chevron">${pfIcon('chevron')}</span></button><div class="pf-light"><label>時間帯</label>${pfChoice(GAME_LIGHTING_OPTIONS,settings.gameLighting,'data-ui-light')}</div>${crowdChoice()}${weatherChoice(park)}</section>
   <div class="pf-roster">${pfLink('ball','先発投手',pitcherValue,'ui-pitcher-open')}<button type="button" class="pf-link pf-order-link" data-action="match-lineup"><span class="pf-link-icon">${pfIcon('lineup')}</span><span class="pf-link-copy"><small>オーダー編成</small><b>${players.length}人</b></span><span class="pf-chevron">${pfIcon('chevron')}</span>${orderPreview}</button></div>
   <div class="pf-aux"><button type="button" data-action="ui-options-open">${pfIcon('gear')}<span>詳細設定</span>${count?`<b class="pf-count">${count}</b>`:''}${pfIcon('chevron')}</button><button type="button" data-action="ui-presets-open">${pfIcon('star')}<span>プリセット</span>${pfIcon('chevron')}</button></div>`;
   pfScreen('対戦',body,'setup',`${pending?'<p class="pf-warning">開始すると、中断中の試合を置き換えます。</p>':''}<div class="pf-launch"><button class="pf-secondary" data-action="spectate-start">観戦</button><button class="pf-primary" data-action="ui-match-start">${pfIcon('play')}<span>試合開始</span></button></div>`,'close');
@@ -2510,8 +2525,9 @@ function start(mode,challengeId=null,fixedPark=null){
   // v154: a forecast shown on the setup screen for this park is consumed
   // verbatim, so the match weather/wind equal the forecast exactly. Entry
   // points without a setup-screen forecast keep the on-the-spot rolls.
-  const forecast=mode==='match'&&matchForecast&&windPark&&matchForecast.park===windPark.id?matchForecast:null;
-  const matchWind=forecast?forecast.wind:(!training&&mode!=='derby'&&windPark&&windPark.theme!=='dome'&&!windPark.id.includes('dome'))?(Math.random()<.25?0:Math.round((Math.random()*10-5)*2)/2):0;
+  const ordinaryMatch=mode==='match'&&!challengeId&&!pendingUmpire&&!pendingTimeAttack&&!pendingSurvival&&!pendingDraft&&!pendingConquest;
+  const forecast=ordinaryMatch&&windPark?(matchForecast?.park===windPark.id&&matchForecast.choice===selectedMatchWeather(windPark)?matchForecast:matchWeatherForecast(windPark)):null;
+  const matchWind=forecast?forecast.wind:(!training&&mode!=='derby'&&windPark&&!NightGame.isIndoorPark(windPark))?(Math.random()<.25?0:Math.round((Math.random()*10-5)*2)/2):0;
   const survRun=pendingSurvival&&mode==='match'?NightSurvival.loadRun():null;
   const survClubs=survRun&&survRun.status==='active'?(()=>{const user=NightTeams.get(survRun.userTeamId),opp=NightTeams.get(survRun.opponentId);if(!user||!opp)return undefined;return settings.matchUserHome?{home:user,away:opp}:{home:opp,away:user};})():undefined;
   const randomClubs=mode==='match'&&settings.randomRoster&&!pendingUmpire&&!pendingTimeAttack&&!pendingSurvival&&!pendingDraft&&!pendingConquest?(()=>{const rm=ensureRandomMatch();if(!rm)return undefined;const homeId=settings.matchUserHome?settings.matchTeam:settings.matchOpponent,awayId=settings.matchUserHome?settings.matchOpponent:settings.matchTeam;return {home:rm.clubs[homeId],away:rm.clubs[awayId]};})():undefined;
@@ -3727,7 +3743,7 @@ function start(mode,challengeId=null,fixedPark=null){
    const room=`<section class="pf-online-room"><div><small>${host?'ホスト':'ゲスト'} / 合言葉</small><b class="online-code">${uiEscape(o.code)}</b></div><div class="pf-online-share"><button class="pf-secondary" data-action="online-copy-code">コピー</button>${host?'<button class="pf-secondary" data-action="online-copy-link">招待リンク</button>':''}${host&&typeof navigator.share==='function'?'<button class="pf-secondary" data-action="online-share-link">共有</button>':''}</div><p class="pf-online-status" role="status">${uiEscape(o.status||'')}</p></section>`;
    const mode=host?pfChoice([['match','通常対戦'],['derby','HRダービー']],o.mode,'data-online-mode'):`<p class="pf-online-mode">${derby?'HRダービー':'通常対戦'}（ホスト設定）</p>`;
    const conditions=derby?'':host?`<div class="pf-conditions"><div><label>先攻・後攻</label>${pfChoice([['away','先攻'],['home','後攻']],home?'home':'away','data-online-side')}</div><div><label>イニング</label>${pfChoice([3,5,9].map(n=>[n,n+'回']),innings,'data-online-innings')}</div></div>`:`<div class="pf-conditions"><div><label>先攻・後攻</label><b>${typeof o.config?.hostHome==='boolean'?(home?'後攻':'先攻'):'—'}</b></div><div><label>イニング</label><b>${innings?innings+'回':'—'}</b></div></div>`;
-   const venue=`<section class="pf-venue"><button type="button" class="pf-venue-main" ${host?'data-action="online-park-open"':'disabled'}>${parkMiniSVG(park)}<span><b>${uiEscape(park.name)}</b><small>${host?'球場選択':'ホスト設定'}</small></span><span class="pf-chevron">${host?pfIcon('chevron'):''}</span></button>${derby?'':host?crowdChoice(true):'<div class="pf-light"><label>観客数</label><b>'+uiEscape(CROWD_CHOICES.find(([v])=>v===(o.config?.crowdAttendance||'full'))?.[1]||'満員')+'</b></div>'}</section>`;
+   const venue=`<section class="pf-venue"><button type="button" class="pf-venue-main" ${host?'data-action="online-park-open"':'disabled'}>${parkMiniSVG(park)}<span><b>${uiEscape(park.name)}</b><small>${host?'球場選択':'ホスト設定'}</small></span><span class="pf-chevron">${host?pfIcon('chevron'):''}</span></button>${derby?'':host?crowdChoice(true)+weatherChoice(park,true):'<div class="pf-light"><label>観客数</label><b>'+uiEscape(CROWD_CHOICES.find(([v])=>v===(o.config?.crowdAttendance||'full'))?.[1]||'満員')+'</b></div>'+weatherChoice(park,true,true,o.config?.matchWeather||'auto')}</section>`;
    let roster='';
    if(!derby&&own&&(host||o.conditionSeed)){
      const {config,players}=lineupConfig('online'),pitcher=own.pitchers[config.pitcher];
@@ -3948,7 +3964,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function onlineSendLobbyConfig(){
    const o=online;if(!o||o.role!=='host')return;
-   o.session?.send({t:'lobby-config',crowdAttendance:settings.crowdAttendance,rules:onlineRulesConfig(),handicap:onlineHandicapWire(),innings:settings.innings,club:o.myClub,hostHome:o.hostHome,park:onlineParkId(),parkSpec:onlineParkSpec(onlineParkId()),conditionSeed:o.conditionSeed,tiebreak:!!settings.tiebreak,syncVersion:ONLINE_SYNC_VERSION});
+   o.session?.send({t:'lobby-config',matchWeather:settings.matchWeather,crowdAttendance:settings.crowdAttendance,rules:onlineRulesConfig(),handicap:onlineHandicapWire(),innings:settings.innings,club:o.myClub,hostHome:o.hostHome,park:onlineParkId(),parkSpec:onlineParkSpec(onlineParkId()),conditionSeed:o.conditionSeed,tiebreak:!!settings.tiebreak,syncVersion:ONLINE_SYNC_VERSION});
  }
  function startOnlineMatch(){
    const o=online;if(!o||o.role!=='host'||!o.guestClub||!o.session?.open)return;
@@ -3960,7 +3976,7 @@ function start(mode,challengeId=null,fixedPark=null){
    const park=o.park||home.park;
    const {config:hostLineup}=lineupConfig('online'),guestLineup=onlineNormalizeLineup(NightTeams.get(o.guestClub),o.guestLineup);
    if(o.started)o.conditionSeed=onlineSeed();
-   const rules=onlineRulesConfig(),forecast=NightGame.rollForecast(NightPlayers.parks.find(p=>p.id===park));
+   const rules=onlineRulesConfig(),forecast=matchWeatherForecast(NightPlayers.parks.find(p=>p.id===park)||NightPlayers.parks[0]);
    const uniforms={home:o.hostHome?NightUniforms.snapshot(home,'home'):NightUniforms.resolvedKit(home,'home',o.guestUniforms?.home||{}),away:o.hostHome?NightUniforms.resolvedKit(away,'away',o.guestUniforms?.away||{}):NightUniforms.snapshot(away,'away')};
    o.session?.send({t:'start',crowdAttendance:settings.crowdAttendance,home:homeId,away:awayId,uniforms,innings:settings.innings,difficulty:settings.difficulty,park,parkSpec:onlineParkSpec(park),weather:forecast.weather,wind:forecast.wind,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:hostLineup.pitcher,hostHome:o.hostHome,hostLineup,guestLineup,conditionSeed:o.conditionSeed,syncVersion:ONLINE_SYNC_VERSION});
    NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
@@ -4013,7 +4029,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(m.t==='start'){startOnlineGuestMatch(m);return;}
    if(m.t==='start-derby'){startOnlineGuestDerby(m);return;}
    if(m.t==='lobby-mode'){const mode=m.mode==='derby'?'derby':'match',changed=o.mode!==mode;o.mode=mode;if(changed&&!o.started){o.myReady=false;onlineSendClub();if((mode==='derby'&&(modalKind==='online-pitchers'||(modalKind==='lineup'&&lineupContext==='online'))))onlineModal();else onlineLobbyRefresh();}return;}
-   if(m.t==='lobby-config'){o.config={crowdAttendance:m.crowdAttendance,rules:m.rules,handicap:m.handicap,innings:m.innings,club:m.club,hostHome:m.hostHome,park:m.park,parkSpec:m.parkSpec,tiebreak:m.tiebreak,syncVersion:m.syncVersion};if(typeof m.conditionSeed==='string')o.conditionSeed=m.conditionSeed;if(!o.started){if(o.mode!=='derby'&&m.syncVersion!==ONLINE_SYNC_VERSION)o.status='ホストとゲストを最新版に更新してください';onlineLobbyRefresh();}return;}
+   if(m.t==='lobby-config'){o.config={matchWeather:m.matchWeather,crowdAttendance:m.crowdAttendance,rules:m.rules,handicap:m.handicap,innings:m.innings,club:m.club,hostHome:m.hostHome,park:m.park,parkSpec:m.parkSpec,tiebreak:m.tiebreak,syncVersion:m.syncVersion};if(typeof m.conditionSeed==='string')o.conditionSeed=m.conditionSeed;if(!o.started){if(o.mode!=='derby'&&m.syncVersion!==ONLINE_SYNC_VERSION)o.status='ホストとゲストを最新版に更新してください';onlineLobbyRefresh();}return;}
    if(m.t==='host-left'){onlinePeerGone();return;}
    if(m.t==='ping'){o.session?.send({t:'pong',ts:m.ts,gt:Math.round(performance.now())});return;}
    if(m.t==='latency'){o.lastLat=Number(m.ms)||0;return;}
@@ -4556,6 +4572,8 @@ function start(mode,challengeId=null,fixedPark=null){
    if(b.dataset.matchPreset){applyMatchPreset(b.dataset.matchPreset);return;}
    if(b.dataset.uiPitcher!==undefined){const {club,config}=lineupConfig('match'),n=Number(b.dataset.uiPitcher);if(Number.isInteger(n)&&club.pitchers[n]){config.pitcher=n;saveLineup('match');matchPitchers('match');}return;}
    if(b.dataset.stadiumSection){stadiumSetSection(b.dataset.stadiumSection);return;}
+   if(b.dataset.matchWeather){if(MATCH_WEATHER_CHOICES.some(([id])=>id===b.dataset.matchWeather)){const park=NightPlayers.parks.find(p=>p.id===settings.park);if(!NightGame.isIndoorPark(park)){settings.matchWeather=b.dataset.matchWeather;matchForecast=null;save();setupMatch();}}return;}
+   if(b.dataset.onlineWeather){if(online?.role==='host'&&MATCH_WEATHER_CHOICES.some(([id])=>id===b.dataset.onlineWeather)){const park=NightPlayers.parks.find(p=>p.id===onlineParkId());if(!NightGame.isIndoorPark(park)){settings.matchWeather=b.dataset.onlineWeather;matchForecast=null;save();onlineSendLobbyConfig();onlinePregame();}}return;}
    if(b.dataset.matchCrowd){if(NightGame.crowdOptions.includes(b.dataset.matchCrowd)){settings.crowdAttendance=b.dataset.matchCrowd;save();setupMatch();}return;}
    if(b.dataset.onlineCrowd){if(online?.role==='host'&&NightGame.crowdOptions.includes(b.dataset.onlineCrowd)){settings.crowdAttendance=b.dataset.onlineCrowd;save();onlineSendLobbyConfig();onlinePregame();}return;}
    if(b.dataset.uiLight){settings.gameLighting=gameLightingMode(b.dataset.uiLight);save();setupMatch();return;}

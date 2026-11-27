@@ -216,18 +216,12 @@ export function buildPremiumPark(renderer,park){
 /** Detail additions that preserve the large-head, tiny-body chibi proportions. */
 export function decorateChibiPlayer(renderer,p){
  if(renderer.gl.isSoftwareRenderer)return;
- const head=p.head,root=p.root;
- const bright=renderer.mat('premiumFaceHighlight',0xffffff,.14);
- const iris=renderer.mat('premiumEyes',0x162d3c,.22);
- const cheek=renderer.mat('premiumCheeks',0xf0a88d,.92);
+ const root=p.root;
  const jerseyLight=renderer.mat('premiumWhiteStitch',0xf5f5ea,.72);
  const accent=p.accentMat;
  const ellipse=(parent,scale,pos,material)=>renderer.ellipsoid(parent,scale,pos,material,true);
  for(const side of [-1,1]){
-  // Large sparkling eyes and softened cheeks: deliberately not realistic anatomy.
-  ellipse(head,[.047,.067,.013],[side*.143,-.006,.416],iris);
-  ellipse(head,[.019,.025,.009],[side*.130,.045,.432],bright);
-  ellipse(head,[.048,.025,.012],[side*.225,-.078,.384],cheek);
+  // Facial features are defined once in makePlayer for both renderers.
   // No universal ear cover or plastic crown decoration: headgear
   // is now built by role in makePlayer. Sleeves use the actual kit.
   // Premium cleat stripe and tongue details.

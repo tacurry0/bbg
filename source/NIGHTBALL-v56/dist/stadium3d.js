@@ -9,7 +9,7 @@ import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
 import { drawVenueVision } from './venue-vision.js?v=252';
 import { loadMatchModel } from './match-models.js?v=56';
-import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=228';
+import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=261';
 import {
  createStadiumEnvMap,
  createContactShadowTexture,
@@ -694,17 +694,24 @@ export class StadiumRenderer {
   const belt=this.mesh(new T.CylinderGeometry(.268,.263,.046,24),accentMat,body);belt.position.y=.46;
   const buckle=this.box(body,[.074,.054,.030],[0,.46,.264],trimMat);buckle.castShadow=false;
   const collar=this.mesh(new T.TorusGeometry(.115,.023,6,16),accentMat,body);collar.rotation.x=Math.PI/2;collar.position.y=1.01;
-  head.position.y=1.32;head.scale.set(.58,.64,.60);body.add(head);
+  head.position.y=1.36;head.scale.set(.72,.72,.70);body.add(head);
   this.ellipsoid(body,[.108,.114,.108],[0,1.083,0],skin);this.ellipsoid(head,[.43,.40,.405],[0,0,0],skin);
   const eyes=[],brows=[];
-  const cheekMat=this.mat('cheek'+(no%2),0xd48373,.78);
+  // A single coherent chibi face, not layered duplicate eye meshes.
+  // All eye highlights share the blinking group and disappear on closure.
+  const cheekMat=this.mat('softCheeks',0xe6a08b,.90),eyeMat=this.mat('chibiEye',0x25242c,.34);
+  const glintMat=new T.MeshBasicMaterial({color:0xfffaf0});
   for(const side of [-1,1]){
-   this.ellipsoid(head,[.076,.12,.075],[side*.415,-.02,.02],skin);
-   eyes.push(this.ellipsoid(head,[.047,.10,.027],[side*.145,.015,.38],this.mat('eyes',0x121e26,.18)));
-   this.ellipsoid(head,[.015,.026,.01],[side*.135,.048,.407],this.mat('eyeGlints',0xffffff,.08));
-   this.ellipsoid(head,[.062,.034,.022],[side*.215,-.072,.362],cheekMat,true);
+   this.ellipsoid(head,[.063,.083,.067],[side*.401,-.055,.02],skin);
+   const eye=new T.Group();eye.position.set(side*.143,-.007,.377);head.add(eye);
+   this.ellipsoid(eye,[.073,.092,.030],[0,0,0],eyeMat);
+   const hi=this.ellipsoid(eye,[.021,.025,.010],[-.020,.033,.029],glintMat,true);hi.castShadow=false;
+   const tiny=this.ellipsoid(eye,[.008,.009,.006],[.025,-.030,.028],glintMat,true);tiny.castShadow=false;
+   eyes.push(eye);
+   const blush=this.ellipsoid(head,[.071,.026,.012],[side*.227,-.112,.326],cheekMat,true);blush.rotation.y=side*.42;blush.castShadow=false;
   }
-  this.ellipsoid(head,[.058,.057,.067],[0,-.078,.399],skin);this.chalkFace(head);
+  const nose=this.ellipsoid(head,[.027,.021,.025],[0,-.090,.399],skin,true);nose.castShadow=false;
+  this.chalkFace(head);
   const helmetRole=helmetOrCap(role)==='helmet';
   const capMat=new T.MeshPhysicalMaterial({color:capColor,roughness:helmetRole?.30:.96,metalness:helmetRole?.03:0,clearcoat:helmetRole?.72:0,clearcoatRoughness:.26});
   const visorMat=capMat.clone();visorMat.side=T.DoubleSide;
@@ -744,7 +751,7 @@ export class StadiumRenderer {
   const socks=[this.limb(root,[-.165,.22,0],[-.17,.15,.1],.079,socksMat),this.limb(root,[.165,.22,0],[.17,.15,.1],.079,socksMat)];
   const elbowGuard=role==='batter'?this.ellipsoid(body,[.076,.092,.076],[-.32,.76,.05],capMat,true):null;
   for(const sign of [-1,1]){
-   brows.push(this.ellipsoid(head,[.048,.021,.057],[sign*.145,.104,.374],this.mat('brow',0x463229)));
+   const brow=this.ellipsoid(head,[.052,.013,.014],[sign*.143,.103,.374],this.mat('brow',0x574237),true);brow.rotation.z=sign*-.08;brow.castShadow=false;brows.push(brow);
   }
   const mittScale=role==='catcher'?1.4:1.18;
   const glove=new T.Group();hands[0].add(glove);this.ellipsoid(glove,[mittScale,1.35,.79],[0,0,.1],this.mat('glove',0x965d38,.74),true);
@@ -804,7 +811,7 @@ export class StadiumRenderer {
   const mark=k.capMark,letter=contrast(helmetOrCap(p.role)==='helmet'?k.helmet:k.cap);c.strokeStyle=letter==='#ffffff'?'#1d2633':'#ffffff';c.strokeText(mark,32,34,58);c.fillStyle=letter;c.fillText(mark,32,34,58);p.logoTex.needsUpdate=true;
  }
 
- chalkFace(head){const pts=[new T.Vector3(-.045,-.17,.36),new T.Vector3(0,-.18,.37),new T.Vector3(.045,-.17,.36)];this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),8,.009,4,false),this.mat('mouth',0x9f6c52),head);}
+ chalkFace(head){const pts=[new T.Vector3(-.051,-.151,.374),new T.Vector3(-.026,-.173,.373),new T.Vector3(0,-.181,.365),new T.Vector3(.026,-.173,.373),new T.Vector3(.051,-.151,.374)];const mouth=this.mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts),12,.008,6,false),this.mat('mouth',0x70463f),head);mouth.castShadow=false;}
  poseArm(player,index,shoulder,hand){
   const bend=player.role==='batter'?.075:.094,side=index?1:-1;
   const elbow=[(shoulder[0]+hand[0])*.5+side*bend,(shoulder[1]+hand[1])*.5-.035,(shoulder[2]+hand[2])*.5-.06];
@@ -831,7 +838,7 @@ export class StadiumRenderer {
   if(p.eyes){
    const blinkPhase=time>0?(time*.001+p.no*1.37)%3.8:1;
    const blink=blinkPhase<.11?Math.max(.12,Math.abs(blinkPhase-.055)/.055):1;
-   for(const eye of p.eyes)eye.scale.y=.10*blink;
+   for(const eye of p.eyes)eye.scale.y=blink;
   }
   for(let i=0;i<2;i++){
    const side=i?1:-1,foot=p.feet[i],hand=p.hands[i],kick=running?Math.max(0,Math.cos(cycle)*side)*pace:0;
