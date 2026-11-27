@@ -2558,13 +2558,13 @@ function start(mode,challengeId=null,fixedPark=null){
   $('hit-readout').textContent='';
   $('play-tools').hidden=true;
  }
- const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,umpireLast:null,umpireShownAt:0};
+ const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,baseVerdicts:[],umpireLast:null,umpireShownAt:0};
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
-  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.resultTime=0;playFeedback.pendingReplay=false;playFeedback.reviewVerdict=null;playCallSeen=null;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
+  playFeedback.scoreTime=0;playFeedback.callTime=0;playFeedback.resultTime=0;playFeedback.pendingReplay=false;playFeedback.baseVerdicts=[];playCallSeen=null;playFeedback.umpireLast=null;playFeedback.umpireShownAt=0;
   $('scoring-chip').hidden=true;$('umpire-call').hidden=true;
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
@@ -2578,11 +2578,22 @@ function start(mode,challengeId=null,fixedPark=null){
   if(!playFeedback.scoreTime)$('scoring-chip').hidden=true;
   if(!playFeedback.callTime)$('umpire-call').hidden=true;
  }
+ // Remember calls for this batted ball, not the visibility of the panel.
+ // A challenge replaces the original ruling at its base; a distinct out
+ // or a double play still has its own presentation.
+ function recordBaseVerdict(calls,verdict,base,reviewed){
+  if(reviewed){for(let i=calls.length-1;i>=0;i--){if(calls[i].base===base){calls.splice(i,1);break;}}}
+  calls.push({verdict,base,reviewed});
+ }
+ function duplicateOutResult(calls,en){
+  return ['OUT','OUT AT FIRST','FORCE OUT','BUNT OUT'].includes(en)&&calls.some(c=>c.verdict==='out');
+ }
  function showPlayCall({verdict,base,overturn}){
   const panel=$('umpire-call'),label=verdict==='out'?'OUT':'SAFE',reviewed=typeof overturn==='boolean';
+  recordBaseVerdict(playFeedback.baseVerdicts,verdict,base,reviewed);
   panel.dataset.verdict=verdict;panel.dataset.review=String(reviewed);
   panel.innerHTML=`<strong>${label}</strong>${reviewed?`<small>${overturn?'判定変更':'判定維持'}</small>`:''}`;
-  if(reviewed){hideStageBanner();stageResultKey='';playFeedback.resultTime=0;playFeedback.reviewVerdict=verdict;}else playFeedback.reviewVerdict=null;
+  if(reviewed){hideStageBanner();stageResultKey='';playFeedback.resultTime=0;}
   panel.hidden=false;playFeedback.callTime=reviewed?2000:verdict==='out'?1800:1500;
   if(typeof panel.animate==='function'&&!matchMedia('(prefers-reduced-motion: reduce)').matches){
    panel.getAnimations().forEach(animation=>animation.cancel());
@@ -2838,9 +2849,13 @@ function start(mode,challengeId=null,fixedPark=null){
    if(type==='message'){
      // ABS already presented this exact pitch verdict in the review layer.
      if(game?.phase==='abs-review'&&absShownResult&&['STRIKE','BALL'].includes(data.en))return;
-     // Keep the challenge result as the single OUT verdict; distinct hits,
-     // double plays and other subsequent calls still get their own display.
-     if(playFeedback.reviewVerdict==='out'&&data.en==='OUT'){playFeedback.reviewVerdict=null;return;}
+     // The base ruling has already shown OUT. Suppress only the redundant
+     // single-out result; preserve fly outs, strikeouts, sacrifices, hits,
+     // double plays and both the initial and reviewed challenge decisions.
+     if(duplicateOutResult(playFeedback.baseVerdicts,data.en))return;
+     if(data.en==='DOUBLE PLAY'&&$('umpire-call').dataset.review!=='true'){
+      $('umpire-call').hidden=true;playFeedback.callTime=0;
+     }
      const resultSig=resultSignature(data);
      if(resultSig&&stageResultShown.has(resultSig))return;
      if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
@@ -2886,11 +2901,11 @@ function start(mode,challengeId=null,fixedPark=null){
        {opacity:1,transform:'none'}
       ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
-   }else if(type==='clear'){stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
+   }else if(type==='clear'){playFeedback.baseVerdicts=[];playFeedback.callTime=0;$('umpire-call').hidden=true;stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
-   else if(type==='field'){playFeedback.reviewVerdict=null;review.capture(game);updatePlayTools();}
+   else if(type==='field'){playFeedback.baseVerdicts=[];review.capture(game);updatePlayTools();}
    else if(type==='update')updateUI();
    else if(type==='timing'){
      // Contact feedback is sound/vibration only; no text over the field.
