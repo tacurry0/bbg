@@ -8,9 +8,9 @@ const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',we
  const g=make('record');g.beginHalf();assert.equal(g.pitch.speed,150);assert.equal(g.derby.remaining,120000);assert.equal(g.crowdAttendanceMode,'full');
  g.update(50);const rem=g.derby.remaining;
  g.startField(62,29,.15,false,true);for(let i=0;i<1000&&g.phase==='field';i++)g.update(16);
- assert.equal(g.derby.turnHR,1);assert.equal(g.derby.remaining,rem,'no clock expense for flight');assert.equal(g.field.overFence,true);assert.equal(g.field.ball.bounces,0,'score at fence, not landing');assert(g.hit.derbyResult.distance>110);assert(Number.isFinite(g.hit.derbyResult.x));assert(Number.isFinite(g.hit.derbyResult.exitKmh));
+ assert.equal(g.derby.turnHR,1);assert(g.derby.remaining<rem-1000,'clock continues in flight');assert.equal(g.field.overFence,true);assert(g.field.ball.bounces>=1,'score at landing, not fence');assert(g.hit.derbyResult.distance>110);assert(Number.isFinite(g.hit.derbyResult.x));assert(Number.isFinite(g.hit.derbyResult.exitKmh));
  g.finishDerbyBall(true);assert.equal(g.derby.turnHR,1,'no duplicate homer');
- const resultRem=g.derby.remaining;g.update(20);assert.equal(g.derby.remaining,resultRem,'no clock expense for result');
+ const resultRem=g.derby.remaining;g.update(20);assert.equal(g.derby.remaining,resultRem-20,'clock continues in result');
  g.derby.record({kind:'miss',hr:false});assert.equal(g.derby.streak,0);
  g.derby.remaining=1;g.beginHalf();g.update(20);assert.equal(g.derbyTransition,'finish');
 }
@@ -29,7 +29,7 @@ const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',we
 {
  const g=make('online');let events=[];g.emit=(t,d)=>events.push(t);g.derby.target=0;g.beginHalf();g.startField(62,29,0,false);g.finishDerbyBall(true);
  assert(g.derby.pendingFinish);assert(events.includes('derby-walkoff'));assert(!events.includes('derby-online-turn'));
- for(let i=0;i<30;i++)g.update(50);assert(events.includes('derby-online-turn'));assert.equal(g.phase,'derby-break');
+ for(let i=0;i<80;i++)g.update(50);assert(events.includes('derby-online-turn'));assert.equal(g.phase,'derby-break');
 }
 {
  const state=D.createTimed({host:{name:'A'},guest:{name:'B'},first:1});
@@ -61,6 +61,6 @@ h.cc.game.finishDerbyBall(true);transfer(h,a);assert.equal(a.cc.online.derbyCont
 h.cc.game.finishDerbyTurn();transfer(h,a);assert(!h.cc.onlineDerbyMyTurn());assert(a.cc.onlineDerbyMyTurn());assert.equal(a.cc.game.derby.target,1);assert.equal(a.cc.game.derby.remaining,120000);
 for(let i=0;i<2;i++){a.cc.game.beginHalf();a.cc.game.startField(62,29,0,false);a.cc.game.finishDerbyBall(true);transfer(a,h);}
 assert(a.cc.game.derby.pendingFinish);
-for(let i=0;i<30;i++)a.cc.game.update(50);transfer(a,h);
+for(let i=0;i<80;i++)a.cc.game.update(50);transfer(a,h);
 assert(h.cc.online.derbyContest.done);assert(a.cc.online.derbyContest.done);assert.equal(h.cc.online.derbyContest.winner,1);assert.equal(a.cc.online.derbyContest.winner,1);assert(h.cc.online.derbyContest.walkOff);assert.equal(h.cc.game.phase,'ended');assert.equal(a.cc.game.phase,'ended');
 console.log('PASS v262: enhanced derby, league selection, real-physics CPU clips, timed spectator frames, synchronized records and walk-off');

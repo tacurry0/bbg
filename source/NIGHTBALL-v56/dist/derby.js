@@ -42,9 +42,9 @@
    return this.userBatsSecond&&Number.isFinite(opponentScore)&&this.turnHR>opponentScore;
   }
   cpuScore(entry,extra,scoreToBeat=Infinity){
-   if(this.enhanced&&this.matchup?.entrants.includes(entry)&&!entry.user&&typeof NightGame!=='undefined'){
+   if(this.enhanced&&!entry.user&&typeof NightGame!=='undefined'){
     const clips=NightDerby.simulateTurn(entry,this.park,extra?60000:120000,scoreToBeat);
-    const key=extra?'extraClips':'normalClips';this.matchup[key]=clips;
+    const key=extra?'extraClips':'normalClips';if(this.matchup?.entrants.includes(entry))this.matchup[key]=clips;
     return clips.filter(b=>b.result?.hr).length;
    }
    const size=(this.park.leftCenter+this.park.rightCenter)/2;
@@ -114,13 +114,26 @@
    const clips=[];let used=0,hr=0;
    while(used<duration&&hr<=target&&clips.length<120){
     const pitch={x:(Math.random()-.5)*.9,y:Math.random()*.49-.13};g.createPitch(NightGame.TYPES[0],pitch);
-    const q=Math.random(),power=entry.player.power||65;
-    const speed=29+q*19+(power-60)*.12+Math.random()*5,launch=12+Math.random()*32,spray=(Math.random()-.5)*1.65;
-    const shot={speed,launch,spray,pitch};g.startField(speed,launch,spray,true,q>.85);
-    let elapsed=0;while(g.phase==='field'&&elapsed<12000){g.updateField(1/60);elapsed+=1000/60;}
-    const result=g.derby.turnHistory.at(-1)||{hr:false,kind:'in-play',distance:0};if(result.hr)hr++;
-    clips.push({...shot,result});used+=(g.pitch?.duration||900)*1.12+270;
-    g.derby.turnHistory=[];g.derby.pendingFinish=false;
+    const windup=g.pitch.windupMs??270,contactTime=g.pitch.duration*(.88+Math.random()*.24);
+    if(used+windup>=duration)break;
+    const q=Math.random(),power=entry.player.power||65,contact=entry.player.contact||65;
+    const miss=q<Math.max(.04,.13-(contact-65)*.002);
+    const launch=miss?0:Math.random()<.13?2+Math.random()*5:17+Math.random()*27;
+    const speed=22+(0.36+q*.64)*19+(power-60)*.12+9,spray=(Math.random()-.5)*1.82;
+    const shot={speed,launch,spray,pitch,windup,contactTime,miss,perfect:q>.85};
+    let elapsed=0;
+    if(miss){g.completePitch('miss');g.setPhase('result');elapsed=330;}
+    else{
+     g.startField(speed,launch,spray,true,shot.perfect);
+     while(g.phase==='field'&&elapsed<18000){g.updateField(1/120);elapsed+=1000/120;}
+     if(g.phase==='field')g.finishDerbyBall(!!g.field.overFence&&!!g.field.ball.bounces);
+    }
+    const result=g.derby.turnHistory.at(-1)||{hr:false,kind:'miss',distance:0};if(result.hr)hr++;
+    const walkoff=result.hr&&hr>target;
+    const resultMs=NightGame.derbyResultDuration(g.field,g.hit,walkoff);
+    clips.push({...shot,result,fieldMs:elapsed,resultMs,walkoff,startMs:used});
+    used+=windup+contactTime+elapsed+resultMs;
+    g.derby.turnHistory=[];g.derby.pendingFinish=false;g.field=null;g.hit=null;
    }
    return clips;
   }

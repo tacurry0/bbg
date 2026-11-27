@@ -6,6 +6,8 @@ on:
     paths:
       - 'source/NIGHTBALL-v56/dist/**'
       - 'source/NIGHTBALL-v56/tests/premium-browser.mjs'
+      - 'source/NIGHTBALL-v56/tests/derby-browser.mjs'
+      - 'source/NIGHTBALL-v56/tests/derby-stadium-v263.mjs'
       - 'source/NIGHTBALL-v56/tests/npb-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/kbo-browser.mjs'
       - 'source/NIGHTBALL-v56/tests/career-world-browser.mjs'
@@ -34,6 +36,11 @@ jobs:
         run: |
           npm install --no-save --no-package-lock playwright@1.56.1
           npx playwright install chromium
+      - name: Verify rebuilt Home Run Derby
+        working-directory: source/NIGHTBALL-v56
+        run: |
+          node tests/derby-stadium-v263.mjs
+          node tests/derby-browser.mjs
       - name: Verify Stadium Vision verdict layout
         working-directory: source/NIGHTBALL-v56
         run: node tests/verdict-vision-v220.cjs --browser

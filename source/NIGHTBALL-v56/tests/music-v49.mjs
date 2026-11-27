@@ -75,8 +75,7 @@ const worldGame={...g,career:null,worldMusic:{teamSeed:'world-save',playerId:'ca
  phase:'windup',half:'top',side:'away',userSide:'away',batFinished:false,batter:{id:'career-player'},bases:[false,true,false]};
 const worldSettings=musicSettings();
 mixer.update(worldGame,worldSettings,true,true);await tick();
-assert.equal(mixer.slots.away.id,'preset:stadium');
-assert(mixer.slots.away.source.loop);
+assert(!mixer.slots.away);
 worldSettings.assignments['career-team:world-save']={cheer:'preset:clap'};
 mixer.update(worldGame,worldSettings,true,true);await tick();
 assert.equal(mixer.slots.away.id,'preset:clap');

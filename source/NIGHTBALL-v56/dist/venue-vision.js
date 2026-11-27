@@ -286,7 +286,17 @@ export function drawVenueVision(renderer,id,game){
  }
  if(game?.derby?.enhanced){const w=canvas.width,h=canvas.height;gradient(c,w*.23,h*.12,w*.54,h*.65,'#061329','#163963');text(c,'HOME RUN DERBY',w*.5,h*.26,h*.09,'#9ddfff',w*.49);text(c,game.batter.name,w*.5,h*.39,h*.09,'#fff',w*.48);text(c,(game.derby.turnHR||0)+' HR',w*.5,h*.67,h*.22,'#ffdc6c',w*.49);}
  const cut=game?.phase==='cinematic'?game.broadcastCut:null,k=cut?.kind==='strikeout'?cut:game?.phase==='result'?game.pitch?.strikeCelebration:null,hr=cut?.kind==='homer'?cut:game?.phase==='result'&&game.hit?.kind==='hr'?(game.field?.homerCelebration||{}):null;
- if(k||hr){const w=canvas.width,h=canvas.height,side=k?k.side:game.side,club=game.teams[side],accent=typeof club?.color==='string'?club.color:k?'#57cfff':'#ffdc77',left=w*.24,top=h*.14,width=w*.52,height=h*.62;gradient(c,left,top,width,height,'#061321','#182b48');rect(c,accent,left,top,width,Math.max(3,h*.025));text(c,k?'STRIKEOUT':hr.tag||'HOME RUN',w*.5,top+height*.49,Math.min(height*.30,width*.10),'#fff',width*.93);text(c,k?`${k.ks||1} K`:(hr.distance||game.hit?.distance||0)+' m'+(game.derby?' · '+game.derby.turnHR+' HR':''),w*.5,top+height*.84,height*.20,k?'#85ddff':'#ffdf79',width*.9);}
+ if(hr&&game.derby?.enhanced){
+  const w=canvas.width,h=canvas.height,phase=game.phaseTime/1000,accent=hr.walkoff?'#ff82c9':hr.level>=3?'#ff9d36':'#ffda60';
+  gradient(c,w*.04,h*.045,w*.92,h*.89,'#170c31','#090e20');rect(c,accent,w*.04,h*.045,w*.92,h*.02);
+  c.save();c.beginPath();c.rect(w*.04,h*.07,w*.92,h*.84);c.clip();
+  for(let i=-3;i<9;i++){const x=(i*.18+phase*.16)%1.3*w;c.fillStyle=i%2?'rgba(255,181,48,.17)':'rgba(93,177,255,.16)';c.beginPath();c.moveTo(x,h*.07);c.lineTo(x+.075*w,h*.07);c.lineTo(x-.18*w,h*.91);c.lineTo(x-.26*w,h*.91);c.closePath();c.fill();}
+  c.restore();
+  text(c,hr.walkoff?'WALK-OFF WIN!':'HOME RUN DERBY',w*.5,h*.19,h*.085,accent,w*.86);
+  text(c,hr.tag||'HOME RUN!',w*.5,h*.48,h*.24,'#fff7d9',w*.87);
+  text(c,game.batter.name,w*.5,h*.68,h*.11,'#f0f7ff',w*.86);
+  text(c,(hr.distance||game.hit?.distance||0)+' m   ·   '+game.derby.turnHR+' HR',w*.5,h*.84,h*.13,accent,w*.86);
+ }else if(k||hr){const w=canvas.width,h=canvas.height,side=k?k.side:game.side,club=game.teams[side],accent=typeof club?.color==='string'?club.color:k?'#57cfff':'#ffdc77',left=w*.24,top=h*.14,width=w*.52,height=h*.62;gradient(c,left,top,width,height,'#061321','#182b48');rect(c,accent,left,top,width,Math.max(3,h*.025));text(c,k?'STRIKEOUT':hr.tag||'HOME RUN',w*.5,top+height*.49,Math.min(height*.30,width*.10),'#fff',width*.93);text(c,k?`${k.ks||1} K`:(hr.distance||game.hit?.distance||0)+' m'+(game.derby?' · '+game.derby.turnHR+' HR':''),w*.5,top+height*.84,height*.20,k?'#85ddff':'#ffdf79',width*.9);}
  material.map.needsUpdate=true;
  if(id==='harbor'){
   const secondary=venueVision(renderer,id,'auxiliary');

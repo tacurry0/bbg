@@ -2,12 +2,12 @@ import { jerseyUV, torsoGeometry, pantsTexture, capGeometry, visorGeometry, unif
 import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=243';
 import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
 import * as T from './vendor/three.module.min.js';
-import { CanvasSceneRenderer } from './canvas3d.js?v=228';
+import { CanvasSceneRenderer } from './canvas3d.js?v=263';
 import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v=74';
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
 import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
-import { drawVenueVision } from './venue-vision.js?v=262';
+import { drawVenueVision } from './venue-vision.js?v=263';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=261';
 import {
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=262';
+} from './stadium-fx.js?v=263';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -225,7 +225,7 @@ export class StadiumRenderer {
    this.grassUniforms.uConcourseColor.value.setHex(park.school?0x586552:park.id==='tokyo-dome'?0x1c2c3d:0x16222f);
    this.grassUniforms.uVenueMow.value.set(...(park.mowing??[0,1]));
   }
-  this.decoratePark(park);this.prepareSupporters();for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
+  this.decoratePark(park);this.prepareSupporters(!!this.derbyCrowdWanted);for(const m of this.wallGroup.children){if(m.geometry&&!Object.values(this.geometries).includes(m.geometry))m.geometry.dispose();if(m.userData.parkMarker){m.material.map.dispose();m.material.dispose();}}this.wallGroup.clear();
   const wall=[],seams=[],rail=[],track=[],trackEdge=[],pts=[];
   const trackWidth=park.trackWidth??4.15;
   const colorKey=park.id;
@@ -338,8 +338,11 @@ export class StadiumRenderer {
   geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setAttribute('fanPart',new T.Float32BufferAttribute(parts,1));
   return geometry;
  }
- prepareSupporters(){
-  this.supporterKey=null;this.supporterMeshes=[];this.crowdQuality=1;
+ prepareSupporters(derbyFull=false){
+  // Rebuild once when entering/leaving a derby or changing venue. Never
+  // inherit a reduced crowd from another mode or leave old fans hidden.
+  for(const oldBatch of this.supporterMeshes||[]){const m=oldBatch.mesh;if(m.parent){m.removeFromParent();m.geometry.dispose();m.material.dispose();m.dispose();}}
+  this.supporterDerby=derbyFull;this.supporterKey=null;this.supporterMeshes=[];this.crowdQuality=1;
   const seats=[],old=[],park=this.parkDecor;
   park.updateWorldMatrix(true,true);
   park.traverse(o=>{
@@ -350,7 +353,7 @@ export class StadiumRenderer {
   const sources=seats.length?seats:old.filter(o=>!/crowd heads/i.test(o.name));
   if(!sources.length)return;
   const software=this.gl.isSoftwareRenderer,small=(globalThis.navigator?.hardwareConcurrency||8)<=4||(globalThis.navigator?.deviceMemory||8)<=4||Math.min(globalThis.innerWidth||1000,globalThis.innerHeight||1000)<560;
-  const budget=this.hero?900:software?650:small?4700:8500;
+  const budget=this.hero?900:derbyFull?(software?1800:small?11500:18500):software?650:small?4700:8500;
   const total=sources.reduce((sum,o)=>sum+o.count,0),stride=Math.max(1,Math.ceil(total/budget));
   const inv=new T.Matrix4().copy(park.matrixWorld).invert(),matrix=new T.Matrix4(),local=new T.Matrix4(),pos=new T.Vector3(),quat=new T.Quaternion(),scale=new T.Vector3();
   const sample=[];let ordinal=0;
@@ -364,13 +367,13 @@ export class StadiumRenderer {
     const len=Math.hypot(pos.x,pos.z)||1;
     const x=pos.x-(seats.length?pos.x/len*.20:0),z=pos.z-(seats.length?pos.z/len*.20:0);
     const y=pos.y-(seats.length?.12:/nightball crowd/i.test(mesh.name)?.30:.42);
-    sample.push({x,y,z,seed,yaw:Math.atan2(-x,-z),detail:Math.hypot(x,z)+Math.max(0,y)*2});
+    sample.push({x,y,z,seed,yaw:Math.atan2(-x,-z),seatWidth:seats.length?scale.x:.63,detail:Math.hypot(x,z)+Math.max(0,y)*2});
    }
   }
   if(!sample.length)return;
   for(const o of old)o.visible=false;
   sample.sort((a,b)=>a.detail-b.detail);
-  const detailed=software||this.hero?0:Math.min(small?700:1400,Math.floor(sample.length*.22));
+  const detailed=software||this.hero?0:Math.min(derbyFull?(small?500:900):small?700:1400,Math.floor(sample.length*.22));
   for(const [list,rich] of [[sample.slice(0,detailed),true],[sample.slice(detailed),false]]){
    if(!list.length)continue;list.sort((a,b)=>a.seed-b.seed);
    const geometry=this.supporterGeometry(rich),material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9,side:T.DoubleSide});
@@ -393,7 +396,7 @@ export class StadiumRenderer {
   // Slow devices reduce the rendered sample count, never the match's
   // configured attendance or crowd audio. Stable shuffled ordering avoids
   // turning a whole seating section empty when reducing detail.
-  if(!this.gl.isSoftwareRenderer&&this.frameAvg>34&&this.graphicsRatio<=1&&this.crowdQuality===1){
+  if(!this.supporterDerby&&!this.gl.isSoftwareRenderer&&this.frameAvg>34&&this.graphicsRatio<=1&&this.crowdQuality===1){
    this.crowdQuality=.72;for(const batch of this.supporterMeshes)batch.mesh.count=Math.round((batch.visibleCount||0)*this.crowdQuality);
   }
   if(!force&&this.supporterKey===key)return;this.supporterKey=key;
@@ -410,7 +413,12 @@ export class StadiumRenderer {
     const visitor=style==='npb'?x<-18&&outfield:x<-32&&(!outfield||angle<-.36);
     const side=seed<.13?0:visitor?(seed<.85?-1:1):cheeringSection||seed<.72?1:seed<.88?0:-1;
     const height=.88+seed*.26;
-    anchor.position.set(x,y,z);anchor.rotation.set(0,yaw,0);anchor.scale.set(.86+seed*.22,height,.88+seed*.18);anchor.updateMatrix();
+    anchor.position.set(x,y,z);anchor.rotation.set(0,yaw,0);
+     const full=this.supporterDerby,seatWidth=fan.seatWidth||.63;
+     // Cheap wider distant silhouettes cover entire rows instead of
+     // leaving isolated dots between hundreds of unoccupied seats.
+     const width=full?Math.max(1.25,Math.min(3.1,seatWidth/.43*1.05)):1;
+     anchor.scale.set((.86+seed*.22)*width,height*(full?1.17:1),.88+seed*.18);anchor.updateMatrix();
     mesh.setMatrixAt(count,anchor.matrix);
     color.setHex(neutral[Math.floor(seed*97)%neutral.length]);
     if(side!==0)color.lerp(side===1?homeColor:awayColor,cheeringSection?.83:.58);
@@ -419,6 +427,8 @@ export class StadiumRenderer {
    const batch=this.supporterMeshes.find(b=>b.mesh===mesh);batch.visibleCount=count;
    mesh.count=Math.round(count*this.crowdQuality);mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;sideAttr.needsUpdate=true;seedAttr.needsUpdate=true;mesh.computeBoundingSphere();
   }
+  this.scene.userData.staticRevision=(this.scene.userData.staticRevision||0)+1;
+  this.canvas.dataset.spectators=String(this.supporterMeshes.reduce((n,b)=>n+b.mesh.count,0));
  }
  decoratePark(park){
   if(!this.parkDecor)return;
@@ -669,7 +679,7 @@ export class StadiumRenderer {
    if(g?.derby){c.fillStyle='#f1f9ff';c.font='900 95px Arial';c.fillText((g.derby.turnHR||0)+' HR',512,282,950);c.fillStyle='#abddfa';c.font='bold 34px Arial';c.fillText(g.batter.name,512,343,900);}
   }
   c.fillStyle='#3c8bc2';c.fillRect(28,382,968,2);
-  const call=g?.phase==='result'?{hr:'HOME RUN!',single:'BASE HIT',double:'DOUBLE!',triple:'TRIPLE!'}[g.hit?.kind]:null;
+  const call=g?.phase==='result'?{hr:g?.field?.homerCelebration?.tag||'HOME RUN!',single:'BASE HIT',double:'DOUBLE!',triple:'TRIPLE!'}[g.hit?.kind]:null;
   if(call){
    const exit=g?.hit?.exitKmh?`  •  ${Math.round(g.hit.exitKmh)} km/h`:'';
    c.fillStyle=g?.hit?.kind==='hr'?'#ffd866':'#9ee8ff';c.font='italic 900 31px Arial';c.fillText(label(call)+exit,512,424);
@@ -1001,7 +1011,15 @@ export class StadiumRenderer {
  }
  followPlay(g,time){
   const f=g.field,trot=g.phase==='result'&&f.outcome==='hr'&&!g.derby;
-  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'&&(g.hit?.distance>=150||g.derby.pendingFinish)){const x=f.ball.x,z=f.ball.y;this.camera.position.set(x*.75,Math.min(34,g.park.roofHeight?18:34),-z+25);this.camera.lookAt(x,Math.max(2,f.ball.z*.75),-z);this.camera.fov=48;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);return;}
+  if(g.derby?.enhanced&&g.phase==='result'&&f.outcome==='hr'){
+   const a=clamp(Math.atan2(f.ball.x,f.ball.y),-.67,.67),r=NightPlayers.wallDistance(g.park,a),h=NightPlayers.fenceHeight(g.park,a),inside=!!g.park.roofHeight||g.park.theme==='dome';
+   const cy=inside?Math.min(19,h+12):h+17,dist=r-(this.camera.aspect<.85?40:34);
+   const camera=this.fieldPosition.set(Math.sin(a)*dist,cy,-Math.cos(a)*dist),target=this.fieldFocus.set(Math.sin(a)*(r+6),h+(inside?7:11),-Math.cos(a)*(r+6));
+   camera.y=Math.min(camera.y,domeCameraLimit(this,camera,NightPlayers.roofSurface(g.park,camera.x,-camera.z)-3));
+   this.camera.position.copy(camera);this.camera.lookAt(target);this.camera.fov=this.camera.aspect<.85?70:58;
+   if(g.hit?.distance>=150&&g.phaseTime>500)this.camera.fov-=Math.min(5,(g.phaseTime-500)/180);
+   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=f;return;
+  }
   const h=g.replayView&&g.replayHighlight,a=h&&f.fielders[h.fielder];
   if(a&&Math.abs(f.elapsed-h.time)<1.2){const side=a.x>0?-1:1;this.camera.position.set(a.x+side*5,5.8,-a.y+8);this.camera.lookAt(a.x,1.55,-a.y);this.camera.fov=this.camera.aspect<.85?48:40;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);this.cameraPlay=null;return;}
   const moment=g.replayView?g.replayCloseMoment:null;
@@ -1334,10 +1352,10 @@ export class StadiumRenderer {
   if(!g.replayView&&g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
-  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);const introSide=g.broadcastIntro&&g.phaseTime>=4000&&g.phaseTime<7000?(g.phaseTime<5500?'away':'home'):null;const shownSide=introSide||def,shownPitcher=introSide?g.introStarter(introSide)||g.pitcher:g.pitcher;this.stylePlayer(this.pitcher,shownSide,shownPitcher.no,g.teams[shownSide],g.uniformKits?.[shownSide]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
+  this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.derbyCrowdWanted=!!g.derby;this.setPark(g.park,window.nightSettings?.gameLighting);if(this.supporterDerby!==this.derbyCrowdWanted)this.prepareSupporters(this.derbyCrowdWanted);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);const introSide=g.broadcastIntro&&g.phaseTime>=4000&&g.phaseTime<7000?(g.phaseTime<5500?'away':'home'):null;const shownSide=introSide||def,shownPitcher=introSide?g.introStarter(introSide)||g.pitcher:g.pitcher;this.stylePlayer(this.pitcher,shownSide,shownPitcher.no,g.teams[shownSide],g.uniformKits?.[shownSide]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}
   const score=g?.displayScore?.();
   const boardKey=g?[g.teams.home.name,g.teams.away.name,g.inning,g.half,score?.home,score?.away,
-   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,g.derby?.turnHR,g.derby?.streak,
+   g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,g.derby?.turnHR,g.derby?.streak,g.derby?.enhanced&&g.phase==='result'&&g.hit?.kind==='hr'?Math.floor(g.phaseTime/200):0,
    ...((g.park.pro||VENUE_VISION_PARKS.has(g.park.id))?[g.balls,g.strikes,g.outs,g.batter.id,g.pitcher.id,
     g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
   const boardCall=g?.phase==='cinematic'?g.broadcastCut?.kind:g?.phase==='result'?(g.pitch?.strikeCelebration?'strikeout':g?.hit?.kind):g?.pitch?.speed?Math.round(g.pitch.speed):null;
@@ -1345,19 +1363,20 @@ export class StadiumRenderer {
   if(this.boardKey!==boardKey||this.boardCall!==boardCall||this.boardLanguage!==language){
    this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
   }
-  this.overviewMode=g?.phase==='intro'&&(g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
-  const cameraView=g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
+  this.overviewMode=g?.phase==='intro'&&(g.derby?.enhanced?g.phaseTime<1700:g.broadcastIntro||g.park.pro||VENUE_VISION_PARKS.has(g.park.id));
+  const cameraView=g?.derby?.enhanced&&g.phase==='result'&&g.field?.outcome==='hr'?(g.field.homerCelebration?.walkoff&&g.phaseTime>=2000?'derby-walkoff':'derby-fireworks'):g?.derby?.enhanced&&g.phase==='intro'&&!this.overviewMode?'derby-batter-intro':g?.absCalledStrikeout||g?.phase==='result'&&g.pitch?.strikeCelebration||g?.phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'?'pitcher-closeup':this.overviewMode?'overview':'play';
   if(this.canvas.dataset.cameraView!==cameraView)this.canvas.dataset.cameraView=cameraView;
   if(field)this.followPlay(g,time);
   else if(g?.broadcastIntro)this.broadcastCamera(g);
   else if(this.overviewMode)this.overviewCamera(g.park);
+  else if(g?.derby?.enhanced&&g.phase==='intro'){const x=g.batter.hand==='L'?1.65:-1.65;this.camera.position.set(x+3.0,2.3,4.6);this.camera.lookAt(x,1.2,.25);this.camera.fov=44;this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);}
   else if(this.fieldMode||!this.hero){this.camera.fov=g?.park.id==='dome'?54:49;this.camera.updateProjectionMatrix();this.resetCamera();}
   this.lastTime=time;
   this.fieldMode=field;
   for(const p of this.players){p.root.visible=false;p.shadow.visible=false;}
   if(field){
    const f=g.field,elapsed=f.elapsed+(g.phase==='result'?g.phaseTime/1000:0);
-   const contact=!g.replayView&&g.phase==='field'&&f.elapsed<.15&&!f.foul&&!g.derby;
+   const contact=!g.replayView&&g.phase==='field'&&f.elapsed<.15&&!f.foul;
    f.fielders.forEach((p,i)=>{
     const actor=this.fielders[i],dx=p.x-actor.lastX,dz=p.y-actor.lastZ;
     const focus=f.throw?.fromIndex===i?f.throw.to:f.ball;
@@ -1426,7 +1445,8 @@ export class StadiumRenderer {
     this.ballShadow.scale.setScalar(.88);this.ballShadow.visible=true;
    }
   }
-  if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
+  if(g?.derby?.enhanced&&g.phase==='result'&&g.field?.homerCelebration?.walkoff&&g.phaseTime>=2000){this.renderLiveCut(g,time,{kind:'homer',side:g.side,playerId:g.batter.id,level:3,variant:'deep',duration:3600});}
+  else if(g?.phase==='cinematic'&&!g.replayView)this.renderLiveCut(g,time);
   else if(g&&!g.replayView&&(g.absCalledStrikeout||g.phase==='result'&&g.pitch?.strikeCelebration)&&!g.fastForward&&!g.spectate&&!g.autoDefense&&!g.autoBatting){const k=g.pitch?.strikeCelebration,side=g.side==='home'?'away':'home';this.renderLiveCut(g,time,{kind:'strikeout',side,playerId:g.pitcher.id,level:k?.level||1,duration:1500,preview:g.phase==='abs-call'});}
   const wet=window.NightGame.rainLevel(g)/3;
   if(this.grassUniforms?.uWet)this.grassUniforms.uWet.value=wet;

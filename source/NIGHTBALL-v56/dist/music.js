@@ -16,15 +16,11 @@ const BROTHERS_HIT='preset:ctbc-brothers-hit';
 const HIT_DUCK_GAIN=.10,HIT_DUCK_TIME=.25;
 const recordings={ [NPB_TAIKO]:'npb-taiko.mp3',[BROTHERS_HIT]:'ctbc-brothers-hit.mp3' };
 export const PRESETS=[{id:NPB_TAIKO,name:'NPB 太鼓応援'},{id:BROTHERS_HIT,name:'我們兄弟（安打）'},...brass.map(({id,name})=>({id:'preset:'+id,name}))];
-export const DEFAULT_CAREER_CHEER='preset:stadium';
-export function defaultTeamCheer(id,chance=false){
- if(!id)return null;
- if(id.startsWith('npb-'))return NPB_TAIKO;
- if(id==='apbc-japan')return chance?'preset:japan-rally':'preset:stadium';
- if(id.startsWith('kbo-')||id==='apbc-korea')return chance?'preset:korea-rally':'preset:clap';
- if(['brothers','dragons','lions','guardians','monkeys','hawks','apbc-taipei'].includes(id))return chance?'preset:taiwan-rally':'preset:clap';
- return null;
-}
+// No league or career batting song is assigned automatically. Imported and
+// explicitly assigned songs still work; the ambient crowd and result cues
+// remain separate from music.
+export const DEFAULT_CAREER_CHEER=null;
+export function defaultTeamCheer(){return null;}
 export function defaultTeamResult(id,kind){
  return kind==='hit'&&['owls','brothers'].includes(id)?BROTHERS_HIT:null;
 }
