@@ -555,7 +555,7 @@ window.NightGame=class NightGame{
    }
   }
   g.conditionSeed??=career?career.teamSeed+'/'+career.fixtureId:'legacy/'+g.teams.home.id+'/'+g.teams.away.id;
-  g.runningRevision=41;if(g.battingAssist===undefined)g.battingAssist=true;return g;
+  g._cutSubSeen??=(g.substitutions||[]).length;g.runningRevision=41;if(g.battingAssist===undefined)g.battingAssist=true;return g;
  }
 
  fixtureClub(id){
@@ -579,6 +579,44 @@ window.NightGame=class NightGame{
  get opponentScore(){return this[this.opponentSide+'Score'];}
  get battingScore(){return this[this.side+'Score'];}
  get isFixture(){return this.mode==='match'||this.mode==='pennant';}
+ get liveCutsEnabled(){return this.isFixture&&!this.career&&!this.derby&&!this.timeAttack&&!this.challenge&&!this.umpireMode&&!this.spectate&&!this.fastForward&&!this.autoDefense&&!this.autoBatting&&!this.replayView;}
+ startBroadcastCut(kind,data={},duration=1400){
+  if(!this.liveCutsEnabled||this.mirror||this.phase==='cinematic'||this.phase==='ended')return false;
+  this.broadcastCut={...data,kind,duration,resume:this.phase,at:this.phaseTime,id:(this._cutSerial=(this._cutSerial||0)+1)};
+  this.phase='cinematic';this.phaseTime=0;this.touch=null;this.notify();return true;
+ }
+ endBroadcastCut(){
+  if(this.mirror||this.phase!=='cinematic'||!this.broadcastCut||this.paused)return false;
+  const cut=this.broadcastCut;this.broadcastCut=null;this.phase=cut.resume;this.phaseTime=cut.at;
+  if(cut.kind==='walkoff'){this._walkoffCutDone=true;this.finish();}
+  else this.notify();
+  return true;
+ }
+ maybeBroadcastCut(){
+  if(!this.liveCutsEnabled||this.paused||this.mirror||!['aim','windup','result'].includes(this.phase))return false;
+  const fieldSide=this.side==='home'?'away':'home',half=this.inning+'/'+this.half;
+  if(this.phase==='result'&&this.field?.resolved&&!this.field.broadcastCutSeen){
+   const field=this.field;field.broadcastCutSeen=true;
+   if(field.outcome==='hr')return this.startBroadcastCut('homer',{side:this.side,playerId:this.batter.id,name:this.batter.name,distance:this.hit?.distance||Math.round(field.maxTravel||0)},1550);
+   const play=(this.playEvents||[]).find(p=>['jump','dive'].includes(p.type));
+   if(play&&['flyout','groundout','forceout','doubleplay'].includes(field.outcome)){
+    const a=field.fielders[play.fielder];
+    if(a)return this.startBroadcastCut('catch',{side:fieldSide,playerId:this.fielder(a.name,fieldSide)?.id,name:a.player,x:a.x,z:a.y},1200);
+   }
+  }
+  if(!['aim','windup'].includes(this.phase))return false;
+  const subs=this.substitutions||[],seen=this._cutSubSeen||0;
+  if(subs.length>seen){
+   this._cutSubSeen=subs.length;
+   const row=subs.slice(seen).reverse().find(s=>s.inning===this.inning&&s.half===this.half&&['pitch','hit'].includes(s.type));
+   if(row)return this.startBroadcastCut(row.type==='pitch'?'relief':'pinch-hit',{side:row.side,playerId:row.inId,name:row.inName,previous:row.outName},1600);
+  }
+  if(this.balls||this.strikes||this._cutPressureHalf===half)return false;
+  const close=Math.abs(this.homeScore-this.awayScore)<=2,late=this.inning>=Math.max(2,this.totalInnings-1);
+  if(this.inning>=this.totalInnings&&close){this._cutPressureHalf=half;return this.startBroadcastCut('final-inning',{side:fieldSide},1350);}
+  if(late&&close&&(this.bases[1]||this.bases[2])){this._cutPressureHalf=half;return this.startBroadcastCut('pressure',{side:fieldSide,base:this.bases[2]?3:2},1350);}
+  return false;
+ }
  get broadcastIntro(){return this.phase==='intro'&&this.isFixture&&!this.career&&!this.derby&&!this.timeAttack&&!this.fastForward;}
  get introDuration(){return this.broadcastIntro?10500:this.career?(this.career.shortIntro?160:1100):1400;}
  introStarter(side){const index=side===this.userSide?this.homePitcherIndex:this.awayPitcherIndex;return this.pitchingStaff[side]?.[index]||this.pitchingStaff[side]?.[0];}
@@ -768,6 +806,7 @@ window.NightGame=class NightGame{
  setCursor(x,y){if(this.paused||this.umpireMode)return;this.cursor={x:clamp(x,-1.55,1.55),y:clamp(y,-1.55,1.55)};}
  update(dt,holdResult=false){
   if(dt<=0||this.paused||['ended','change','derby-break','career-pregame','career-ready'].includes(this.phase))return;
+  if(this.phase==='cinematic'){this.phaseTime+=Math.min(dt,100);if(this.phaseTime>=(this.broadcastCut?.duration||1000))this.endBroadcastCut();return;}
   const derby=this.derby;
   if(derby&&this.phase!=='intro'){
    derby.remaining=Math.max(0,derby.remaining-dt);
@@ -1364,7 +1403,7 @@ window.NightGame=class NightGame{
   // the visible pitch, while a new phase starts on its authoritative time.
   this._ptBase=samePhase&&!s.lock?Math.max(s.pt,Math.min(this.phaseTime,s.pt+80)):s.pt;this._ptAt=now;
   this.phaseTime=this._ptBase;
-  this.phase=s.phase;this.inning=s.inning;this.half=s.half;
+  this.phase=s.phase;this.broadcastCut=s.cut||null;this.inning=s.inning;this.half=s.half;
   this.outs=s.outs;this.balls=s.balls;this.strikes=s.strikes;
   this.homeScore=s.hs;this.awayScore=s.as;this.home=s.home;this.away=s.away;
   this.homeHits=s.hh;this.awayHits=s.ah;this.homeErrors=s.he;this.awayErrors=s.ae;
@@ -2742,6 +2781,6 @@ window.NightGame=class NightGame{
    :{kind:'bat',runs:userRuns,hits:this.session.hits,hr:this.session.hr,allowed:oppRuns,halves:ta.halves};
   this.finish();return true;
  }
- finish(){if(this.phase==='ended')return;delete this.pendingWorldBatting;this.setPhase('ended');this.emit('end',this);}
+ finish(){if(this.phase==='ended'||this.phase==='cinematic')return;if(this.liveCutsEnabled&&this.walkoffWin&&!this._walkoffCutDone&&this.startBroadcastCut('walkoff',{side:'home',playerId:this.batter.id,name:this.batter.name},2200))return;delete this.pendingWorldBatting;this.setPhase('ended');this.emit('end',this);}
 };
 })();

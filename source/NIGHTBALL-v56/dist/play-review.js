@@ -40,8 +40,9 @@ export class PlayReview {
   if(final&&last&&frame.elapsed-last.elapsed<.001)frames[frames.length-1]=frame;
   else frames.push(frame);
   if(frames.length>385)frames.shift();
-  if(final&&frames.length>1&&game.homeScore+game.awayScore>this.record.score){
-   this.save(game,{frames,hit:{...game.hit}});
+  const highlight=final&&game.liveCutsEnabled&&['flyout','groundout','forceout','doubleplay'].includes(f.outcome)?(game.playEvents||[]).find(e=>e.type==='jump'||e.type==='dive'):null;
+  if(final&&frames.length>1&&(game.homeScore+game.awayScore>this.record.score||highlight)){
+   this.save(game,{frames,hit:{...game.hit},highlight:highlight?{fielder:highlight.fielder,time:highlight.time}:null});
   }
   return this.clip;
  }
@@ -71,7 +72,7 @@ export class PlayReview {
   if(!clip||clip.game!==game)return false;
   const {pitch,frames}=clip;
   const projected=Object.create(game);
-  Object.assign(projected,{phase:pitch?'pitch':'field',replayView:view,replayCloseMoment:clip.closeMoment||null,replayChallenge:!!clip.challenge,hit:clip.hit,teams:clip.teams,lineups:clip.lineups,
+  Object.assign(projected,{phase:pitch?'pitch':'field',replayView:view,replayCloseMoment:clip.closeMoment||null,replayChallenge:!!clip.challenge,replayHighlight:clip.highlight||null,hit:clip.hit,teams:clip.teams,lineups:clip.lineups,
    field:pitch?null:{...frames[0]},pitch:pitch?{...pitch}:game.pitch,phaseTime:0,inning:clip.inning,half:clip.half,outs:clip.outs,
    homeScore:clip.homeScore,awayScore:clip.awayScore,bases:clip.bases,paused:true});
   const span=pitch?0:frames.at(-1).elapsed-frames[0].elapsed;

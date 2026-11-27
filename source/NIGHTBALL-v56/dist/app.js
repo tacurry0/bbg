@@ -1,13 +1,13 @@
 import { CustomParkPreview } from './custom-park3d.js?v=219';
 import { AbsReview, absActorBounds } from './abs-review.js?v=3';
-import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=236';
+import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=239';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
 import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=238';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=239';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -221,7 +221,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const y=window.scrollY;
   if(screen===next&&scrollView===view)return y;
   if(screen!=='game')screenScrollPositions.set(scrollView,y);
-  if(next!=='game')renderMatchIntro(null);
+  if(next!=='game'){renderMatchIntro(null);renderLiveCut(null);}
   screen=next;scrollView=view;
   return screenScrollPositions.get(view)??0;
  }
@@ -784,8 +784,32 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }else if(g.skipIntro()){if(onlineMatchActive())onlineTick(g,true);renderMatchIntro(null);}
  }
  $('match-intro').addEventListener('click',skipMatchIntro);
+ var liveCutOwner,liveCutId;
+ function renderLiveCut(g){
+  const root=$('live-cut'),cut=g?.phase==='cinematic'&&!g.replayView?g.broadcastCut:null;
+  if(!cut){root.hidden=true;$('stage').classList.remove('live-cut-active');liveCutOwner=null;liveCutId=null;return;}
+  root.hidden=false;$('stage').classList.add('live-cut-active');
+  root.style.setProperty('--cut-progress',Math.min(100,g.phaseTime/cut.duration*100)+'%');
+  if(liveCutOwner===g&&liveCutId===cut.id)return;
+  liveCutOwner=g;liveCutId=cut.id;root.dataset.kind=cut.kind;root.querySelector('button').disabled=false;
+  const team=g.teams[cut.side],tr=s=>window.NightI18n?.text(s)??s;
+  const labels={relief:'PITCHING CHANGE','pinch-hit':'PINCH HITTER',homer:'HOME RUN',catch:'GREAT PLAY',pressure:'BIG MOMENT','final-inning':g.inning>g.totalInnings?'EXTRA INNING':'FINAL INNING',walkoff:'WALK-OFF WIN'};
+  root.querySelector('.lc-tag').textContent=labels[cut.kind]||'NIGHTBALL';
+  root.querySelector('.lc-name').textContent=cut.kind==='walkoff'?team.name:cut.name||g.pitcher.name;
+  root.querySelector('.lc-detail').textContent=cut.kind==='homer'?(cut.distance?cut.distance+' m':''):cut.kind==='relief'||cut.kind==='pinch-hit'?(cut.previous?cut.previous+' → '+cut.name:''):cut.kind==='walkoff'?g.awayScore+' – '+g.homeScore:cut.kind==='pressure'||cut.kind==='final-inning'?g.inning+tr('回')+' · '+g.awayScore+' – '+g.homeScore:team.name;
+  root.querySelector('button').textContent=tr('スキップ')+' ›';
+  if(cut.kind==='walkoff')stadiumAudio.cheer(1.25,2.4);
+ }
+ function skipLiveCut(){
+  const g=game,c=g?.broadcastCut;if(!c||g.phase!=='cinematic'||g.paused)return;
+  if(onlineMatchActive()&&online.role==='guest'){
+   if(online.sync.lock||online.sync.disconnected)return;
+   if(online.session?.send({t:'cut-skip',id:c.id,epoch:online.sync.epoch}))$('live-cut').querySelector('button').disabled=true;
+  }else if(g.endBroadcastCut()){if(onlineMatchActive())onlineTick(g,true);renderLiveCut(null);}
+ }
+ $('live-cut').addEventListener('click',skipLiveCut);
  function activateGame(){
-  renderMatchIntro(null);
+  renderMatchIntro(null);renderLiveCut(null);
   stageResultShown=new Set();stageResultKey='';
   if(!game.umpireMode&&(game.career||game.worldFixture||game.mode==='pennant'||game.mode==='match'&&!game.competition&&!game.apbcFixtureId)){
    game.absRemaining??=2;
@@ -2704,7 +2728,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function launchReplay(){if(onlineMatchActive()){if(online.role==='host')onlineStartReplay();return;}launchReplayLocal();}
  function launchReplayLocal(){
   if(!game||review.playback||!$('modal').hidden||!review.open(game))return;
-  $('game').classList.add('replay-active');$('replay-label').textContent=review.playback.clip.challenge?'CHALLENGE':'REPLAY';$('replay-label').hidden=false;updatePlaySkip();
+  $('game').classList.add('replay-active');$('replay-label').textContent=review.playback.clip.challenge?'CHALLENGE':review.playback.clip.highlight?'GREAT PLAY':'REPLAY';$('replay-label').hidden=false;updatePlaySkip();
   if(review.playback.clip.challenge){$('umpire-call').hidden=true;playFeedback.callTime=0;hideStageBanner();}
   updatePlayTools();updateChallenge();return true;
  }
@@ -3067,7 +3091,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=237,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=239,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
  const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
  const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected);
@@ -3140,7 +3164,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const clip=review.clip,frames=clip.frames,step=frames?Math.max(1,Math.ceil(frames.length/72)):1;
   const sampled=frames?frames.filter((_,i)=>i%step===0||i===frames.length-1).map(f=>({...f,trail:f.trail?.slice(-4)||[]})):undefined;
   // Both devices use exactly the same sampled recording and camera.
-  const wire={pitch:clip.pitch,frames:sampled,hit:clip.hit,closeMoment:clip.closeMoment,challenge:clip.challenge,view:'outfield'};
+  const wire={pitch:clip.pitch,frames:sampled,hit:clip.hit,closeMoment:clip.closeMoment,highlight:clip.highlight,challenge:clip.challenge,view:'outfield'};
   if(!onlineAcquire('replay','both'))return false;
   review.clip={...clip,...wire};
   o.sync.replayPreparedAt=performance.now();
@@ -3577,6 +3601,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(Number.isFinite(m.ct)&&o.latency)o.lastGuestAgeMs=o.latency.ageMs(m.ct,performance.now());
    const sync=o.sync;if(!sync||sync.disconnected)return;
    if(m.epoch!==sync.epoch)return;
+   if(m.t==='cut-skip'){if(g.phase==='cinematic'&&g.broadcastCut?.id===m.id&&!sync.lock&&g.endBroadcastCut())onlineTick(g,true);return;}
    if(m.t==='intro-skip'){if(g.broadcastIntro&&!sync.lock&&g.skipIntro())onlineTick(g,true);return;}
    if(m.t==='sync-menu'){
      if(!sync.lock&&!sync.request&&['pause','bench','settings','roster','history','box','tactics','howto'].includes(m.kind)){sync.request={kind:m.kind,owner:'guest'};onlineSyncTick();}
@@ -3688,12 +3713,12 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  // Full render state for the guest's mirror game (see NightGame.applyMirror).
  function onlineState(g,o){
-   const fieldPhase=['field','result','play-call','play-review'].includes(g.phase)&&g.field;
+   const fieldPhase=(['field','result','play-call','play-review'].includes(g.phase)||g.phase==='cinematic'&&g.broadcastCut?.resume==='result')&&g.field;
    let field=null;
    if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,closeCall:undefined}:g.field.manual};}
    let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
-     epoch:o.sync?.epoch??0,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
+     epoch:o.sync?.epoch??0,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,cut:g.broadcastCut||null,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
      hs:g.homeScore,as:g.awayScore,home:g.home.slice(),away:g.away.slice(),hh:g.homeHits,ah:g.awayHits,he:g.homeErrors,ae:g.awayErrors,
      bases:g.bases.map(b=>b?1:0),baseIds:g.baseIds.slice(),bi:{...g.battingIndex},batFin:g.batFinished?1:0,
      lu:{home:g.lineups.home.map(p=>[p.id,p.fieldPos||p.pos]),away:g.lineups.away.map(p=>[p.id,p.fieldPos||p.pos])},
@@ -3975,7 +4000,7 @@ function start(mode,challengeId=null,fixedPark=null){
   history.replaceState({nightball:'home'},'',location.href);
   renderMenuClubs();updateResume();restorePageScroll(y);
  }
- function swing(){if(game?.broadcastIntro)return;if(!game||game.paused||onlineInputBlocked()||game.umpireMode||game.spectate)return;
+ function swing(){if(game?.broadcastIntro||game?.phase==='cinematic')return;if(!game||game.paused||onlineInputBlocked()||game.umpireMode||game.spectate)return;
    const g=game;
    // Both sides are judged on the swing timing at the actual button press.
    // Guest input still travels to the authoritative host; no artificial host delay.
@@ -4706,11 +4731,12 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
     const hold=playFeedback.scoreTime>0||playFeedback.callTime>0||playFeedback.resultTime>0;
     const current=game;
     try{
+     if(!current.mirror&&!current.paused&&$('modal').hidden&&!onlineInputBlocked())current.maybeBroadcastCut();
      if(current.mirror)current.mirrorTick(activeDt);
      else current.update(activeDt,hold||playFeedback.pendingReplay);
     }catch(error){handleGameError(current,error);return;}
     if(screen!=='game'||game!==current)return;
-    renderMatchIntro(game);
+    renderMatchIntro(game);renderLiveCut(game);
     if(onlineMatchActive()&&online.role==='host')onlineSyncTick();
     const rb=$('react');if(rb)rb.hidden=!game?.onlineGame;onlineTick(game);updateScoringChip(game);
     try{updatePlayCallUI(game);}catch{}

@@ -318,3 +318,13 @@
 .game-stage .pitch-deck.opponent-repertoire{transform:scale(calc(var(--control-scale,1) * .70));transform-origin:left top;pointer-events:none}
 .game-stage .pitch-deck.opponent-repertoire .pitch-type,.game-stage .pitch-deck.opponent-repertoire .pitch-type:disabled{pointer-events:none;opacity:1;filter:none;cursor:default;background:linear-gradient(180deg,#3f9bf0,#1668c4 60%,#0d4f9e);color:#fff;border-color:#b2e0ffe6;box-shadow:0 2px 5px #00142a66}
 .game-stage .pitch-deck.opponent-repertoire .pitch-type .pt-name{color:#fff;text-shadow:0 1px 2px #001e468c}
+
+/* v239: short, skippable broadcast cutaways. */
+.game-stage.live-cut-active>:not(#game-canvas):not(#live-cut):not(#rain-overlay){visibility:hidden!important;pointer-events:none!important}
+.game-stage .live-cut[hidden]{display:none!important}
+.live-cut{position:absolute;inset:0;z-index:96;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:clamp(12px,3vw,24px);background:linear-gradient(180deg,#04102188,transparent 28%,transparent 58%,#061020dd);color:#fff;cursor:pointer;touch-action:manipulation;--lc-accent:#7ed5ff}
+.live-cut[data-kind=homer],.live-cut[data-kind=walkoff]{--lc-accent:#ffd05c}
+.live-cut button{border:1px solid #fff8;background:#081322d9;border-radius:5px;color:#fff;padding:8px 12px;min-height:40px;font-size:12px;font-weight:750}
+.lc-caption{align-self:stretch;margin-top:auto;margin-bottom:12px;display:grid;gap:4px;width:min(100%,440px);padding:12px 16px;border-left:4px solid var(--lc-accent);background:linear-gradient(90deg,#061322f4,#061322b8,transparent);text-shadow:0 2px 6px #000;animation:mi-in .2s ease-out both}
+.lc-tag{font-size:12px;font-weight:900;letter-spacing:.12em;color:var(--lc-accent)}.lc-name{font-size:clamp(20px,5vw,34px);line-height:1.14;overflow-wrap:anywhere}.lc-detail{font-size:12px;color:#dce8f3}.lc-progress{align-self:stretch;height:3px;background:#fff3}.lc-progress i{display:block;width:var(--cut-progress,0%);height:100%;background:var(--lc-accent)}
+@media(prefers-reduced-motion:reduce){.lc-caption{animation:none}}
