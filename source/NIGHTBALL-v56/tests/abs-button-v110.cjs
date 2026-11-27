@@ -105,7 +105,7 @@ function calledPitch({defending=false,x=1.08,roll=0,userRemaining=2,cpuRemaining
  assert(app.includes("$('abs-challenge').addEventListener('click'"),'button has a click handler');
  assert(app.includes('function activateAbsButton(e)')&&app.includes('if(!game.requestAbsChallenge())return false;'),'button and keyboard tap share requestAbsChallenge after checking the display window');
  assert(app.includes("absBtn.hidden=!interactive||!!g.umpireMode"),'visibility follows the challenge window and excludes umpire mode');
- assert(app.includes("$('abs-challenge-count').textContent='残り'+g.absRemaining"),'count badge shows the remaining challenges');
+ assert(app.includes("setAbsText('abs-challenge-count',copy.remaining(g.absRemaining))"),'count badge shows the remaining challenges');
  assert(!app.includes('abs-challenge-fill'),'no timer-bar fill is driven anymore (v127 spec change)');
  assert(app.includes("absActor.addEventListener('pointerup'"),'double-tap path on the actor overlay is unchanged');
  assert(app.includes('absLastTap'),'double-tap bookkeeping is unchanged');

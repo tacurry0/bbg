@@ -223,7 +223,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(screen===next&&scrollView===view)return y;
   if(screen!=='game')screenScrollPositions.set(scrollView,y);
   if(next!=='game'){renderMatchIntro(null);renderLiveCut(null);hideImpact();}
-  screen=next;scrollView=view;
+  screen=next;scrollView=view;document.documentElement.classList.toggle('nightball-playing',next==='game');
   return screenScrollPositions.get(view)??0;
  }
  function restorePageScroll(y){
@@ -2625,9 +2625,32 @@ function start(mode,challengeId=null,fixedPark=null){
     {duration:235,easing:'cubic-bezier(.12,.74,.25,1)'});
   }
  }
+ const ABS_LANG={
+ ja:{label:'ABSチャレンジ',system:'ABS チャレンジシステム',splash:'チャレンジ',strike:'ストライク',ball:'ボール',inside:'ゾーン内 ',outside:'ゾーン外 ',unit:' cm',upheld:'判定維持',changed:'判定変更',remaining:n=>'残り'+n+'回',batter:'打者',catcher:'捕手',pitcher:'投手',by:r=>r+'のチャレンジ'},
+ 'zh-Hant':{label:'ABS 挑戰',system:'ABS 挑戰系統',splash:'挑戰',strike:'好球',ball:'壞球',inside:'好球帶內 ',outside:'距離好球帶 ',unit:' 公分',upheld:'維持原判',changed:'改判',remaining:n=>'剩餘'+n+'次',batter:'打者',catcher:'捕手',pitcher:'投手',by:r=>r+'提出挑戰'},
+ ko:{label:'ABS 챌린지',system:'ABS 챌린지 시스템',splash:'챌린지',strike:'스트라이크',ball:'볼',inside:'존 안 ',outside:'존 밖 ',unit:' cm',upheld:'판정 유지',changed:'판정 번복',remaining:n=>'남은 '+n+'회',batter:'타자',catcher:'포수',pitcher:'투수',by:r=>r+' 챌린지'},
+ en:{label:'ABS CHALLENGE',system:'ABS CHALLENGE SYSTEM',splash:'CHALLENGE',strike:'STRIKE',ball:'BALL',inside:'Inside zone ',outside:'Outside zone ',unit:' cm',upheld:'CALL STANDS',changed:'CALL OVERTURNED',remaining:n=>n+' left',batter:'Batter',catcher:'Catcher',pitcher:'Pitcher',by:r=>r+' challenge'}
+ };
+ function absHomeLanguage(g){
+  const home=g?.teams?.home||{},id=String(home.id||'').toLowerCase(),country=String(home.country||home.nation||'').toLowerCase(),league=String(home.league||home.leagueId||'').toLowerCase();
+  if(['jp','japan','ja','jpn'].includes(country)||league==='npb'||/^(npb-|apbc-japan|jp-|school-jp-)/.test(id))return 'ja';
+  if(['kr','korea','south-korea','ko','kor'].includes(country)||league==='kbo'||/^(kbo-|apbc-korea|kr-|school-kr-)/.test(id))return 'ko';
+  if(['tw','taiwan','taipei','twn','tpe'].includes(country)||league==='cpbl'||/^(cpbl-|apbc-taipei|tw-|school-tw-)/.test(id))return 'zh-Hant';
+  if(['au','australia','aus','us','usa','uk','gb'].includes(country)||id==='apbc-australia')return 'en';
+  if(globalThis.NightTeams?.npb?.some(t=>t.id===id))return 'ja';
+  if(globalThis.NightTeams?.kbo?.some(t=>t.id===id))return 'ko';
+  if(globalThis.NightTeams?.all?.some(t=>t.id===id))return 'zh-Hant';
+  const schoolCountry=g?.career?.country;
+  if(schoolCountry==='jp')return 'ja';if(schoolCountry==='kr')return 'ko';
+  return 'zh-Hant';
+ }
+ function setAbsText(id,value){const el=$(id);if(el.textContent!==value)el.textContent=value;}
  function updateAbsUI(g,draw=false){
   const interactive=g.absCanChallenge&&!g.paused&&$('modal').hidden&&onlineDecisionVisible('abs');
   const actor=$('abs-actor'),panel=$('abs-review'),call=g.absCall;
+  const lang=absHomeLanguage(g),copy=ABS_LANG[lang];
+  if(panel.lang!==lang){panel.lang=lang;panel.setAttribute('aria-label',copy.label);setAbsText('abs-system-label',copy.system);setAbsText('abs-splash-label',copy.splash);}
+  const button=$('abs-challenge');if(button.lang!==lang){button.lang=lang;setAbsText('abs-challenge-label',copy.label);}
   const calledK=g.phase==='abs-call'&&!!call?.umpireStrike&&g.inMatch&&g.strikes>=2;
   $('stage').dataset.absStrikeout=String(calledK);
   if(!calledK&&$('impact-fx')?.dataset.source==='abs')hideImpact();
@@ -2636,7 +2659,7 @@ function start(mode,challengeId=null,fixedPark=null){
   // pitcher closeup there is no double-tap actor target over the button.
   const absBtn=$('abs-challenge');
   absBtn.hidden=!interactive||!!g.umpireMode;
-  if(!absBtn.hidden){$('abs-challenge-count').textContent='残り'+g.absRemaining;absBtn.disabled=false;}
+  if(!absBtn.hidden){setAbsText('abs-challenge-count',copy.remaining(g.absRemaining));absBtn.disabled=false;}
   if(g.phase==='abs-call'&&call!==absShownCall){
    absShownCall=call;absLastTap=null;
    const en=call.umpireStrike?'STRIKE':'BALL',speech=call.umpireStrike?'ストライク':'ボール';
@@ -2644,8 +2667,8 @@ function start(mode,challengeId=null,fixedPark=null){
     // Preview the umpire's third strike; the actual ABS decision is pending.
     hideStageBanner();showImpact({en:'STRIKEOUT',celebration:{speed:g.pitch?.speed||g.lastPitch?.speed||0}},{pending:true});
    }else onEvent('message',{en,ja:'',speech});
-   const role=g.defending?'投手':'打者';
-   actor.setAttribute('aria-label',role+'でABSチャレンジ 残り'+g.absRemaining+'回');
+   const role=g.defending?copy.pitcher:copy.batter;
+   actor.lang=lang;actor.setAttribute('aria-label',copy.by(role)+' · '+copy.remaining(g.absRemaining));
   }
   if(interactive&&!calledK){
    const bounds=absActorBounds(renderer,g);
@@ -2664,7 +2687,7 @@ function start(mode,challengeId=null,fixedPark=null){
    challenger.hidden=!call.cpu;
    if(call.cpu){
     const opponent=g.teams[g.userSide==='home'?'away':'home'];
-    challenger.textContent=opponent.short+' · '+(g.defending?'打者':'捕手')+'のチャレンジ';
+    challenger.textContent=opponent.short+' · '+copy.by(g.defending?copy.batter:copy.catcher);
    }
   }
   const showResult=reduceAbsMotion.matches||g.phaseTime>=NightGame.ABS_TIMING.reviewReveal;
@@ -2674,9 +2697,9 @@ function start(mode,challengeId=null,fixedPark=null){
    absShownResult=call;
    hideStageBanner();
    result.dataset.strike=String(call.strike);
-   $('abs-word').textContent=call.strike?(g.inMatch&&g.strikes>=2?'STRIKEOUT':'STRIKE'):'BALL';
-   $('abs-gap').textContent=(call.strike?'好球帶內 ':'距離好球帶 ')+(Math.abs(call.gap)*100).toFixed(1)+' 公分';
-   $('abs-change').textContent=call.strike===call.umpireStrike?'判定維持':'判定変更';
+   setAbsText('abs-word',call.strike?copy.strike:copy.ball);
+   setAbsText('abs-gap',(call.strike?copy.inside:copy.outside)+(Math.abs(call.gap)*100).toFixed(1)+copy.unit);
+   setAbsText('abs-change',call.strike===call.umpireStrike?copy.upheld:copy.changed);
   }
   result.hidden=!showResult;
   if(draw)absReview.draw(call,g.phaseTime,reduceAbsMotion.matches);
@@ -4237,6 +4260,11 @@ function start(mode,challengeId=null,fixedPark=null){
   const cancel=e=>{if(gesture?.pointer===e.pointerId)clear();};el.addEventListener('pointercancel',cancel);el.addEventListener('lostpointercapture',cancel);
  }
  bindFieldAim($('game-canvas'));
+ // Stop native long-press selection without intercepting gameplay input.
+ const gameSurface=$('game');
+ const blockGameSelection=e=>{if(screen==='game'&&!e.target.closest?.('input,textarea,select,[contenteditable]:not([contenteditable="false"])'))e.preventDefault();};
+ for(const type of ['selectstart','contextmenu','dragstart'])gameSurface.addEventListener(type,blockGameSelection);
+ $('game-canvas').addEventListener('touchstart',e=>{if(screen==='game'&&e.cancelable)e.preventDefault();},{passive:false});
  $('swing').addEventListener('pointerdown',e=>{e.preventDefault();unlockAudio();swing();});
  // Keyboard support also makes the game playable on a computer.
  $('swing').addEventListener('click',e=>{if(e.detail===0)swing();});

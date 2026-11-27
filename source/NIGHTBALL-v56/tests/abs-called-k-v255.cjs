@@ -11,7 +11,7 @@ function absActorBounds(){return {x:1,y:1,w:1,h:1}}function onlineDecisionVisibl
 function onEvent(t,d){events.push(d.en)}
 let game={phase:'abs-call',absCall:{umpireStrike:true,strike:false},inMatch:true,strikes:2,absCanChallenge:true,absRemaining:2,pitch:{speed:145},phaseTime:0,teams:{},defending:false};
 `;
-new Function(setup+get('var impactRemaining=0;','function hideStaleResultBanner()')+get('function updateAbsUI(g,draw=false){',"$('play-challenge').addEventListener")+`
+new Function(setup+get('var impactRemaining=0;','function hideStaleResultBanner()')+get('const ABS_LANG={',"$('play-challenge').addEventListener")+`
 updateAbsUI(game);if($('impact-fx').hidden||$('impact-fx').dataset.source!=='abs'||$('abs-challenge').hidden||events.length)throw Error('called K must replace STRIKE and show ABS');
 if($('stage').dataset.absStrikeout!=='true')throw Error('K layout');
 updateAbsUI(game);if(events.length)throw Error('repeated call');
@@ -20,5 +20,10 @@ game.phase='result';game.absCanChallenge=false;updateAbsUI(game);if(!$('abs-chal
 hideImpact();game.phase='abs-call';game.absCall={umpireStrike:true,strike:false};game.absCanChallenge=true;updateAbsUI(game);game.phase='abs-review';game.absCanChallenge=false;updateAbsUI(game);if(!$('impact-fx').hidden||$('abs-review').hidden||!$('abs-challenge').hidden)throw Error('ABS review takes over');
 game.phase='abs-call';game.strikes=1;game.absCall={umpireStrike:true,strike:true};game.absCanChallenge=true;updateAbsUI(game);if(events.at(-1)!=='STRIKE'||$('abs-challenge').hidden)throw Error('ordinary strike unchanged');
 `)();
-assert(app.includes("call.strike?(g.inMatch&&g.strikes>=2?'STRIKEOUT':'STRIKE'):'BALL'"));
+assert(app.includes("setAbsText('abs-word',call.strike?copy.strike:copy.ball)"));
 console.log('Called strikeout ABS presentation passed');
+
+new Function(get('const ABS_LANG={','function updateAbsUI(g,draw=false){')+`
+const cases=[['npb-g','ja','ストライク'],['kbo-ob','ko','스트라이크'],['owls','zh-Hant','好球'],['apbc-japan','ja','ストライク'],['apbc-korea','ko','스트라이크'],['apbc-taipei','zh-Hant','好球'],['apbc-australia','en','STRIKE']];
+for(const [id,lang,word] of cases){const actual=absHomeLanguage({teams:{home:{id},away:{id:'npb-g'}}});if(actual!==lang||ABS_LANG[actual].strike!==word)throw Error(id+' '+actual);}
+`)();

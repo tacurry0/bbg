@@ -131,19 +131,6 @@
 #stage:has(#abs-review:not([hidden])) #stage-message { visibility:hidden !important; }
 #umpire-call[data-review="true"] { flex-wrap:wrap; gap:4px 12px; padding:5px 14px; }
 #umpire-call[data-review="true"] small { color:#f2f6f8; letter-spacing:.04em; font-weight:800; }
-#abs-verdict {
-  --abs-color:#80efb0;
-  display:flex; flex-direction:column; justify-content:center; align-items:center;
-  min-width:0; width:max-content; max-width:92%; gap:5px; padding:8px 18px;
-  border:0; border-block:1px solid var(--abs-color); border-radius:0;
-  background:rgba(0,0,0,.48); box-shadow:none; text-shadow:0 1px 3px #071019,0 0 8px color-mix(in srgb,var(--abs-color) 48%,transparent);
-}
-#abs-verdict[data-strike="true"] { --abs-color:#ffe179; }
-#abs-verdict strong { font:900 clamp(24px,7vw,36px)/1.1 system-ui,sans-serif; letter-spacing:.06em; }
-#abs-verdict #abs-change { color:#f2f6f8; font:800 clamp(11px,3.3vw,14px)/1.2 system-ui,sans-serif; opacity:1; }
-#abs-verdict #abs-gap { display:none; }
-#abs-verdict[hidden] { display:none; }
-
 /* v252: unique strikeout and home run verdicts */
 #stage-message.vision-call[data-celebration="k"]{--vision-accent:#8de5ff}
 #stage-message.vision-call[data-celebration="k"] .stage-call,#stage-message.vision-call[data-celebration="hr"] .stage-call{background:linear-gradient(110deg,#0a1425ef,#152b42ed);border-block:2px solid var(--vision-accent);box-shadow:0 4px 18px #02091470}
@@ -267,3 +254,17 @@
 #stage[data-half-done="true"] :is(#bat-options,#pitch-deck,#thumb-hint,#atbat-chart,#abs-actor) {visibility:hidden!important;pointer-events:none!important}
 #stage:has(#half-break:not([hidden])) > #impact-fx {visibility:hidden!important}
 @media(orientation:portrait){#stage[data-abs-strikeout="true"] .impact-core{transform:translate(-30%,-7%);width:62%}}
+
+/* v257: original bordered ABS verdict from abs.css with its distance row. */
+#abs-verdict {max-width:94%;white-space:normal;text-align:center}
+#abs-verdict #abs-word {font-size:clamp(1.45rem,5.7vw,3rem);overflow-wrap:normal}
+#abs-verdict:lang(zh-Hant) #abs-word {font-size:clamp(1.85rem,6vw,3rem)}
+html.nightball-playing,html.nightball-playing body,html.nightball-playing #game,
+html.nightball-playing #game * {
+ -webkit-user-select:none!important;user-select:none!important;-webkit-touch-callout:none!important;
+}
+html.nightball-playing :is(input,textarea,[contenteditable]:not([contenteditable="false"])) {
+ -webkit-user-select:text!important;user-select:text!important;-webkit-touch-callout:default!important;
+}
+#game #game-canvas {touch-action:none;-webkit-user-drag:none;-webkit-touch-callout:none}
+#game :is(img,svg) {-webkit-user-drag:none}
