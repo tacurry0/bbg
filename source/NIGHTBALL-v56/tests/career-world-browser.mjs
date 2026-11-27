@@ -57,6 +57,7 @@ try{
    await page.locator('[data-mode="career"]').click();
   };
   const state=()=>page.evaluate(()=>NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
+  const drain=async()=>{for(let i=0;i<40;i++){if(!(await state())?.success?.pending)return;await press('success-choice','0');}throw Error('too many consecutive career events');};
   await open();
   assert.equal(await page.locator('[data-world-action="country"]').count(),3);
   await press('country',country);
@@ -66,6 +67,9 @@ try{
   await page.locator('[name="schoolTier"]').selectOption('1');
   await page.locator('[name="style"]').selectOption(style);
   await page.locator('#world-create [type="submit"]').click();
+  assert.equal((await state()).success.pending.id,'entrance');
+  assert(await page.locator('.cw-forced-event').isVisible());
+  await drain();
   if(country==='jp'){
    await press('career-options');
    await press('music');
@@ -90,6 +94,7 @@ try{
   assert(await visibleDock());
   await press('success-action','quick-toggle');
   await press('train-direct',drill);
+  await drain();
   assert.match(await page.locator('.cw-tr-result').innerText(),/練習/);
   assert.equal((await state()).success.goal.skill,drill);
   assert.equal((await state()).success.actionWeek,'2027-'+(country==='jp'?'03-29':country==='tw'?'08-09':'03-01'));
@@ -103,6 +108,7 @@ try{
   await page.locator('[name="name"]').fill(country==='jp'?'別の高校生':country==='tw'?'陳新的':'キム・セジュン');
   await page.locator('#world-create [type="submit"]').click();
   assert.notEqual((await state()).seed,originalSeed);
+  await drain();
   await press('slots');
   await press('slot-open','0');
   assert.equal((await state()).seed,originalSeed);
@@ -120,7 +126,8 @@ try{
   for(let grade=1;grade<=3;grade++){
    let w=await state();
    assert.equal(w.grade,grade);
-   await press('advance','game');
+   await drain();
+   for(let i=0;i<40&&!(await state()).queue;i++){await press('advance','game');await drain();}
    w=await state();
    assert(w.queue?.selected>=0);
    const id=w.queue.games[w.queue.selected].id;
@@ -187,6 +194,7 @@ try{
    assert.match(await page.locator('#modal-content').innerText(),country==='kr'?/奪三振/:/打数/);
    await press('result-next');
    await page.locator('#career .cw-compact-profile').waitFor({state:'visible'});
+   await drain();w=await state();
    if(grade===1){
     await press('career-options');
     await press('last-result');
@@ -194,7 +202,8 @@ try{
     await press('result-next');
    }
    let clicks=0;
-   while(w.stage==='school'&&w.grade===grade&&clicks++<30){
+   while(w.stage==='school'&&w.grade===grade&&clicks++<100){
+    await drain();w=await state();if(w.stage!=='school'||w.grade!==grade)break;
     if(w.queue?.selected>=0){
      await press('simulate');
      await page.locator('#modal-title').filter({hasText:'試合結果'}).waitFor({state:'visible'});
@@ -206,9 +215,10 @@ try{
     }
     w=await state();
    }
-   assert(clicks<30);
+   assert(clicks<100);await drain();
   }
   assert.equal((await state()).stage,'draft');
+  await drain();
   await press('draft-apply');
   await press('draft-all');
   const draft=await state();
@@ -229,16 +239,19 @@ try{
      w.sign({club:'npb-l',annual:520,years:1,type:'新人契約'});
      w.startSeason(w.year+1);
     }
-    while(w.stage==='pro'){
+    for(let i=0;w.stage==='pro'&&i<500;i++){
+     while(w.success?.pending)NightCareerWorldSuccess.choose(w,0);
      w.run('season');
+     while(w.success?.pending)NightCareerWorldSuccess.choose(w,0);
      if(w.queue)w.finishDay();
     }
+    if(w.stage!=='offseason')throw Error('season did not finish');
     for(const key of NightCareerWorldMatch.batting)w.player[key]=79;
     w.player.born=w.year-26;w.contract.remaining=0;w.marketChoice='released';
     w.openMarket(true);
     localStorage.setItem(NightCareerWorld.key,NightCareerWorldSave.encode(w));
    });
-   await open();
+   await open();await drain();
    const offseason=await state();
    const index=offseason.offers.findIndex(offer=>!offer.club.startsWith('npb-')&&!offer.club.startsWith('kbo-'));
    assert(index>=0);
@@ -249,13 +262,16 @@ try{
    assert.equal((await state()).contract.currency,'TWD');
    await page.evaluate(()=>{
     const w=NightCareerWorld.restore(NightCareerWorldSave.decode(localStorage.getItem(NightCareerWorld.key)));
-    while(w.stage==='pro'){
+    for(let i=0;w.stage==='pro'&&i<500;i++){
+     while(w.success?.pending)NightCareerWorldSuccess.choose(w,0);
      w.run('season');
+     while(w.success?.pending)NightCareerWorldSuccess.choose(w,0);
      if(w.queue)w.finishDay();
     }
+    if(w.stage!=='offseason')throw Error('season did not finish');
     localStorage.setItem(NightCareerWorld.key,NightCareerWorldSave.encode(w));
    });
-   await open();
+   await open();await drain();
    page.once('dialog',dialog=>dialog.accept());
    await press('retire');
    assert.equal((await state()).stage,'retired');

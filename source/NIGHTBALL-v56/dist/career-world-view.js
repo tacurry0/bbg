@@ -119,7 +119,7 @@
   const icons={contact:'打',power:'長',run:'走',field:'守',arm:'肩',velocity:'速',control:'制',movement:'変',stamina:'持'};
   const cards=keys.map(k=>{
    const p=Z.preview(w,k,s.specialTraining);
-   return button('train-direct',k,p.label+'練習','<div class="cw-tr-head"><i>'+icons[k]+'</i><strong>'+p.label+' <em>Lv.'+p.level+'</em></strong><small>−'+p.energy+'</small></div><div class="cw-tr-gains">'+Object.entries(p.gains).map(([x,n])=>'<span data-xp="'+x+'">'+xpShort[x]+'+'+n+'</span>').join('')+'</div><div class="cw-tr-foot"><span title="'+esc(p.partnerName||'')+'">'+esc(p.badge||p.partnerName||'通常')+'</span><span>故障 '+(p.risk*100).toFixed(1)+'%</span></div>','cw-tr-card '+(p.event==='normal'?'':'cw-bonus-'+p.event),!p.enabled);
+   return button('train-direct',k,p.label+'練習','<div class="cw-tr-head"><i>'+icons[k]+'</i><strong>'+p.label+' <em>Lv.'+p.level+'</em></strong><small>−'+p.energy+'</small></div><div class="cw-tr-gains">'+Object.entries(p.gains).map(([x,n])=>'<span data-xp="'+x+'">'+xpShort[x]+'+'+n+'</span>').join('')+'</div><div class="cw-tr-foot"><span title="'+esc(p.partnerName||'')+'">'+esc([p.partnerName,p.badge].filter(Boolean).join(' · ')||'通常')+'</span><span>故障 '+(p.risk*100).toFixed(1)+'%</span></div>','cw-tr-card '+(p.event==='normal'?'':'cw-bonus-'+p.event),!p.enabled);
   }).join('');
   const rest=button('rest-direct','','休養','<div class="cw-tr-head"><i>休</i><strong>休養</strong><small>+31</small></div><div class="cw-tr-gains"><span>体力回復</span></div><div class="cw-tr-foot"><span>故障なし</span></div>','cw-tr-card cw-rest',!Z.available(w));
   const event=s.inbox?act('success-event','イベント：'+s.inbox.title,'','cw-event-button'):'';
@@ -280,7 +280,7 @@
   const peer=w.members(w.player.club).find(p=>p.id!==w.player.id);
   return section('私生活',`<p>${w.life.housing} · ${wallet} · ${w.life.married?'既婚':w.life.partner?'交際中':'未婚'}</p><div class="cw-grid">
    ${act('life','休養','rest')}${act('life','趣味 '+w.money(w.costs[0]),'hobby')}${act('life','引っ越し '+w.money(w.costs[1]),'move')}
-   ${act('life','住居購入 '+w.money(w.costs[2]),'house')}${w.life.car?'<p>自家用車あり</p>':act('life','車を購入 '+w.money(Math.round(w.costs[2]*.10)),'car')}${w.life.partner?act('life','家族と過ごす','family'):''}${w.life.sponsor?'<p>スポンサー契約中</p>':''}${act('life','リハビリ','rehab')}
+   ${act('life','住居購入 '+w.money(w.costs[2]),'house')}${w.life.car?'<p>自家用車あり</p>':act('life','車を購入 '+w.money(Math.round(w.costs[2]*.10)),'car')}${w.life.partner?act('life',w.life.married?'家族と過ごす':'恋人と過ごす','family'):''}${w.life.sponsor?'<p>スポンサー契約中</p>':''}${act('life','リハビリ','rehab')}
    ${peer?act('social',peer.name+'と交流',peer.id):''}</div>`)+
    section('人気・評価',Object.entries({fans:'ファン人気',media:'メディア',scout:'海外スカウト',coach:'コーチ',manager:'監督',trust:'信頼'}).map(([k,label])=>`<p>${label} <strong>${Math.round(w.ratings[k])}</strong></p>`).join(''));
  }
