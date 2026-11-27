@@ -41,7 +41,16 @@ try{
  await page.locator('#modal-content [data-action="close"]').tap();
  await page.locator('#modal').waitFor({state:'hidden'});
  await page.waitForFunction(()=>window.derbyTest?.g.derby&&document.querySelector('#game-canvas').dataset.spectatorModel==='tokyo-dome-real'&&Number(document.querySelector('#game-canvas').dataset.spectators)>20000,null,{timeout:45000});
- await page.evaluate(()=>{const {g,r}=window.derbyTest;g.beginHalf();g.startField(62,29,.10,false,true);while(g.phase==='field')g.updateField(1/120);assertDriver();function assertDriver(){if(g.hit.kind!=='hr')throw Error('Expected HR');}g.phaseTime=650;g.paused=true;r.render(g,g.time);});
+ await page.evaluate(()=>{const {g,r}=window.derbyTest;g.beginHalf();g.startField(62,29,.10,false,true);while(g.phase==='field')g.updateField(1/120);assertDriver();function assertDriver(){if(g.hit.kind!=='hr')throw Error('Expected HR');}g.phaseTime=650;g.paused=true;
+  const impact=document.querySelector('#impact-fx');
+  if(impact.hidden||impact.dataset.kind!=='hr')throw Error('The shared HOME RUN animation did not start');
+  void impact.offsetWidth;
+  // GPU-free CI is slow. Freeze the actual live animation halfway through,
+  // not the finished transparent state, so the screenshot is representative.
+  const animations=impact.getAnimations({subtree:true});
+  if(!animations.length)throw Error('HOME RUN animation is missing');
+  for(const a of animations){a.pause();a.currentTime=650;}
+  r.render(g,g.time);});
  await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.cameraView==='derby-landing',null,{timeout:10000});
  const scene=await page.evaluate(()=>{const {g,r}=window.derbyTest,show=r.vfx.derbyShow;return {clock:g.derby.remaining,show:show.group.visible,jets:show.jets.filter(j=>j.root.visible).length,bursts:show.bursts.filter(b=>b.root.visible).length,spectators:Number(r.canvas.dataset.spectators)};});
  assert(scene.show&&scene.jets>=3&&(scene.bursts===0||scene.bursts>=3)&&scene.spectators>20000,JSON.stringify(scene));
@@ -68,6 +77,7 @@ try{
  assert(await page.locator('.derby-bracket .winner-path').count()>0);
  const layout=await page.evaluate(()=>{const modal=document.querySelector('#modal-content'),b=document.querySelector('.derby-bracket'),svg=document.querySelector('.dr-map-frame svg');const overlaps=[...b.querySelectorAll('.derby-entry:not(.pending)')].some(e=>{const n=e.querySelector('.derby-player').getBoundingClientRect(),v=e.querySelector('.dr-bracket-score').getBoundingClientRect();return n.bottom>v.top+1;});return {width:modal.clientWidth,scrollWidth:modal.scrollWidth,mapHeight:svg.getBoundingClientRect().height,overlaps};});
  assert(layout.scrollWidth<=layout.width+2&&layout.mapHeight>=150&&!layout.overlaps,JSON.stringify(layout));
+ await page.locator('#modal-content').evaluate(el=>el.getAnimations().forEach(a=>a.finish()));
  await page.screenshot({path:'tests/screenshots/derby-result-v266.png',timeout:90000});
  await page.locator('.dr-map-frame').scrollIntoViewIfNeeded();
  await page.screenshot({path:'tests/screenshots/derby-spray-v266.png',timeout:90000});
