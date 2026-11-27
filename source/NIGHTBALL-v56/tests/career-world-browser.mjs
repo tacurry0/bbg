@@ -79,6 +79,8 @@ try{
   }
   const drill=country==='kr'?'control':'contact';
   assert.equal(await page.locator('.cw-avatar').count(),0);
+  assert.equal(await page.locator('.cw-social-button').count(),2);
+  for(const b of await page.locator('.cw-social-button').all())assert((await b.boundingBox()).height>=44);
   assert.equal(await page.locator('.cw-tr-card').count(),country==='kr'?5:6);
   assert.equal(await page.locator('[data-world-action="success-skill"]').count(),0);
   assert.equal(await page.locator('.cw-fixed-dock').evaluate(e=>getComputedStyle(e).position),'fixed');

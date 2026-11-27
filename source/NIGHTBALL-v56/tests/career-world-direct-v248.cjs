@@ -25,5 +25,6 @@ require('../dist/career-world-view.js');
 const h=NightCareerWorldView.trainingDeck(w);
 assert.equal((h.match(/data-world-action="train-direct"/g)||[]).length,5);
 assert(h.includes('故障'));
+assert.equal((h.match(/class="cw-social-button"/g)||[]).length,2);
 assert(!h.includes('success-skill'));
 console.log('PASS: direct training, deterministic weekly preview, displayed energy cost, one action per week, training card markup.');
