@@ -1,0 +1,16 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+global.window=global;
+for(const p of ['ratings-data','players','pennant','game'])vm.runInThisContext(fs.readFileSync('dist/'+p+'.js','utf8'),{filename:p+'.js'});
+const g=new NightGame('match','standard',()=>{},{userHome:true,manualRunning:false});
+g.half='bottom';g.strikes=1;g.bases=[false,false,false];
+g.startField(31,5,1.1,false,false,{quality:.4,side:.6});
+for(let i=0;i<1500&&!g.field.resolved;i++)g.updateField(1/120);
+assert.equal(g.field.outcome,'foul');assert.equal(g.strikes,2);
+const {x,y}=g.field.ball,outs=g.outs,score=g.homeScore,field=g.field;
+g.updateFoulMotion(.25);
+assert(Math.hypot(field.ball.x-x,field.ball.y-y)>.1,'foul continues moving after ruling');
+assert.equal(g.strikes,2);assert.equal(g.outs,outs);assert.equal(g.homeScore,score);
+g.updateFoulMotion(1);assert.equal(field.foulMotionRemaining,0);
+const stop={...field.ball};g.updateFoulMotion(1);assert.deepEqual(field.ball,stop);
+assert.equal(g.phase,'result');
+console.log('PASS v242 foul visual follow-through');

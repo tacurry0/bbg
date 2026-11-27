@@ -864,7 +864,7 @@ window.NightGame=class NightGame{
    if(!ta.remaining&&!['field','miss'].includes(this.phase)){this.finishTimeAttack();return;}
   }
   if((this.fastForward||this.spectate)&&this.defending&&!this.autoDefense)this.autoDefense=true;
-   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&!['intro','abs-call','abs-review','play-call','play-review'].includes(this.phase))dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field)this.updateRunners(dt/1000);
+   dt=Math.min(dt,this.phase==='field'?240:50);if(this.fastForward)dt*=4;if(this.phase==='pitch'&&!this.defending&&this.battingAssist&&this.pitch.progress>.62&&this.pitch.progress<1.12)dt*=.76;if(this.autoDefense&&this.defending&&!['intro','abs-call','abs-review','play-call','play-review'].includes(this.phase))dt*=this.defenseSpeed;else if(!derby&&(this.phase==='field'||this.phase==='result'&&this.field))dt*=this.fieldSpeed;this.time+=dt;this.phaseTime+=dt;this.swingAge+=dt;if(this.phase==='result'&&this.field){this.updateRunners(dt/1000);this.updateFoulMotion(dt/1000);}
   if(this.phase==='intro'&&this.phaseTime>=this.introDuration){this.beginHalf();}
   else if(this.phase==='abs-call'&&this.absCall?.cpu&&!this.absCall.remote&&this.phaseTime>=NightGame.ABS_TIMING.cpuCall){
    this.setPhase('abs-review');this.notify();
@@ -899,7 +899,7 @@ window.NightGame=class NightGame{
    if(this.phaseTime>330)this.strike(true);
   }
   else if(this.phase==='field'){let remaining=dt/1000;while(remaining>1e-6&&this.phase==='field'){const untilCatch=this.field?.throw?Math.max(.000001,this.field.throw.duration-this.field.throw.t):Infinity;const step=Math.min(remaining,1/120,untilCatch);this.updateField(step);remaining-=step;}}
-  else if(this.phase==='result'&&!holdResult&&this.phaseTime>(derby?(this.hit?.kind==='hr'?700:240):this.field?(this.runningDemo?3300:620):this.pitch?.callResult?NightGame.ABS_TIMING.pitchResult:720)){
+  else if(this.phase==='result'&&!holdResult&&this.phaseTime>(derby?(this.hit?.kind==='hr'?700:240):this.field?(this.runningDemo?3300:this.field.outcome==='foul'?850:620):this.pitch?.callResult?NightGame.ABS_TIMING.pitchResult:720)){
    if(this.challenge&&(this.field&&!this.field.foul||this.outs>=this.outsNeeded))return;
    if(this.field&&this.phaseTime<18000&&this.field.runners.some(r=>!r.out&&Math.abs(r.progress-(r.target??r.start))>.01))return;
    if(typeof this.career?.queuedRunningMode==='boolean'){
@@ -1615,7 +1615,9 @@ window.NightGame=class NightGame{
   // Horizontal miss distance signs the side spin: dragging across the ball
   // slices/hooks it in flight (initial spray above stays as modelled).
   const sideMiss=clamp((aim.x-p.targetX)/(rx+.07),-1,1);
-  this.startField(exitSpeed+(this.derby&&power?3:0),launch,spray,cpu,perfect,{quality,side:sideMiss});
+  // A mishit loses at most 2.6 m/s (9.36 km/h). Good contact and derby carry remain unchanged.
+  const mishitLoss=this.derby?0:Math.max(0,.65-quality)*4;
+  this.startField(exitSpeed+(this.derby&&power?3:0)-mishitLoss,launch,spray,cpu,perfect,{quality,side:sideMiss});
  }
  startField(speed,launch,spray,cpu,perfect=false,contact=null){
   // Metal bat (variant rule): a flat +3% exit-velocity boost, applied
@@ -1822,6 +1824,22 @@ window.NightGame=class NightGame{
   this[errors]=(this[errors]||0)+1;
   f.misplay='wild';const runner=f.runners.find(r=>r.id===plan.runnerId);f.errorWouldOut=!!runner?.batter&&plan.duration+.15<runTime(runner,1);this.fieldingAction(plan.fromIndex,'wild');
   return {...plan,to,coverAt:wanted,duration:plan.duration+(dist(plan.from,to)-length)/p.arm};
+ }
+ // A called foul is dead for gameplay, but its existing velocity is kept
+ // for a brief visual follow-through. No fielding, runner or scoring logic.
+ updateFoulMotion(dt){
+  const f=this.field;
+  if(!f||f.outcome!=='foul'||!f.resolved||!(f.foulMotionRemaining>0)||dt<=0)return;
+  let remaining=Math.min(dt,f.foulMotionRemaining);
+  f.foulMotionRemaining=Math.max(0,f.foulMotionRemaining-remaining);
+  const b=f.ball;
+  while(remaining>1e-6){
+   const step=Math.min(remaining,1/120);
+   const landed=moveBattedBall(b,step,this.windVector(),this.park);
+   if(landed&&b.bounces<=3)this.emit('sound','bounce');
+   remaining-=step;
+  }
+  f.trail.push({x:b.x,y:b.y,z:b.z});if(f.trail.length>14)f.trail.shift();
  }
  updateField(dt){
   const f=this.field,b=f.ball;f.elapsed+=dt;
@@ -2522,6 +2540,7 @@ window.NightGame=class NightGame{
   f.runners.forEach(r=>{r.target=advance?Math.min(4,r.start+advance):thirdOut?r.progress:r.start;if(!advance&&r.batter)r.out=true;r.running=false;});this.hit.kind=kind;
   const distance=Math.round(f.maxTravel),out=kind==='flyout'||kind==='groundout';let runs=0;
   if(kind==='foul'){
+   f.foulMotionRemaining=.85;for(const p of f.fielders){p.running=false;p.moveSpeed=0;}
    this.emit('cue','foul');this.emit('sound','foul');this.steal=false;if(this.inMatch)this.strikes=Math.min(2,this.strikes+1);this.completePitch('foul');this.message('FOUL','ファウル',this.strikes===2?'2ストライク。もう一度。':'次の1球へ。');
   }else{
    if(!this.defending){if(!out){this.session.hits++;this.session.maxDistance=Math.max(this.session.maxDistance,distance);}if(kind==='hr')this.session.hr++;}
