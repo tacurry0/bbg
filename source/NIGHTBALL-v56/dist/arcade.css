@@ -599,3 +599,17 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 .modal .dr-map-frame > svg.derby-map{width:100%!important;min-height:152px!important;max-height:204px!important}
 @media(max-width:360px){.derby-tree{--bracket-row:40px;--bracket-gap:7px}.derby-entry{height:36px;grid-template-columns:11px minmax(0,1fr) max-content;column-gap:2px;padding-inline:2px}.dr-bracket-logo,.dr-bracket-logo .club-badge{width:11px;height:12px}.derby-entry .derby-player{font-size:9px}.derby-entry .dr-bracket-score{font-size:13px!important}.dr-bracket-key{font-size:8px}}
 @media(min-width:600px){.derby-tree{--bracket-row:42px;--bracket-gap:16px}.derby-entry{height:38px;grid-template-columns:19px minmax(0,1fr) max-content;padding-inline:6px;gap:5px}.dr-bracket-logo,.dr-bracket-logo .club-badge{width:19px;height:19px}.derby-entry .derby-player{font-size:13px}.derby-entry .dr-bracket-score{font-size:17px}}
+
+/* v268: full-width field view, fixed power swing and an actual pre-turn countdown. */
+.game-screen.derby-active #bat-options{display:none!important}
+.game-screen.derby-active .derby-intro-overlay{display:grid;place-items:center;align-items:center;padding:8% 12px 0;background:radial-gradient(ellipse at 50% 54%,#06172b88,transparent 63%)}
+.game-screen.derby-active .derby-intro-overlay[hidden]{display:none}
+.dr-start-count{display:grid;justify-items:center;gap:8px;transform:translateY(4%);color:#fff;text-align:center;text-shadow:0 2px 6px #031528,0 4px 16px #031528}
+.dr-start-count>small{font:950 italic clamp(13px,3.5vw,20px)/1 Arial,sans-serif;letter-spacing:.105em;color:#ffe5a0}
+.dr-start-count>b{font:1000 italic clamp(96px,31vw,154px)/.94 Arial,sans-serif;letter-spacing:-.055em;color:#fff1c7;-webkit-text-stroke:1px #fff4d5;text-shadow:0 3px 0 #c28a25,0 6px 0 #70461b,0 10px 20px #06172bba;animation:dr-count-pop .24s cubic-bezier(.15,.78,.34,1) both}
+.dr-start-count>span{font:950 italic 14px/1 Arial,sans-serif;letter-spacing:.15em;color:#e3f1ff}
+.dr-count-bars{display:flex;gap:4px;justify-content:center;margin:4px 0}
+.dr-count-bars i{width:22px;height:4px;border-radius:3px;background:#c2def05c;border:1px solid #d8edff55}
+.dr-count-bars i.lit{background:#fcd374;border-color:#fff0bf;box-shadow:0 0 6px #ffcb5880}
+@keyframes dr-count-pop{from{opacity:0;transform:scale(1.3)}to{opacity:1;transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.dr-start-count>b{animation:none}}

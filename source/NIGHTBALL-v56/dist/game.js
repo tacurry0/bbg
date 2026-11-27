@@ -199,7 +199,7 @@ window.NightGame=class NightGame{
  }
  static delivery(pitcher,fromSet=false,derby=false){
   const form=derby?'overhand':NightGame.pitchingForm(pitcher),preset=NightGame.PITCH_FORMS[form];
-  return {form,fromSet:!derby&&!!fromSet,windupMs:derby?270:fromSet?490:700,releaseX:(pitcher?.hand==='L'?1:-1)*preset.x/.68,releaseY:(2.10-preset.h)/.62};
+  return {form,fromSet:!derby&&!!fromSet,windupMs:derby?380:fromSet?490:700,releaseX:(pitcher?.hand==='L'?1:-1)*preset.x/.68,releaseY:(2.10-preset.h)/.62};
  }
  // v202: animation-only batting styles; ratings and swing judgment are unchanged.
  // Explicit battingForm is authoritative. The stable ID fallback is fictional.
@@ -704,7 +704,7 @@ window.NightGame=class NightGame{
   return false;
  }
  get broadcastIntro(){return this.phase==='intro'&&this.isFixture&&!this.career&&!this.derby&&!this.timeAttack&&!this.fastForward;}
- get introDuration(){return this.derby?.enhanced?3200:this.broadcastIntro?10500:this.career?(this.career.shortIntro?160:1100):1400;}
+ get introDuration(){return this.derby?.enhanced?3000:this.broadcastIntro?10500:this.career?(this.career.shortIntro?160:1100):1400;}
  introStarter(side){const index=side===this.userSide?this.homePitcherIndex:this.awayPitcherIndex;return this.pitchingStaff[side]?.[index]||this.pitchingStaff[side]?.[0];}
  skipIntro(){if(!this.broadcastIntro||this.mirror||this.paused)return false;this.beginHalf();return true;}
  get batter(){return (['practice','derby'].includes(this.mode)||this.mode==='career-bat'&&!this.career?.continuous)?this.teams.home.batters.find(p=>p.id===this.practiceBatter)||this.lineups.home[0]:this.lineups[this.side][this.battingIndex[this.side]%9];}
@@ -926,7 +926,7 @@ window.NightGame=class NightGame{
   }
   else if(this.phase==='play-review'&&this.phaseTime>=1400)this.resolvePlayCall(true);
   else if(this.phase==='aim'&&(this.autoDefense||this.umpireMode)&&this.defending&&this.phaseTime>480)this.autoPitch();
-  else if(this.phase==='windup'&&this.phaseTime>(this.pitch?.windupMs??(derby?270:700))){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
+  else if(this.phase==='windup'&&this.phaseTime>(this.pitch?.windupMs??(derby?380:700))){if(!this.pitch.delivered){this.pitch.delivered=true;const record=this.pitcherRecord();record.workload=(record.workload??record.pitches*1.65)+(this.pitch.cost??1.65);record.pitches++;if(this.defending)this.session.thrown++;}this.setPhase('pitch');this.emit('sound','pitch');this.notify();}
   else if(this.phase==='pitch'){
    this.pitch.progress=this.phaseTime/this.pitch.duration;
    if((this.defending||this.autoBatting||this.umpireMode)&&!this.pitch.cpuActed&&this.pitch.progress>=this.pitch.cpuTime){this.pitch.cpuActed=true;this.cpuBat();}
@@ -1642,7 +1642,7 @@ window.NightGame=class NightGame{
  }
  cpuBat(){if(this.pitch.cpuBunt){this.buntBall();return;}if(this.pitch.cpuSwing){const m=this.matchup(),edge=Math.max(Math.abs(this.pitch.targetX),Math.abs(this.pitch.targetY)),trailing=this[this.side+'Score']<this[(this.side==='home'?'away':'home')+'Score'];const power=clamp((m.power>80?.50:.27)*(this.managerForSide(this.side).powerMul??1)+(this.balls>=2&&this.strikes===0?.10:0)-(this.strikes===2?.16:0)-(edge>.85?.09:0)+(trailing&&this.inning>=Math.max(3,this.totalInnings-1)?.06:0),.04,.8);this.attempt(this.pitch.cpuAim,Math.random()<power,this.pitch.cpuTime-1,true);}}
  attempt(aim,power,delta,cpu){
-  if(this.paused)return false;const p=this.pitch;p.swung=true;this.swingAge=0;this.emit('sound','swing');if(!cpu)this.session.swings++;
+  if(this.paused)return false;if(this.derby){power=true;this.power=true;this.bunt=false;}const p=this.pitch;p.swung=true;this.swingAge=0;this.emit('sound','swing');if(!cpu)this.session.swings++;
   const previousPower=this.power;this.power=power;const {rx,ry}=this.batSize;this.power=previousPower;
   const contactError=Math.hypot((aim.x-p.targetX)/(rx+.07),(aim.y-p.targetY)/(ry+.07));
   const form=this.batter.careerForm;
@@ -2608,6 +2608,28 @@ window.NightGame=class NightGame{
   if(!this.defending&&!this.runningDemo){this.session.pitches++;this.session.history.push(kind);}
   if(this.derby?.enhanced&&['take','miss','strike'].includes(kind)){const result=this.derby.record({hr:false,kind,distance:0});this.emit('derby-ball',result);}
  }
+ // All renderers use the same deterministic plan, including remote spectator
+ // frames and CPU clips. Ordinary homers cycle through distinct stadium shows.
+ static derbyShowPlan(g){
+  const f=g?.field,c=f?.homerCelebration||{},n=Math.max(1,Math.floor(g?.derby?.turnHR||1)),level=c.level||1;
+  const kinds=['landing','outfield','sweep','fan'];
+  const kind=c.walkoff?'finale':kinds.includes(c.presentation)?c.presentation:kinds[(n-1)%kinds.length];
+  const a=clamp(Math.atan2(f?.ball?.x||0,f?.ball?.y||1),-.70,.70);
+  const wide=kind==='outfield'||kind==='finale',count=wide?(kind==='finale'?9:7):kind==='landing'?(level>=3?5:level>=2?4:3):5;
+  const step=wide?(1.40/(count-1)):kind==='sweep'?.083:kind==='fan'?.073:.052;
+  const half=(count-1)*step*.5,center=wide?0:clamp(a,-.75+half,.75-half);
+  const direction=a<0?-1:1;
+  const lanes=Array.from({length:count},(_,i)=>{
+   const offset=i-(count-1)*.5;
+   let delay=i*.035,height=1,tilt=0,pulses=1;
+   if(wide){delay=Math.abs(offset)*.023;height=kind==='finale'?1.18:1.02;}
+   else if(kind==='sweep'){delay=(direction>0?i:count-1-i)*.085;height=.9+Math.abs(offset)*.08;}
+   else if(kind==='fan'){delay=Math.abs(offset)*.048;height=1.18-Math.abs(offset)*.13;tilt=offset*.88;pulses=i%2===0?2:1;}
+   else height=1-Math.abs(offset)*.055;
+   return {angle:center+offset*step,delay,height,tilt,pulses};
+  });
+  return {kind,center,angle:a,level,count,lanes,direction,wide};
+ }
  static derbyResultDuration(field,hit,walkoff=false){
   if(walkoff)return 3600;
    if(hit?.kind==='hr')return (field?.homerCelebration?.level||1)>=2?1900:1200;
@@ -2630,7 +2652,7 @@ window.NightGame=class NightGame{
    this.session.maxDistance=Math.max(this.session.maxDistance,this.hit.distance);
    if(this.derby.enhanced){
      const walkoff=this.derby.clinched,streak=this.derby.streak,deep=this.hit.distance>=140;
-     f.homerCelebration={level:walkoff||deep||streak>=5?3:streak>=3?2:1,walkoff,streak,distance:this.hit.distance,tag:walkoff?'WALK-OFF HOME RUN':deep?'MONSTER SHOT':streak>=3?streak+' IN A ROW':'HOME RUN'};
+     f.homerCelebration={presentation:['landing','outfield','sweep','fan'][(this.derby.turnHR-1)%4],level:walkoff||deep||streak>=5?3:streak>=3?2:1,walkoff,streak,distance:this.hit.distance,tag:walkoff?'WALK-OFF HOME RUN':deep?'MONSTER SHOT':streak>=3?streak+' IN A ROW':'HOME RUN'};
     }
     this.message('HOME RUN','ホームラン！',this.hit.distance+' m','homer');this.emit('sound','homer');
   }else if(f.foul)this.emit('sound','foul');

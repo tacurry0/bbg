@@ -556,14 +556,14 @@ export class DerbyStadiumShow{
   this.flameTex=Array.from({length:4},(_,i)=>this.makeTexture(i+2));this.smokeTex=this.makeTexture(7,true);
   const baseGeo=new T.BoxGeometry(.92,.36,.92),baseMat=new T.MeshStandardMaterial({color:0x30363a,metalness:.65,roughness:.55});
   const tubeGeo=new T.CylinderGeometry(.19,.25,.32,8),tubeMat=new T.MeshStandardMaterial({color:0x171c20,metalness:.45});
-  this.jets=Array.from({length:5},(_,i)=>{
+  this.jets=Array.from({length:9},(_,i)=>{
    const root=new T.Group(),base=new T.Mesh(baseGeo,baseMat),tube=new T.Mesh(tubeGeo,tubeMat);base.position.y=.12;tube.position.y=.43;root.add(base,tube);
    const flame=Array.from({length:17},(_,j)=>{const f=new T.Sprite(new T.SpriteMaterial({map:this.flameTex[(i*3+j)%4],transparent:true,depthWrite:false,blending:T.NormalBlending,fog:false,toneMapped:false,opacity:0}));f.visible=false;root.add(f);return f;});
    const smoke=new T.Sprite(new T.SpriteMaterial({map:this.smokeTex,transparent:true,depthWrite:false,opacity:0}));root.add(smoke);
    this.group.add(root);return {root,flame,smoke};
   });
-  const palettes=[0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333];
-  this.bursts=Array.from({length:5},(_,i)=>{
+  const palettes=[0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333];
+  this.bursts=Array.from({length:9},(_,i)=>{
    const count=56,geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3));
    const mat=new T.LineBasicMaterial({color:palettes[i],transparent:true,opacity:1,depthWrite:false,blending:T.AdditiveBlending,fog:false});
    const lines=new T.LineSegments(geo,mat);lines.frustumCulled=false;lines.visible=false;const root=new T.Group();root.add(lines);
@@ -577,28 +577,31 @@ export class DerbyStadiumShow{
   if(!show){if(this.group)this.group.visible=false;this.last=null;return;}
   if(!this.group)this.init();
   const park=g.park,indoors=park.theme==='dome'||!!park.roofHeight,age=Math.max(0,g.phaseTime/1000),celebration=f.homerCelebration||{},level=celebration.level||1;
-  this.group.visible=age<1.8;const angle=clamp(Math.atan2(f.ball.x,f.ball.y),-.67,.67),count=level>=3?5:level>=2?4:3;
+  const plan=NightGame.derbyShowPlan(g),count=plan.count;this.group.visible=age<(plan.kind==='finale'?2.2:1.8);this.kind=plan.kind;
   const place=(root,a,off,lift)=>{
    const r=NightPlayers.wallDistance(park,a)+off,x=Math.sin(a)*r,z=Math.cos(a)*r,h=NightPlayers.fenceHeight(park,a);
    const roof=NightPlayers.roofSurface(park,x,z),y=Math.min(h+lift,Number.isFinite(roof)?roof-3:h+lift);
    root.position.set(x,y,z);return Number.isFinite(roof)?Math.max(1,roof-y):Infinity;
   };
   this.jets.forEach((jet,i)=>{
-   jet.root.visible=i<count&&age<1.45;
+   const lane=plan.lanes[i];
+   jet.root.visible=!!lane&&age<(plan.kind==='finale'?2.05:1.55);
    if(!jet.root.visible)return;
-   const a=clamp(angle+(i-(count-1)/2)*.052,-.76,.76);const clearance=place(jet.root,a,2.0,.6);
+   const clearance=place(jet.root,lane.angle,2.0,.6);
    // Each puff is born at the nozzle and rises/expands before extinguishing.
    // The slight timing differences avoid five identical candle shapes.
-   const t=age-i*.046,burstDuration=level>=3?.77:.66,life=indoors?.55:.61;
-   const travel=Math.min(indoors?6.7:8.5,clearance*.68)*(1+.08*(level-1));
+   const t=age-lane.delay,burstDuration=plan.kind==='sweep'?.45:plan.kind==='finale'?.76:lane.pulses===2?.64:level>=3?.77:.66,life=indoors?.55:.61;
+   const travel=Math.min((indoors?6.7:8.5)*lane.height*(1+.08*(level-1)),clearance*.68);
+   const cycle=plan.kind==='finale'&&t>1.1?t-1.1:t;
    for(let j=0;j<jet.flame.length;j++){
-    const spr=jet.flame[j],birth=j*.045,elapsed=t-birth,progress=elapsed/life;
-    const active=birth<=burstDuration&&progress>=0&&progress<1;
+    const spr=jet.flame[j],birth=j*.045,elapsed=cycle-birth,progress=elapsed/life;
+    const pulseOn=lane.pulses!==2||birth<.22||birth>.35;
+    const active=pulseOn&&birth<=burstDuration&&progress>=0&&progress<1;
     spr.visible=active;if(!active)continue;
     const flow=clamp(progress,0,1),spread=.93+2.05*Math.pow(flow,.82);
     const yy=.54+travel*(flow*.77+flow*flow*.23);
-    const wx=(Math.sin(i*2.2+j*4.73)*.22+Math.sin(t*9+j*1.9)*.16)*flow;
-    const wz=Math.cos(i*1.5+j*3.49)*.24*flow;
+    const wx=(Math.sin(i*2.2+j*4.73)*.22+Math.sin(t*9+j*1.9)*.16)*flow+Math.cos(lane.angle)*lane.tilt*flow;
+    const wz=Math.cos(i*1.5+j*3.49)*.24*flow-Math.sin(lane.angle)*lane.tilt*flow;
     spr.position.set(wx,Math.min(yy,clearance*.82),wz);
     spr.scale.set(spread*(.8+.25*Math.sin(j*2.3+i)),(1.32+spread*.98)*(1-.12*flow),1);
     spr.material.opacity=clamp(Math.min(1,flow*18)*(1-Math.pow(flow,3.4)),0,1);
@@ -610,10 +613,9 @@ export class DerbyStadiumShow{
    // Only big hits and streaks get low warm sparks. No floating white lines,
    // no sky-wide explosions, and no fireworks above the dome roof.
   this.bursts.forEach((b,i)=>{
-    const t=age-i*.045-.04;b.root.visible=level>=2&&i<count&&t>=0&&t<1.13;
+    const lane=plan.lanes[i],t=age-(lane?.delay||0)-.04;b.root.visible=(level>=2||plan.kind==='finale')&&!!lane&&t>=0&&t<1.13;
     if(!b.root.visible)return;
-    const a=clamp(angle+(i-(count-1)/2)*.052,-.76,.76);
-    const clearance=place(b.root,a,2.0,.85),fade=clamp(1-t/1.13,0,1);
+    const clearance=place(b.root,lane.angle,2.0,.85),fade=clamp(1-t/1.13,0,1);
     for(let j=0;j<b.count;j++){
      const phase=j/b.count,theta=j*2.399963,agej=Math.max(0,t-phase*.32),radial=(.7+(j%7)*.25)*agej;
      const y=Math.min(clearance*.78,(5.5+(j%9)*.55)*agej-4.4*agej*agej);

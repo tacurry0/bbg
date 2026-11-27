@@ -114,7 +114,7 @@
    const clips=[];let used=0,hr=0;
    while(used<duration&&hr<=target&&clips.length<120){
     const pitch={x:(Math.random()-.5)*.9,y:Math.random()*.49-.13};g.createPitch(NightGame.TYPES[0],pitch);
-    const windup=g.pitch.windupMs??270,contactTime=g.pitch.duration*(.88+Math.random()*.24);
+    const windup=g.pitch.windupMs??380,contactTime=g.pitch.duration*(.88+Math.random()*.24);
     if(used+windup>=duration)break;
     const q=Math.random(),power=entry.player.power||65,contact=entry.player.contact||65;
     const miss=q<Math.max(.04,.13-(contact-65)*.002);

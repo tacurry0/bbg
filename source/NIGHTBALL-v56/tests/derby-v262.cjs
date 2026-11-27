@@ -5,6 +5,24 @@ function context(){const c=vm.createContext({console,performance,structuredClone
 const c=context(),G=c.NightGame,D=c.NightOnlineDerby;
 const make=(mode,opts={})=>new G('derby','standard',()=>{},{park:'tokyo-dome',weather:'clear',crowdAttendance:'full',...opts,derby:{enhanced:true,mode,...opts.derby}});
 {
+ const g=make('record');g.setPhase('intro');const full=g.derby.remaining;
+ for(let i=0;i<59;i++)g.update(50);
+ assert.equal(g.phase,'intro');assert.equal(g.phaseTime,2950);assert.equal(g.derby.remaining,full);
+ g.update(50);assert.equal(g.phase,'windup');assert.equal(g.derby.remaining,full);assert.equal(g.pitch.speed,150);assert.equal(g.pitch.windupMs,380);
+ for(let i=0;i<7;i++)g.update(50);
+ assert.equal(g.phase,'windup');g.update(50);assert.equal(g.phase,'pitch');
+ g.power=false;g.bunt=true;g.attempt({x:g.pitch.targetX,y:g.pitch.targetY},false,0,false);
+ assert.equal(g.power,true);assert.equal(g.bunt,false);
+ const kinds=['landing','outfield','sweep','fan'];
+ const plans=kinds.map((kind,i)=>G.derbyShowPlan({derby:{turnHR:i+1},field:{ball:{x:20,y:120},homerCelebration:{level:1}}}));
+ assert.deepEqual(Array.from(plans,p=>p.kind),kinds);
+ assert.equal(plans[1].count,7);assert(plans[1].lanes[0].angle<-.65&&plans[1].lanes.at(-1).angle>.65);
+ assert(plans[2].lanes.at(-1).delay-plans[2].lanes[0].delay>.3);
+ assert(plans[3].lanes[0].tilt<0&&plans[3].lanes.at(-1).tilt>0);
+ assert.equal(G.derbyShowPlan({derby:{turnHR:1},field:{homerCelebration:{walkoff:true},ball:{x:0,y:120}}}).kind,'finale');
+ console.log('PASS v268: three-second uncharged countdown, 380ms windup, forced power swing and four deterministic stadium plans');
+}
+{
  const g=make('record');g.beginHalf();assert.equal(g.pitch.speed,150);assert.equal(g.derby.remaining,120000);assert.equal(g.crowdAttendanceMode,'full');
  g.update(50);const rem=g.derby.remaining;
  g.startField(62,29,.15,false,true);for(let i=0;i<1000&&g.phase==='field';i++)g.update(16);
