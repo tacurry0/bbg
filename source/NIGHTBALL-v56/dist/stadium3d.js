@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=266';
+} from './stadium-fx.js?v=267';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -1018,14 +1018,14 @@ export class StadiumRenderer {
    const b=f.ball,park=g.park,portrait=this.camera.aspect<.95;
    const a=clamp(Math.atan2(b.x,b.y),-.70,.70);
    const r=NightPlayers.wallDistance(park,a),h=NightPlayers.fenceHeight(park,a);
-   const sx=Math.sin(a),sz=Math.cos(a),back=portrait?40:32;
+   const sx=Math.sin(a),sz=Math.cos(a),back=portrait?41:32;
    const cx=sx*(r-back),cz=sz*(r-back);
    const roof=NightPlayers.roofSurface(park,cx,cz);
-   const height=Math.min(h+11,Number.isFinite(roof)?roof-3.5:Infinity);
+   const height=Math.min(h+5.5,Number.isFinite(roof)?roof-3.5:Infinity);
    this.camera.position.set(cx,height,-cz);
-   this.cameraFocus.set(sx*(r+4),h+5.6,-sz*(r+4));
+   this.cameraFocus.set(sx*(r+4),h+7.6,-sz*(r+4));
    this.camera.lookAt(this.cameraFocus);
-   this.camera.fov=portrait?64:47;
+   this.camera.fov=portrait?(f.homerCelebration?.level>=3?62:55):47;
    this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
    this.cameraPlay=f;
    if(this.keyLight){this.keyLight.target.position.set(sx*r,0,-sz*r);this.keyLight.target.updateMatrixWorld();}

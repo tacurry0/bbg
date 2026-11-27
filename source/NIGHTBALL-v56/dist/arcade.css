@@ -559,7 +559,43 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 @media(max-width:360px){.derby-tree{--bracket-row:57px;--bracket-gap:8px}.derby-entry{height:52px;grid-template-rows:35px 13px;padding-inline:3px}.derby-entry .derby-player{font-size:12px}.dr-entry-status{gap:1px}.dr-entry-status em{font-size:8px}.dr-entry-status .club-badge{width:10px;height:10px;flex-basis:10px}.dr-bracket-score{font-size:14px!important}.derby-entry .dr-bracket-score small{font-size:10px}.dr-hud-metrics>span{gap:2px}.dr-hud-metrics small{font-size:9px}}
 @media(min-width:600px){.derby-tree{--bracket-row:51px;--bracket-gap:16px}.derby-entry{height:46px;grid-template-rows:26px 15px}.derby-entry .derby-player{font-size:14px}.dr-entry-status .club-badge{width:15px;height:15px;flex-basis:15px}}
 @media(orientation:landscape) and (max-height:530px){.game-screen.derby-active .game-stage>.scoreboard{left:7px;transform:none;width:min(365px,48%)}.game-screen.derby-active #stage>#impact-fx[data-kind="hr"]{padding-bottom:5%}.game-screen.derby-active #stage>#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(31px,11vh,62px)}}
-/* Give two CJK name lines their own space before the score row. */
-.derby-entry{height:45px;grid-template-rows:26px 15px}.derby-tree{--bracket-row:50px}
-@media(max-width:390px){.derby-tree{--bracket-row:61px;--bracket-gap:8px}.derby-entry{height:56px;grid-template-rows:39px 13px;padding-inline:3px}.derby-entry .derby-player{font-size:12px}}
-@media(min-width:600px){.derby-tree{--bracket-row:51px}.derby-entry{height:46px;grid-template-rows:26px 15px}}
+/* Derby result: tournament-first compact, single-row identity; 7 matches always visible. */
+.derby-bracket{--route:#bd8d29;background:linear-gradient(180deg,#f7fbff,#eaf4fa);border:1px solid #a9c9de;border-radius:8px;padding:0 5px 5px;margin:7px 0;overflow:visible}
+.dr-bracket-header{margin:0 -5px 6px;padding:7px 8px;background:linear-gradient(100deg,#164a75,#146b9f);border-radius:7px 7px 0 0;min-height:0}
+.dr-bracket-header strong{color:#fff;font-size:13px;letter-spacing:.02em}
+.dr-bracket-key{color:#ffe49e;font-size:9px;gap:4px}.dr-bracket-key i{background:#f1cd74;width:12px}
+.derby-tree{--bracket-row:37px;--bracket-gap:9px;min-width:0;grid-template-columns:minmax(0,1.17fr) minmax(0,1fr) minmax(0,.96fr)}
+.derby-tree h3{font-size:11px;letter-spacing:.035em;color:#366c90;padding:0 0 4px;margin:0 0 3px}
+.derby-pair{border:1px solid #adc9da;background:#fff;border-radius:5px;box-shadow:0 1px 2px #173f6517}
+.derby-pair.current{border-color:#2183bd;box-shadow:none}.derby-pair.winner-path,.derby-pair.user-path{border-color:var(--route)}
+.derby-tree-round:not(:last-child) .derby-pair::after,.derby-tree-round:not(:first-child) .derby-pair::before{border-color:#97b4ca}
+.derby-tree-round:not(:last-child) .derby-pair.winner-path::after,.derby-tree-round:not(:first-child) .derby-pair.user-path::before{border-color:var(--route)}
+.derby-entry{display:grid;grid-template-columns:14px minmax(0,1fr) max-content;grid-template-rows:1fr;column-gap:3px;height:33px;min-height:0;align-items:center;align-content:stretch;padding:2px 3px;overflow:hidden;border-radius:0}
+.derby-entry:first-child{border-radius:4px 4px 0 0}.derby-entry:last-child{border-radius:0 0 4px 4px}
+.derby-entry+.derby-entry{border-color:#dbe7ef}
+.derby-entry.pending{color:#90a5b6;background:#f5f9fc}
+.derby-entry.winner{background:#e1f0fa;color:#14517a;box-shadow:inset 2px 0 #368ebc}
+.derby-entry.user{background:#fff8df;color:#6c4b12;box-shadow:inset 2px 0 var(--route)}
+.derby-entry.user.winner{background:linear-gradient(105deg,#ffe8a1,#fff5d5);color:#6a4814;box-shadow:inset 3px 0 var(--route)}
+.dr-bracket-logo{grid-column:1;grid-row:1;align-self:center;display:grid;place-items:center;width:14px;height:17px}
+.dr-bracket-logo .club-badge{display:grid;place-items:center;width:14px;height:14px;margin:0;padding:0;border:0;background:none;box-shadow:none}
+.dr-bracket-logo img{width:100%;height:100%;object-fit:contain}
+.derby-entry .derby-player{grid-column:2;grid-row:1;display:block;min-width:0;font-size:clamp(9px,2.6vw,12px);font-weight:850;line-height:1.12;letter-spacing:-.025em;white-space:normal;overflow-wrap:anywhere;word-break:normal;max-height:3.36em;overflow:hidden}
+.derby-entry .dr-bracket-score{grid-column:3;grid-row:1;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:1px;white-space:nowrap;font:950 15px/.98 Arial,sans-serif;color:#194a72;min-width:1ch}
+.derby-entry.winner .dr-bracket-score{color:#076499}.derby-entry.user .dr-bracket-score{color:#94630e}
+.derby-entry .dr-bracket-score small,.derby-entry.user .dr-bracket-score small{font:800 9px/1 Arial,sans-serif;color:#59758c;padding:0}
+.derby-entry.pending .dr-bracket-logo{width:0}.derby-entry.pending{grid-template-columns:0 minmax(0,1fr) max-content;gap:3px}
+.modal:is([data-kind="derby-result"],[data-kind="online-derby-result"]) .dr-result-title{padding:4px 5px 0}
+.modal .dr-result-title h2#modal-title{font-size:clamp(21px,6vw,29px)}
+.dr-result-side{grid-template-columns:25px minmax(0,1fr);grid-template-rows:25px auto;gap:1px 5px}
+.dr-result-side img,.dr-result-placeholder{width:25px;height:25px}
+.dr-result-match{padding:4px 8px 5px;gap:6px}
+.dr-result-side>b:last-child{font-size:clamp(30px,8.4vw,42px)}
+.dr-result-hero>p{padding:3px 7px}
+.dr-result-actions{margin:6px 0}
+.modal .dr-result-actions button{min-height:39px;padding:6px 7px}
+.derby-stat-card{padding:7px}.derby-stat-grid>div{padding:5px 1px}.derby-stat-grid small{font-size:10px}
+.dr-map-frame{min-height:152px;margin:6px 0 4px}
+.modal .dr-map-frame > svg.derby-map{width:100%!important;min-height:152px!important;max-height:204px!important}
+@media(max-width:360px){.derby-tree{--bracket-row:40px;--bracket-gap:7px}.derby-entry{height:36px;grid-template-columns:11px minmax(0,1fr) max-content;column-gap:2px;padding-inline:2px}.dr-bracket-logo,.dr-bracket-logo .club-badge{width:11px;height:12px}.derby-entry .derby-player{font-size:9px}.derby-entry .dr-bracket-score{font-size:13px!important}.dr-bracket-key{font-size:8px}}
+@media(min-width:600px){.derby-tree{--bracket-row:42px;--bracket-gap:16px}.derby-entry{height:38px;grid-template-columns:19px minmax(0,1fr) max-content;padding-inline:6px;gap:5px}.dr-bracket-logo,.dr-bracket-logo .club-badge{width:19px;height:19px}.derby-entry .derby-player{font-size:13px}.derby-entry .dr-bracket-score{font-size:17px}}

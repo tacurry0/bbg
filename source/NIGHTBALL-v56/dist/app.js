@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=263';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=266';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=267';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -1855,12 +1855,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const d=g.derby;
   const entry=(p,match,i,winner)=>{
    const normal=match?.normal[i],extra=match?.extra[i],score=normal==null?'—':String(normal);
-   if(!p)return '<div class="derby-entry pending"><span class="derby-player">未定</span><b class="dr-bracket-score">—</b></div>';
-   const name=uiEscape(p.player.name);
-   return `<div class="derby-entry${p.user?' user':''}${winner?' winner':''}" title="${name} ${uiEscape(derbyScoreText(match||{normal:[null,null],extra:[null,null]},i))}">
-    <span class="derby-entry-name"><span class="derby-player">${name}</span></span>
+   if(!p)return '<div class="derby-entry pending"><span class="dr-bracket-logo"></span><span class="derby-player">未定</span><b class="dr-bracket-score">—</b></div>';
+   const name=uiEscape(p.player.name),label=name+(p.user?' · 自分':'')+(winner?' · 勝ち':'')+' · '+uiEscape(derbyScoreText(match||{normal:[null,null],extra:[null,null]},i));
+   return `<div class="derby-entry${p.user?' user':''}${winner?' winner':''}" title="${label}" aria-label="${label}">
+    <span class="dr-bracket-logo">${clubBadge(p.club.id,true)}</span>
+    <span class="derby-player">${name}</span>
     <b class="dr-bracket-score">${score}${extra!=null?'<small>+'+extra+'</small>':''}</b>
-    <span class="dr-entry-status">${clubBadge(p.club.id,true)}${p.user?'<em>自分</em>':''}${winner?'<i aria-label="勝ち">✓</i>':''}</span>
    </div>`;
   };
   const rounds=['準々決勝','準決勝','決勝'];

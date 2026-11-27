@@ -33,7 +33,7 @@ try{
  await page.locator('.dr-roster-player').first().tap();await page.locator('[data-action="derby-menu-back"].dr-start').tap();
  await page.locator('[data-derby-mode="record"]').tap();
  await page.evaluate(async()=>{
-  const {StadiumRenderer}=await import('./stadium3d.js?v=266');
+  const {StadiumRenderer}=await import('./stadium3d.js?v=267');
   const render=StadiumRenderer.prototype.render;
   StadiumRenderer.prototype.render=function(g,t){if(g?.derby)window.derbyTest={g,r:this};return render.apply(this,arguments);};
  });
@@ -41,7 +41,7 @@ try{
  await page.locator('#modal-content [data-action="close"]').tap();
  await page.locator('#modal').waitFor({state:'hidden'});
  await page.waitForFunction(()=>window.derbyTest?.g.derby&&document.querySelector('#game-canvas').dataset.spectatorModel==='tokyo-dome-real'&&Number(document.querySelector('#game-canvas').dataset.spectators)>20000,null,{timeout:45000});
- await page.evaluate(()=>{const {g,r}=window.derbyTest;g.beginHalf();g.startField(62,29,.10,false,true);while(g.phase==='field')g.updateField(1/120);assertDriver();function assertDriver(){if(g.hit.kind!=='hr')throw Error('Expected HR');}g.phaseTime=650;g.paused=true;
+ await page.evaluate(()=>{const {g,r}=window.derbyTest;g.beginHalf();g.startField(62,29,.10,false,true);while(g.phase==='field')g.updateField(1/120);assertDriver();function assertDriver(){if(g.hit.kind!=='hr')throw Error('Expected HR');}g.phaseTime=460;g.paused=true;
   const impact=document.querySelector('#impact-fx');
   if(impact.hidden||impact.dataset.kind!=='hr')throw Error('The shared HOME RUN animation did not start');
   void impact.offsetWidth;
@@ -49,11 +49,11 @@ try{
   // not the finished transparent state, so the screenshot is representative.
   const animations=impact.getAnimations({subtree:true});
   if(!animations.length)throw Error('HOME RUN animation is missing');
-  for(const a of animations){a.pause();a.currentTime=650;}
+  for(const a of animations){a.pause();a.currentTime=460;}
   r.render(g,g.time);});
  await page.waitForFunction(()=>document.querySelector('#game-canvas').dataset.cameraView==='derby-landing',null,{timeout:10000});
- const scene=await page.evaluate(()=>{const {g,r}=window.derbyTest,show=r.vfx.derbyShow;return {clock:g.derby.remaining,show:show.group.visible,jets:show.jets.filter(j=>j.root.visible).length,bursts:show.bursts.filter(b=>b.root.visible).length,spectators:Number(r.canvas.dataset.spectators)};});
- assert(scene.show&&scene.jets>=3&&(scene.bursts===0||scene.bursts>=3)&&scene.spectators>20000,JSON.stringify(scene));
+ const scene=await page.evaluate(()=>{const {g,r}=window.derbyTest,show=r.vfx.derbyShow;return {clock:g.derby.remaining,show:show.group.visible,puffs:show.jets.filter(j=>j.root.visible).map(j=>j.flame.filter(f=>f.visible).length),jets:show.jets.filter(j=>j.root.visible).length,bursts:show.bursts.filter(b=>b.root.visible).length,spectators:Number(r.canvas.dataset.spectators)};});
+ assert(scene.show&&scene.jets>=3&&(scene.bursts===0||scene.bursts>=3)&&scene.spectators>20000&&scene.puffs.every(n=>n>=3),JSON.stringify(scene));
  assert.equal(await page.locator('#modal').isVisible(),false);
  assert(await page.locator('.dr-hud').isVisible());assert.equal(await page.locator('.dr-hud-metrics>span').count(),3);
  // At the first post-landing frame, measure each active jet's camera projection.
@@ -61,12 +61,12 @@ try{
  const framing=await page.evaluate(()=>{const {r}=window.derbyTest;return r.vfx.derbyShow.jets.filter(j=>j.root.visible).map(j=>{const p=j.root.position;const a=r.project(p.x,p.y+3,p.z);return a.x>=0&&a.x<=r.width&&a.y>=0&&a.y<=r.height;});});
  assert(framing.filter(Boolean).length>=3,'at least three flame jets must be in the frame: '+framing);
  
- await page.screenshot({path:'tests/screenshots/derby-homer-v263.png',timeout:90000});
+ await page.screenshot({path:'tests/screenshots/derby-homer-v267.png',timeout:90000});
  // Actual tournament result, not just interpolated test markup.
  await page.reload({waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>!!document.querySelector('#game-canvas')?.dataset.graphics,null,{timeout:30000});
  await page.locator('[data-mode="derby"]').tap();await page.locator('[data-derby-mode="tournament"]').tap();
- await page.evaluate(async()=>{const {StadiumRenderer}=await import('./stadium3d.js?v=266');const render=StadiumRenderer.prototype.render;StadiumRenderer.prototype.render=function(g,t){if(g?.derby)window.derbyTest={g,r:this};return render.apply(this,arguments);};});
+ await page.evaluate(async()=>{const {StadiumRenderer}=await import('./stadium3d.js?v=267');const render=StadiumRenderer.prototype.render;StadiumRenderer.prototype.render=function(g,t){if(g?.derby)window.derbyTest={g,r:this};return render.apply(this,arguments);};});
  await page.locator('[data-action="start-derby"]').tap();
  await page.locator('#modal-content [data-action="close"]').tap();
  await page.waitForFunction(()=>window.derbyTest?.g.derby.mode==='tournament',null,{timeout:45000});
@@ -75,11 +75,11 @@ try{
  assert.equal(await page.locator('.derby-bracket .derby-pair').count(),7);
  assert.equal(await page.locator('.derby-bracket details').count(),0);
  assert(await page.locator('.derby-bracket .winner-path').count()>0);
- const layout=await page.evaluate(()=>{const modal=document.querySelector('#modal-content'),b=document.querySelector('.derby-bracket'),svg=document.querySelector('.dr-map-frame svg');const overlaps=[...b.querySelectorAll('.derby-entry:not(.pending)')].some(e=>{const n=e.querySelector('.derby-player').getBoundingClientRect(),v=e.querySelector('.dr-bracket-score').getBoundingClientRect();return n.bottom>v.top+1;});return {width:modal.clientWidth,scrollWidth:modal.scrollWidth,mapHeight:svg.getBoundingClientRect().height,overlaps};});
- assert(layout.scrollWidth<=layout.width+2&&layout.mapHeight>=150&&!layout.overlaps,JSON.stringify(layout));
+ const layout=await page.evaluate(()=>{const modal=document.querySelector('#modal-content'),b=document.querySelector('.derby-bracket'),svg=document.querySelector('.dr-map-frame svg');const overlaps=[...b.querySelectorAll('.derby-entry:not(.pending)')].some(e=>{const n=e.querySelector('.derby-player').getBoundingClientRect(),v=e.querySelector('.dr-bracket-score').getBoundingClientRect(),l=e.querySelector('.dr-bracket-logo').getBoundingClientRect();return n.right>v.left+1||l.right>n.left+1||Math.abs(n.top+n.height/2-v.top-v.height/2)>2;});return {width:modal.clientWidth,scrollWidth:modal.scrollWidth,mapHeight:svg.getBoundingClientRect().height,bracketHeight:b.getBoundingClientRect().height,overlaps};});
+ assert(layout.scrollWidth<=layout.width+2&&layout.mapHeight>=150&&layout.bracketHeight<390&&!layout.overlaps,JSON.stringify(layout));
  await page.locator('#modal-content').evaluate(el=>el.getAnimations().forEach(a=>a.finish()));
- await page.screenshot({path:'tests/screenshots/derby-result-v266.png',timeout:90000});
+ await page.screenshot({path:'tests/screenshots/derby-result-v267.png',timeout:90000});
  await page.locator('.dr-map-frame').scrollIntoViewIfNeeded();
- await page.screenshot({path:'tests/screenshots/derby-spray-v266.png',timeout:90000});
+ await page.screenshot({path:'tests/screenshots/derby-spray-v267.png',timeout:90000});
  assert.deepEqual(errors,[]);console.log('PASS v263 mobile derby UI, 3D crowd, HR camera and stadium pyrotechnics',scene);
 }finally{await browser?.close();server.close();}
