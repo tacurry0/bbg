@@ -17,3 +17,12 @@ settings.stadiumDJ=false;djTick(g);if(djSpeaking())throw Error('OFF');
 settings.stadiumDJ=true;g.phase='ended';djFinal(g);if(!spoken.at(-1).text.includes('ballgame'))throw Error('final');
 `)();
 assert(app.includes("stadiumDJ:true"));console.log('Stadium DJ checks passed');
+
+new Function(app.slice(app.indexOf('const DJ_CLIP_ORDER='),app.indexOf('var djState;'))+`
+const eq=(s,w)=>{if(djClipIds(s).join(',')!==w)throw Error(s+': '+djClipIds(s))};
+eq('Leading off. right fielder. Number 28!','order-1,pos-8,number,num-28');
+eq('Batting cleanup. designated hitter. Number 123!','order-4,pos-9,number,num-1,num-2,num-3');
+eq('Home run! Number 6!','hr,number,num-6');
+eq('After review, the call is overturned.','abs-overturned');
+eq('Inning over','');
+`)();

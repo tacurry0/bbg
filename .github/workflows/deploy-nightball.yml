@@ -99,6 +99,22 @@ jobs:
           echo "Prepared publish directory:"
           ls -la _site | head -40
 
+      - name: Build English stadium PA audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          if ! command -v espeak-ng >/dev/null && ! command -v espeak >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends espeak-ng
+          fi
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends ffmpeg
+          fi
+          python3 source/NIGHTBALL-v56/scripts/build-dj-audio.py _site/assets/audio
+          test -s _site/assets/audio/dj-pa-v1.mp3
+          test -s _site/assets/audio/dj-pa-v1.json
+
       - name: Set up GitHub Pages
         uses: actions/configure-pages@v5
 

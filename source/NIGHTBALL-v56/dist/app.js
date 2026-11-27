@@ -93,7 +93,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const music=djSpeaking()?{...settings.music,cheer:Math.round(settings.music.cheer*.35),results:Math.round(settings.music.results*.5)}:settings.music;
   ballparkMusic.update(playing||results?game:null,music,enabled,active||results);
  }
- function unlockAudio(){stadiumAudio.unlock();syncAudio();}
+ function unlockAudio(){stadiumAudio.unlock();if(settings.stadiumDJ&&settings.sound)djLoadAssets();syncAudio();}
  function sound(name){syncAudio();if(game)stadiumAudio.setAtmosphere(NightGame.stadiumAtmosphere(game));stadiumAudio.play(name,{hand:game?.batter?.hand,ballPan:game?.field?.ball?Math.max(-.75,Math.min(.75,game.field.ball.x/75)):0});if(name==='homer')vibrate([30,30,60]);else if(name==='hit'||name==='perfect')vibrate(20);}
  function vibrate(v){if(settings.vibration&&navigator.vibrate)try{navigator.vibrate(v);}catch{}}
  function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('toast').classList.remove('show');$('toast').textContent='';},2500);}
@@ -2857,14 +2857,77 @@ function start(mode,challengeId=null,fixedPark=null){
   const female=/\b(female|samantha|victoria|karen|moira|zira|susan|jenny|aria|emma|serena|tessa|ava|allison)\b/i;
   return english.find(v=>male.test(v.name)&&!female.test(v.name))||english.find(v=>!female.test(v.name))||english[0]||null;
  }
+
+ const DJ_CLIP_ORDER=['','leading off','batting second','batting third','batting cleanup','batting fifth','batting sixth','batting seventh','batting eighth','batting ninth'];
+ const DJ_CLIP_POS=['pitcher','catcher','first baseman','second baseman','third baseman','shortstop','left fielder','center fielder','right fielder','designated hitter'];
+ function djClipIds(text){
+  const t=String(text).toLowerCase(),ids=[];
+  if(t.startsWith('ladies and gentlemen'))return ['welcome'];
+  if(t.startsWith('that is the ballgame'))return ['final'];
+  if(t.startsWith('after review'))return [t.includes('overturned')?'abs-overturned':'abs-stands'];
+  if(t.startsWith('grand slam'))ids.push('grand');
+  else if(t.startsWith('walk-off home run'))ids.push('walkoff');
+  else if(t.startsWith('home run'))ids.push('hr');
+  else if(t.startsWith('now pitching'))ids.push('pitching');
+  else if(t.startsWith('now entering as a pinch hitter'))ids.push('pinch');
+  else{
+   const order=DJ_CLIP_ORDER.findIndex((p,i)=>i>0&&t.startsWith(p));
+   if(order>0)ids.push('order-'+order);
+   const pos=DJ_CLIP_POS.findIndex(p=>t.includes('. '+p+'.'));
+   if(pos>=0)ids.push('pos-'+pos);
+  }
+  const n=t.match(/\bnumber\s+(zero\s+)?(\d+)/);
+  if(n){ids.push('number');const digits=n[2];if(n[1])ids.push('num-0');if(digits.length<=2)ids.push('num-'+Number(digits));else for(const digit of digits)ids.push('num-'+digit);}
+  return ids;
+ }
+ var djAssetPromise;
+ function djLoadAssets(){
+  if(djAssetPromise)return djAssetPromise;
+  const c=typeof stadiumAudio!=='undefined'?stadiumAudio.context:null;
+  if(!c||typeof fetch!=='function')return null;
+  djAssetPromise=Promise.all([fetch('./assets/audio/dj-pa-v1.json').then(r=>{if(!r.ok)throw Error(r.status);return r.json();}),fetch('./assets/audio/dj-pa-v1.mp3').then(r=>{if(!r.ok)throw Error(r.status);return r.arrayBuffer();})]).then(async([meta,bytes])=>({clips:meta.clips,buffer:await c.decodeAudioData(bytes)})).catch(()=>{djAssetPromise=null;return null;});
+  return djAssetPromise;
+ }
+ function djNative(d,text){
+  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance!=='function'){d.current=null;d.priority=0;d.until=0;return false;}
+  try{
+   const synth=window.speechSynthesis,u=new SpeechSynthesisUtterance(text);
+   u.lang='en-US';const voice=djVoice(synth.getVoices());if(voice){u.voice=voice;u.lang=voice.lang;}
+   u.rate=.94;u.pitch=.79;u.volume=Math.min(1,Math.max(0,settings.soundVolume/100));
+   d.current=u;d.until=performance.now()+Math.min(8500,1800+text.length*78);
+   const done=()=>{if(d.current===u){d.current=null;d.priority=0;d.until=0;}};
+   u.onend=done;u.onerror=done;
+   if(synth.speaking)synth.cancel();synth.resume?.();synth.speak(u);return true;
+  }catch{d.current=null;d.priority=0;d.until=0;return false;}
+ }
+ function djPlayPA(d,token,asset,text){
+  if(d.current!==token)return;
+  const c=typeof stadiumAudio!=='undefined'?stadiumAudio.context:null;
+  const ids=djClipIds(text);
+  if(!asset||!c||c.state!=='running'||!ids.length||ids.some(id=>!asset.clips[id])){djNative(d,text);return;}
+  try{
+   let at=c.currentTime+.035;
+   const gain=c.createGain();gain.gain.value=.95;
+   const speaker=c.createBiquadFilter();speaker.type='bandpass';speaker.frequency.value=1800;speaker.Q.value=.55;
+   gain.connect(speaker);speaker.connect(stadiumAudio.effects||stadiumAudio.master||c.destination);
+   token.nodes=[gain,speaker];token.sources=[];
+   for(const id of ids){
+    const [offset,duration]=asset.clips[id],source=c.createBufferSource();
+    source.buffer=asset.buffer;source.connect(gain);source.start(at,offset,duration);token.sources.push(source);at+=duration+.055;
+   }
+   d.until=performance.now()+Math.ceil((at-c.currentTime)*1000)+180;
+   token.sources.at(-1).onended=()=>{for(const n of token.nodes)try{n.disconnect();}catch{};if(d.current===token){d.current=null;d.priority=0;d.until=0;}};
+  }catch{for(const s of token.sources||[])try{s.stop();}catch{};for(const n of token.nodes||[])try{n.disconnect();}catch{};djNative(d,text);}
+ }
+
  var djState;
  function djSession(g){
   if(!djState||djState.game!==g){stopDJ();djState={game:g,plate:'',subs:g?.substitutions?.length||0,welcome:false,ended:false,current:null,priority:0,until:0,pending:null,keys:new Set()};}
   return djState;
  }
- function djAllowed(g){return !!g&&screen==='game'&&settings.stadiumDJ&&settings.sound&&!document.hidden&&!g.fastForward&&!g.spectate&&!g.umpireMode&&!g.derby&&!g.timeAttack&&(g.isFixture||g.career)&&'speechSynthesis' in window&&typeof SpeechSynthesisUtterance==='function';}
+ function djAllowed(g){return !!g&&screen==='game'&&settings.stadiumDJ&&settings.sound&&!document.hidden&&!g.fastForward&&!g.spectate&&!g.umpireMode&&!g.derby&&!g.timeAttack&&(g.isFixture||g.career);}
  function stopDJ(){
-  if(djState?.current){try{window.speechSynthesis.cancel();}catch{}}
+  if(djState?.current){const cur=djState.current;if(cur.kind==='pa'){for(const s of cur.sources||[])try{s.stop();}catch{};for(const n of cur.nodes||[])try{n.disconnect();}catch{}}else try{window.speechSynthesis.cancel();}catch{}}
   if(djState){djState.current=null;djState.pending=null;djState.until=0;djState.priority=0;}
  }
  function djSpeaking(){return !!djState?.current&&performance.now()<djState.until;}
@@ -2878,22 +2941,21 @@ function start(mode,challengeId=null,fixedPark=null){
    if(priority===1)d.pending={text,priority,expires:now+3500,plate:d.plate};
    return false;
   }
-  try{
-   const synth=window.speechSynthesis;
-   const u=new SpeechSynthesisUtterance(text);u.lang='en-US';const voice=djVoice(synth.getVoices());if(voice){u.voice=voice;u.lang=voice.lang;}
-   u.rate=.94;u.pitch=.79;u.volume=Math.min(1,Math.max(0,settings.soundVolume/100));
-   d.current=u;d.priority=priority;d.until=now+Math.min(8500,1800+text.length*78);d.pending=null;
-   const done=()=>{if(d.current===u){d.current=null;d.priority=0;d.until=0;}};
-   u.onend=done;u.onerror=done;
-   synth.cancel();synth.speak(u);return true;
-  }catch{d.current=null;d.priority=0;d.until=0;return false;}
+  // Same unlocked Web Audio path as other game effects. Native TTS is fallback.
+  stopDJ();d.priority=priority;d.until=now+8500;
+  const assets=djLoadAssets();
+  if(!assets)return djNative(d,text);
+  const token={kind:'pa',sources:[],nodes:[]};d.current=token;
+  assets.then(asset=>djPlayPA(d,token,asset,text));
+  return true;
  }
  function djTick(g){
   if(!djAllowed(g)){stopDJ();return;}
   const d=djSession(g);
   if(d.current&&!djSpeaking()){stopDJ();}
-  if(g.paused||review.playback||!$('modal').hidden&&g.phase!=='ended'){stopDJ();return;}
+  if((g.paused||review.playback||!$('modal').hidden)&&g.phase!=='ended'&&!d.ended){stopDJ();return;}
   if(!d.welcome){d.welcome=true;if(g.broadcastIntro)djSay(g,'Ladies and gentlemen! Welcome to the ballpark. Here are your starting lineups!',2,'welcome');}
+  if(d.ended)return;
   const rows=g.substitutions||[];
   if(rows.length>d.subs){
    const latest=rows.slice(d.subs).reverse().find(x=>x.type==='pitch'||x.type==='hit');d.subs=rows.length;
