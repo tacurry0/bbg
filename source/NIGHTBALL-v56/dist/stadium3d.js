@@ -904,21 +904,26 @@ export class StadiumRenderer {
    ||f.runners.find(r=>r.batter&&!r.out&&!r.scored&&r.progress<3.999);
   const b=trot?{x:runner?.x??0,y:runner?.y??0,z:0,bounces:1}:f.ball;
   const returning=!!th||!!manual?.secured||b.bounces>0||f.wallHit;
+  // Keep the ball as the primary subject, especially on long outfield plays.
+  const outfield=!trot&&(Math.hypot(b.x,b.y)>40||f.maxTravel>44||b.z>8||f.wallHit||f.overFence);
   let x=b.x,z=b.y,span=0;
-  if(th){
-   x=b.x*.58+th.to.x*.42;z=b.y*.58+th.to.y*.42;
-   span=Math.hypot(th.to.x-b.x,th.to.y-b.y);
-  }
+  const bias=(px,pz,weight,limit)=>{
+   const dx=px-x,dz=pz-z,d=Math.hypot(dx,dz);
+   const amount=Math.min(weight,limit/Math.max(.001,d));
+   x+=dx*amount;z+=dz*amount;return d;
+  };
+  if(th)span=bias(th.to.x,th.to.y,outfield?.16:.42,outfield?5:18);
   if(runner){
-   const weight=selected===runner.id?.43:returning?.30:.20;
-   x+=(runner.x-x)*weight;z+=(runner.y-z)*weight;
-   span=Math.max(span,Math.hypot(runner.x-x,runner.y-z)*(returning?1.26:1.05));
+   const weight=outfield?.07:selected===runner.id?.43:returning?.30:.20;
+   const d=bias(runner.x,runner.y,weight,outfield?3:18);
+   span=Math.max(span,outfield?Math.min(22,d):d*(returning?1.26:1.05));
   }
+  if(outfield)span=Math.min(35,span);
   const portrait=this.camera.aspect<.95,park=g.park;
   const infield=trot||f.trajectory==='ground'&&f.maxTravel<44&&!f.wallHit&&(!th||th.base===1);
   const replay=g.replayView,broadcast=park.id==='tokyo-dome';
-  const height=clamp((infield?18:29)+span*(portrait?.57:.37)+b.z*.20,infield?16:28,68);
-  const centerZ=clamp(z+Math.min(5,Math.max(0,b.vy||0)*.12),2,g.derby?140:park.center+3);
+  const height=clamp((infield?18:29)+span*(portrait?.57:.37)+b.z*(outfield?.62:.20),infield?16:28,68);
+  const centerZ=outfield?z+clamp((b.vy||0)*.07,-2,3):clamp(z+Math.min(5,Math.max(0,b.vy||0)*.12),2,g.derby?140:park.center+3);
   const highFly=!returning&&b.z>5&&(f.trajectory==='fly'||f.trajectory==='blooper');
   const aerial=broadcast?!returning&&!infield&&b.z>5:highFly;
   let baseSide=0;
@@ -927,7 +932,7 @@ export class StadiumRenderer {
   else if(highFly)baseSide=clamp(b.x*.16,-12,12);
   else if(th)baseSide=clamp((b.x-th.to.x)*.10,-9,9);
   const side=replay?(replay==='infield'?20:broadcast?-26:-22):baseSide;
-  const target=this.fieldFocus.set(x,Math.max(0,b.z*.43),-centerZ);
+  const target=this.fieldFocus.set(x,Math.max(0,b.z*(outfield?.90:.43)),-centerZ);
   const camera=this.fieldPosition.set(x*.91+side,height,-centerZ+height*(infield?.84:aerial?.76:.63));
   const roofLimit=(position)=>domeCameraLimit(this, position, NightPlayers.roofSurface(park,position.x,-position.z)-3.5);
   const squeeze=Math.max(0,camera.y-roofLimit(camera));
@@ -943,13 +948,29 @@ export class StadiumRenderer {
    this.camera.fov=portrait?58:47;
   }
   const dt=clamp((time-this.lastTime)/1000,0,.07);
-  this.camera.position.lerp(camera,1-Math.exp(-dt*6));
+  this.camera.position.lerp(camera,1-Math.exp(-dt*(outfield?10:6)));
   this.camera.position.y=Math.min(this.camera.position.y,roofLimit(this.camera.position));
-  this.cameraFocus.lerp(target,1-Math.exp(-dt*10));
+  this.cameraFocus.lerp(target,1-Math.exp(-dt*(outfield?17:10)));
   const fov=(portrait?56:47)+Math.min(10,squeeze*.46);
   this.camera.fov+=(fov-this.camera.fov)*(1-Math.exp(-dt*4));
   this.camera.lookAt(this.cameraFocus);
   this.camera.updateProjectionMatrix();
+  this.camera.updateMatrixWorld(true);
+  // Check the real ball after interpolation and roof constraints. The scene
+  // is mirrored on Z. Correct only when the ball risks leaving the frame.
+  if(!trot){
+   const world=(this.fieldBallWorld??=new T.Vector3()).set(b.x,b.z+.08,-b.y);
+   const ndc=(this.fieldBallNdc??=new T.Vector3()).copy(world).project(this.camera);
+   if(!Number.isFinite(ndc.x)||!Number.isFinite(ndc.y)||Math.abs(ndc.x)>.78||Math.abs(ndc.y)>.72||ndc.z<-1||ndc.z>1){
+    if(world.distanceTo(this.camera.position)<8||ndc.z>1){
+     this.camera.position.copy(camera);
+     this.camera.position.y=Math.min(this.camera.position.y,roofLimit(this.camera.position));
+    }
+    this.cameraFocus.copy(world);
+    this.camera.lookAt(this.cameraFocus);
+    this.camera.updateMatrixWorld(true);
+   }
+  }
   if(this.keyLight){
    const fx=clamp(this.cameraFocus.x,-45,45),fz=clamp(-this.cameraFocus.z,0,105);
    this.keyLight.target.position.set(fx,0,fz);

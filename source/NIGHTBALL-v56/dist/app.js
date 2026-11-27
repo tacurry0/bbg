@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=229';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=232';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -3954,8 +3954,8 @@ function start(mode,challengeId=null,fixedPark=null){
    if(screen==='game'&&e.key==='Escape')pause();
    if(screen==='game'&&game&&['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key)){e.preventDefault();game.setCursor(game.cursor.x+(e.key==='ArrowLeft'?-.1:e.key==='ArrowRight'?.1:0),game.cursor.y+(e.key==='ArrowUp'?-.1:e.key==='ArrowDown'?.1:0));updatePad();}
  });
- const releases=globalThis.NightballReleases||[];
- const latestRelease=releases[0];
+ const releases=(globalThis.NightballReleases||[]).slice().sort((a,b)=>b.version-a.version);
+ const latestRelease=releases[0],recentReleases=releases.slice(0,3),olderReleases=releases.slice(3);
  const releaseTitle=r=>'v'+r.version+' '+r.title;
  const releaseReadKey='nightball.releaseSeen';
  function markReleaseRead(){
@@ -3963,27 +3963,29 @@ function start(mode,challengeId=null,fixedPark=null){
   try{localStorage.setItem(releaseReadKey,String(latestRelease.version));}catch{}
   delete $('menu-notices').dataset.unread;
  }
+ const releaseSection=r=>`<section class="release-note"><h3>${releaseTitle(r)}</h3><p>${r.detail}</p>${r.items?.length?`<ul>${r.items.map(t=>`<li>${t}</li>`).join('')}</ul>`:''}</section>`;
+ const archiveButton=()=>olderReleases.length?`<button class="secondary-button" data-action="release-archive">過去のアップデート</button>`:'';
  function releaseHistory(){
-  markReleaseRead();
-  modal(`${modalTitle('','更新履歴')}${releases.map((r,i)=>`<section class="release-note"><h3>${releaseTitle(r)}</h3><p>${r.detail}</p>${r.items.length?`<ul>${r.items.map(t=>`<li>${t}</li>`).join('')}</ul>`:''}</section>`).join('')}<button class="secondary-button" data-action="home-notices">お知らせ</button>`,'release-history');
+  modal(`${modalTitle('','過去のアップデート')}${olderReleases.map(releaseSection).join('')}<button class="secondary-button" data-action="home-notices">お知らせ</button>`,'release-history');
  }
- const homeNotices=[
-  ...(latestRelease?[{title:releaseTitle(latestRelease),detail:latestRelease.detail,open:releaseHistory}]:[]),
-  {title:'APBCモード',detail:'日本・台湾・韓国・豪州が参戦',open:apbcHub},
-  {title:'オンライン対戦',detail:'ルームを作成・参加',open:onlineModal},
-  {title:'選手キャリア',detail:'選手の育成・シーズンの進行',open:worldDashboard},
- ];
+ function releaseDetail(r){
+  if(r===latestRelease)markReleaseRead();
+  modal(`${modalTitle('','更新内容')}${releaseSection(r)}${archiveButton()}<button class="secondary-button" data-action="home-notices">お知らせ</button>`,'release-detail');
+ }
+ const homeNotices=recentReleases.map(r=>({title:releaseTitle(r),detail:r.detail,open:()=>releaseDetail(r)}));
  const noticeRegion=document.querySelector('.menu-notices'),noticeCard=$('notice-card');
  const noticeCopy=noticeCard.querySelector('.notice-card-copy');
  noticeRegion.querySelector('.notice-pages').innerHTML=homeNotices.map((_,i)=>`<button type="button" data-notice-index="${i}" aria-label="お知らせ ${i+1}" aria-current="${i===0}"></button>`).join('');
- $('notice-title').textContent=homeNotices[0].title;
- $('notice-detail').textContent=homeNotices[0].detail;
+ noticeRegion.hidden=!homeNotices.length;
+ $('notice-title').textContent=homeNotices[0]?.title||'';
+ $('notice-detail').textContent=homeNotices[0]?.detail||'';
  try{if(latestRelease&&Number(localStorage.getItem(releaseReadKey)||0)>=latestRelease.version)delete $('menu-notices').dataset.unread;else if(latestRelease)$('menu-notices').dataset.unread='true';}catch{}
  const hoverNotices=matchMedia('(hover: hover)');
  const noticeInterval=6000;
  let homeNoticeIndex=0,noticeAnimation,noticeGesture=null,noticeClickUntil=0;
  let nextNoticeAt=0;
  function showHomeNotice(index,manual=true){
+  if(homeNotices.length<2)return;
   const direction=Math.sign(index-homeNoticeIndex);
   const next=(index+homeNotices.length)%homeNotices.length;
   if(manual)nextNoticeAt=performance.now()+noticeInterval;
@@ -4013,7 +4015,7 @@ function start(mode,challengeId=null,fixedPark=null){
   notice.open();
  }
  function homeNoticesModal(){
-  modal(`${modalTitle('','お知らせ')}${homeNotices.map(({title},i)=>`<button class="secondary-button" data-open-notice="${i}">${title}</button>`).join('')}<button class="secondary-button" data-action="howto">遊び方</button>`,'home-notices');
+  modal(`${modalTitle('','お知らせ')}${homeNotices.map(({title},i)=>`<button class="secondary-button" data-open-notice="${i}">${title}</button>`).join('')}${archiveButton()}`,'home-notices');
  }
  $('bench-button').onclick=requestBench;$('sub').onclick=requestBench;
  $('bunt').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate&&game.mode!=='derby'){game.bunt=true;game.power=false;updateStyle();sound('tap');}};
@@ -4277,6 +4279,7 @@ function start(mode,challengeId=null,fixedPark=null){
       break;
      case'leave':if(game?.worldFixture){checkpoint();worldDashboard();}else if(game?.career){checkpoint();careerDashboard();}else if(game?.apbcFixtureId){checkpoint();game.paused=true;apbcDashboard();}else if(game?.mode==='pennant'){checkpoint();game.paused=true;leagueDashboard();}else if(['practice','pitching'].includes(game?.mode)){closeModal(false);game.paused=false;game.finish();}else home();break;
      case'home-notices':homeNoticesModal();break;
+     case'release-archive':releaseHistory();break;
      case'howto':howto();break;
      case'start-match':start('match');break;
      case'match-teams':setupMatchTeams();break;

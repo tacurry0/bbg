@@ -1,0 +1,13 @@
+import fs from 'node:fs';
+import assert from 'node:assert/strict';
+const app=fs.readFileSync(new URL('../dist/app.js',import.meta.url),'utf8');
+const stadium=fs.readFileSync(new URL('../dist/stadium3d.js',import.meta.url),'utf8');
+const block=app.slice(app.indexOf(' const releases=(globalThis'),app.indexOf(' const noticeRegion='));
+let shown='';
+const result=new Function('globalThis','modal','modalTitle','localStorage','$',block+'\nreturn {recent:homeNotices.map(n=>n.title),older:olderReleases.map(r=>r.version),detail:homeNotices[1].open,history:releaseHistory};')({NightballReleases:[{version:229,title:'old'},{version:232,title:'new'},{version:230,title:'third'},{version:231,title:'second'}]},html=>{shown=html},()=>'',{},()=>({dataset:{}}));
+assert.deepEqual(result.recent,['v232 new','v231 second','v230 third']);
+assert.deepEqual(result.older,[229]);
+result.detail();assert.match(shown,/v231 second/);assert.doesNotMatch(shown,/v232 new/);
+result.history();assert.match(shown,/v229 old/);assert.doesNotMatch(shown,/v231 second/);
+assert.match(stadium,/fieldBallNdc/);assert.match(stadium,/cameraFocus.copy\(world\)/);
+console.log('PASS release detail and archive separation; camera guard present');
