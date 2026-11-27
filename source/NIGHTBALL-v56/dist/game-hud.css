@@ -320,7 +320,7 @@
 .game-stage .pitch-deck.opponent-repertoire .pitch-type .pt-name{color:#fff;text-shadow:0 1px 2px #001e468c}
 
 /* v239: short, skippable broadcast cutaways. */
-.game-stage.live-cut-active>:not(#game-canvas):not(#live-cut):not(#rain-overlay){visibility:hidden!important;pointer-events:none!important}
+.game-stage.live-cut-active>:not(#game-canvas):not(#live-cut):not(#rain-overlay):not(#impact-fx){visibility:hidden!important;pointer-events:none!important}
 .game-stage .live-cut[hidden]{display:none!important}
 .live-cut{position:absolute;inset:0;z-index:96;display:flex;flex-direction:column;align-items:flex-end;justify-content:space-between;padding:clamp(12px,3vw,24px);background:linear-gradient(180deg,#04102188,transparent 28%,transparent 58%,#061020dd);color:#fff;cursor:pointer;touch-action:manipulation;--lc-accent:#7ed5ff}
 .live-cut[data-kind=homer],.live-cut[data-kind=walkoff]{--lc-accent:#ffd05c}

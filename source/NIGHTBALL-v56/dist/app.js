@@ -788,11 +788,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  var liveCutOwner,liveCutId;
  function renderLiveCut(g){
   const root=$('live-cut'),cut=g?.phase==='cinematic'&&!g.replayView?g.broadcastCut:null;
-  if(!cut){root.hidden=true;$('stage').classList.remove('live-cut-active');liveCutOwner=null;liveCutId=null;return;}
+  if(!cut){if(liveCutOwner&&$('impact-fx')?.dataset.source==='cut')hideImpact();root.hidden=true;$('stage').classList.remove('live-cut-active');liveCutOwner=null;liveCutId=null;return;}
   root.hidden=false;$('stage').classList.add('live-cut-active');
   root.style.setProperty('--cut-progress',Math.min(100,g.phaseTime/cut.duration*100)+'%');
   if(liveCutOwner===g&&liveCutId===cut.id)return;
   liveCutOwner=g;liveCutId=cut.id;root.dataset.kind=cut.kind;root.querySelector('button').disabled=false;
+  if(['homer','strikeout'].includes(cut.kind))showImpact({en:cut.kind==='homer'?'HOME RUN':'STRIKEOUT',celebration:cut},{cut:true,duration:Math.max(120,cut.duration-g.phaseTime)});
   const team=g.teams[cut.side],tr=s=>window.NightI18n?.text(s)??s;
   const labels={relief:'PITCHING CHANGE','pinch-hit':'PINCH HITTER',homer:'HOME RUN',strikeout:'STRIKEOUT',catch:'GREAT PLAY',pressure:'BIG MOMENT','final-inning':g.inning>g.totalInnings?'EXTRA INNING':'FINAL INNING',walkoff:'WALK-OFF WIN'};
   root.querySelector('.lc-tag').textContent=['homer','strikeout'].includes(cut.kind)?'':labels[cut.kind]||'NIGHTBALL';
@@ -2591,7 +2592,7 @@ function start(mode,challengeId=null,fixedPark=null){
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
  function tickPlayFeedback(dt){
-  if(impactRemaining>0){impactRemaining=Math.max(0,impactRemaining-dt);if(!impactRemaining)hideImpact();}
+  if(impactRemaining>0){impactRemaining=Math.max(0,impactRemaining-dt);if(!impactRemaining&&$('impact-fx')?.dataset.source!=='cut')hideImpact();}
   playFeedback.scoreTime=Math.max(0,playFeedback.scoreTime-dt);
   // The base OUT/SAFE panel takes visual priority over the result banner.
   // Only count time during which the final result can actually be read.
@@ -2862,17 +2863,18 @@ function start(mode,challengeId=null,fixedPark=null){
  // Keep the current tone and layout until opacity finishes fading out.
  // Resetting every class immediately briefly repaints the legacy banner.
  var impactRemaining=0;
- function hideImpact(){impactRemaining=0;const el=$('impact-fx');if(el)el.hidden=true;}
- function showImpact(data){
+ function hideImpact(){impactRemaining=0;const el=$('impact-fx');if(el){el.hidden=true;delete el.dataset.source;}}
+ function showImpact(data,options={}){
   const el=$('impact-fx'), k=data.en==='STRIKEOUT',c=data.celebration||{};
   if(!el||game?.fastForward||game?.spectate||game?.replayView||review.playback)return false;
-  const short=!!(game?.derby||game?.timeAttack),duration=short?650:k?1370:1650;
-  el.hidden=true;el.dataset.kind=k?'k':'hr';el.dataset.level=String(c.level||1);
+  if(!options.cut&&el.dataset.source==='cut'&&!el.hidden&&el.dataset.kind===(k?'k':'hr'))return true;
+  const short=!!(game?.derby||game?.timeAttack),duration=options.duration??(short?650:k?1370:1950);
+  el.hidden=true;el.dataset.kind=k?'k':'hr';el.dataset.level=String(c.level||1);el.dataset.source=options.cut?'cut':'result';
   el.style.setProperty('--impact-duration',duration+'ms');
   const glyph=el.querySelector('.impact-glyph');glyph.dataset.glyph=k?'K':'HR';glyph.textContent=k?'K':'';
   const title=el.querySelector('.impact-title');title.replaceChildren();
   const words=k?['STRIKEOUT']:['HOME','RUN'];
-  for(const word of words){const part=document.createElement('span');part.className='impact-word';part.textContent=word;title.append(part);}
+  for(const word of words){const part=document.createElement('span');part.className='impact-word';part.dataset.word=word;part.textContent=word;title.append(part);}
   const meta=el.querySelector('.impact-meta');
   const tag=({'WALK-OFF HOME RUN':'WALK-OFF','GO-AHEAD HOME RUN':'GO-AHEAD','GAME-TYING HOME RUN':'GAME-TYING','GRAND SLAM':'GRAND SLAM'})[c.tag]||'';
   const distance=c.distance||Number((data.sub||'').match(/(\d+)\s*m/)?.[1]||0);
@@ -2922,9 +2924,9 @@ function start(mode,challengeId=null,fixedPark=null){
      // (even faster with auto-defence). Hold the actual result for 1.5s
      // of readable wall-clock time, without altering pitch/ABS rules.
      const finalOut=kind==='out'&&!['JUMPING CATCH','DIVING CATCH'].includes(data.en);
-     playFeedback.resultTime=game?.fastForward?0:finalOut?1500:visionTone==='homer'&&!game?.derby?1800:0;
+     playFeedback.resultTime=game?.fastForward?0:finalOut?1500:visionTone==='homer'&&!game?.derby?2000:0;
      stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'')+(visionTone?' vision-call':'');
-     if(special&&showImpact(data))stage.classList.add('impact-replaced');else hideImpact();
+     if(special&&showImpact(data))stage.classList.add('impact-replaced');else if($('impact-fx')?.dataset.source!=='cut')hideImpact();
      stage.dataset.visionTone=visionTone;
      stage.dataset.visionLabel=displayEn;
      stage.dataset.visionLong=String(displayEn.length>12);

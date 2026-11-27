@@ -665,11 +665,11 @@ window.NightGame=class NightGame{
  maybeBroadcastCut(){
   if(this.paused||this.mirror||!['aim','windup','result'].includes(this.phase))return false;
    if(!this.liveCutsEnabled&&!(this.phase==='result'&&this.resultCutsEnabled))return false;
-   if(this.phase==='result'&&this.pitch?.strikeCelebration&&!this.pitch.strikeCelebration.seen){const k=this.pitch.strikeCelebration;k.seen=true;if(k.level>=2)return this.startBroadcastCut('strikeout',k,k.level===3?2000:1250);}
+   if(this.phase==='result'&&this.pitch?.strikeCelebration&&!this.pitch.strikeCelebration.seen){const k=this.pitch.strikeCelebration;k.seen=true;if(k.level>=2)return this.startBroadcastCut('strikeout',k,k.level===3?2000:1550);}
   const fieldSide=this.side==='home'?'away':'home',half=this.inning+'/'+this.half;
   if(this.phase==='result'&&this.field?.resolved&&!this.field.broadcastCutSeen){
    const field=this.field;field.broadcastCutSeen=true;
-   if(field.outcome==='hr'){const h=field.homerCelebration||{};return this.startBroadcastCut('homer',{side:this.side,playerId:this.batter.id,name:this.batter.name,distance:this.hit?.distance||Math.round(field.maxTravel||0),...h},h.level===3?2300:h.level===2?1700:1050);}
+   if(field.outcome==='hr'){const h=field.homerCelebration||{};return this.startBroadcastCut('homer',{side:this.side,playerId:this.batter.id,name:this.batter.name,distance:this.hit?.distance||Math.round(field.maxTravel||0),...h},h.level===3?2600:h.level===2?2300:2050);}
     if(!this.liveCutsEnabled)return false;
    const play=(this.playEvents||[]).find(p=>['jump','dive'].includes(p.type));
    if(play&&['flyout','groundout','forceout','doubleplay'].includes(field.outcome)){

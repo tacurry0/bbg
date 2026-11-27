@@ -197,3 +197,27 @@
 @media(max-width:420px){#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(34px,11vw,46px)}}
 @media(max-height:520px) and (orientation:landscape){.impact-glyph{font-size:clamp(80px,30vh,170px)}#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(38px,11vh,68px)}}
 @media(prefers-reduced-motion:reduce){#stage > #impact-fx,.impact-fx *,.impact-fx *::before,.impact-fx *::after{animation:none!important}.impact-streaks,.impact-flash,.impact-glyph::before,.impact-glyph::after{display:none}}
+
+/* v254: put the result graphics on top of the broadcast cutaway, not in the
+   HUD layers that disappear when the camera switches to a player. */
+#stage.live-cut-active > #impact-fx:not([hidden]) {visibility:visible!important;z-index:97;pointer-events:none!important}
+#stage.live-cut-active > #impact-fx[data-source="cut"]:not([hidden]) {animation:impact-life var(--impact-duration) linear both}
+#stage.live-cut-active #live-cut .lc-caption {transition:opacity .18s}
+#stage:has(#impact-fx[data-source="cut"]:not([hidden])) #live-cut .lc-caption {opacity:0}
+#impact-fx .impact-ring {display:none}
+#impact-fx[data-kind="hr"] {--accent:#fff6ba;--edge:#ff9c21;--shadow:#783508}
+#impact-fx[data-kind="hr"] .impact-core{width:96%;max-width:1100px;gap:clamp(8px,2vh,18px)}
+#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(48px,min(15vw,24vh),150px);letter-spacing:-.065em;line-height:.85;gap:.12em;transform:skewX(-6deg);isolation:isolate}
+#impact-fx[data-kind="hr"] .impact-word{position:relative;z-index:0;padding:0 .03em;color:#ffed93;-webkit-text-stroke:clamp(1px,.28vw,3px) #fff5d0;text-shadow:0 3px 0 #eaa13a,0 6px 0 #b65c15,0 9px 0 #713410,0 12px 0 #402109,0 0 15px #ffb72b,0 12px 28px #000c;animation-name:impact-home-bold}
+#impact-fx[data-kind="hr"] .impact-word + .impact-word{animation-name:impact-run-bold}
+#impact-fx[data-kind="hr"] .impact-word::before{content:attr(data-word);position:absolute;inset:0;z-index:-1;color:transparent;-webkit-text-stroke:1px #ffae35;transform:scale(1.10);opacity:.65}
+#impact-fx[data-kind="hr"] .impact-shade{background:radial-gradient(ellipse at 50% 50%,#3b210d9c 0%,#0a0e1a85 45%,transparent 80%)}
+#impact-fx[data-kind="hr"] .impact-streaks i{height:clamp(4px,1.6vh,12px);transform:rotate(-18deg);filter:drop-shadow(0 0 10px #ff9d25)}
+#impact-fx[data-kind="hr"] .impact-ring{display:block;position:absolute;left:50%;top:50%;width:min(84vw,64vh);aspect-ratio:1;border:3px solid #ffe7a2;border-radius:50%;box-shadow:0 0 22px #ffad2e,inset 0 0 18px #ffad2e;animation:impact-gold-ring var(--impact-duration) ease-out both;pointer-events:none}
+#impact-fx[data-kind="hr"] .impact-meta{font-size:clamp(15px,4.4vw,25px);letter-spacing:.12em;margin-top:4px}
+@keyframes impact-home-bold{0%{opacity:0;transform:translateX(-130%) scale(1.65) rotate(-8deg)}20%{opacity:1;transform:translateX(3%) scale(1.09) rotate(1deg)}32%{transform:translateX(0) scale(.99)}44%,82%{transform:translateX(0) scale(1)}100%{transform:translateX(-5%) scale(1.06)}}
+@keyframes impact-run-bold{0%{opacity:0;transform:translateX(130%) scale(1.65) rotate(8deg)}20%{opacity:1;transform:translateX(-3%) scale(1.09) rotate(-1deg)}32%{transform:translateX(0) scale(.99)}44%,82%{transform:translateX(0) scale(1)}100%{transform:translateX(5%) scale(1.06)}}
+@keyframes impact-gold-ring{0%,10%{opacity:0;transform:translate(-50%,-50%) scale(.2)}24%{opacity:.8}60%,100%{opacity:0;transform:translate(-50%,-50%) scale(2)}}
+@media(orientation:portrait){#impact-fx[data-kind="hr"] .impact-title{flex-direction:column;gap:.07em;font-size:clamp(62px,min(24vw,19vh),138px);letter-spacing:-.055em}}
+@media(max-height:520px) and (orientation:landscape){#impact-fx[data-kind="hr"] .impact-title{font-size:clamp(42px,min(14vw,23vh),108px)}}
+@media(prefers-reduced-motion:reduce){#impact-fx .impact-ring,#impact-fx .impact-word::before{display:none!important}}
