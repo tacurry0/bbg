@@ -858,7 +858,7 @@ export class StadiumRenderer {
   const holding=th?.fromIndex===index||m?.secured&&m.holder===index;
   const chasing=!th&&!m?.secured&&f.chaser===index;
   const distance=Math.hypot(player.root.position.x-b.x,player.root.position.z-b.y);
-  const action=f.fielders[index].action,age=action?elapsed-action.time:-1,glove=player.hands[0];
+  const model=f.fielders[index],action=model.action,age=action?elapsed-action.time:-1,glove=player.hands[0];
   const motion=player.motionStyle||window.NightGame.movementStyle({no:player.no});
   if(action&&age>=0&&age<.43&&['jump','dive','bobble'].includes(action.type)){
    const extension=window.NightGame.actionEnvelope(age,.43);
@@ -878,8 +878,10 @@ export class StadiumRenderer {
   const release=holding&&th?clamp(th.t/Math.max(.07,th.release||.28),0,1):0;
   const ready=receiving?clamp(1-(th.duration-th.t)*2.5,0,1):0;
   if(holding&&th&&release<1){
-   const hand=player.hands[1],plant=player.feet[0],weight=Math.sin(release*Math.PI);
-   hand.position.set(.27+.10*weight*motion.arm,.81+weight*.41,.05+release*.48);
+   const hand=player.hands[1],plant=player.feet[0],weight=Math.sin(release*Math.PI),style=th.throwStyle||'overhand',sidearm=style==='sidearm',running=style==='running',crow=style==='crow-hop'||style==='bounce';
+   hand.position.set(.27+.10*weight*motion.arm+(sidearm?.34*weight:0),.81+weight*(sidearm?.12:.41),.05+release*.48);
+   if(crow)player.root.position.y+=.13*weight;
+   if(running)player.body.rotation.x=.22*weight;
    player.body.rotation.y=release*.72-.38;
    plant.position.z+=weight*.24;player.body.position.y-=weight*.07;
    this.poseLeg(player,0,[-.15,.46,0],plant.position.toArray());
@@ -889,7 +891,10 @@ export class StadiumRenderer {
    const reach=Math.max(clamp(1-distance/3,0,1),action?.type==='pickup'?window.NightGame.actionEnvelope(age,.30):0);
    player.body.rotation.x=.22+reach*.37;
    player.body.position.y=-.23*reach;
-   glove.position.set(-.32,.55-.34*reach,.31+.15*reach);
+   const backhand=model.pickupStyle==='backhand',charge=model.pickupStyle==='charge';
+   glove.position.set(backhand?.20+.16*reach:-.32,.55-.34*reach,.31+.15*reach+(charge?.16:0));
+   if(backhand)player.body.rotation.z=-.23*reach;
+   if(charge)player.body.rotation.x+=.10*reach;
   }else if(ready||holding||action?.type==='catch'){
    const catchBeat=action?.type==='catch'?window.NightGame.actionEnvelope(age,.30):0;
    glove.position.set(-.27,.79+ready*.26+catchBeat*.22,.34+catchBeat*.10);
@@ -1255,7 +1260,8 @@ export class StadiumRenderer {
     const focus=f.throw?.fromIndex===i?f.throw.to:f.ball;
     const angle=p.running&&Math.hypot(dx,dz)>.001?Math.atan2(dx,dz):
      Math.hypot(focus.x-p.x,focus.y-p.y)>.05?Math.atan2(focus.x-p.x,focus.y-p.y):actor.root.rotation.y;
-    this.animatePlayer(actor,p.x,p.y,angle,time,p.running,0,clamp(p.speed/6.65,.55,1.27));
+    const gait=clamp((p.moveSpeed??p.speed)/6.65,.35,1.27);this.animatePlayer(actor,p.x,p.y,angle,time,p.running,0,gait);
+    if(p.running&&i>=6&&p.target?.y>p.startY+5){const ballFacing=Math.atan2(f.ball.x-p.x,f.ball.y-p.y)-angle;actor.head.rotation.y=clamp(Math.atan2(Math.sin(ballFacing),Math.cos(ballFacing)),-.95,.95);}
     this.poseFielder(actor,i,f,elapsed);actor.lastX=p.x;actor.lastZ=p.y;
    });
    if(contact){
@@ -1279,7 +1285,7 @@ export class StadiumRenderer {
    const showBall=!(g.phase==='result'&&f.outcome==='hr'&&!g.derby);
    const ballSize=NightGame.ballVisualScale(f.ball.z,Math.hypot(f.ball.x,f.ball.y));
    this.ball.position.set(f.ball.x,f.ball.z+.08,f.ball.y);this.ball.scale.setScalar(ballSize);
-   this.ball.rotation.set(0,0,time*.009);
+   this.ball.rotation.set(time*.0006*(f.ball.spinSide||0)/60,0,time*.0006*(f.ball.spinBack||600)/60);
    this.ball.visible=showBall;this.ballHalo.visible=showBall;
    this.ballHalo.scale.set(.40*ballSize,.40*ballSize,1);
    this.ballShadow.position.set(f.ball.x,.05,f.ball.y);this.ballShadow.visible=showBall&&f.ball.z<20;this.ballShadow.scale.setScalar(1+f.ball.z*.020);

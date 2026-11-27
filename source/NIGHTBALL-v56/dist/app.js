@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=239';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=241';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -2809,7 +2809,7 @@ function start(mode,challengeId=null,fixedPark=null){
  const VISION_CALL_TONES=Object.freeze({
   'STRIKE':'strike','SWING & MISS':'strike','STRIKEOUT':'strike','BALL':'ball','WALK':'ball',
   'INTENTIONAL WALK':'ball','HIT BY PITCH':'ball','FOUL':'neutral','TAKE':'neutral',
-  'MISPLAY':'error','WILD THROW':'error','WILD PITCH':'error','PASSED BALL':'error',
+  'ERROR':'error','MISPLAY':'error','WILD THROW':'error','WILD PITCH':'error','PASSED BALL':'error',
   'STEAL':'hit','HOME RUN':'homer'
  });
  // v224: display a single verdict, preserving the full engine event for
@@ -3106,7 +3106,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=239,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=241,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
  const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
  const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected);
