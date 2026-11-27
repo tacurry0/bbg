@@ -7,7 +7,7 @@ import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=231';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=244';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=252';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -794,10 +794,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(liveCutOwner===g&&liveCutId===cut.id)return;
   liveCutOwner=g;liveCutId=cut.id;root.dataset.kind=cut.kind;root.querySelector('button').disabled=false;
   const team=g.teams[cut.side],tr=s=>window.NightI18n?.text(s)??s;
-  const labels={relief:'PITCHING CHANGE','pinch-hit':'PINCH HITTER',homer:'HOME RUN',catch:'GREAT PLAY',pressure:'BIG MOMENT','final-inning':g.inning>g.totalInnings?'EXTRA INNING':'FINAL INNING',walkoff:'WALK-OFF WIN'};
-  root.querySelector('.lc-tag').textContent=labels[cut.kind]||'NIGHTBALL';
+  const labels={relief:'PITCHING CHANGE','pinch-hit':'PINCH HITTER',homer:'HOME RUN',strikeout:'STRIKEOUT',catch:'GREAT PLAY',pressure:'BIG MOMENT','final-inning':g.inning>g.totalInnings?'EXTRA INNING':'FINAL INNING',walkoff:'WALK-OFF WIN'};
+  root.querySelector('.lc-tag').textContent=cut.kind==='homer'&&cut.tag?cut.tag:labels[cut.kind]||'NIGHTBALL';
   root.querySelector('.lc-name').textContent=cut.kind==='walkoff'?team.name:cut.name||g.pitcher.name;
-  root.querySelector('.lc-detail').textContent=cut.kind==='homer'?(cut.distance?cut.distance+' m':''):cut.kind==='relief'||cut.kind==='pinch-hit'?(cut.previous?cut.previous+' → '+cut.name:''):cut.kind==='walkoff'?g.awayScore+' – '+g.homeScore:cut.kind==='pressure'||cut.kind==='final-inning'?g.inning+tr('回')+' · '+g.awayScore+' – '+g.homeScore:team.name;
+  root.querySelector('.lc-detail').textContent=cut.kind==='homer'?[(cut.distance?cut.distance+' m':''),cut.runs?('+'+cut.runs):''].filter(Boolean).join(' · '):cut.kind==='strikeout'?`${cut.ks||1} K${cut.speed?' · '+cut.speed+' km/h':''}`:cut.kind==='relief'||cut.kind==='pinch-hit'?(cut.previous?cut.previous+' → '+cut.name:''):cut.kind==='walkoff'?g.awayScore+' – '+g.homeScore:cut.kind==='pressure'||cut.kind==='final-inning'?g.inning+tr('回')+' · '+g.awayScore+' – '+g.homeScore:team.name;
   root.querySelector('button').textContent=tr('スキップ')+' ›';
   if(cut.kind==='walkoff')stadiumAudio.cheer(1.25,2.4);
  }
@@ -2889,6 +2889,7 @@ function start(mode,challengeId=null,fixedPark=null){
      const pitchCall=['BALL','WALK'].includes(data.en)?'ball':
       ['STRIKE','STRIKEOUT','SWING & MISS'].includes(data.en)?'strike':'';
      const displayEn=visionLabel(data);
+      const celebration=data.celebration, special=data.en==='STRIKEOUT'||data.en==='HOME RUN';stage.dataset.celebration=special?(data.en==='STRIKEOUT'?'k':'hr'):'';stage.dataset.celebrationLevel=String(celebration?.level||1);
      const samePitchCall=pitchCall&&previousCall===displayEn&&stage.classList.contains('show')&&stage.classList.contains('pitch-call');
      // v162: batted-ball result banners (kind hit/out that are not pitch
      // calls) get the .result-compact one-row layout from style.css, at
@@ -2909,10 +2910,10 @@ function start(mode,challengeId=null,fixedPark=null){
      stage.dataset.visionImpact=String(['STRIKEOUT','DOUBLE PLAY','JUMPING CATCH','DIVING CATCH'].includes(data.en)||visionTone==='error'||visionTone==='homer');
      $('message-en').textContent=displayEn;
      $('message-ja').textContent=visionTone?'':data.ja;
-     $('message-sub').textContent=visionTone?'':data.sub||'';
+     $('message-sub').textContent=special?(data.en==='STRIKEOUT'?(celebration?.ks?`${celebration.ks} K`:''):(celebration?.distance?`${celebration.distance} m`:'')):visionTone?'':data.sub||'';
      $('message-ja').hidden=!!visionTone;
      const detailEl=stage.querySelector('.stage-call-detail');
-     if(detailEl)detailEl.hidden=!!visionTone;
+     if(detailEl)detailEl.hidden=!!visionTone&&!special;
      const banner=stage.querySelector('.stage-call');
      if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
@@ -2920,7 +2921,7 @@ function start(mode,challengeId=null,fixedPark=null){
       banner.animate([
        {opacity:0,transform:visionTone?(impact?'scale(.94)':'translateY(4px)'):(impact?'translateX(-14px) scale(.94)':'translateY(8px)')},
        {opacity:1,transform:'none'}
-      ],{duration:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
+      ],{duration:special?350:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
    }else if(type==='clear'){playFeedback.baseVerdicts=[];playFeedback.callTime=0;$('umpire-call').hidden=true;stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);

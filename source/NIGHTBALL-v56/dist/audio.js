@@ -122,6 +122,7 @@
     case'foul':this.cheer(Math.abs(detail.ballPan||0)>.35?.25:.12,1.2,detail.ballPan||this.atmosphere.pan,1.12);break;
     case'out':if(this.cheerLevel<.6&&this.cheerVoice){this.stopVoice(this.cheerVoice);this.lastCheer=-100;}this.cheer(.34,1.5,-this.atmosphere.pan,1.04);break;
     case'strike':this.cheer(.12,1,-this.atmosphere.pan);break;
+     case'strikeout':if(this.cheerVoice){this.stopVoice(this.cheerVoice);this.lastCheer=-100;}this.cheer(.70,2.1,-this.atmosphere.pan,1.06);break;
     case'ball':break;
     case'homer':this.cheer(1.15,6.5,this.atmosphere.pan,.98);break;
     case'win':this.cheer(1.15,8);break;

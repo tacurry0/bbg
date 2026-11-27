@@ -143,3 +143,10 @@
 #abs-verdict #abs-change { color:#f2f6f8; font:800 clamp(11px,3.3vw,14px)/1.2 system-ui,sans-serif; opacity:1; }
 #abs-verdict #abs-gap { display:none; }
 #abs-verdict[hidden] { display:none; }
+
+/* v252: unique strikeout and home run verdicts */
+#stage-message.vision-call[data-celebration="k"]{--vision-accent:#8de5ff}
+#stage-message.vision-call[data-celebration="k"] .stage-call,#stage-message.vision-call[data-celebration="hr"] .stage-call{background:linear-gradient(110deg,#0a1425ef,#152b42ed);border-block:2px solid var(--vision-accent);box-shadow:0 4px 18px #02091470}
+#stage-message.vision-call[data-celebration="k"] #message-en{font-size:clamp(23px,6.9vw,34px)}
+#stage-message.vision-call[data-celebration="hr"] .stage-call:has(.stage-call-detail:not([hidden])) #message-en{font-size:clamp(17px,5.4vw,29px)}
+#stage-message.vision-call[data-celebration-level="3"] .stage-call{box-shadow:0 0 18px color-mix(in srgb,var(--vision-accent) 45%,transparent)}

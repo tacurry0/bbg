@@ -7,7 +7,7 @@ import { decorateBroadcastDome, decorateTaiwanPark } from './broadcast-dome.js?v
 import { addReferenceBackstop, decorateOpenAirPark, OPEN_AIR_MODELS } from './open-air-parks.js?v=74';
 import { decorateProStadium, proOverview } from './pro-stadiums.js?v=75';
 import { applyParkLighting, gameLightingMode, usesDayLight } from './game-lighting.js?v=74';
-import { drawVenueVision } from './venue-vision.js?v=74';
+import { drawVenueVision } from './venue-vision.js?v=252';
 import { loadMatchModel } from './match-models.js?v=56';
 import { buildPremiumPark, decorateChibiPlayer } from './stadium-premium.js?v=228';
 import {
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=244';
+} from './stadium-fx.js?v=252';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -1038,7 +1038,7 @@ export class StadiumRenderer {
   else if(broadcast)baseSide=aerial?clamp(b.x*.24,-16,16):clamp(-b.x*.36,-21,21);
   else if(highFly)baseSide=clamp(b.x*.16,-12,12);
   else if(th)baseSide=clamp((b.x-th.to.x)*.10,-9,9);
-  const side=replay?(replay==='infield'?20:broadcast?-26:-22):baseSide;
+  const side=replay?(replay==='infield'?20:broadcast?-26:-22):trot?(runner?.progress>2?-9:9):baseSide;
   const target=this.fieldFocus.set(x,Math.max(0,b.z*(outfield?.90:.43)),-centerZ);
   const camera=this.fieldPosition.set(x*.91+side,height,-centerZ+height*(infield?.84:aerial?.76:.63));
   const roofLimit=(position)=>domeCameraLimit(this, position, NightPlayers.roofSurface(park,position.x,-position.z)-3.5);
@@ -1058,7 +1058,7 @@ export class StadiumRenderer {
   this.camera.position.lerp(camera,1-Math.exp(-dt*(outfield?10:6)));
   this.camera.position.y=Math.min(this.camera.position.y,roofLimit(this.camera.position));
   this.cameraFocus.lerp(target,1-Math.exp(-dt*(outfield?17:10)));
-  const fov=(portrait?56:47)+Math.min(10,squeeze*.46);
+  const fov=(trot?(portrait?50:41):portrait?56:47)+Math.min(10,squeeze*.46);
   this.camera.fov+=(fov-this.camera.fov)*(1-Math.exp(-dt*4));
   this.camera.lookAt(this.cameraFocus);
   this.camera.updateProjectionMatrix();
@@ -1120,7 +1120,8 @@ export class StadiumRenderer {
    tx=x;tz=z;
    if(cut.kind==='pressure'&&cut.base){const b=NightGame.BASES[cut.base],s=g.side,profile=g.lineups[s].find(a=>a.id===g.baseIds[cut.base-1]),a=this.runners[0];this.stylePlayer(a,s,profile?.no||1,g.teams[s],g.uniformKits?.[s]);this.animatePlayer(a,b.x,b.y,Math.PI,time,false);
     if(p>.58){tx=b.x;tz=b.y;}}
-  }else if(cut.kind==='catch'){
+  }else if(cut.kind==='strikeout'){x=tx=0;z=tz=18.4;this.pitcher.throwHand=pitcher.hand||'R';this.pitcher.releaseProgress=null;this.pitcher.fromSet=false;place(this.pitcher,pitcher,x,z,Math.PI);const i=pitcher.hand==='L'?0:1,sign=i?1:-1,beat=Math.sin(Math.PI*clamp(p*1.2,0,1)),lift=cut.level>=3?.73:.43,hand=[sign*(.28+.17*beat),.86+lift*beat,.18+.12*beat];this.pitcher.hands[i].position.set(...hand);this.poseArm(this.pitcher,i,[sign*.245,.94,0],hand);this.pitcher.body.rotation.x=-.08*beat;
+   }else if(cut.kind==='catch'){
    x=cut.x||0;z=cut.z||35;tx=x;tz=z;const a=this.fielders[0];place(a,batter,x,z,Math.PI);
    a.hands[0].position.set(-.42,1.28,.20);this.poseArm(a,0,[-.245,.94,0],a.hands[0].position.toArray());
   }else if(cut.kind==='walkoff'){
@@ -1132,10 +1133,10 @@ export class StadiumRenderer {
   }else{
    x=cut.kind==='homer'?1+3.8*p:-3+2*p;z=cut.kind==='homer'?1+3.8*p:0;tx=x;tz=z;
    const a=cut.kind==='homer'?this.runners[0]:this.batter;
-   a.swingActive=false;a.bunting=false;a.batHand=batter.hand||'R';place(a,batter,x,z,cut.kind==='homer'?Math.PI/4:Math.PI,cut.kind==='homer'||cut.kind==='pinch-hit');
+   a.swingActive=false;a.bunting=false;a.batHand=batter.hand||'R';place(a,batter,x,z,cut.kind==='homer'?Math.PI/4:Math.PI,cut.kind==='homer'||cut.kind==='pinch-hit');if(cut.kind==='homer'){const beat=Math.sin(Math.PI*p),i=batter.hand==='L'?0:1,sign=i?1:-1,hand=[sign*.36,.9+(cut.level>=2?.62:.35)*beat,.28];a.hands[i].position.set(...hand);this.poseArm(a,i,[sign*.245,.94,0],hand);a.head.rotation.y=.35*beat;}
   }
-  const side=tx>10?-1:1,dist=wide?13:6.2;
-  this.camera.position.set(tx+side*(wide?5:2.4-.8*p),wide?6.2:2.6,-tz+dist);
+  const side=cut.kind==='strikeout'?(pitcher.hand==='L'?-1:1):cut.kind==='homer'&&cut.variant==='liner'?-1:tx>10?-1:1,dist=wide?13:cut.kind==='homer'&&cut.variant==='deep'?8:6.2;
+  this.camera.position.set(tx+side*(wide?5:2.4-.8*p),wide?6.2:cut.kind==='strikeout'?1.65:cut.variant==='tower'?3.6:2.6,-tz+dist);
   this.camera.lookAt(tx,wide?1.4:1.65,-tz);this.camera.fov=wide?53:this.camera.aspect<.85?47:38;
   this.camera.updateProjectionMatrix();this.camera.updateMatrixWorld(true);
  }
@@ -1318,7 +1319,7 @@ export class StadiumRenderer {
    g.homeHits,g.awayHits,g.homeErrors,g.awayErrors,g.home?.join(','),g.away?.join(','),g.park.id,
    ...((g.park.pro||VENUE_VISION_PARKS.has(g.park.id))?[g.balls,g.strikes,g.outs,g.batter.id,g.pitcher.id,
     g.pitchingStats?.[g.pitcher.id]?.pitches,g.lineups.away.map(p=>p.id).join(','),g.lineups.home.map(p=>p.id).join(',')]:[])].join('/'):'hero';
-  const boardCall=g?.phase==='result'?g?.hit?.kind:g?.pitch?.speed?Math.round(g.pitch.speed):null;
+  const boardCall=g?.phase==='cinematic'?g.broadcastCut?.kind:g?.phase==='result'?(g.pitch?.strikeCelebration?'strikeout':g?.hit?.kind):g?.pitch?.speed?Math.round(g.pitch.speed):null;
   const language=globalThis.NightI18n?.language;
   if(this.boardKey!==boardKey||this.boardCall!==boardCall||this.boardLanguage!==language){
    this.drawBoard(g);this.boardKey=boardKey;this.boardCall=boardCall;this.boardLanguage=language;
@@ -1387,7 +1388,7 @@ export class StadiumRenderer {
    this.pitcher.fromSet=g?.pitch?.fromSet??!!(g?.inMatch&&g?.bases?.some(Boolean));
    this.animatePlayer(this.pitcher,0,18.4,Math.PI,time,false,g?.phase==='windup'?Math.min(1,g.phaseTime/(g.pitch?.windupMs??(g.derby?270:700))):0);
    this.batter.batHand=left?'L':'R';this.batter.pitchProgress=g&&['pitch','miss'].includes(g.phase)?g.pitch?.progress??0:0;this.batter.batForm=window.NightGame.battingForm(g?.batter);this.batter.swingActive=!!g&&g.swingAge<380;this.batter.bunting=!!g?.bunt;this.animatePlayer(this.batter,left?1.65:-1.65,-.25,left?-.65:.65,time,false,swing);
-   this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}
+   this.animatePlayer(this.catcher,0,-1.45,0,time,false);this.catcher.body.scale.y=.83;if(!this.hero){this.catcher.root.visible=false;this.catcher.shadow.visible=false;}const k=g?.phase==='result'&&g.pitch?.strikeCelebration;if(k){const p=clamp(g.phaseTime/800,0,1),beat=Math.sin(Math.PI*p);this.batter.head.rotation.y=(k.swung?-.22:.48)*beat;this.batter.body.rotation.x=(k.swung?.18:.06)*beat;const i=this.pitcher.throwHand==='L'?0:1,sign=i?1:-1,hand=[sign*.30,.86+.26*beat,.18];this.pitcher.hands[i].position.set(...hand);this.poseArm(this.pitcher,i,[sign*.245,.94,0],hand);}
    const positions=g?.derby?[]:(window.NightGame?.positions(g?.park)||[]);positions.forEach(([name,x,z],i)=>{if(i<2)return;this.animatePlayer(this.fielders[i],x,z,Math.PI,time);});
    if(g&&g.inMatch)g.bases.forEach((occupied,i)=>{if(!occupied)return;const p=this.runners[i],base=NightGame.BASES[i+1],profile=g.lineups[g.side].find(b=>b.id===g.baseIds[i]);this.stylePlayer(p,g.side,profile?.no||1,g.teams[g.side],g.uniformKits?.[g.side]);p.motionStyle=window.NightGame.movementStyle(profile||{no:p.no});this.animatePlayer(p,base.x,base.y,Math.PI,time,false);p.lastX=base.x;p.lastZ=base.y;});
    this.ball.visible=false;this.ballHalo.visible=false;this.ballShadow.visible=false;this.trail.visible=false;this.landing.visible=false;this.landingInner.visible=false;

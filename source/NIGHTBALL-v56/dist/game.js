@@ -281,8 +281,9 @@ window.NightGame=class NightGame{
   let attack=.18+excitement*.62,defense=.10+excitement*.24,reaction='watch';
   if(review){attack=defense=.04;reaction='review';}
   else if(phase==='cinematic'&&g.broadcastCut?.kind==='walkoff'||g?.walkoffWin&&phase==='ended'){attack=1;defense=.02;reaction='win';}
-  else if(phase==='result'&&kind==='hr'){attack=1;defense=.03;reaction='homer';}
+  else if(phase==='result'&&kind==='hr'||phase==='cinematic'&&g.broadcastCut?.kind==='homer'){attack=1;defense=.03;reaction='homer';}
   else if(phase==='result'&&['single','double','triple','error'].includes(kind)){attack=.86;defense=.10;reaction='hit';}
+  else if(phase==='cinematic'&&g.broadcastCut?.kind==='strikeout'||phase==='result'&&g.pitch?.strikeCelebration){attack=.02;defense=g.pitch?.strikeCelebration?.level>=2||g.broadcastCut?.level>=2?1:.68;reaction='out';}
   else if(phase==='result'&&['flyout','groundout','forceout','doubleplay','strikeout','buntout'].includes(kind)||phase==='result'&&g?.log?.at(-1)?.en==='STRIKEOUT'){attack=.04;defense=.80;reaction='out';}
   else if(phase==='field'){attack=g?.field?.foul?.23:Math.max(.53,attack);defense=Math.max(.25,defense);reaction='flight';}
   else if(g?.bases?.[1]||g?.bases?.[2])reaction='chance';
@@ -647,9 +648,10 @@ window.NightGame=class NightGame{
  get opponentScore(){return this[this.opponentSide+'Score'];}
  get battingScore(){return this[this.side+'Score'];}
  get isFixture(){return this.mode==='match'||this.mode==='pennant';}
+ get resultCutsEnabled(){return (this.isFixture||!!this.career)&&!this.derby&&!this.timeAttack&&!this.challenge&&!this.umpireMode&&!this.spectate&&!this.fastForward&&!this.autoDefense&&!this.autoBatting&&!this.replayView;}
  get liveCutsEnabled(){return this.isFixture&&!this.career&&!this.derby&&!this.timeAttack&&!this.challenge&&!this.umpireMode&&!this.spectate&&!this.fastForward&&!this.autoDefense&&!this.autoBatting&&!this.replayView;}
  startBroadcastCut(kind,data={},duration=1400){
-  if(!this.liveCutsEnabled||this.mirror||this.phase==='cinematic'||this.phase==='ended')return false;
+  if(!(['homer','strikeout'].includes(kind)?this.resultCutsEnabled:this.liveCutsEnabled)||this.mirror||this.phase==='cinematic'||this.phase==='ended')return false;
   this.broadcastCut={...data,kind,duration,resume:this.phase,at:this.phaseTime,id:(this._cutSerial=(this._cutSerial||0)+1)};
   this.phase='cinematic';this.phaseTime=0;this.touch=null;this.notify();return true;
  }
@@ -661,11 +663,14 @@ window.NightGame=class NightGame{
   return true;
  }
  maybeBroadcastCut(){
-  if(!this.liveCutsEnabled||this.paused||this.mirror||!['aim','windup','result'].includes(this.phase))return false;
+  if(this.paused||this.mirror||!['aim','windup','result'].includes(this.phase))return false;
+   if(!this.liveCutsEnabled&&!(this.phase==='result'&&this.resultCutsEnabled))return false;
+   if(this.phase==='result'&&this.pitch?.strikeCelebration&&!this.pitch.strikeCelebration.seen){const k=this.pitch.strikeCelebration;k.seen=true;if(k.level>=2)return this.startBroadcastCut('strikeout',k,k.level===3?2000:1250);}
   const fieldSide=this.side==='home'?'away':'home',half=this.inning+'/'+this.half;
   if(this.phase==='result'&&this.field?.resolved&&!this.field.broadcastCutSeen){
    const field=this.field;field.broadcastCutSeen=true;
-   if(field.outcome==='hr')return this.startBroadcastCut('homer',{side:this.side,playerId:this.batter.id,name:this.batter.name,distance:this.hit?.distance||Math.round(field.maxTravel||0)},1550);
+   if(field.outcome==='hr'){const h=field.homerCelebration||{};return this.startBroadcastCut('homer',{side:this.side,playerId:this.batter.id,name:this.batter.name,distance:this.hit?.distance||Math.round(field.maxTravel||0),...h},h.level===3?2300:h.level===2?1700:1050);}
+    if(!this.liveCutsEnabled)return false;
    const play=(this.playEvents||[]).find(p=>['jump','dive'].includes(p.type));
    if(play&&['flyout','groundout','forceout','doubleplay'].includes(field.outcome)){
     const a=field.fielders[play.fielder];
@@ -737,7 +742,7 @@ window.NightGame=class NightGame{
  runnerRating(p){return p?.run??65;}
  get runnerSpeed(){return RUNNER_SPEED(this.runnerRating(this.batter));}
  batterStats(){return this.box[this.batter.id]||(this.box[this.batter.id]={pa:0,ab:0,h:0,hr:0,rbi:0,k:0,bb:0,r:0,doubles:0,triples:0});}
- endAtBat(kind,runs=0,simulated=false){this.atBatPitches=[];this.pitcherRecord().batters++;const b=this.batterStats();b.pa++;if(!['walk','hbp','sacrifice','sacrificefly'].includes(kind))b.ab++;if(kind==='sacrifice')b.sac=(b.sac||0)+1;if(kind==='sacrificefly')b.sf=(b.sf||0)+1;if(kind==='doubleplay')b.gidp=(b.gidp||0)+1;if(['single','double','triple','hr'].includes(kind))b.h++;if(kind==='hr')b.hr++;if(kind==='double')b.doubles=(b.doubles||0)+1;if(kind==='triple')b.triples=(b.triples||0)+1;if(kind==='strikeout'){b.k++;this.pitcherRecord().k=(this.pitcherRecord().k||0)+1;}if(kind==='walk'){b.bb++;this.pitcherRecord().bb=(this.pitcherRecord().bb||0)+1;}if(kind==='hbp'){b.hbp=(b.hbp||0)+1;this.pitcherRecord().hbp=(this.pitcherRecord().hbp||0)+1;}b.rbi+=runs;if(!simulated&&this.atBatRisp){if(!['walk','hbp','sacrifice','sacrificefly'].includes(kind))b.rispAb=(b.rispAb||0)+1;if(['single','double','triple','hr'].includes(kind))b.rispH=(b.rispH||0)+1;}this.atBatRisp=false;this.batFinished=true;
+ endAtBat(kind,runs=0,simulated=false){const streakKey=this.inning+'/'+this.half+'/'+this.pitcher.id;this._strikeStreak={key:streakKey,n:kind==='strikeout'?(this._strikeStreak?.key===streakKey?this._strikeStreak.n:0)+1:0};this.atBatPitches=[];this.pitcherRecord().batters++;const b=this.batterStats();b.pa++;if(!['walk','hbp','sacrifice','sacrificefly'].includes(kind))b.ab++;if(kind==='sacrifice')b.sac=(b.sac||0)+1;if(kind==='sacrificefly')b.sf=(b.sf||0)+1;if(kind==='doubleplay')b.gidp=(b.gidp||0)+1;if(['single','double','triple','hr'].includes(kind))b.h++;if(kind==='hr')b.hr++;if(kind==='double')b.doubles=(b.doubles||0)+1;if(kind==='triple')b.triples=(b.triples||0)+1;if(kind==='strikeout'){b.k++;this.pitcherRecord().k=(this.pitcherRecord().k||0)+1;}if(kind==='walk'){b.bb++;this.pitcherRecord().bb=(this.pitcherRecord().bb||0)+1;}if(kind==='hbp'){b.hbp=(b.hbp||0)+1;this.pitcherRecord().hbp=(this.pitcherRecord().hbp||0)+1;}b.rbi+=runs;if(!simulated&&this.atBatRisp){if(!['walk','hbp','sacrifice','sacrificefly'].includes(kind))b.rispAb=(b.rispAb||0)+1;if(['single','double','triple','hr'].includes(kind))b.rispH=(b.rispH||0)+1;}this.atBatRisp=false;this.batFinished=true;
   if(this.career?.rivalId&&(this.pitcher.id===this.career.rivalId||this.batter.id===this.career.rivalId)){
    if(!simulated||this.batter.id===this.career.playerId||this.pitcher.id===this.career.playerId){
     const r=this.career.rivalStats||={pa:0,h:0,hr:0,k:0};
@@ -854,7 +859,7 @@ window.NightGame=class NightGame{
 
  get defending(){return (this.half==='top')===this.userHome;}
  get inMatch(){return this.isFixture||this.mode==='pitching'||!!this.career||!!this.challenge;}
- message(en,ja,sub='',kind='',speech='',homeRunRuns=0){const data={en,ja,sub,kind,speech};if(en==='HOME RUN'&&homeRunRuns>=1&&homeRunRuns<=4)data.homeRunRuns=homeRunRuns;if(this.log){this.log.push({inning:this.inning,half:this.half,...data,batter:this.batter?.name||''});if(this.log.length>80)this.log.shift();}this.emit('message',data);}
+ message(en,ja,sub='',kind='',speech='',homeRunRuns=0,celebration=null){const data={en,ja,sub,kind,speech};if(celebration)data.celebration={...celebration};if(en==='HOME RUN'&&homeRunRuns>=1&&homeRunRuns<=4)data.homeRunRuns=homeRunRuns;if(this.log){this.log.push({inning:this.inning,half:this.half,...data,batter:this.batter?.name||''});if(this.log.length>80)this.log.shift();}this.emit('message',data);}
  notify(){this.emit('update',this);}
  setPhase(p){if(p!=='result')this.umpireReveal=null;this.phase=p;this.phaseTime=0;}
  get homeRunRunning(){
@@ -2560,7 +2565,7 @@ window.NightGame=class NightGame{
   const f=this.field;if(f.resolved)return;if(f.manual&&(kind==='hr'||kind==='foul'||f.groundRule)){f.manual=null;for(const r of f.runners){r.target=undefined;r.out=false;}}if(['sacrifice','buntout','buntsingle','doubleplay','forceout'].includes(kind)){this.finishSmallBall(kind);return;}const originalAdvance={single:1,double:2,triple:3,hr:4}[kind];if(originalAdvance&&originalAdvance<4)kind=['','single','double','triple'][this.hitAdvance(originalAdvance)];if(kind==='flyout')this.emit('sound','catch');f.resolved=true;f.outcome=kind;const advance={single:1,double:2,triple:3,hr:4}[kind]||0;
   const thirdOut=['flyout','groundout'].includes(kind)&&(f.outsAtContact??this.outs)===this.outsNeeded-1;
   f.runners.forEach(r=>{r.target=advance?Math.min(4,r.start+advance):thirdOut?r.progress:r.start;if(!advance&&r.batter)r.out=true;r.running=false;});this.hit.kind=kind;
-  const distance=Math.round(f.maxTravel),out=kind==='flyout'||kind==='groundout';let runs=0;
+  const distance=Math.round(f.maxTravel),out=kind==='flyout'||kind==='groundout';let runs=0;const leadBefore=this.battingScore-(this.side==='home'?this.awayScore:this.homeScore);
   if(kind==='foul'){
    f.foulMotionRemaining=.85;for(const p of f.fielders){p.running=false;p.moveSpeed=0;}
    this.emit('cue','foul');this.emit('sound','foul');this.steal=false;if(this.inMatch)this.strikes=Math.min(2,this.strikes+1);this.completePitch('foul');this.message('FOUL','ファウル',this.strikes===2?'2ストライク。もう一度。':'次の1球へ。');
@@ -2569,8 +2574,9 @@ window.NightGame=class NightGame{
    if(!out){this[this.side+'Hits']++;this.pitcherRecord().h=(this.pitcherRecord().h||0)+1;}
    this.completePitch(kind);
    if(this.inMatch){if(out)this.addOut();else{const before=this.battingScore;this.advance({single:1,double:2,triple:3,hr:4}[kind]);runs=(this.battingScore)-before;if(!this.defending&&runs===4&&kind==='hr')this.session.grandSlam=true;}this.endAtBat(kind,runs);this.resetCount();this.checkEnd();}
-   const label={single:['SINGLE','ヒット'],double:f.groundRule?['GROUND-RULE DOUBLE','エンタイトルツーベース']:['DOUBLE','ツーベース'],triple:['TRIPLE','スリーベース'],hr:['HOME RUN','ホームラン！'],flyout:['FLY OUT','フライをキャッチ！'],groundout:['OUT AT FIRST','一塁へ送球、アウト！']}[kind];
-   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${distance} m${runs?' · '+runs+'点':''}${out?' · '+this.outs+'アウト':''}`,kind==='hr'?'homer':out?'out':'hit','',kind==='hr'?runs:0);
+   if(kind==='hr'){const leadAfter=leadBefore+runs,walkoff=!!this.walkoffWin,tag=walkoff?'WALK-OFF HOME RUN':runs===4?'GRAND SLAM':leadBefore<0&&leadAfter>0?'GO-AHEAD HOME RUN':leadBefore<0&&leadAfter===0?'GAME-TYING HOME RUN':null;const level=walkoff||runs===4||leadBefore<0&&leadAfter>0?3:tag||leadBefore===0||distance>=135?2:1;f.homerCelebration={runs,level,tag,distance,variant:distance>=135?'deep':(this.hit?.launchAngle??this.hit?.launch??0)>=32?'tower':(this.hit?.exitKmh??0)>=155?'liner':'standard',walkoff};}
+    const label={single:['SINGLE','ヒット'],double:f.groundRule?['GROUND-RULE DOUBLE','エンタイトルツーベース']:['DOUBLE','ツーベース'],triple:['TRIPLE','スリーベース'],hr:['HOME RUN','ホームラン！'],flyout:['FLY OUT','フライをキャッチ！'],groundout:['OUT AT FIRST','一塁へ送球、アウト！']}[kind];
+   this.message(label[0],label[1],`${f.fieldingNote?f.fieldingNote+' · ':''}${distance} m${runs?' · '+runs+'点':''}${out?' · '+this.outs+'アウト':''}`,kind==='hr'?'homer':out?'out':'hit','',kind==='hr'?runs:0,kind==='hr'?f.homerCelebration:null);
    this.emit('cue',kind==='hr'?'homer':out?'out':'hit');this.emit('sound',kind==='hr'?'homer':out?'out':'safe');
   }
   this.setPhase('result');this.emit('hit',this.hit);this.notify();
@@ -2831,7 +2837,7 @@ window.NightGame=class NightGame{
   this.emit('cue','strike');
   if(this.pitch)this.pitch.callResult=true;
   this.completePitch('miss');this.catchPitchSound();this.emit('sound','strike');
-  if(this.inMatch){this.strikes++;if(this.strikes>=3){this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'','','',`${swung?'空振り':'ストライク'}。`);this.resolveSteal();this.rollWildPitch();}}
+  if(this.inMatch){this.strikes++;if(this.strikes>=3){const risp=!!(this.bases[1]||this.bases[2]),loaded=this.bases.every(Boolean),third=this.outs+1===this.outsNeeded,side=this.side==='home'?'away':'home';this.addOut('strikeout',this.pitcher.id);if(this.defending)this.session.ks++;this.endAtBat('strikeout');this.resetCount();const ks=this.pitcherRecord().k||0,streak=this._strikeStreak?.n||1,level=third&&loaded||streak===3||ks===10||third&&risp&&this.inning>=this.totalInnings?3:third&&risp||risp&&Math.abs(this.homeScore-this.awayScore)<=2||streak===2?2:1;const k={side,playerId:this.pitcher.id,name:this.pitcher.name,swung:!!swung,ks,streak,level,third,speed:this.pitch?.speed||this.lastPitch?.speed||0};if(this.pitch)this.pitch.strikeCelebration=k;this.message('STRIKEOUT',swung?'空振り三振！':'見逃し三振！',`${this.outs}アウト`,'out','',0,k);this.emit('sound','strikeout');}else{this.message(swung?'SWING & MISS':'STRIKE',swung?'空振り':'','','',`${swung?'空振り':'ストライク'}。`);this.resolveSteal();this.rollWildPitch();}}
   else if(!this.derby)this.message('SWING & MISS','空振り','ボールの位置とカーソルを合わせよう');
   this.setPhase('result');this.notify();
  }

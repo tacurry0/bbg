@@ -817,7 +817,7 @@ export class StadiumVFX {
     const styleCode={npb:0,cpbl:1,kbo:2,international:3,school:4};
     this.crowdUniforms.uCrowdHomeStyle.value=styleCode[a.homeLeague]??0;this.crowdUniforms.uCrowdAwayStyle.value=styleCode[a.awayLeague]??0;
     for(const [key,v] of [['uCrowdHome',a.homeExcite],['uCrowdAway',a.awayExcite]]){const u=this.crowdUniforms[key];u.value+=((v??.15)-u.value)*.085;}
-    const targetExcite=isHR?1:Math.max(a.excitement*.72,(g?.phase==='result'&&['single','double','triple'].includes(g?.hit?.kind))?.82:isHit?.48:0);
+    const targetExcite=isHR?1:g?.pitch?.strikeCelebration&&(g.phase==='result'||g.phase==='cinematic')?(g.pitch.strikeCelebration.level>=2?.90:.60):Math.max(a.excitement*.72,(g?.phase==='result'&&['single','double','triple'].includes(g?.hit?.kind))?.82:isHit?.48:0);
     this.crowdUniforms.uCrowdExcite.value += (targetExcite - this.crowdUniforms.uCrowdExcite.value) * 0.08;
 
     if (this.r.sky?.material?.uniforms?.uTime) {
@@ -895,7 +895,7 @@ export class StadiumVFX {
       }
 
       // Home Run Stadium Fireworks!
-      if (isHR && !g.park?.roofHeight) {
+      if (isHR && !g.derby && !g.replayView && !g.park?.roofHeight) {
         const palettes = [
           [0xffdf59, 0xff7b39, 0xffffff],
           [0x6ce8ff, 0x4f9dff, 0xfff5c0],
@@ -907,7 +907,7 @@ export class StadiumVFX {
           this.lastFirework = tSec;
           this.burstFirework(-11, 17.5, centerZ + 7, palettes[0]);
           this.burstFirework(11, 19.5, centerZ + 9, palettes[1]);
-        } else if (tSec - this.lastFirework > 0.38) {
+        } else if ((f.homerCelebration?.level||1)>=2 && tSec - this.lastFirework > 0.65 && g.phaseTime<2600) {
           this.lastFirework = tSec;
           const fx = (Math.random() - 0.5) * 34;
           const fy = 15 + Math.random() * 13;
