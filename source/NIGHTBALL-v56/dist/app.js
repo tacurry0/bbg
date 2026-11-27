@@ -24,7 +24,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  target:'<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4M1 12h4m14 0h4"/>'
  };
  function svg(name){return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]||icons.ball}</svg>`;}
- const defaults={crowdAttendance:'full',gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:NightPlayers.defaultPitcherIndex?.(NightTeams.get('owls'))??0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,bullpenClub:'owls',bullpenPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false,hardcore:false,handicapUserRuns:0,handicapCpuRuns:0,handicapUserOuts:3,handicapCpuOuts:3,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
+ const defaults={crowdAttendance:'full',gameLighting:'auto',hudScale:100,controlsScale:100,manualRunning:true,runningModeChosen:false,difficulty:'standard',sound:true,audioCues:false,soundVolume:78,crowdVolume:50,vibration:true,assist:false,cursorVersion:4,cursorLift:80,cursorShift:64,timingGuide:true,battingAssist:true,timingSound:true,sensitivity:1,releaseSwing:true,leftHanded:false,fieldSpeed:1,innings:5,park:'night',pitcher:NightPlayers.defaultPitcherIndex?.(NightTeams.get('owls'))??0,practiceClub:'owls',practiceBatter:'o1',practicePitch:'random',pitchingClub:'owls',pitchingPlayer:null,bullpenClub:'owls',bullpenPlayer:null,derbyPark:'tokyo-dome',derbyClub:'owls',derbyBatter:'o4',showTrace:true,matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false,hardcore:false,handicapUserRuns:0,handicapCpuRuns:0,handicapUserOuts:3,handicapCpuOuts:3,taKind:'bat',taSeconds:90,defenseSpeed:1,apbcTeam:'apbc-taipei',apbcOpponent:'apbc-japan',apbcUserHome:true,apbcInnings:5,apbcLineups:{},matchLineups:{},pennantGamesPerOpponent:4,tiebreak:false,injuries:'normal',tts:false,stadiumDJ:true,customDifficulty:{bat:0,pitch:0,field:0,run:0},order:NightPlayers.owls.map(p=>p.id)};
  const recordDefaults={games:0,wins:0,draws:0,hr:0,hits:0,maxDistance:0,bestTimedDerby:0,bestTimedDerbyDistance:0,perfect:0,grandSlam:false,ks:0,thrown:0,practicePitches:0,practiceHits:0,practiceHr:0,practiceMaxDistance:0,practiceThrown:0,practiceKs:0,achievements:{},winStreak:0,bestStreak:0};
  let settings,records;
  try{settings={...defaults,...JSON.parse(localStorage.getItem('nightball.settings')||'{}')};records={...recordDefaults,...JSON.parse(localStorage.getItem('nightball.records')||'{}')};}catch{settings={...defaults};records={...recordDefaults};}
@@ -89,7 +89,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const active=!!playing&&!game.paused&&$('modal').hidden;
   stadiumAudio.update({enabled,active,volume:settings.soundVolume,crowd:settings.crowdVolume,cues:!!settings.audioCues,park:game?.park?.theme||NightPlayers.parks.find(p=>p.id===settings.park)?.theme||'night'});
   const results=screen==='game'&&game?.phase==='ended'&&['result','career-result'].includes(modalKind);
-  ballparkMusic.update(playing||results?game:null,settings.music,enabled,active||results);
+  if(!enabled||!settings.stadiumDJ)stopDJ();
+  const music=djSpeaking()?{...settings.music,cheer:Math.round(settings.music.cheer*.35),results:Math.round(settings.music.results*.5)}:settings.music;
+  ballparkMusic.update(playing||results?game:null,music,enabled,active||results);
  }
  function unlockAudio(){stadiumAudio.unlock();syncAudio();}
  function sound(name){syncAudio();if(game)stadiumAudio.setAtmosphere(NightGame.stadiumAtmosphere(game));stadiumAudio.play(name,{hand:game?.batter?.hand,ballPan:game?.field?.ball?Math.max(-.75,Math.min(.75,game.field.ball.x/75)):0});if(name==='homer')vibrate([30,30,60]);else if(name==='hit'||name==='perfect')vibrate(20);}
@@ -222,7 +224,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const y=window.scrollY;
   if(screen===next&&scrollView===view)return y;
   if(screen!=='game')screenScrollPositions.set(scrollView,y);
-  if(next!=='game'){renderMatchIntro(null);renderLiveCut(null);hideImpact();}
+  if(next!=='game'){stopDJ();renderMatchIntro(null);renderLiveCut(null);hideImpact();}
   screen=next;scrollView=view;document.documentElement.classList.toggle('nightball-playing',next==='game');
   return screenScrollPositions.get(view)??0;
  }
@@ -2212,7 +2214,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(scope!=='online')rows.splice(1,0,['battingAssist','打撃アシスト','手前のボールを少しゆっくりにする']);
   return rows;
  }
- const settingsAudioRows=[['sound','サウンド','録音の打球・捕球音と観客の歓声'],['timingSound','離すタイミングの合図','音と対応端末の短い振動'],['vibration','振動','ミートした手応え'],['tts','実況の音声読み上げ','打席の結果を端末の音声合成で読み上げる'],['audioCues','音響ガイド','判定（ストライク／ボール）と打球結果を音の高さとパターンで知らせる。審判モードでは自分のコール後にだけ鳴る']];
+ const settingsAudioRows=[['sound','サウンド','録音の打球・捕球音と観客の歓声'],['timingSound','離すタイミングの合図','音と対応端末の短い振動'],['vibration','振動','ミートした手応え'],['stadiumDJ','球場アナウンス','全球団共通の英語スタジアムDJ。打席登場・選手交代・ホームラン・ABSなど'],['tts','実況の音声読み上げ','打席の結果を端末の音声合成で読み上げる'],['audioCues','音響ガイド','判定（ストライク／ボール）と打球結果を音の高さとパターンで知らせる。審判モードでは自分のコール後にだけ鳴る']];
  function settingsToggleAllowed(key,scope){
   return settingsControlRows(scope).some(row=>row[0]===key)||settingsAudioRows.some(row=>row[0]===key)||scope==='home'&&key==='tiebreak';
  }
@@ -2700,6 +2702,7 @@ function start(mode,challengeId=null,fixedPark=null){
    setAbsText('abs-word',call.strike?copy.strike:copy.ball);
    setAbsText('abs-gap',(call.strike?copy.inside:copy.outside)+(Math.abs(call.gap)*100).toFixed(1)+copy.unit);
    setAbsText('abs-change',call.strike===call.umpireStrike?copy.upheld:copy.changed);
+   if(typeof djSay==='function')djSay(g,call.strike===call.umpireStrike?'After review, the call stands.':'After review, the call is overturned.',3,'abs/'+[g.inning,g.half,g.batter?.id,g.pitchTrace?.length,g.phaseTime>=0?g.pitch?.id:''].join('/'));
   }
   result.hidden=!showResult;
   if(draw)absReview.draw(call,g.phaseTime,reduceAbsMotion.matches);
@@ -2836,8 +2839,87 @@ function start(mode,challengeId=null,fixedPark=null){
   hr.hidden=false;hr.classList.remove('play');void hr.offsetWidth;hr.classList.add('play');
   clearTimeout(hr._hideTimer);hr._hideTimer=setTimeout(()=>{hr.hidden=true;},ms);
  }
+ 
+ // English stadium PA: presentation only, never delays the game or online input.
+ const DJ_POS={P:'pitcher',C:'catcher','1B':'first baseman','2B':'second baseman','3B':'third baseman',SS:'shortstop',LF:'left fielder',CF:'center fielder',RF:'right fielder',DH:'designated hitter'};
+ const DJ_ORDER=['','Leading off','Batting second','Batting third','Batting cleanup','Batting fifth','Batting sixth','Batting seventh','Batting eighth','Batting ninth'];
+ function djPlayer(p){
+  if(!p)return '';
+  const candidates=[p.englishName,p.nameEn,p.nameEN,p.romanizedName,p.romanName,p.latinName,p.name];
+  const name=candidates.find(n=>typeof n==='string'&&/[A-Za-z]/.test(n)&&/^[\p{Script=Latin}\p{M} .’'\-]+$/u.test(n.trim()));
+  const number=p.no!=null&&p.no!==''?'Number '+String(p.no).replace(/^0(\d)$/,'zero $1'):'';
+  return [number,name?.trim()].filter(Boolean).join('. ');
+ }
+ function djBatter(g){const p=g.batter,n=(g.battingIndex?.[g.side]??0)%9+1;return [DJ_ORDER[n],DJ_POS[p?.fieldPos||p?.pos],djPlayer(p)].filter(Boolean).join('. ')+'!';}
+ function djVoice(voices){
+  const english=voices.filter(v=>/^en(?:[-_]|$)/i.test(v.lang||''));
+  const male=/\b(male|david|mark|guy|ryan|george|daniel|alex|fred|tom|aaron|arthur|oliver|james|john|matthew|brian|eric|gordon|lee|reed|rishi|ralph|nathan|andrew|christopher|roger|brandon|steffan|william|richard)\b/i;
+  const female=/\b(female|samantha|victoria|karen|moira|zira|susan|jenny|aria|emma|serena|tessa|ava|allison)\b/i;
+  return english.find(v=>male.test(v.name)&&!female.test(v.name))||english.find(v=>!female.test(v.name))||english[0]||null;
+ }
+ var djState;
+ function djSession(g){
+  if(!djState||djState.game!==g){stopDJ();djState={game:g,plate:'',subs:g?.substitutions?.length||0,welcome:false,ended:false,current:null,priority:0,until:0,pending:null,keys:new Set()};}
+  return djState;
+ }
+ function djAllowed(g){return !!g&&screen==='game'&&settings.stadiumDJ&&settings.sound&&!document.hidden&&!g.fastForward&&!g.spectate&&!g.umpireMode&&!g.derby&&!g.timeAttack&&(g.isFixture||g.career)&&'speechSynthesis' in window&&typeof SpeechSynthesisUtterance==='function';}
+ function stopDJ(){
+  if(djState?.current){try{window.speechSynthesis.cancel();}catch{}}
+  if(djState){djState.current=null;djState.pending=null;djState.until=0;djState.priority=0;}
+ }
+ function djSpeaking(){return !!djState?.current&&performance.now()<djState.until;}
+ function djSay(g,text,priority=1,key=''){
+  if(!djAllowed(g)||!text)return false;
+  const d=djSession(g),now=performance.now();
+  if(key&&d.keys.has(key))return false;
+  if(key)d.keys.add(key);
+  if(djSpeaking()&&priority<=d.priority){
+   // Keep only the latest lower-priority line; never build a backlog.
+   if(priority===1)d.pending={text,priority,expires:now+3500,plate:d.plate};
+   return false;
+  }
+  try{
+   const synth=window.speechSynthesis;
+   const u=new SpeechSynthesisUtterance(text);u.lang='en-US';const voice=djVoice(synth.getVoices());if(voice){u.voice=voice;u.lang=voice.lang;}
+   u.rate=.94;u.pitch=.79;u.volume=Math.min(1,Math.max(0,settings.soundVolume/100));
+   d.current=u;d.priority=priority;d.until=now+Math.min(8500,1800+text.length*78);d.pending=null;
+   const done=()=>{if(d.current===u){d.current=null;d.priority=0;d.until=0;}};
+   u.onend=done;u.onerror=done;
+   synth.cancel();synth.speak(u);return true;
+  }catch{d.current=null;d.priority=0;d.until=0;return false;}
+ }
+ function djTick(g){
+  if(!djAllowed(g)){stopDJ();return;}
+  const d=djSession(g);
+  if(d.current&&!djSpeaking()){stopDJ();}
+  if(g.paused||review.playback||!$('modal').hidden&&g.phase!=='ended'){stopDJ();return;}
+  if(!d.welcome){d.welcome=true;if(g.broadcastIntro)djSay(g,'Ladies and gentlemen! Welcome to the ballpark. Here are your starting lineups!',2,'welcome');}
+  const rows=g.substitutions||[];
+  if(rows.length>d.subs){
+   const latest=rows.slice(d.subs).reverse().find(x=>x.type==='pitch'||x.type==='hit');d.subs=rows.length;
+   if(latest){const club=g.teams[latest.side],p=[...(club?.pitchers||[]),...(club?.batters||[])].find(p=>p.id===latest.inId)||{name:latest.inName};const label=latest.type==='pitch'?'Now pitching':'Now entering as a pinch hitter';djSay(g,label+'. '+djPlayer(p)+'!',2,'sub/'+rows.length);}
+  }
+  const active=['aim','windup','pitch'].includes(g.phase)&&!g.batFinished&&g.outs<(g.outsNeeded||3);
+  if(active){
+   const p=g.batter,key=[g.inning,g.half,g.battingIndex?.[g.side],p?.id,g.box?.[p?.id]?.pa||0].join('/');
+   if(key!==d.plate){d.plate=key;djSay(g,djBatter(g),1,'plate/'+key);}
+  }
+  if(d.pending&&!djSpeaking()){
+   const pending=d.pending;d.pending=null;
+   if(active&&d.plate===pending.plate&&performance.now()<pending.expires)djSay(g,pending.text,pending.priority);
+  }
+ }
+ function djResult(g,data){
+  if(data?.en!=='HOME RUN')return false;
+  const c=data.celebration||{},tag=String(c.tag||'').toUpperCase();
+  const call=/GRAND SLAM/.test(tag)?'Grand slam!':/WALK.OFF/.test(tag)?'Walk-off home run!': 'Home run!';
+  djSay(g,call+' '+djPlayer(g?.batter)+(g?.batter?'!':''),3,'hr/'+[g?.inning,g?.half,g?.homeScore,g?.awayScore,g?.batter?.id].join('/'));
+  return true;
+ }
+ function djFinal(g){if(!djAllowed(g))return;const d=djSession(g);if(d.ended)return;d.ended=true;djSay(g,'That is the ballgame! Thank you for joining us, and have a great day!',4,'final');}
+ 
  function speakPlay(data){
-   if(!settings.tts||!('speechSynthesis' in window))return;
+   if(!settings.tts||!settings.sound||!('speechSynthesis' in window)||djSpeaking())return;
    const speakable=['homer','hit','out'].includes(data.kind)||/^(HOME RUN|STRIKEOUT|WALK|HIT BY PITCH|WILD PITCH|PASSED BALL|INTENTIONAL WALK|GAME SET|WALK-OFF)/.test(data.en||'');
    // Display text (data.ja/data.sub) and spoken text are separate since
    // v146: pitch-call banners no longer show the katakana call words, but
@@ -2944,7 +3026,7 @@ function start(mode,challengeId=null,fixedPark=null){
      const resultSig=resultSignature(data);
      if(resultSig&&stageResultShown.has(resultSig))return;
      if(resultSig){stageResultShown.add(resultSig);stageResultKey=resultSig;}
-     speakPlay(data);
+     if(!djAllowed(game)||!djResult(game,data))speakPlay(data);
      const previousCall=$('stage-message').dataset.visionLabel;
      if(game?.challenge&&data.en==='STRIKEOUT')updateChallenge(true);
      const stage=$('stage-message');
@@ -3915,7 +3997,7 @@ function start(mode,challengeId=null,fixedPark=null){
      recordOnlineResult(o.mySide==='home'?o.awayClub:o.homeClub,mine,draw,m.hs,m.as);
     NightRecordRoom.recordResult({mode:'online',result:draw?'draw':mine?'win':'loss',rs:o.mySide==='home'?m.hs:m.as,ra:o.mySide==='home'?m.as:m.hs,opp:NightTeams.get(o.mySide==='home'?o.awayClub:o.homeClub)?.name||'',at:new Date().toISOString()});
      o.lastEnd=m;o.rematchOffer=null;
-     guestResultModal();
+     djFinal(game);guestResultModal();
    }
  }
  // The guest's innings come from the host's start message and are kept
@@ -4062,6 +4144,7 @@ function start(mode,challengeId=null,fixedPark=null){
   modal(`${modalTitle('','試合終了',false)}${finalScoreCard(report,g.userSide)}<div class="segmented ui-result-tabs" role="group">${tabs.map(([key,label])=>`<button data-final-tab="${key}" aria-pressed="${tab===key}" class="${tab===key?'active':''}">${label}</button>`).join('')}</div><div class="ui-result-body">${body}</div>${g.umpireMode?umpireResultHTML(g):''}${newDistance?'<div class="new-best">最長飛距離を更新</div>':''}${g.onlineGame&&online?.role==='host'?onlineRematchButtons():''}<div class="ui-action-dock"><button class="secondary-button" data-action="home">ホームへ戻る</button><button class="primary-button" data-action="${g.umpireMode?'umpire-restart':'restart'}">${g.umpireMode?'もう一度審判する':'もう一度プレイ'}</button></div>`,'result');
  }
  function finish(g){
+   djFinal(g);
    if(g.mode==='match'||g.mode==='pennant'||g.apbcFixtureId)foldCareerTotals(g);
    if(g.timeAttack){finishTimeAttackResult(g);return;}
    if(g.survival){finishSurvivalResult(g);return;}
@@ -4824,6 +4907,7 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
  }
  function frame(now){
   requestAnimationFrame(frame);
+  if(screen==='game'&&game)djTick(game);else stopDJ();
   syncAudio();
   const dt=now-last;last=now;
   if(screen==='game'&&game){
