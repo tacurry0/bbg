@@ -45,3 +45,8 @@
   width: clamp(93px, 30vw, 140px);
   height: auto;
 }
+
+/* v236: small, online-only RTT / FPS readout. */
+#online-net-meter{flex:none;align-self:center;margin:0 4px;padding:3px 4px;border:1px solid #ffffff30;border-radius:4px;background:#071c2cbb;color:#b7f4cf;font:750 10px/1.25 system-ui,sans-serif;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#online-net-meter[data-quality="fair"]{color:#ffe19b}#online-net-meter[data-quality="poor"]{color:#ffaaa5}
+@media(max-width:360px){#online-net-meter{font-size:9px;margin:0 2px;padding:3px 2px}.topbar:has(#online-net-meter:not([hidden])){padding-inline:8px;gap:3px}}

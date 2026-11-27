@@ -7,6 +7,20 @@ const copyField=f=>({
  maxTravel:f.maxTravel,landing:f.landing,landingTime:f.landingTime,elapsed:f.elapsed,impact:f.impact,reviewMoment:f.reviewMoment?{...f.reviewMoment}:null
 });
 const mix=(a,b,u)=>a+(b-a)*u;
+// Map wall time to recording time with the same slow-motion segment on
+// both devices, independent of FPS or network arrival order.
+export function replayClock(seconds,rate,slowFrom,slowTo){
+ let left=Math.max(0,seconds),clock=0;
+ const slow=Math.min(.52,rate);
+ if(!Number.isFinite(slowFrom)||!Number.isFinite(slowTo))return left*rate;
+ const before=Math.max(0,slowFrom),end=Math.max(before,slowTo);
+ const first=before/rate;
+ if(left<=first)return left*rate;
+ left-=first;clock=before;
+ const duration=(end-before)/slow;
+ if(left<=duration)return clock+left*slow;
+ return end+(left-duration)*rate;
+}
 const position=(a,b,u,ball=false)=>a?{...a,x:mix(a.x,b?.x??a.x,u),y:mix(a.y,b?.y??a.y,u),
  ...(ball?{z:mix(a.z,b?.z??a.z,u)}:{})}:a;
 
@@ -70,12 +84,15 @@ export class PlayReview {
   if(this.playback)this.playback.clip.game.paused=this.playback.wasPaused;
   this.playback=null;
  }
- frame(dt){
+ frame(dt,now=performance.now()){
   const replay=this.playback;
   if(!replay)return null;
   const {clip,projected}=replay;
   const moment=clip.closeMoment,near=moment&&clip.frames&&Math.abs(clip.frames[0].elapsed+replay.clock-moment.time)<1.1;
-  replay.clock+=Math.max(0,Math.min(200,dt))*.001*(near?Math.min(.52,replay.rate):replay.rate);
+  if(Number.isFinite(replay.syncStart)){
+   const relative=moment&&clip.frames?moment.time-clip.frames[0].elapsed:NaN;
+   replay.clock=replayClock((now-replay.syncStart)/1000,replay.rate,relative-1.1,relative+1.1);
+  }else replay.clock+=Math.max(0,Math.min(200,dt))*.001*(near?Math.min(.52,replay.rate):replay.rate);
   if(clip.pitch){
    const duration=clip.pitch.duration/1000,progress=replay.clock/duration;
    if(progress>1.24+.4/duration)return null;
@@ -90,7 +107,7 @@ export class PlayReview {
   const u=a===b?0:Math.max(0,Math.min(1,(time-a.elapsed)/(b.elapsed-a.elapsed)));
   Object.assign(projected.field,a,{elapsed:Math.min(time,last.elapsed),
    ball:position(a.ball,b.ball,u,true),
-   runners:a.runners.map((p,i)=>position(p,b.runners[i],u)),
+   runners:a.runners.map(p=>position(p,b.runners.find(q=>q.id===p.id),u)),
    fielders:a.fielders.map((p,i)=>position(p,b.fielders[i],u)),
    resolved:a===last});
   return {game:projected,time:replay.clock*1000};

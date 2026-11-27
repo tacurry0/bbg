@@ -25,7 +25,7 @@
   <link rel="stylesheet" href="./match-ui.css?v=211">
   <link rel="stylesheet" href="./pregame.css?v=235">
   <link rel="stylesheet" href="./half-break.css?v=224">
-  <link rel="stylesheet" href="./nightball-brand.css?v=226">
+  <link rel="stylesheet" href="./nightball-brand.css?v=236">
   <link rel="stylesheet" href="./settings-mode.css?v=227">
   <link rel="stylesheet" href="./utility-pages.css?v=234">
   <link rel="stylesheet" href="./uniform-editor.css?v=228">
@@ -35,7 +35,7 @@
 <div class="app" id="app">
   <header class="topbar">
     <button class="wordmark" id="brand" aria-label="ホーム"><img class="nightball-logo" src="./assets/menu/nightball-logo-v226.png" width="1851" height="556" alt="NIGHTBALL"></button>
-    <div class="top-actions"><button class="icon-button" id="menu-notices" type="button" data-unread="true" aria-label="お知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bell"></use></svg></button><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
+    <span id="online-net-meter" title="往復通信遅延 / 描画FPS" hidden></span><div class="top-actions"><button class="icon-button" id="menu-notices" type="button" data-unread="true" aria-label="お知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bell"></use></svg></button><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
   </header>
   <div class="react-panel" id="react-panel" hidden></div>
 
@@ -216,7 +216,7 @@
 </div>
   <button id="replay-skip" class="replay-skip" data-replay-hint="タップで走塁をスキップ" aria-label="リプレイをスキップ" type="button" hidden></button>
 <script defer src="./i18n-catalog.js?v=228"></script>
-<script defer src="./release-notes.js?v=235"></script>
+<script defer src="./release-notes.js?v=236"></script>
 <script defer src="./i18n.js?v=1"></script>
 <script defer src="./ratings-data.js?v=56"></script>
 <script defer src="./pitching-expansion-2026.js?v=196"></script>
@@ -250,7 +250,7 @@
 <script defer src="./matchup-data.js?v=56"></script>
 <script defer src="./audio.js?v=205"></script>
 <script defer src="./derby.js?v=57"></script>
-<script defer src="./game.js?v=233"></script>
+<script defer src="./game.js?v=236"></script>
 <script defer src="./career-leagues.js?v=56"></script>
 <script defer src="./career-development.js?v=57"></script>
 <script defer src="./career-life.js?v=56"></script>
@@ -270,8 +270,8 @@
 <script defer src="./renderer.js?v=228"></script>
 <script defer src="./squad.js?v=56"></script>
 <script defer src="./pwa-update.js?v=2"></script>
-<script defer src="./online.js?v=2"></script>
+<script defer src="./online.js?v=236"></script>
 <script defer src="./online-derby.js?v=1"></script>
-<script type="module" src="./app.js?v=235"></script>
+<script type="module" src="./app.js?v=236"></script>
 </body>
 </html>

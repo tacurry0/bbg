@@ -118,7 +118,9 @@
  }
  class Session{
   constructor(handlers){this.handlers=handlers;this.peer=null;this.conn=null;this.open=false;this.dead=false;}
-  send(data){if(this.open&&this.conn){try{this.conn.send(data);}catch{}}}
+  send(data){if(this.open&&this.conn){try{this.conn.send(data);return true;}catch{}}return false;}
+  // Do not queue obsolete periodic snapshots behind reliable game events.
+  canSendState(){const c=this.conn;return !!(this.open&&c&&!(c.bufferSize>0)&&!((c.dataChannel||c._dc)?.bufferedAmount>32768));}
   wireConn(conn){
    this.conn=conn;
    let opened=false;
@@ -211,5 +213,21 @@
   const n=Number(index);
   return Number.isInteger(n)&&n>=0&&n<QUICK_CHATS.length?QUICK_CHATS[n]:null;
  }
- window.NightOnline={loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
+ // Reliable ordered delta stream: only changed metadata is sent; the
+ // current field pose and clocks are independent of the metadata cache.
+ const LIVE_STATE_KEYS=new Set(['pt','field','fsq','swingAge','stamp','seq']);
+ function stateDelta(state,previous,full=false){
+  const patch={},next={};
+  for(const [k,v] of Object.entries(state)){
+   if(LIVE_STATE_KEYS.has(k)){patch[k]=v;continue;}
+   const encoded=JSON.stringify(v??null);next[k]=encoded;
+   if(full||previous?.[k]!==encoded)patch[k]=JSON.parse(encoded);
+  }
+  return {patch,next};
+ }
+ function mergeState(previous,patch,full){
+  if(!full&&!previous)return null;
+  return {...(full?{}:previous),...patch};
+ }
+ window.NightOnline={stateDelta,mergeState,loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
 })();

@@ -1162,7 +1162,7 @@ export class StadiumRenderer {
   c.moveTo(center.x,center.y+2);c.lineTo(center.x,center.y+6);
   c.stroke();c.restore();
   if(g.touch){const tx=g.touch.x/480*this.width,ty=g.touch.y/540*this.height;c.strokeStyle='#efffd74d';c.lineWidth=1;c.setLineDash([2,5]);c.beginPath();c.moveTo(tx-3,ty-3);c.lineTo(center.x+5,center.y+5);c.stroke();c.setLineDash([]);c.fillStyle='#efffd72b';c.beginPath();c.arc(tx,ty,12,0,Math.PI*2);c.fill();}
-  if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
+  if(!g.replayView&&g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&window.nightSettings?.timingGuide!==false)this.drawPitchGuide(g);
  }
  render(g,time){
   this.resize();if(!this.width||this.hero&&this.heroRendered)return;const field=!!g?.field&&['field','result','play-call','play-review'].includes(g.phase);if(g){this.setPark(g.park,window.nightSettings?.gameLighting);this.updateSupporters(g);const atk=g.side,def=atk==='home'?'away':'home';this.stylePlayer(this.batter,atk,g.batter.no,g.teams[atk],g.uniformKits?.[atk]);this.stylePlayer(this.pitcher,def,g.pitcher.no,g.teams[def],g.uniformKits?.[def]);this.stylePlayer(this.catcher,def,g.fielder('C',def).no,g.teams[def],g.uniformKits?.[def]);for(let i=0;i<this.fielders.length;i++){const profile=g.fielder(NightGame.POS[i][0],def);this.stylePlayer(this.fielders[i],def,profile.no,g.teams[def],g.uniformKits?.[def]);this.fielders[i].motionStyle=window.NightGame.movementStyle(profile);}}

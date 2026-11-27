@@ -800,7 +800,7 @@ window.NightGame=class NightGame{
    // the resolution paths keep a guarded fallback (catchPitchSound) for
    // direct calls that never pass through this frame loop.
    if(this.phase==='pitch'&&!this.pitch.swung&&!derby&&this.pitch.progress>=1)this.catchPitchSound();
-   if(this.phase==='pitch'&&this.pitch.progress>1.24&&!(this.remoteBatter&&!this.pitch.swung&&this.pitch.progress<1.8))this.take();
+   if(this.phase==='pitch'&&this.pitch.progress>1.24&&!(this.remoteBatter&&!this.pitch.swung&&(this.onlineGame?this.phaseTime<this.pitch.duration*1.24+Math.max(70,Math.min(500,(this.onlineRttMs??180)+70)):this.pitch.progress<1.8)))this.take();
   }else if(this.phase==='miss'){
    // A whiff leaves the ball travelling: pitch.progress froze when the
    // swing missed, and the renderers extend it by phaseTime/duration
@@ -1355,17 +1355,24 @@ window.NightGame=class NightGame{
  // simulates. applyMirror stores the latest host state, mirrorTick advances
  // local clocks and interpolates field positions between snapshots.
  applyMirror(s){
-  const now=performance.now();
-  this._ptBase=s.pt;this._ptAt=now;
+  const now=performance.now(),samePhase=this.phase===s.phase&&this._mirrorPitchSeq===s.pitchSeq;
+  // A stable presentation clock prevents a late packet from rewinding
+  // the visible pitch, while a new phase starts on its authoritative time.
+  this._ptBase=samePhase&&!s.lock?Math.max(s.pt,Math.min(this.phaseTime,s.pt+80)):s.pt;this._ptAt=now;
+  this.phaseTime=this._ptBase;
   this.phase=s.phase;this.inning=s.inning;this.half=s.half;
   this.outs=s.outs;this.balls=s.balls;this.strikes=s.strikes;
   this.homeScore=s.hs;this.awayScore=s.as;this.home=s.home;this.away=s.away;
   this.homeHits=s.hh;this.awayHits=s.ah;this.homeErrors=s.he;this.awayErrors=s.ae;
   this.bases=[!!s.bases[0],!!s.bases[1],!!s.bases[2]];this.baseIds=s.baseIds.slice();
   this.battingIndex={home:s.bi.home,away:s.bi.away};this.batFinished=!!s.batFin;
-  for(const side of ['home','away']){
-   const club=this.teams[side];
-   this.lineups[side]=s.lu[side].map(([id,pos])=>{const p=club.batters.find(b=>b.id===id);return p?{...p,fieldPos:pos}:this.lineups[side][0];});
+  // Delta decoding keeps unchanged lineups by reference.
+  if(this._mirrorLineupWire!==s.lu){
+   this._mirrorLineupWire=s.lu;
+   for(const side of ['home','away']){
+    const club=this.teams[side];
+    this.lineups[side]=s.lu[side].map(([id,pos])=>{const p=club.batters.find(b=>b.id===id);return p?{...p,fieldPos:pos}:this.lineups[side][0];});
+   }
   }
   this.homePitcherIndex=s.pi.c;this.awayPitcherIndex=s.pi.u;
   this.usedPitchers=s.usedC.slice();this.usedCpuPitchers=s.usedU.slice();if(s.removed)this.removedPlayers=s.removed;if(s.substitutions)this.substitutions=s.substitutions;
@@ -1378,7 +1385,7 @@ window.NightGame=class NightGame{
   this.halfBreak=s.halfBreak||null;this.hit=s.hit||null;
   if(s.lastPitch)this.lastPitch=s.lastPitch;
   this.atBatPitches=Array.isArray(s.abp)?s.abp.map(p=>({id:p.i,name:p.n||'',x:p.x,y:p.y,result:p.r})):[];
-  this.swingAge=s.swingAge;
+  if(!(samePhase&&this._mirrorSwung&&s.phase==='pitch'&&!s.pitch?.swung))this.swingAge=s.swingAge;
   if(s.pitchSeq!==this._mirrorPitchSeq){this._mirrorPitchSeq=s.pitchSeq;this._mirrorSwung=false;this.pitch=s.pitch;}
   else if(s.pitch&&this.pitch){const prog=this.pitch.progress;Object.assign(this.pitch,s.pitch);this.pitch.progress=prog;}
   else this.pitch=s.pitch;
@@ -1393,21 +1400,42 @@ window.NightGame=class NightGame{
   }
   else if(this.absCall)delete this.absCall;
   const mp=this.pitcher;if(mp)this.session.thrown=this.pitchingStats[mp.id]?.pitches||0;
-  if(s.field){this._fieldPrev=this._fieldCurr&&this._fieldCurr.fsq===s.fsq?this._fieldCurr:null;this._fieldCurr={t:now,f:s.field,fs:s.fs||1,fsq:s.fsq};}
-  else{this._fieldPrev=null;this._fieldCurr=null;}
+  if(s.field){
+   const stamp=Number.isFinite(s.stamp)?s.stamp:now;
+   const observed=now-stamp;
+   this._mirrorOffset=this._mirrorOffset==null?observed:Math.min(observed,this._mirrorOffset+.15);
+   let buffer=this._fieldFrames;
+   if(!buffer||buffer.at(-1)?.fsq!==s.fsq||!samePhase||s.lock)buffer=this._fieldFrames=[];
+   const t=stamp+this._mirrorOffset;
+   const previous=buffer.at(-1);
+   if(previous&&t<=previous.t)buffer.pop();
+   buffer.push({t,f:s.field,fs:s.fs||1,fsq:s.fsq});
+   while(buffer.length>8)buffer.shift();
+   this._fieldCurr=buffer.at(-1);
+  }else{this._fieldFrames=[];this._fieldCurr=null;}
  }
  mirrorTick(dt){
   const now=performance.now();
   if(dt>0&&!this.paused){
    this.time+=dt;this.swingAge+=dt;
    if(this._ptAt!=null)this.phaseTime=Math.min(this._ptBase+(now-this._ptAt),this._ptBase+5000);
-   if(this.phase==='pitch'&&this.pitch)this.pitch.progress=this.phaseTime/this.pitch.duration;
+   if(this.phase==='pitch'&&this.pitch)this.pitch.progress=Math.min(1.24,this.phaseTime/this.pitch.duration);
    if(this.mirrorSend&&this.steal!==this._sentSteal){this._sentSteal=this.steal;this.mirrorSend({t:'steal',on:!!this.steal});}
   }
-  const cur=this._fieldCurr;
-  if(!cur){this.field=null;this._mirrorFseq=-1;return;}
-  const cf=cur.f,prev=this._fieldPrev,span=prev?Math.max(16,cur.t-prev.t):0;
-  const a=prev?Math.max(0,Math.min(1+35/Math.max(16,span),(now-span-prev.t)/span)):1,lerp=(p,c)=>p+(c-p)*a;
+  const buffer=this._fieldFrames||[],latest=buffer.at(-1);
+  if(!latest){this.field=null;this._mirrorFseq=-1;return;}
+  // Interpolate on the host's packet timestamps rather than arrival gaps.
+  // Keep a short buffer for jitter; extrapolate for at most 25 ms.
+  let cur=latest,prev=null;
+  const target=now-50;
+  if(!this.paused&&buffer.length>1){
+   const i=buffer.findIndex(v=>v.t>=target);
+   if(i===0){cur=buffer[0];}
+   else if(i>0){cur=buffer[i];prev=buffer[i-1];}
+   else{cur=latest;prev=buffer[buffer.length-2];}
+  }
+  const cf=cur.f,span=prev?Math.max(1,cur.t-prev.t):0;
+  const a=prev?Math.max(0,Math.min(1+(cf.resolved?0:25/span),(target-prev.t)/span)):1,lerp=(p,c)=>p+(c-p)*a;
   if(this._mirrorFseq!==cur.fsq||!this.field){
    // New play: fresh field objects exactly once. The 3D camera resets and
    // re-aims whenever the field object identity changes, so identity must
@@ -1432,7 +1460,7 @@ window.NightGame=class NightGame{
    for(const id of[...this._mirrorRunners.keys()])if(!cf.runners.some(r=>r.id===id)&&!(pf&&pf.runners.some(r=>r.id===id)))this._mirrorRunners.delete(id);
   }
   const F=this.field;
-  F.elapsed=cf.elapsed+Math.max(0,(now-cur.t)/1000)*cur.fs;
+  F.elapsed=prev?lerp(prev.f.elapsed,cf.elapsed):cf.elapsed;
   F.trail.push({x:F.ball.x,y:F.ball.y,z:F.ball.z});if(F.trail.length>40)F.trail.shift();
  }
  pitchAt(u){
@@ -1448,7 +1476,7 @@ window.NightGame=class NightGame{
   const remainingBreak=1-t*t*(3-2*t);
   return {x:p.targetX-p.bx*remainingBreak,y:p.targetY-p.by*remainingBreak};
  }
- swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung)return false;this._mirrorSwung=true;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
+ swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung||this.phaseTime>this.pitch.duration*1.24+30)return false;this._mirrorSwung=true;this.swingAge=0;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung||(this.derby&&!this.derby.remaining))return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
  buntBall(){
   this.pitch.swung=true;this.swingAge=0;this.session.swings++;this.session.contacts++;
   // One roll per bunt: 90% sacrifice, 5% failed advance, 5% bunt hit.
