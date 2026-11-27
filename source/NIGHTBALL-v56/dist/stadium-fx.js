@@ -542,10 +542,10 @@ export class DerbyStadiumShow{
   else{
    const flame=(cx,cy,rx,ry,hue)=>{
     x.save();x.translate(cx,cy);x.scale(rx,ry);const g=x.createRadialGradient(0,.22,0,0,0,1);
-    g.addColorStop(0,'rgba(255,255,212,1)');g.addColorStop(.22,'rgba(255,233,106,.98)');g.addColorStop(.52,'rgba(255,159,29,.85)');g.addColorStop(.80,'rgba(255,62,8,.42)');g.addColorStop(1,'rgba(255,40,0,0)');
+    g.addColorStop(0,'rgba(255,255,212,1)');g.addColorStop(.22,'rgba(255,223,94,1)');g.addColorStop(.52,'rgba(255,133,16,.96)');g.addColorStop(.80,'rgba(237,54,5,.78)');g.addColorStop(1,'rgba(255,40,0,0)');
     x.fillStyle=g;x.beginPath();x.arc(0,0,1,0,Math.PI*2);x.fill();x.restore();
    };
-   x.globalCompositeOperation='lighter';flame(48,120,31,70);flame(37,73,20,57);flame(62,66,17,52);flame(46,39,12,40);
+   x.globalCompositeOperation='source-over';flame(48,120,31,70);flame(37,73,20,57);flame(62,66,17,52);flame(46,39,12,40);
   }
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;return t;
  }
@@ -555,16 +555,16 @@ export class DerbyStadiumShow{
   const baseGeo=new T.BoxGeometry(1.15,.55,1.0),baseMat=new T.MeshStandardMaterial({color:0x303841,metalness:.6,roughness:.45});
   this.jets=Array.from({length:5},()=>{
    const root=new T.Group(),base=new T.Mesh(baseGeo,baseMat);base.position.y=.1;root.add(base);
-   const flame=Array.from({length:3},()=>{const f=new T.Sprite(new T.SpriteMaterial({map:this.flameTex,transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false,opacity:1}));root.add(f);return f;});
+   const flame=Array.from({length:3},()=>{const f=new T.Sprite(new T.SpriteMaterial({map:this.flameTex,transparent:true,depthWrite:false,blending:T.NormalBlending,fog:false,opacity:1}));root.add(f);return f;});
    const smoke=new T.Sprite(new T.SpriteMaterial({map:this.smokeTex,transparent:true,depthWrite:false,opacity:.6}));root.add(smoke);
    this.group.add(root);return {root,flame,smoke};
   });
-  const palettes=[0xffd66d,0xff7f43,0x7fe8ff,0xff83c3,0xfff5da];
+  const palettes=[0xffb333,0xff8127,0xffcf51,0xff981c,0xffb333];
   this.bursts=Array.from({length:5},(_,i)=>{
    const count=56,geo=new T.BufferGeometry();geo.setAttribute('position',new T.BufferAttribute(new Float32Array(count*6),3));
    const mat=new T.LineBasicMaterial({color:palettes[i],transparent:true,opacity:1,depthWrite:false,blending:T.AdditiveBlending,fog:false});
-   const lines=new T.LineSegments(geo,mat);lines.frustumCulled=false;const root=new T.Group();root.add(lines);
-   const stars=new T.InstancedMesh(new T.SphereGeometry(.13,5,4),new T.MeshBasicMaterial({color:palettes[i],transparent:true,opacity:1,blending:T.AdditiveBlending,depthWrite:false,fog:false}),count);stars.frustumCulled=false;root.add(stars);
+   const lines=new T.LineSegments(geo,mat);lines.frustumCulled=false;lines.visible=false;const root=new T.Group();root.add(lines);
+   const stars=new T.InstancedMesh(new T.SphereGeometry(.10,5,4),new T.MeshBasicMaterial({color:palettes[i],transparent:true,opacity:1,blending:T.NormalBlending,depthWrite:false,fog:false}),count);stars.frustumCulled=false;root.add(stars);
    const glow=new T.Sprite(new T.SpriteMaterial({map:this.r.glowTexture(),color:palettes[i],transparent:true,depthWrite:false,blending:T.AdditiveBlending,opacity:.8}));root.add(glow);
    this.group.add(root);return {root,lines,glow,stars,count,dummy:new T.Object3D()};
   });
@@ -574,41 +574,38 @@ export class DerbyStadiumShow{
   if(!show){if(this.group)this.group.visible=false;this.last=null;return;}
   if(!this.group)this.init();
   const park=g.park,indoors=park.theme==='dome'||!!park.roofHeight,age=Math.max(0,g.phaseTime/1000),celebration=f.homerCelebration||{},level=celebration.level||1;
-  this.group.visible=age<2.5;const angle=clamp(Math.atan2(f.ball.x,f.ball.y),-.67,.67),count=level>=3?5:level>=2?4:3;
+  this.group.visible=age<1.8;const angle=clamp(Math.atan2(f.ball.x,f.ball.y),-.67,.67),count=level>=3?5:level>=2?4:3;
   const place=(root,a,off,lift)=>{
    const r=NightPlayers.wallDistance(park,a)+off,x=Math.sin(a)*r,z=Math.cos(a)*r,h=NightPlayers.fenceHeight(park,a);
    const roof=NightPlayers.roofSurface(park,x,z),y=Math.min(h+lift,Number.isFinite(roof)?roof-3:h+lift);
    root.position.set(x,y,z);return Number.isFinite(roof)?Math.max(1,roof-y):Infinity;
   };
   this.jets.forEach((jet,i)=>{
-   jet.root.visible=i<count&&age<1.5;
+   jet.root.visible=i<count&&age<1.25;
    if(!jet.root.visible)return;
-   const a=clamp(angle+(i-(count-1)/2)*.083,-.76,.76);const clearance=place(jet.root,a,1.8,.6);
-   const t=Math.max(0,age-i*.065),ramp=clamp(t/.15,0,1)*(1-clamp((t-.85)/.50,0,1)),base=(indoors?5.1:8.7)*(1+.12*(level-1));
+   const a=clamp(angle+(i-(count-1)/2)*.07,-.76,.76);const clearance=place(jet.root,a,2.0,.6);
+   const t=Math.max(0,age-i*.065),ramp=clamp(t/.15,0,1)*(1-clamp((t-.85)/.50,0,1)),base=(indoors?7.2:10.8)*(1+.14*(level-1));
    const height=Math.min(base,clearance*.72)*ramp*(.84+.16*Math.sin(t*38+i*2));
    for(let j=0;j<jet.flame.length;j++){
-    const spr=jet.flame[j],h=Math.max(.03,height*(.9-j*.17));spr.visible=ramp>.02;spr.material.opacity=ramp*(1-j*.19);spr.material.color.setHex(indoors?0xaeeaff:0xffffff);spr.position.set(Math.sin(t*20+i+j)*.30*(j+1),h*.48,Math.cos(t*16+j)*.13);spr.scale.set((indoors?1.3:2.0)*(1-j*.12)*Math.max(.3,ramp),h,1);
+    const spr=jet.flame[j],h=Math.max(.03,height*(.9-j*.17));spr.visible=ramp>.02;spr.material.opacity=ramp*(1-j*.19);spr.material.color.setHex(0xffffff);spr.position.set(Math.sin(t*20+i+j)*.30*(j+1),h*.48,Math.cos(t*16+j)*.13);spr.scale.set((indoors?2.0:2.65)*(1-j*.12)*Math.max(.3,ramp),h,1);
    }
-   jet.smoke.position.set(Math.sin(i*3+t)*.65,height+.75+t*1.8,0);jet.smoke.scale.setScalar(1.3+t*2.5);jet.smoke.material.opacity=.38*ramp;
+   jet.smoke.position.set(Math.sin(i*3+t)*.65,height+.75+t*1.8,0);jet.smoke.scale.setScalar(1.3+t*2.5);jet.smoke.material.opacity=.18*ramp;
   });
+   // Only big hits and streaks get low warm sparks. No floating white lines,
+   // no sky-wide explosions, and no fireworks above the dome roof.
   this.bursts.forEach((b,i)=>{
-   const t=age-(i%3)*.14-.06;b.root.visible=i<count&&t>=0&&t<1.58;
-   if(!b.root.visible)return;
-   const a=clamp(angle+(i-(count-1)/2)*(this.r.camera?.aspect<.85?.089:.125),-.76,.76);
-   // Indoor celebrations use low cold-spark fountains above the rail;
-   // outdoors the same rigs are aerial bursts, safely clear of the stands.
-   const clearance=place(b.root,a,indoors?4.5:9,indoors?6.5+(i%2)*2:16+(i%3)*6);
-   const attr=b.lines.geometry.attributes.position,spread=indoors?5.7:11.8,fade=clamp(1-t/1.58,0,1);
-   for(let j=0;j<b.count;j++){
-    const phi=Math.acos(1-2*(j+.5)/b.count),theta=j*2.399963,sp=spread*(.7+(j%7)*.095);
-    const vx=Math.cos(theta)*Math.sin(phi)*sp,vy=Math.cos(phi)*sp+(indoors?3:1.7),vz=Math.sin(theta)*Math.sin(phi)*sp;
-    const head=t+.04,tail=Math.max(0,t-.18);
-    const height=t=>Math.min(clearance*.85,vy*t-2.4*t*t);
-    attr.setXYZ(j*2,vx*tail,height(tail),vz*tail);attr.setXYZ(j*2+1,vx*head,height(head),vz*head);
-    b.dummy.position.set(vx*head,height(head),vz*head);b.dummy.scale.setScalar((.6+fade*.8)*(j%4===0?1.55:1));b.dummy.updateMatrix();b.stars.setMatrixAt(j,b.dummy.matrix);
-   }
-   b.stars.instanceMatrix.needsUpdate=true;b.stars.material.opacity=fade;attr.needsUpdate=true;b.lines.material.opacity=fade*.95;b.glow.scale.setScalar(2.7+Math.min(9,t*15));b.glow.material.opacity=Math.max(0,1-t*4)*.9;
-  });
+    const t=age-i*.045-.04;b.root.visible=level>=2&&i<count&&t>=0&&t<1.13;
+    if(!b.root.visible)return;
+    const a=clamp(angle+(i-(count-1)/2)*.07,-.76,.76);
+    const clearance=place(b.root,a,2.0,.85),fade=clamp(1-t/1.13,0,1);
+    for(let j=0;j<b.count;j++){
+     const phase=j/b.count,theta=j*2.399963,agej=Math.max(0,t-phase*.32),radial=(.7+(j%7)*.25)*agej;
+     const y=Math.min(clearance*.78,(5.5+(j%9)*.55)*agej-4.4*agej*agej);
+     b.dummy.position.set(Math.cos(theta)*radial,Math.max(0,y),Math.sin(theta)*radial);
+     b.dummy.scale.setScalar((agej>0&&y>0)?(.6+fade*.6):0);b.dummy.updateMatrix();b.stars.setMatrixAt(j,b.dummy.matrix);
+    }
+    b.stars.instanceMatrix.needsUpdate=true;b.stars.material.opacity=fade;b.glow.visible=false;b.lines.visible=false;
+   });
  }
 }
 

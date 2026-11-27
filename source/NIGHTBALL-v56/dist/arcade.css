@@ -339,3 +339,116 @@ body:has(.game-screen:not([hidden])) .app{border-color:#7f968052;box-shadow:0 0 
 @keyframes dr-banner-shine{to{transform:translateX(160%)}}@keyframes dr-hr-banner{0%{opacity:0;transform:translateY(14px) scale(.8)}12%{opacity:1;transform:translateY(0) scale(1.035)}20%,84%{opacity:1;transform:none}100%{opacity:0;transform:translateY(7px)}}@keyframes dr-intro{from{opacity:0;transform:translateX(-20px)}}
 @media (orientation:landscape) and (max-height:530px){.game-screen.derby-active .game-stage>.scoreboard{left:7px;transform:none;width:min(360px,48%)}.dr-hud-shots{display:none}.derby-spectacle{padding-bottom:4%}.dr-hero{min-height:114px}.dr-hero-title{font-size:30px}.dr-ball{width:72px;height:72px}}
 @media(prefers-reduced-motion:reduce){.derby-spectacle.fire .dr-hr-banner,.derby-spectacle.walkoff.fire .dr-hr-banner,.dr-intro-caption{animation:none;opacity:1}.dr-hr-banner:after{animation:none;display:none}}
+
+/* v265 — derby broadcast package. Scoped to derby only. */
+.game-screen.derby-active .game-stage>.scoreboard{width:min(370px,calc(100% - 22px));max-width:calc(100% - 22px);top:7px}
+.dr-hud{background:linear-gradient(115deg,#142940f2,#081627f5);border-color:#b69a58;border-radius:8px}
+.dr-hud-top{min-height:18px;padding:4px 8px;background:#152b43;color:#f7d98d;border-bottom:1px solid #b99a5b66}
+.dr-hud-top strong{color:#f6d686;text-shadow:none;font-size:10px;letter-spacing:.55px}.dr-hud-top small{font-size:10px}
+.dr-live-dot{background:#ffd372;box-shadow:none}
+.dr-hud-match{padding:5px 7px;gap:5px;grid-template-columns:minmax(0,1fr) minmax(75px,.94fr) minmax(0,1fr)}
+.dr-hud-side>span>small{font-size:clamp(10px,2.9vw,13px)}.dr-hud-side>span>img{width:17px;height:17px}
+.dr-hud-side>b{font:950 clamp(27px,8vw,36px)/1 Arial;transform-origin:center}
+.dr-hud-clock{background:#06132155;border-radius:0;border-inline:1px solid #65819d50}
+.dr-hud-clock strong{font:950 clamp(27px,7.7vw,35px)/1.1 Arial;letter-spacing:-.7px}
+.dr-hud-clock strong.low{color:#ffbd65}.dr-hud-clock strong.urgent{color:#ff7768;text-shadow:0 0 10px #ff49386b}
+.dr-hud-clock .derby-timer-track{height:3px;margin-top:4px}
+.dr-hud-goal{color:#ffdc83;background:#1b3047;font-size:11px;padding:4px 7px;border-top:1px solid #b99a5b55}
+.dr-hud-goal em{font:900 italic 10px Arial;color:#fff5d9;padding-left:7px;margin-left:3px;border-left:1px solid #ab975f}
+.game-screen.derby-active #distance{display:none}
+.derby-spectacle{padding-bottom:17%;align-items:flex-end}
+.derby-spectacle .dr-hr-banner{width:min(92%,460px);padding:6px 4px 10px;border:0;border-radius:0;clip-path:none;box-shadow:none;background:linear-gradient(90deg,transparent,#07101fe8 24%,#07101fe8 76%,transparent)}
+.derby-spectacle .dr-hr-banner::before{background:linear-gradient(90deg,transparent,#ffdb7a 25%,#ffe8af 75%,transparent);height:2px;top:auto;bottom:0}
+.derby-spectacle .dr-hr-banner::after{display:none}
+.dr-hr-banner>small{display:block;color:#fce2a0;letter-spacing:1.25px;text-shadow:0 2px 3px #000}
+.dr-hr-banner>strong{font:1000 italic clamp(36px,10.5vw,64px)/1.04 Arial,sans-serif;letter-spacing:-1.6px;color:#ffe3a0;text-shadow:0 2px #a76616,0 5px #422406,0 7px 12px #000,0 0 17px #efac2a91;-webkit-text-stroke:.6px #fff0c3}
+.dr-hr-banner>div:last-child{margin:4px 0 0;gap:6px}
+.dr-hr-banner b{font-size:24px;text-shadow:0 2px 4px #000}
+.dr-hr-banner span{font-size:13px;color:#e0e8f3;text-shadow:0 1px 3px #000}
+.derby-spectacle.mega .dr-hr-banner{box-shadow:none}
+.derby-spectacle.mega .dr-hr-banner>strong{font-size:clamp(39px,11vw,68px);color:#fff0c1;text-shadow:0 2px #c08416,0 5px #613807,0 6px 13px #000,0 0 20px #ffc060ba}
+.derby-spectacle.walkoff{align-items:flex-end;padding-bottom:17%}
+.derby-spectacle.walkoff.fire .dr-hr-banner{background:linear-gradient(90deg,transparent,#12192dea 23%,#12192dea 77%,transparent)}
+.derby-spectacle.fire .dr-hr-banner{animation:dr-broadcast-hit 1.45s both}
+.derby-spectacle.walkoff.fire .dr-hr-banner{animation:dr-broadcast-hit 3.45s both}
+.derby-spectacle.dr-other-shot{padding-bottom:12%}
+.derby-spectacle.dr-other-shot .dr-hr-banner{width:min(200px,65%);background:#081827df;border:1px solid #88a9c279;border-radius:6px;padding:5px 9px;box-shadow:none}
+.derby-spectacle.dr-other-shot .dr-hr-banner::before,.derby-spectacle.dr-other-shot .dr-hr-banner>small{display:none}
+.derby-spectacle.dr-other-shot .dr-hr-banner>strong{font:900 italic 15px Arial;color:#e5f0ff;text-shadow:none;-webkit-text-stroke:0;letter-spacing:.4px}
+.derby-spectacle.dr-other-shot .dr-hr-banner b{font-size:16px}.derby-spectacle.dr-other-shot .dr-hr-banner span{font-size:11px}
+.derby-spectacle.dr-other-shot.fire .dr-hr-banner{animation:dr-broadcast-hit .52s both}
+@keyframes dr-broadcast-hit{0%{opacity:0;transform:translateY(9px) scale(.9)}13%{opacity:1;transform:translateY(0) scale(1.045)}24%,85%{opacity:1;transform:none}100%{opacity:0;transform:translateY(3px)}}
+
+/* All 7 tournament match cards stay in the result, not in a tab or popup. */
+.modal:is([data-kind="derby-result"],[data-kind="online-derby-result"]){color-scheme:dark;background:linear-gradient(145deg,#172d47,#091627 55%,#0c1c30);border:1px solid #89774c;border-radius:15px;padding:11px;color:#eff5fd;box-shadow:0 10px 40px #000b;--text:#eff5fd;--muted:#a7b9d1;--line:#415570;max-width:640px}
+.modal[data-kind="derby-result"] .dr-result-hero,.modal[data-kind="online-derby-result"] .dr-result-hero{border:1px solid #405673;border-radius:9px;overflow:hidden;background:radial-gradient(ellipse at 50% 0,#3b4d66 0,transparent 60%),linear-gradient(125deg,#162b44,#0a1527);position:relative}
+.dr-result-hero.won{background:radial-gradient(ellipse at 50% -15%,#77613b66 0%,transparent 65%),linear-gradient(135deg,#172d46,#091524);border-color:#b99a58}
+.dr-result-kicker{display:flex;justify-content:space-between;gap:4px;align-items:center;padding:7px 10px;background:#061422a8;border-bottom:1px solid #9ab3d32b;font-size:10px;color:#c4d3e7;text-transform:uppercase;letter-spacing:.5px}
+.dr-result-kicker span:first-child{font:900 italic 11px Arial;color:#e7c47f}
+.dr-result-title{padding:8px 8px 0;text-align:center}
+.dr-result-call{font:1000 italic clamp(29px,8.4vw,52px)/1 Arial;letter-spacing:-.8px;color:#d1dfef;text-shadow:0 2px 7px #0006}
+.dr-result-hero.won .dr-result-call{color:#ffe09a;text-shadow:0 2px #9a641f,0 4px 9px #000a}
+.modal .dr-result-title h2#modal-title{padding:2px 0!important;margin:0!important;min-height:0!important;line-height:1.3;font:bold 12px/1.3 sans-serif;background:none!important;border:0!important;border-radius:0;box-shadow:none!important;text-shadow:none!important;color:#e1ecf8!important;display:block;text-align:center}
+.modal .dr-result-title h2::before,.modal .dr-result-title h2::after{display:none!important}
+.dr-result-match{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);align-items:end;gap:7px;padding:7px 10px 8px}
+.dr-result-side{display:grid;grid-template-columns:27px minmax(0,1fr);grid-template-rows:25px auto;gap:2px 6px;align-items:center}
+.dr-result-side img,.dr-result-placeholder{width:27px;height:27px;object-fit:contain;padding:2px;background:#f2f5fa;border-radius:6px;color:#ad7d28;text-align:center}
+.dr-result-side>strong{font-size:clamp(11px,3.4vw,15px);line-height:1.15;color:#e7effa;overflow-wrap:anywhere}
+.dr-result-side>b:last-child{grid-column:1/-1;text-align:center;font:950 clamp(31px,9vw,50px)/1 Arial;color:#e0e9f3;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dr-result-side.won>b:last-child{color:#ffe09a}.dr-result-vs{font:800 24px Arial;color:#8096af;text-align:center;padding-bottom:5px}
+.dr-result-hero>p{padding:5px 8px;margin:0;color:#eac783;font-size:11px;text-align:center;border-top:1px solid #b6a37740;background:#0003}
+.dr-result-hero.champion{border-color:#f3c870;box-shadow:inset 0 0 35px #d4a44122}.dr-result-hero.champion .dr-result-call{color:#fff0b7}
+.dr-result-actions{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.modal .dr-result-actions button{flex:1 1 33%;width:auto;min-width:0;min-height:39px;margin:0;border:1px solid #4c6887;border-radius:6px;background:#20374f;color:#e4effc;box-shadow:none;text-shadow:none;font-size:12px;font-weight:850;padding:8px 9px;white-space:normal}
+.modal .dr-result-actions button.primary-button{flex:1 1 50%;background:linear-gradient(135deg,#f8d88b,#c79a45);border:1px solid #ffdfa0;color:#15243a;text-shadow:none;box-shadow:0 2px 4px #0005}
+.modal .dr-result-actions button::before,.modal .dr-result-actions button::after{display:none!important}
+.modal .dr-result-actions button span{font-size:18px;line-height:0;vertical-align:-1px;margin-left:4px}
+.derby-bracket{--route:#e9bc69;background:linear-gradient(165deg,#142942,#0b192d);border:1px solid #415c7b;border-radius:10px;overflow:visible;padding:8px 6px 5px;color:#dce9f6;margin:10px 0}
+.dr-bracket-header{display:flex;justify-content:space-between;align-items:center;gap:3px;padding:0 3px 7px}
+.dr-bracket-header>span:first-child{display:grid;gap:1px}.dr-bracket-header strong{font-size:14px;color:#f0f5ff}.dr-bracket-header small{font:900 italic 9px Arial;color:#d9b771;letter-spacing:.7px}
+.dr-bracket-key{display:flex;align-items:center;gap:4px;font-size:10px;color:#f2d48d;white-space:nowrap}.dr-bracket-key i{width:17px;height:2px;background:var(--route)}
+.derby-tree{--bracket-row:48px;--bracket-gap:10px;grid-template-columns:repeat(3,minmax(0,1fr));min-width:0;padding:0 1px 2px;background:none;border:none;gap:var(--bracket-gap)}
+.derby-tree h3{display:flex;justify-content:center;align-items:center;gap:3px;color:#cee0f3;font-size:clamp(10px,2.8vw,13px);border-bottom:1px solid #37506a;padding:0 0 5px;margin:0 0 4px;text-align:center;line-height:1.3}
+.derby-tree h3 small{font:900 9px Arial;color:#7894b0}
+.derby-tree-round{min-width:0}
+.derby-pair{background:#101f31;border:1px solid #3d5875;border-radius:6px;box-shadow:0 2px 5px #0005;min-width:0}
+.derby-pair.current{border-color:#c8a25c;box-shadow:0 0 0 1px #d6b26044}
+.derby-pair.winner-path,.derby-pair.user-path{border-color:var(--route)}
+.derby-tree-round:not(:last-child) .derby-pair::after,.derby-tree-round:not(:first-child) .derby-pair::before{border-color:#4d6986}
+.derby-tree-round:not(:last-child) .derby-pair.winner-path::after,.derby-tree-round:not(:first-child) .derby-pair.user-path::before{border-color:var(--route);filter:drop-shadow(0 0 2px #ba8a3d)}
+.derby-entry{position:relative;display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:25px 13px;gap:1px 2px;min-height:0;height:43px;padding:2px 4px;align-content:center;color:#d4e0ed;background:#142438;font-size:11px;line-height:1.13}
+.derby-entry+ .derby-entry{border-top:1px solid #39516a}
+.derby-entry.user{background:#34301f;color:#fff2cf;box-shadow:inset 2px 0 var(--route)}
+.derby-entry.winner{background:linear-gradient(130deg,#28425b,#193249);color:#f1f7fe}
+.derby-entry.user.winner{background:linear-gradient(120deg,#66522c,#392f23);color:#fff3ce;box-shadow:inset 2px 0 var(--route)}
+.derby-entry.pending{color:#94a8be;background:#101d2e}
+.derby-entry-name{grid-column:1/-1;grid-row:1;display:flex;align-items:center;gap:3px;min-width:0;max-width:100%}
+.derby-entry-name .club-badge{width:13px;height:13px;flex:0 0 13px;margin:0;padding:0}
+.derby-entry .derby-player{grid-column:1/-1;grid-row:1;min-width:0;font-size:clamp(10px,2.65vw,12px);font-weight:800;line-height:1.13;overflow-wrap:anywhere;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.derby-entry .dr-bracket-score{grid-column:2;grid-row:2;align-self:center;justify-self:end;white-space:nowrap;color:#f2f6fa;font:950 13px/1 Arial,sans-serif;letter-spacing:0}
+.derby-entry.winner .dr-bracket-score{color:#fce19b}
+.derby-entry .dr-bracket-score small{display:inline;font:800 9px/1 Arial;color:#b2bfd0;padding-left:2px}
+.derby-entry.user .dr-bracket-score small{color:#ead3a1}
+.dr-entry-status{grid-column:1;grid-row:2;display:flex;align-items:center;gap:4px;font:900 9px/1 Arial;color:#ffda82;white-space:nowrap}
+.dr-entry-status i{font:900 11px/1 Arial;color:#d9e9ff}.derby-entry.user .dr-entry-status i{color:#ffda82}
+.derby-stat-card{margin:9px 0 0;background:#122640;border:1px solid #3a5877;border-radius:9px;padding:8px;color:#eff8ff}
+.derby-stat-card h3{text-align:left;font-size:13px;margin:0 0 7px}
+.derby-stat-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:3px}
+.derby-stat-grid>div{background:#203b57;padding:6px 2px 7px;border-radius:5px;min-width:0}
+.derby-stat-grid small{font-size:clamp(8px,2.5vw,11px);white-space:normal;line-height:1.2}
+.derby-stat-grid b{font:900 clamp(15px,4.8vw,22px)/1.1 Arial;white-space:nowrap}
+.derby-stat-grid em{font-size:9px;margin-left:2px}
+.dr-shot-details{margin-top:7px;border-top:1px solid #405876;padding-top:7px}
+.dr-shot-details summary,.modal .dr-op-record summary{font-size:12px;color:#d5e7f9;padding:3px 0;cursor:pointer}
+.dr-map-frame{display:grid;place-items:center;min-height:155px;background:#091727;border-radius:8px;margin:7px 0}
+.modal .derby-map,.dr-map-frame .derby-map{display:block!important;width:100%!important;max-width:390px!important;height:auto!important;min-height:155px;max-height:260px!important;margin:0!important;aspect-ratio:auto!important;background:none;overflow:visible}
+.derby-shot-list>div{grid-template-columns:21px 35px minmax(45px,1fr) minmax(62px,1.25fr);gap:3px}.derby-shot-list small{overflow-wrap:anywhere}
+.modal .dr-op-record{margin-top:10px;color:#edf5ff}
+@media(max-width:360px){.modal:is([data-kind="derby-result"],[data-kind="online-derby-result"]){padding:8px}.derby-bracket{padding-inline:4px}.derby-tree{--bracket-gap:8px}.derby-entry{padding-inline:3px}.derby-entry-name{gap:2px}.derby-entry-name .club-badge{flex-basis:12px;width:12px;height:12px}.derby-tree h3 small{display:none}.dr-result-side>strong{font-size:11px}}
+@media(min-width:600px){.derby-tree{--bracket-row:51px;--bracket-gap:20px}.derby-entry{height:46px;padding-inline:7px}.derby-entry .derby-player{font-size:13px}.derby-entry .dr-bracket-score{font-size:15px}.derby-entry-name .club-badge{width:17px;height:17px;flex-basis:17px}}
+@media(orientation:landscape) and (max-height:530px){.game-screen.derby-active .game-stage>.scoreboard{left:7px;transform:none;width:min(340px,48%)}.derby-spectacle,.derby-spectacle.walkoff{padding-bottom:4%}}
+@media(prefers-reduced-motion:reduce){.derby-spectacle.fire .dr-hr-banner,.derby-spectacle.walkoff.fire .dr-hr-banner,.derby-spectacle.dr-other-shot.fire .dr-hr-banner{animation:none;opacity:1}}
+
+.dr-champion-trophy{width:30px!important;height:30px!important;display:inline-block!important;vertical-align:-2px;margin-right:6px;object-fit:contain}.modal[data-kind="online-derby-result"] .derby-record{color:#d8e7f7;font-size:11px;gap:7px;margin:8px 0}.modal[data-kind="online-derby-result"] .derby-record span{flex:1;min-width:0;overflow-wrap:anywhere}.dr-result-hero.champion .dr-result-title{animation:dr-champion-reveal .7s ease-out both}@keyframes dr-champion-reveal{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}@media(prefers-reduced-motion:reduce){.dr-result-hero.champion .dr-result-title{animation:none}}
+
+.dr-result-hero.champion::after{content:"";position:absolute;inset:0 0 auto;height:45px;pointer-events:none;background-image:radial-gradient(ellipse,#ffd878 0 1.5px,transparent 2px),radial-gradient(ellipse,#fff3c8 0 1px,transparent 2px);background-size:31px 23px,43px 31px;opacity:.45;mask-image:linear-gradient(#000,transparent)}

@@ -2624,7 +2624,7 @@ window.NightGame=class NightGame{
    this.derby.turnHR++;this.session.hr++;this.session.hits++;
    this.session.maxDistance=Math.max(this.session.maxDistance,this.hit.distance);
    if(this.derby.enhanced){
-     const walkoff=this.derby.clinched,streak=this.derby.streak,deep=this.hit.distance>=150;
+     const walkoff=this.derby.clinched,streak=this.derby.streak,deep=this.hit.distance>=140;
      f.homerCelebration={level:walkoff||deep||streak>=5?3:streak>=3?2:1,walkoff,streak,distance:this.hit.distance,tag:walkoff?'WALK-OFF HOME RUN':deep?'MONSTER SHOT':streak>=3?streak+' IN A ROW':'HOME RUN'};
     }
     this.message('HOME RUN','ホームラン！',this.hit.distance+' m','homer');this.emit('sound','homer');

@@ -14,7 +14,8 @@ for(const id of ['tokyo-dome','river']){
  const g={park,phase:'result',phaseTime:650,derby:{enhanced:true},field:{outcome:'hr',ball:{x:20,y:145},homerCelebration:{level:3,walkoff:true}}};
  show.update(g);assert(show.group.visible&&show.jets.every(j=>j.root.visible)&&show.bursts.every(b=>b.root.visible));
  for(const j of show.jets){assert(j.root.position.length()>85);assert(j.flame[0].scale.y>1);}
- for(const b of show.bursts){assert(b.stars.count===56);assert(b.lines.geometry.attributes.position.array.some(n=>n!==0));}
+ for(const b of show.bursts){assert(b.stars.count===56);assert(!b.lines.visible);assert(b.stars.instanceMatrix.array.some(n=>n!==0));}
+ g.field.homerCelebration={level:1};show.update(g);assert.equal(show.jets.filter(j=>j.root.visible).length,3);assert(show.bursts.every(b=>!b.root.visible));
  g.phase='windup';show.update(g);assert(!show.group.visible);
 }
 const r=Object.create(StadiumRenderer.prototype);r.scene=new T.Scene();r.parkDecor=new T.Group();r.scene.add(r.parkDecor);r.gl={isSoftwareRenderer:true};r.canvas={dataset:{}};r.vfx={crowdUniforms:{}};

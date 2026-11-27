@@ -1,6 +1,6 @@
 import { decodeTokyoDome } from './tokyo-model.js';
 import * as T from './vendor/three.module.min.js';
-import { venueVision } from './venue-vision.js?v=263';
+import { venueVision } from './venue-vision.js?v=265';
 
 // Instances are per renderer. A title-screen preview and a live game can coexist.
 const instances = new WeakMap();
