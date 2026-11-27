@@ -259,13 +259,34 @@ window.NightGame=class NightGame{
   const chase=clamp((strikes===2?.32:.17)-Math.max(0,edge-1.06)*.43+(80-contact)*.0015-walk*.70+Math.min(.045,breakAmount*.025)+anticipation*.30-(balls===3?.07:0),.015,.40);
   return isStrike?strike:chase;
  }
+ static crowdOptions=['full','high','medium','low','empty','auto'];
+ static crowdLeague(id){return id?.startsWith('npb-')||id==='apbc-japan'?'npb':id?.startsWith('kbo-')||id==='apbc-korea'?'kbo':id?.startsWith('apbc-')?'international':'cpbl';}
+ static crowdAttendance(g){
+  const mode=g?.crowdAttendanceMode||(g?.mode==='match'&&!g?.career?'full':'auto');
+  const levels={full:1,high:.75,medium:.50,low:.25,empty:0};
+  if(Object.hasOwn(levels,mode))return levels[mode];
+  if(!g)return 1;
+  if(g.apbcFinal||g.npbPostseason||g.crowdPostseason)return .98;
+  let h=2166136261;for(const c of (g.conditionSeed||'')+'/'+(g.teams?.home?.id||'')+'/'+(g.teams?.away?.id||'')+'/'+(g.park?.id||''))h=Math.imul(h^c.charCodeAt(0),16777619);
+  const unit=(h>>>0)%1000/999,weekend=g.crowdWeekend??((h>>>0)%7>=5),rank=g.crowdRankBoost||0;
+  const base=g.park?.school?.50:g.competition==='apbc2026'?.85:g.derby?.55:g.mode==='practice'||g.mode==='pitching'?.10:weekend?.65:.45;
+  return clamp(base+unit*(g.park?.school?.35:weekend?.30:.30)+rank-(g.weather==='rain'?.12:0),.05,1);
+ }
  static stadiumAtmosphere(g){
   const home=g?.teams?.home?.id||'',away=g?.teams?.away?.id||'',school=!!g?.park?.school;
-  const league=id=>id.startsWith('npb-')||id==='apbc-japan'?'npb':id.startsWith('kbo-')||id==='apbc-korea'?'kbo':id.startsWith('apbc-')&&id!=='apbc-taipei'?'other':'cpbl';
-  let h=2166136261;for(const c of home+'/'+away+'/'+(g?.park?.id||''))h=Math.imul(h^c.charCodeAt(0),16777619);
-  const attendance=school?.70:.74+(h>>>0)%25/100;
-  const active=league(g?.teams?.[g?.side]?.id||home);
-  return {attendance,excitement:g?.crowdExcitement?.()??.18,league:active,pan:g?.side==='away'?-.36:.36,tempo:active==='cpbl'?1.12:active==='kbo'?1.07:active==='npb'?.96:1};
+  const homeLeague=school?'school':NightGame.crowdLeague(home),awayLeague=school?'school':NightGame.crowdLeague(away);
+  const active=g?.side==='away'?awayLeague:homeLeague,attacking=g?.side==='away'?'away':'home';
+  const excitement=g?.crowdExcitement?.()??.18,phase=g?.phase,kind=g?.field?.outcome||g?.hit?.kind;
+  const review=['play-call','play-review','abs-call','abs-review'].includes(phase);
+  let attack=.18+excitement*.62,defense=.10+excitement*.24,reaction='watch';
+  if(review){attack=defense=.04;reaction='review';}
+  else if(phase==='cinematic'&&g.broadcastCut?.kind==='walkoff'||g?.walkoffWin&&phase==='ended'){attack=1;defense=.02;reaction='win';}
+  else if(phase==='result'&&kind==='hr'){attack=1;defense=.03;reaction='homer';}
+  else if(phase==='result'&&['single','double','triple','error'].includes(kind)){attack=.86;defense=.10;reaction='hit';}
+  else if(phase==='result'&&['flyout','groundout','forceout','doubleplay','strikeout','buntout'].includes(kind)||phase==='result'&&g?.log?.at(-1)?.en==='STRIKEOUT'){attack=.04;defense=.80;reaction='out';}
+  else if(phase==='field'){attack=g?.field?.foul?.23:Math.max(.53,attack);defense=Math.max(.25,defense);reaction='flight';}
+  else if(g?.bases?.[1]||g?.bases?.[2])reaction='chance';
+  return {attendance:NightGame.crowdAttendance(g),excitement:review?0:excitement,league:active,homeLeague,awayLeague,attackSide:attacking,homeExcite:attacking==='home'?attack:defense,awayExcite:attacking==='away'?attack:defense,reaction,pan:attacking==='away'?-.36:.36,tempo:active==='cpbl'?1.12:active==='kbo'?1.07:active==='npb'?.96:1};
  }
  // v206: game-state-aware manager decisions. Profiles are fictional club
  // tendencies, not claims about real managers.
@@ -488,6 +509,7 @@ window.NightGame=class NightGame{
 
  constructor(mode,difficulty,emit,options={}){
   this.conditionSeed=options.career?.fixtureId ? options.career.teamSeed+"/"+options.career.fixtureId : (typeof options.conditionSeed==='string'&&options.conditionSeed?options.conditionSeed:Date.now()+"/"+(++conditionGameSerial));
+  this.crowdAttendanceMode=NightGame.crowdOptions.includes(options.crowdAttendance)?options.crowdAttendance:(mode==='match'&&!options.career&&!options.apbcFixtureId?'full':'auto');this.crowdWeekend=options.crowdWeekend;this.crowdRankBoost=clamp(Number(options.crowdRankBoost)||0,0,.15);this.crowdPostseason=!!options.crowdPostseason;
   this.runningRevision=41;this.competition=options.competition||null;this.apbcFixtureId=options.apbcFixtureId||null;this.apbcRoster=options.apbcRoster||null;this.apbcFinal=options.apbcFinal===true;this.mode=mode;this.career=options.career||null;this.arcadeRoster=options.arcadeRoster===true;this.difficulty=difficulty;this.emit=emit;this.phase='intro';this.phaseTime=0;this.time=0;this.paused=false;
   this.inning=1;this.half=this.career?.continuous||['match','pennant','pitching','career-pitch'].includes(mode)?'top':'bottom';this.outs=0;this.balls=0;this.strikes=0;this.bases=[false,false,false];
   this.npbPostseason=mode==='pennant'&&options.npbPostseason===true;

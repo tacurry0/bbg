@@ -1,5 +1,5 @@
 import { jerseyUV, torsoGeometry, pantsTexture, capGeometry, visorGeometry, uniformTexture, helmetOrCap, contrast } from './uniform-render.js?v=228';
-import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=219';
+import { buildCustomPark, boardPlacement } from './custom-park3d.js?v=243';
 import { rememberOriginalGround, leaveTokyoDome, showTokyoDome, domeCameraLimit } from './tokyo-nightball.js';
 import * as T from './vendor/three.module.min.js';
 import { CanvasSceneRenderer } from './canvas3d.js?v=228';
@@ -19,7 +19,7 @@ import {
  enhanceDirtMaterial,
  enhanceCrowdMaterial,
  StadiumVFX
-} from './stadium-fx.js?v=205';
+} from './stadium-fx.js?v=243';
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const Y=new T.Vector3(0,1,0);
 const BALL_RADIUS=.078;
@@ -312,31 +312,109 @@ export class StadiumRenderer {
   const panel=new T.Mesh(new T.PlaneGeometry(3.5,1.75),new T.MeshBasicMaterial({map:texture,side:T.DoubleSide}));
   panel.renderOrder=2;panel.userData.parkMarker=key;return panel;
  }
- prepareSupporters(){
-  this.supporterKey=null;this.supporterMeshes=[];
-  this.parkDecor.traverse(o=>{
-   if(!o.isInstancedMesh||!/(spectators|seated crowd|crowd heads|nightball crowd)/i.test(o.name))return;
-   if(!this.gl.isSoftwareRenderer&&!o.material.userData.crowdEnhanced){
-    o.material=o.material.clone();o.material.userData.crowdEnhanced=false;o.userData.disposeMaterial=true;
-    enhanceCrowdMaterial(o.material,this.gl,this.vfx.crowdUniforms);
-   }
-   if(o.instanceColor&&!/crowd heads/i.test(o.name))this.supporterMeshes.push({mesh:o,colors:o.instanceColor.array.slice()});
-  });
+ // Each sampled seat is one persistent fan. The two LOD batches share
+ // stable positions and use a shader, not thousands of animated objects.
+ supporterGeometry(detailed){
+  const positions=[],normals=[],colors=[],parts=[];
+  const append=(geo,x,y,z,part,hex)=>{
+   const g=geo.index?geo.toNonIndexed():geo,ps=g.getAttribute('position'),ns=g.getAttribute('normal'),c=new T.Color(hex);
+   for(let i=0;i<ps.count;i++){positions.push(ps.getX(i)+x,ps.getY(i)+y,ps.getZ(i)+z);normals.push(ns.getX(i),ns.getY(i),ns.getZ(i));colors.push(c.r,c.g,c.b);parts.push(part);}
+   if(g!==geo)g.dispose();geo.dispose();
+  };
+  const box=(w,h,d,x,y,z,part,col)=>append(new T.BoxGeometry(w,h,d),x,y,z,part,col);
+  box(.43,.52,.29,0,.61,0,0,0xffffff);
+  append(new T.SphereGeometry(.165,detailed?6:4,detailed?4:3),0,1.02,.015,1,0xe2b28b);
+  if(detailed){
+   box(.13,.37,.14,-.27,.57,.03,2,0xffffff);box(.13,.37,.14,.27,.57,.03,3,0xffffff);
+   box(.15,.17,.16,-.27,.32,.06,2,0xd5b394);box(.15,.17,.16,.27,.32,.06,3,0xd5b394);
+   box(.37,.10,.36,0,1.14,.015,4,0xffffff);
+   box(.32,.035,.20,0,1.13,.22,4,0xffffff);
+   box(.08,.45,.08,.35,.37,.09,5,0xffffff); // cheering stick
+   box(.52,.12,.035,0,.75,.27,6,0xffffff); // scarf / towel
+   box(.035,.85,.035,.36,.55,.11,7,0xe5e5e5);box(.45,.27,.035,.57,.88,.11,7,0xffffff);
+  }
+  const geometry=new T.BufferGeometry();
+  geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));geometry.setAttribute('normal',new T.Float32BufferAttribute(normals,3));
+  geometry.setAttribute('color',new T.Float32BufferAttribute(colors,3));geometry.setAttribute('fanPart',new T.Float32BufferAttribute(parts,1));
+  return geometry;
  }
- updateSupporters(g){
-  if(!g||!this.supporterMeshes?.length)return;
-  const home=g.teams.home,away=g.teams.away,key=[home.id,away.id,home.color,away.color].join('/');
-  if(this.supporterKey===key)return;this.supporterKey=key;
-  const matrix=new T.Matrix4(),color=new T.Color(),homeColor=new T.Color(home.color||0xffffff),awayColor=new T.Color(away.color||0xffffff);
-  for(const {mesh,colors} of this.supporterMeshes){
+ prepareSupporters(){
+  this.supporterKey=null;this.supporterMeshes=[];this.crowdQuality=1;
+  const seats=[],old=[],park=this.parkDecor;
+  park.updateWorldMatrix(true,true);
+  park.traverse(o=>{
+   if(!o.isInstancedMesh)return;
+   if(/blue stadium seats|seat rows/i.test(o.name))seats.push(o);
+   if(/spectators|seated crowd|crowd heads|nightball crowd/i.test(o.name))old.push(o);
+  });
+  const sources=seats.length?seats:old.filter(o=>!/crowd heads/i.test(o.name));
+  if(!sources.length)return;
+  const software=this.gl.isSoftwareRenderer,small=(globalThis.navigator?.hardwareConcurrency||8)<=4||(globalThis.navigator?.deviceMemory||8)<=4||Math.min(globalThis.innerWidth||1000,globalThis.innerHeight||1000)<560;
+  const budget=this.hero?900:software?650:small?4700:8500;
+  const total=sources.reduce((sum,o)=>sum+o.count,0),stride=Math.max(1,Math.ceil(total/budget));
+  const inv=new T.Matrix4().copy(park.matrixWorld).invert(),matrix=new T.Matrix4(),local=new T.Matrix4(),pos=new T.Vector3(),quat=new T.Quaternion(),scale=new T.Vector3();
+  const sample=[];let ordinal=0;
+  for(const mesh of sources){
+   local.multiplyMatrices(inv,mesh.matrixWorld);
    for(let i=0;i<mesh.count;i++){
-    mesh.getMatrixAt(i,matrix);const e=matrix.elements;
-    if(Math.hypot(e[4],e[5],e[6])<.38)continue;
-    color.fromArray(colors,i*3);const section=Math.floor(e[12]/12);
-    if((i*17+Math.abs(section)*13)%10<8)color.lerp(section<0?awayColor:homeColor,.72);
-    mesh.setColorAt(i,color);
+    mesh.getMatrixAt(i,matrix);matrix.premultiply(local);matrix.decompose(pos,quat,scale);
+    if(!seats.length&&/spectators/i.test(mesh.name)&&scale.y<.38)continue; // separate head entries
+    const id=ordinal++;if(id%stride!==0||scale.length()<.05)continue;
+    const seed=((Math.imul(id+193,2654435761)>>>0)%100003)/100003;
+    const len=Math.hypot(pos.x,pos.z)||1;
+    const x=pos.x-(seats.length?pos.x/len*.20:0),z=pos.z-(seats.length?pos.z/len*.20:0);
+    const y=pos.y-(seats.length?.28:/nightball crowd/i.test(mesh.name)?.40:.52);
+    sample.push({x,y,z,seed,yaw:Math.atan2(-x,-z),detail:Math.hypot(x,z)+Math.max(0,y)*2});
    }
-   mesh.instanceColor.needsUpdate=true;
+  }
+  if(!sample.length)return;
+  for(const o of old)o.visible=false;
+  sample.sort((a,b)=>a.detail-b.detail);
+  const detailed=software||this.hero?0:Math.min(small?700:1400,Math.floor(sample.length*.30));
+  for(const [list,rich] of [[sample.slice(0,detailed),true],[sample.slice(detailed),false]]){
+   if(!list.length)continue;list.sort((a,b)=>a.seed-b.seed);
+   const geometry=this.supporterGeometry(rich),material=new T.MeshStandardMaterial({color:0xffffff,vertexColors:true,roughness:.9});
+   material.userData.fanModel=true;
+   const sideAttr=new T.InstancedBufferAttribute(new Float32Array(list.length),1),seedAttr=new T.InstancedBufferAttribute(new Float32Array(list.length),1);
+   geometry.setAttribute('fanSide',sideAttr);geometry.setAttribute('fanSeed',seedAttr);
+   const mesh=new T.InstancedMesh(geometry,material,list.length);mesh.name=rich?'Nightball crowd detailed':'Nightball crowd distant';mesh.userData.disposeMaterial=true;mesh.castShadow=false;mesh.receiveShadow=false;
+   enhanceCrowdMaterial(material,this.gl,this.vfx.crowdUniforms);
+   park.add(mesh);this.supporterMeshes.push({mesh,list,sideAttr,seedAttr});
+  }
+  this.updateSupporters(null,true);
+ }
+ updateSupporters(g,force=false){
+  if(!this.supporterMeshes?.length)return;
+  const a=window.NightGame.stadiumAtmosphere(g),home=g?.teams?.home,away=g?.teams?.away;
+  const key=[home?.id,away?.id,home?.color,away?.color,a.attendance,a.homeLeague,a.awayLeague].join('/');
+  // Slow devices reduce the rendered sample count, never the match's
+  // configured attendance or crowd audio. Stable shuffled ordering avoids
+  // turning a whole seating section empty when reducing detail.
+  if(!this.gl.isSoftwareRenderer&&this.frameAvg>34&&this.graphicsRatio<=1&&this.crowdQuality===1){
+   this.crowdQuality=.72;for(const batch of this.supporterMeshes)batch.mesh.count=Math.round((batch.visibleCount||0)*this.crowdQuality);
+  }
+  if(!force&&this.supporterKey===key)return;this.supporterKey=key;
+  const anchor=new T.Object3D(),color=new T.Color(),homeColor=new T.Color(home?.color||0x2869bb),awayColor=new T.Color(away?.color||0xbc3c3c);
+  const neutral=[0xd6dce4,0x536477,0xefe1c6,0x78939e,0x9f776d,0x34475d];
+  for(const {mesh,list,sideAttr,seedAttr} of this.supporterMeshes){
+   let count=0;
+   for(const fan of list){
+    if(fan.seed>=a.attendance)continue;
+    const {x,y,z,seed,yaw}=fan,angle=Math.atan2(x,z),outfield=z>70&&Math.abs(angle)<.92;
+    const style=a.homeLeague,cheeringSection=style==='npb'?outfield:style==='cpbl'||style==='kbo'?(!outfield&&Math.abs(x)>26):Math.abs(x)>25;
+    // Approximate venue sections; home majority, distinct visitor block,
+    // and neutral spectators spread throughout the rest of the stands.
+    const visitor=style==='npb'?x<-18&&outfield:x<-32&&(!outfield||angle<-.36);
+    const side=seed<.13?0:visitor?(seed<.85?-1:1):cheeringSection||seed<.72?1:seed<.88?0:-1;
+    const height=.88+seed*.26;
+    anchor.position.set(x,y,z);anchor.rotation.set(0,yaw,0);anchor.scale.set(.86+seed*.22,height,.88+seed*.18);anchor.updateMatrix();
+    mesh.setMatrixAt(count,anchor.matrix);
+    color.setHex(neutral[Math.floor(seed*97)%neutral.length]);
+    if(side!==0)color.lerp(side===1?homeColor:awayColor,cheeringSection?.83:.58);
+    mesh.setColorAt(count,color);sideAttr.setX(count,side);seedAttr.setX(count,seed);count++;
+   }
+   const batch=this.supporterMeshes.find(b=>b.mesh===mesh);batch.visibleCount=count;
+   mesh.count=Math.round(count*this.crowdQuality);mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;sideAttr.needsUpdate=true;seedAttr.needsUpdate=true;mesh.computeBoundingSphere();
   }
  }
  decoratePark(park){

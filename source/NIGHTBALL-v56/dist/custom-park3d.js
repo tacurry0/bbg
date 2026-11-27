@@ -70,7 +70,7 @@ function addStands(g,p){
   }
   triangles(g,verts,material(s.seatColor));triangles(g,rows,material(new T.Color(s.seatColor).multiplyScalar(1.35)));
  }
- if(crowd.length){const m=new T.InstancedMesh(new T.BoxGeometry(.42,.72,.46),material(0xffffff),crowd.length);m.userData.disposeMaterial=true;const o=new T.Object3D(),colors=[0xd6d9df,0x89b6d9,0xb65265,0xd5b764,0x586c8c];crowd.forEach((p,i)=>{o.position.set(...p);o.updateMatrix();m.setMatrixAt(i,o.matrix);m.setColorAt(i,new T.Color(colors[i%colors.length]));});g.add(m);}
+ if(crowd.length){const m=new T.InstancedMesh(new T.BoxGeometry(.42,.72,.46),material(0xffffff),crowd.length);m.name='Nightball crowd custom';m.userData.disposeMaterial=true;const o=new T.Object3D(),colors=[0xd6d9df,0x89b6d9,0xb65265,0xd5b764,0x586c8c];crowd.forEach((p,i)=>{o.position.set(...p);o.updateMatrix();m.setMatrixAt(i,o.matrix);m.setColorAt(i,new T.Color(colors[i%colors.length]));});g.add(m);}
 }
 export function boardPlacement(p){const s=p.customSpec,a=s.boardPosition==='left'?-.46:s.boardPosition==='right'?.46:0;return {pos:rad(a,wall(p,a)+8,s.boardElevation),angle:a,width:s.boardWidth,height:s.boardHeight};}
 function roof(g,p){

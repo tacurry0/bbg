@@ -58,25 +58,26 @@
   }
   stopVoice(v){if(!v)return;try{v.source.stop();}catch{}this.voices.delete(v);v.nodes.forEach(n=>{try{n.disconnect();}catch{}});}
   stopEffects(){for(const v of [...this.voices])if(v!==this.bed)this.stopVoice(v);}
-  setAtmosphere(a){if(!a)return;const changed=a.attendance!==this.atmosphere.attendance;this.atmosphere=a;if(changed&&this.bed&&this.context)this.bed.amp.gain.setTargetAtTime(this.bedGain*(.7+this.excitement*.8)*a.attendance,this.context.currentTime,.4);}
-  updateBed(){if(this.scene.active&&this.scene.enabled&&this.scene.crowd>0&&!this.bed){this.bedGain=this.park?.startsWith('school-')?.13:.26;this.bed=this.sample('crowd-bed',{gain:this.bedGain*(0.7+this.excitement*.8)*this.atmosphere.attendance,crowd:true,loop:true});}if(this.scene.crowd===0)this.stopBed();}
+  setAtmosphere(a){if(!a)return;const changed=a.attendance!==this.atmosphere.attendance||a.reaction!==this.atmosphere.reaction;this.atmosphere=a;if(a.reaction==='review'&&this.cheerVoice){this.stopVoice(this.cheerVoice);this.cheerVoice=null;this.lastCheer=-100;}if(changed&&this.bed&&this.context)this.bed.amp.gain.setTargetAtTime(this.crowdBedLevel(),this.context.currentTime,.32);}
+  crowdBedLevel(){const a=this.atmosphere;return this.bedGain*(.7+this.excitement*.8)*a.attendance*(a.reaction==='review'?.40:1);}
+  updateBed(){if(this.scene.active&&this.scene.enabled&&this.scene.crowd>0&&!this.bed){this.bedGain=this.park?.startsWith('school-')?.13:.26;this.bed=this.sample('crowd-bed',{gain:this.crowdBedLevel(),crowd:true,loop:true});}if(this.scene.crowd===0)this.stopBed();}
   // Game-situation excitement (0..1) from NightGame.crowdExcitement: the
   // bed swells and every cheer gets louder as the game tightens.
   setExcitement(v){
    const x=Math.max(0,Math.min(1,Number(v)||0));
    if(Math.abs(x-this.excitement)<.04)return;
    this.excitement=x;
-   if(this.bed&&this.context)this.bed.amp.gain.setTargetAtTime(this.bedGain*(0.7+x*.8)*this.atmosphere.attendance,this.context.currentTime,.4);
+   if(this.bed&&this.context)this.bed.amp.gain.setTargetAtTime(this.crowdBedLevel(),this.context.currentTime,.4);
   }
   stopBed(){if(!this.bed)return;const v=this.bed;this.bed=null;this.stopVoice(v);}
-  cheer(level=1,seconds=3){
-   const c=this.context;if(!c||!this.scene.enabled||!this.scene.crowd)return;
+  cheer(level=1,seconds=3,pan=this.atmosphere.pan,rate=1){
+   const c=this.context;if(!c||!this.scene.enabled||!this.scene.crowd||!this.atmosphere.attendance)return;
    const scaled=Math.min(1.3,level*(0.72+this.excitement*.55)*this.atmosphere.attendance);
    // Replace a small reaction with a big one; never stack several crowd recordings.
    if(c.currentTime-this.lastCheer<.45&&scaled<=this.cheerLevel)return;
    if(this.cheerVoice)this.stopVoice(this.cheerVoice);
    this.lastCheer=c.currentTime;this.cheerLevel=scaled;
-   this.cheerVoice=this.sample('crowd-cheer',{gain:scaled*.54,crowd:true,pan:this.atmosphere.pan,rate:.96+this.atmosphere.tempo*.04,duration:seconds,offset:Math.random()*.5,fade:Math.min(1.4,seconds*.55)});
+   this.cheerVoice=this.sample('crowd-cheer',{gain:scaled*.54,crowd:true,pan,rate:(.96+this.atmosphere.tempo*.04)*rate,duration:seconds,offset:Math.random()*.5,fade:Math.min(1.4,seconds*.55)});
   }
   noise(kind,gain=.2){
    const c=this.context;if(!c||!this.scene.enabled)return;
@@ -108,8 +109,8 @@
    if(!this.context||!this.scene.enabled)return;
    const jitter=()=>.975+Math.random()*.05,pan=detail.hand==='L'?.16:-.16;
    switch(name){
-    case'hit':case'perfect':this.sample(this.variant('bat'),{gain:name==='perfect'?.96:.76,rate:jitter(),pan});if(name==='perfect')this.cheer(.18,1.2);break;
-    case'flight':this.cheer(.25,2.1);break;
+    case'hit':case'perfect':this.sample(this.variant('bat'),{gain:name==='perfect'?.96:.76,rate:jitter(),pan});this.cheer(name==='perfect'?.30:.15,1.2,this.atmosphere.pan,1.07);break;
+    case'flight':this.cheer(.32,2.1,this.atmosphere.pan,1.04);break;
     case'catch':this.sample(this.variant('mitt'),{gain:.74,rate:jitter(),pan:detail.pan||0});break;
     case'pickup':this.sample(this.variant('mitt'),{gain:.38,rate:.93*jitter(),pan:detail.pan||0});break;
     case'swing':this.sample('swish',{gain:.16,rate:1.75*jitter(),pan});break;
@@ -118,11 +119,11 @@
     case'bounce':this.noise('bounce',.28);break;
     case'wall':this.noise('wall',.45);this.cheer(.37,1.65);break;
     case'safe':this.cheer(.44,2.3);break;
-    case'foul':this.cheer(.15,1.2);break;
-    case'out':if(this.cheerLevel<.6&&this.cheerVoice){this.stopVoice(this.cheerVoice);this.lastCheer=-100;}this.cheer(.20,1.3);break;
-    case'strike':this.cheer(.12,1);break;
+    case'foul':this.cheer(Math.abs(detail.ballPan||0)>.35?.25:.12,1.2,detail.ballPan||this.atmosphere.pan,1.12);break;
+    case'out':if(this.cheerLevel<.6&&this.cheerVoice){this.stopVoice(this.cheerVoice);this.lastCheer=-100;}this.cheer(.34,1.5,-this.atmosphere.pan,1.04);break;
+    case'strike':this.cheer(.12,1,-this.atmosphere.pan);break;
     case'ball':break;
-    case'homer':this.cheer(1,6.5);break;
+    case'homer':this.cheer(1.15,6.5,this.atmosphere.pan,.98);break;
     case'win':this.cheer(1.15,8);break;
     case'timing':this.noise('timing',.12);break;
     case'tap':this.noise('tap',.08);break;

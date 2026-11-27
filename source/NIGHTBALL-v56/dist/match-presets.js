@@ -33,7 +33,7 @@ const INNINGS=[3,5,9];
 const CD_KEYS=['bat','pitch','field','run'];
 const VARIANT_KEYS=['variantFullCount','variantMetalBat','variantLowReboundBat','variantNoBreaking','variantTwoOuts'];
 const OPTIONAL_BOOL_KEYS=['randomRoster',...VARIANT_KEYS];
-const FIELDS=['matchTeam','matchOpponent','matchUserHome','innings','park','gameLighting','pitcher','difficulty','customDifficulty','defenseSpeed','fieldSpeed','manualRunning','battingAssist','tiebreak',...OPTIONAL_BOOL_KEYS];
+const FIELDS=['matchTeam','matchOpponent','matchUserHome','innings','park','gameLighting','crowdAttendance','pitcher','difficulty','customDifficulty','defenseSpeed','fieldSpeed','manualRunning','battingAssist','tiebreak',...OPTIONAL_BOOL_KEYS];
 const FALLBACKS={matchTeam:'owls',matchOpponent:'foxes',matchUserHome:true,innings:5,park:'night',gameLighting:'auto',pitcher:0,difficulty:'standard',defenseSpeed:1,fieldSpeed:1,manualRunning:true,battingAssist:true,tiebreak:false,randomRoster:false,variantFullCount:false,variantMetalBat:false,variantLowReboundBat:false,variantNoBreaking:false,variantTwoOuts:false};
 function cleanName(name){
  const clean=String(name??'').replace(/[<>&"']/g,'').trim().slice(0,24);
@@ -70,6 +70,7 @@ function cleanValues(values={}){
  // when the source actually carries the key. Pre-v153 presets have none
  // of them, and omitting them here is what lets applyMatchPreset's
  // Object.assign leave the live values untouched for those fields.
+ if(Object.hasOwn(v,'crowdAttendance'))out.crowdAttendance=['full','high','medium','low','empty','auto'].includes(v.crowdAttendance)?v.crowdAttendance:'full';
  for(const k of OPTIONAL_BOOL_KEYS)if(Object.prototype.hasOwnProperty.call(v,k))out[k]=boolOr(v[k],FALLBACKS[k]);
  return out;
 }

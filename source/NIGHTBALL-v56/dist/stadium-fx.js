@@ -457,6 +457,47 @@ export function enhanceDirtMaterial(material, gl) {
 export function enhanceCrowdMaterial(material, gl, crowdUniforms) {
   if (gl.isSoftwareRenderer || material.userData.crowdEnhanced) return;
   material.userData.crowdEnhanced = true;
+  if(material.userData.fanModel){
+    material.customProgramCacheKey=()=> 'nb-fan-model-v243';
+    material.onBeforeCompile=(shader)=>{
+      for(const [name,uniform] of Object.entries(crowdUniforms))shader.uniforms[name]=uniform;
+      shader.vertexShader=shader.vertexShader.replace('#include <common>',`#include <common>
+        uniform float uCrowdTime,uCrowdHome,uCrowdAway,uCrowdHomeStyle,uCrowdAwayStyle;
+        attribute float fanPart,fanSide,fanSeed;
+      `).replace('#include <color_vertex>',`#include <color_vertex>
+        #if defined(USE_COLOR) || defined(USE_INSTANCING_COLOR)
+          if(fanPart>0.5&&fanPart<1.5){vColor.rgb=mix(vec3(0.36,0.20,0.12),vec3(0.91,0.70,0.52),fract(fanSeed*13.71));}
+          if(fanPart>3.5&&fanPart<4.5)vColor.rgb=mix(vColor.rgb,vec3(0.10,0.12,0.17),0.22);
+        #endif
+      `).replace('#include <begin_vertex>',`#include <begin_vertex>
+        #ifdef USE_INSTANCING
+          float excite=fanSide>0.5?uCrowdHome:fanSide< -0.5?uCrowdAway:(uCrowdHome+uCrowdAway)*0.22;
+          float style=fanSide< -0.5?uCrowdAwayStyle:uCrowdHomeStyle;
+          float phase=uCrowdTime*(style==1.0?5.8:style==2.0?7.0:style==3.0?6.4:4.7)+fanSeed*28.0;
+          float stand=smoothstep(fanSeed*0.62+0.14,fanSeed*0.62+0.30,excite);
+          float wave=sin(phase),beat=abs(wave),active=smoothstep(0.20,0.82,excite);
+          transformed.y+=stand*(0.22+beat*0.12*active)-0.10;
+          transformed.x+=wave*0.035*active;
+          if(fanPart>1.5&&fanPart<3.5){
+            float signArm=fanPart<2.5?-1.0:1.0;
+            float raise=stand*(0.9+0.48*beat)*active+0.12*beat;
+            vec2 pivot=vec2(signArm*0.25,0.78),rel=transformed.xy-pivot;
+            float a=signArm*raise;transformed.xy=pivot+mat2(cos(a),sin(a),-sin(a),cos(a))*rel;
+          }
+          // Props differ by league, and only a subset of supporters hold them.
+          if(fanPart>4.5){
+            float prop=fract(fanSeed*37.0);
+            bool stick=fanPart<5.5&&style<2.5&&prop<0.21;
+            bool towel=fanPart>5.5&&fanPart<6.5&&style>0.5&&prop>=0.21&&prop<0.36;
+            bool flag=fanPart>6.5&&prop>=0.36&&prop<0.43;
+            if(!(stick||towel||flag)||abs(fanSide)<0.5)transformed=vec3(0.0,-0.12,0.0);
+            else{transformed.y+=stand*0.52+beat*active*0.18;transformed.x+=wave*active*0.15;}
+          }
+        #endif
+      `);
+    };
+    return;
+  }
   material.customProgramCacheKey = () => 'nb-crowd-v205';
   material.onBeforeCompile = (shader) => {
     shader.uniforms.uCrowdTime = crowdUniforms.uCrowdTime;
@@ -496,7 +537,9 @@ export class StadiumVFX {
       uCrowdTime: { value: 0 },
       uCrowdExcite: { value: 0 },
       uCrowdTempo: { value: 1 },
-      uCrowdAttendance: { value: 1 }
+      uCrowdAttendance: { value: 1 },
+      uCrowdHome: { value: .15 }, uCrowdAway: { value: .15 },
+      uCrowdHomeStyle: { value: 1 }, uCrowdAwayStyle: { value: 1 }
     };
     if (this.software) return;
 
@@ -771,6 +814,9 @@ export class StadiumVFX {
     const isHit = fieldMode && g?.field && !g.field.foul;
     const a=window.NightGame?.stadiumAtmosphere(g)||{attendance:1,excitement:0,tempo:1};
     this.crowdUniforms.uCrowdAttendance.value=a.attendance;this.crowdUniforms.uCrowdTempo.value=a.tempo;
+    const styleCode={npb:0,cpbl:1,kbo:2,international:3,school:4};
+    this.crowdUniforms.uCrowdHomeStyle.value=styleCode[a.homeLeague]??0;this.crowdUniforms.uCrowdAwayStyle.value=styleCode[a.awayLeague]??0;
+    for(const [key,v] of [['uCrowdHome',a.homeExcite],['uCrowdAway',a.awayExcite]]){const u=this.crowdUniforms[key];u.value+=((v??.15)-u.value)*.085;}
     const targetExcite=isHR?1:Math.max(a.excitement*.72,(g?.phase==='result'&&['single','double','triple'].includes(g?.hit?.kind))?.82:isHit?.48:0);
     this.crowdUniforms.uCrowdExcite.value += (targetExcite - this.crowdUniforms.uCrowdExcite.value) * 0.08;
 
