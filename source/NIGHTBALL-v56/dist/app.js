@@ -222,7 +222,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const y=window.scrollY;
   if(screen===next&&scrollView===view)return y;
   if(screen!=='game')screenScrollPositions.set(scrollView,y);
-  if(next!=='game'){renderMatchIntro(null);renderLiveCut(null);}
+  if(next!=='game'){renderMatchIntro(null);renderLiveCut(null);hideImpact();}
   screen=next;scrollView=view;
   return screenScrollPositions.get(view)??0;
  }
@@ -795,7 +795,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   liveCutOwner=g;liveCutId=cut.id;root.dataset.kind=cut.kind;root.querySelector('button').disabled=false;
   const team=g.teams[cut.side],tr=s=>window.NightI18n?.text(s)??s;
   const labels={relief:'PITCHING CHANGE','pinch-hit':'PINCH HITTER',homer:'HOME RUN',strikeout:'STRIKEOUT',catch:'GREAT PLAY',pressure:'BIG MOMENT','final-inning':g.inning>g.totalInnings?'EXTRA INNING':'FINAL INNING',walkoff:'WALK-OFF WIN'};
-  root.querySelector('.lc-tag').textContent=cut.kind==='homer'&&cut.tag?cut.tag:labels[cut.kind]||'NIGHTBALL';
+  root.querySelector('.lc-tag').textContent=['homer','strikeout'].includes(cut.kind)?'':labels[cut.kind]||'NIGHTBALL';
   root.querySelector('.lc-name').textContent=cut.kind==='walkoff'?team.name:cut.name||g.pitcher.name;
   root.querySelector('.lc-detail').textContent=cut.kind==='homer'?[(cut.distance?cut.distance+' m':''),cut.runs?('+'+cut.runs):''].filter(Boolean).join(' · '):cut.kind==='strikeout'?`${cut.ks||1} K${cut.speed?' · '+cut.speed+' km/h':''}`:cut.kind==='relief'||cut.kind==='pinch-hit'?(cut.previous?cut.previous+' → '+cut.name:''):cut.kind==='walkoff'?g.awayScore+' – '+g.homeScore:cut.kind==='pressure'||cut.kind==='final-inning'?g.inning+tr('回')+' · '+g.awayScore+' – '+g.homeScore:team.name;
   root.querySelector('button').textContent=tr('スキップ')+' ›';
@@ -806,7 +806,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(onlineMatchActive()&&online.role==='guest'){
    if(online.sync.lock||online.sync.disconnected)return;
    if(online.session?.send({t:'cut-skip',id:c.id,epoch:online.sync.epoch}))$('live-cut').querySelector('button').disabled=true;
-  }else if(g.endBroadcastCut()){if(onlineMatchActive())onlineTick(g,true);renderLiveCut(null);}
+  }else if(g.endBroadcastCut()){hideImpact();if(onlineMatchActive())onlineTick(g,true);renderLiveCut(null);}
  }
  $('live-cut').addEventListener('click',skipLiveCut);
  function activateGame(){
@@ -2582,6 +2582,7 @@ function start(mode,challengeId=null,fixedPark=null){
  const playFeedback={score:null,scoreTime:0,callTime:0,resultTime:0,pendingReplay:false,baseVerdicts:[],umpireLast:null,umpireShownAt:0};
  let absShownCall=null,absShownResult=null,absFrozenCall=null,absTouch=null,absLastTap=null;
  function resetPlayFeedback(){
+  hideImpact();
   absShownCall=absShownResult=absFrozenCall=absTouch=absLastTap=null;
   for(const id of ['abs-actor','abs-count','abs-review','abs-challenge'])$(id).hidden=true;
   playFeedback.score=game?{away:game.awayScore,home:game.homeScore}:null;
@@ -2590,6 +2591,7 @@ function start(mode,challengeId=null,fixedPark=null){
   $('replay-skip').hidden=true;$('replay-skip').dataset.mode='';
  }
  function tickPlayFeedback(dt){
+  if(impactRemaining>0){impactRemaining=Math.max(0,impactRemaining-dt);if(!impactRemaining)hideImpact();}
   playFeedback.scoreTime=Math.max(0,playFeedback.scoreTime-dt);
   // The base OUT/SAFE panel takes visual priority over the result banner.
   // Only count time during which the final result can actually be read.
@@ -2859,6 +2861,24 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  // Keep the current tone and layout until opacity finishes fading out.
  // Resetting every class immediately briefly repaints the legacy banner.
+ var impactRemaining=0;
+ function hideImpact(){impactRemaining=0;const el=$('impact-fx');if(el)el.hidden=true;}
+ function showImpact(data){
+  const el=$('impact-fx'), k=data.en==='STRIKEOUT',c=data.celebration||{};
+  if(!el||game?.fastForward||game?.spectate||game?.replayView||review.playback)return false;
+  const short=!!(game?.derby||game?.timeAttack),duration=short?650:k?1370:1650;
+  el.hidden=true;el.dataset.kind=k?'k':'hr';el.dataset.level=String(c.level||1);
+  el.style.setProperty('--impact-duration',duration+'ms');
+  const glyph=el.querySelector('.impact-glyph');glyph.dataset.glyph=k?'K':'HR';glyph.textContent=k?'K':'';
+  const title=el.querySelector('.impact-title');title.replaceChildren();
+  const words=k?['STRIKEOUT']:['HOME','RUN'];
+  for(const word of words){const part=document.createElement('span');part.className='impact-word';part.textContent=word;title.append(part);}
+  const meta=el.querySelector('.impact-meta');
+  const tag=({'WALK-OFF HOME RUN':'WALK-OFF','GO-AHEAD HOME RUN':'GO-AHEAD','GAME-TYING HOME RUN':'GAME-TYING','GRAND SLAM':'GRAND SLAM'})[c.tag]||'';
+  const distance=c.distance||Number((data.sub||'').match(/(\d+)\s*m/)?.[1]||0);
+  meta.textContent=k?[c.ks?c.ks+' K':'',c.speed?c.speed+' km/h':''].filter(Boolean).join('  ·  '):[tag,distance?distance+' m':''].filter(Boolean).join('  ·  ');
+  void el.offsetWidth;el.hidden=false;impactRemaining=duration;return true;
+ }
  function hideStageBanner(){ $('stage-message').classList.remove('show'); }
  function hideStaleResultBanner(){
    if(!stageResultKey||!game)return;
@@ -2904,6 +2924,7 @@ function start(mode,challengeId=null,fixedPark=null){
      const finalOut=kind==='out'&&!['JUMPING CATCH','DIVING CATCH'].includes(data.en);
      playFeedback.resultTime=game?.fastForward?0:finalOut?1500:visionTone==='homer'&&!game?.derby?1800:0;
      stage.className='stage-message show '+kind+(pitchCall?' pitch-call pitch-call--'+pitchCall:'')+(resultCompact?' result-compact':'')+(visionTone?' vision-call':'');
+     if(special&&showImpact(data))stage.classList.add('impact-replaced');else hideImpact();
      stage.dataset.visionTone=visionTone;
      stage.dataset.visionLabel=displayEn;
      stage.dataset.visionLong=String(displayEn.length>12);
@@ -2915,7 +2936,7 @@ function start(mode,challengeId=null,fixedPark=null){
      const detailEl=stage.querySelector('.stage-call-detail');
      if(detailEl)detailEl.hidden=!!visionTone&&!special;
      const banner=stage.querySelector('.stage-call');
-     if(!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
+     if(!stage.classList.contains('impact-replaced')&&!samePitchCall&&typeof banner.animate==='function'&&!reduceAbsMotion.matches){
       banner.getAnimations().forEach(animation=>animation.cancel());
       const impact=['out','hit','homer'].includes(kind);
       banner.animate([
@@ -2923,7 +2944,7 @@ function start(mode,challengeId=null,fixedPark=null){
        {opacity:1,transform:'none'}
       ],{duration:special?350:pitchCall?245:impact?230:170,easing:'cubic-bezier(.16,1,.3,1)'});
      }
-   }else if(type==='clear'){playFeedback.baseVerdicts=[];playFeedback.callTime=0;$('umpire-call').hidden=true;stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
+   }else if(type==='clear'){hideImpact();playFeedback.baseVerdicts=[];playFeedback.callTime=0;$('umpire-call').hidden=true;stageResultKey='';playFeedback.resultTime=0;hideStageBanner();$('distance').textContent='';$('timing-result').textContent='';$('play-tools').hidden=true;const hrEl=$('hr-celebration');if(hrEl)hrEl.hidden=true;}
    else if(type==='sound')sound(data);
    else if(type==='cue'){syncAudio();stadiumAudio.cue(data);}
    else if(type==='music-result'){syncAudio();if(game)ballparkMusic.result(game,data.kind,data.player,data.side,data.thirdOut);}
