@@ -197,6 +197,13 @@ window.NightRenderer=class NightRenderer{
           c.lineWidth=.7;this.ellipse(c,cx,cy,Math.max(2,rx-4),Math.max(2,ry-4),null,g.power?'#ffdcaa55':'#e3ffc255');
           this.ellipse(c,cx,cy,2,2,'#f4ffe2');c.strokeStyle='#f4ffe2';c.lineWidth=1;c.beginPath();c.moveTo(cx-5,cy);c.lineTo(cx+5,cy);c.moveTo(cx,cy-5);c.lineTo(cx,cy+5);c.stroke();
         }else{c.shadowColor='#ffce8b';c.shadowBlur=5;c.lineWidth=1.5;this.ellipse(c,cx,cy,10,10,'#ffce8b1c','#ffce8b');c.shadowBlur=0;c.strokeStyle='#ffe5bb';c.lineWidth=1;c.beginPath();c.moveTo(cx-16,cy);c.lineTo(cx-6,cy);c.moveTo(cx+6,cy);c.lineTo(cx+16,cy);c.moveTo(cx,cy-16);c.lineTo(cx,cy-6);c.moveTo(cx,cy+6);c.lineTo(cx,cy+16);c.stroke();}
+        const preview=g.pitchAimPreview?.();
+        if(preview){
+          const a={x:x+preview.start.x*75,y:y+preview.start.y*64},b={x:x+preview.end.x*75,y:y+preview.end.y*64};
+          c.save();c.strokeStyle='#96e9ff';c.fillStyle='#96e9ff';c.lineWidth=1.5;
+          if(Math.hypot(b.x-a.x,b.y-a.y)>5){c.setLineDash([4,3]);c.beginPath();c.moveTo(a.x,a.y);c.lineTo(b.x,b.y);c.stroke();c.setLineDash([]);this.ellipse(c,a.x,a.y,5,5,null,'#96e9ff');}
+          c.setLineDash([2,3]);c.beginPath();c.arc(b.x,b.y,15,0,Math.PI*2);c.stroke();c.setLineDash([]);c.font='bold 9px sans-serif';c.textAlign='center';c.fillText(window.NightI18n?.text('到達予想')||'到達予想',b.x,b.y+26);c.restore();
+        }
         if(g.pitch&&g.phase==='pitch'&&!g.defending&&!g.hardcore&&(window.nightSettings?.timingGuide!==false||window.nightSettings?.assist)){
           const guide=g.pitchGuidePoint();
           const u=g.pitch.progress;

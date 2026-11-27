@@ -1473,6 +1473,22 @@ window.NightGame=class NightGame{
  }
  // Start at the no-break point on the plate plane, then follow the
  // developing break so the guide and live ball meet at the plate.
+ // The cursor already specifies the intended plate crossing. Show the
+ // unbroken aim point and its movement toward that crossing, not a second
+ // break added to the cursor. This is a nominal prediction, before command error.
+ pitchAimPreview(){
+  if(!this.defending||this.phase!=='aim'||this.paused||this.autoDefense||this.umpireMode||this.spectate||this.replayView||this.fastForward)return null;
+  const p=this.pitcher;if(!p)return null;
+  let id=p.pitches.includes(this.pitchType)?this.pitchType:p.pitches[0]||'fast';
+  if(this.variantRules?.noBreaking)id='fast';
+  const spec=NightGame.pitchSpec(p,id),adj=this.side===this.userSide&&!this.mirror?this.customAdj('pitch'):0;
+  let scale=1+adj*.015;
+  if(this.career&&this.strikes===2&&id!=='fast'&&p.careerPerks?.closer)scale*=1+p.careerPerks.closer*.12;
+  scale*=1+this.masteryFor(p.id,id)*.0025;
+  const bx=spec.bx*(p.hand==='L'?-1:1)*scale,by=spec.by*scale;
+  const end={x:this.cursor.x,y:this.cursor.y};
+  return {id,start:{x:end.x-bx,y:end.y-by},end,bx,by};
+ }
  pitchGuidePoint(){
   const p=this.pitch;
   if(!p)return null;
