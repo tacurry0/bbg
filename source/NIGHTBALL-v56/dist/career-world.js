@@ -354,13 +354,15 @@
   run(mode){
    if(this.currentGame||Z.state(this).pending)return 0;
    const from=this.day,stage=this.stage,grade=this.grade,year=this.year,lastNote=this.timeline.at(-1),injuryAtStart=this.health.injury,initialLevel=this.selection?.level;
-   const limit={day:1,week:7,month:30,game:370,event:370,season:420}[mode]||1;
+   const limit={day:1,week:7,month:30,game:370,event:370,season:420,'training-week':7}[mode]||1;
+   const startWeek=Z.week(this),trainingWeek=mode==='training-week';
    const batch=mode==='season'||mode==='month';
    let steps=0;
    const start=Date.parse(from);
    while(Date.parse(this.day)-start<limit*86400000&&steps<900&&
     !['draft','offseason','retired'].includes(this.stage)){
-    if(!this.queue){
+    if(trainingWeek&&Z.week(this)!==startWeek)break;
+    if(!this.queue&&!trainingWeek){
      const before=this.health.injury;
      const trained=Z.autoWeek(this);
      if(trained&&(Z.state(this).last?.summary.startsWith('覚醒')||this.health.injury>before+14)){steps++;break;}
@@ -372,6 +374,7 @@
     }else if(!this.nextDay())break;
     steps++;
     if(batch&&(this.health.injury>injuryAtStart+14||(initialLevel&&this.selection?.level!==initialLevel)))break;
+    if(trainingWeek&&Z.week(this)!==startWeek&&!this.queue)break;
     if(this.grade!==grade||this.year!==year&&stage==='pro'||mode==='event'&&this.timeline.at(-1)!==lastNote)break;
    }
    return steps;

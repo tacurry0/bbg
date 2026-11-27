@@ -96,96 +96,63 @@
   const value=Math.round(w.player[k]),rank=k==='velocity'?rankLetter((value-110)*2):rankLetter(value);
   return '<div class="cw-ability-tile" data-rank="'+rank+'"><span>'+NightCareerWorld.training[k]+'</span><b>'+rank+'</b><small>'+value+(k==='velocity'?' km/h':'')+'</small></div>';
  }).join('');
- const portrait=(w)=>'<svg class="cw-avatar" viewBox="0 0 110 120" role="img" aria-label="選手イラスト"><defs><linearGradient id="cw-shirt" x2="1" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#a4bdc7"/></linearGradient></defs><ellipse cx="56" cy="111" rx="40" ry="7" fill="#09283a" opacity=".3"/><path d="M19 116V96Q22 78 42 72H70Q90 78 93 96V116Z" fill="url(#cw-shirt)" stroke="#142f43" stroke-width="3"/><path d="M45 72L56 91 68 72M56 92V116" fill="none" stroke="#264b65" stroke-width="3"/><path d="M40 63H71V77L56 85 40 77Z" fill="#dcab80"/><ellipse cx="55" cy="48" rx="33" ry="32" fill="#efbd95" stroke="#20364a" stroke-width="3"/><path d="M22 38Q20 3 56 3Q88 3 91 35L100 42Q84 48 63 40L22 40Z" fill="#163e65" stroke="#0c273f" stroke-width="3"/><path d="M30 34Q54 28 83 35" stroke="#4ea8e2" stroke-width="3" fill="none"/><text x="56" y="25" text-anchor="middle" font-size="14" font-weight="bold" fill="white">N</text><ellipse cx="43" cy="52" rx="4" ry="6" fill="#20364a"/><ellipse cx="69" cy="52" rx="4" ry="6" fill="#20364a"/><path d="M48 66Q56 70 64 66" fill="none" stroke="#8f5847" stroke-width="2" stroke-linecap="round"/><text x="77" y="103" text-anchor="middle" font-size="14" font-weight="bold" fill="#173b5d">'+esc(w.player.no||18)+'</text></svg>';
  function trainingSettings(w){
   const s=Z.state(w);
   return section('育成方針・経験点','<div class="cw-xp">'+Object.entries({strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'}).map(([k,l])=>'<span>'+l+' <b>'+s.xp[k]+'</b></span>').join('')+'</div><div class="cw-grid">'+act('success-action','自動育成 '+(s.autoTrain?'ON':'OFF'),'auto-toggle')+act('success-action','自動振り分け '+(s.autoAllocate?'ON':'OFF'),'allocate-toggle')+'</div><p class="cw-note">重点：'+esc(NightCareerWorld.training[s.plan])+'</p><div class="cw-grid">'+(w.pitching?M.pitching:M.batting).map(k=>act('success-action',NightCareerWorld.training[k]+'を重点','plan:'+k)+act('success-action',NightCareerWorld.training[k]+' 強化','boost:'+k)).join('')+'</div>');
  }
+ const xpShort={strength:'筋',skill:'技',speed:'敏',mental:'精'};
+ const button=(action,value,label,inner,cls='',disabled=false)=>'<button type="button" data-world-action="'+action+'" data-value="'+esc(value)+'" class="'+cls+'" '+(disabled?'disabled':'')+' aria-label="'+esc(label)+'">'+inner+'</button>';
+ function trainingResult(w){
+  const s=Z.state(w),r=s.trainingResult;
+  if(!r&&!s.last)return '';
+  if(!r||s.last?.day!==r.day||!s.last?.title.includes('練習')&&!s.last?.title.includes('特訓'))return '<div class="cw-tr-result"><span>前回</span><b>'+esc(s.last?.title||'')+'</b><small>'+esc(s.last?.summary||'')+'</small></div>';
+  return '<div class="cw-tr-result" data-outcome="'+esc(r.outcome)+'"><span>'+esc(r.label)+'練習</span><b>'+esc(r.outcome)+'</b><small>'+Object.entries(r.gain).map(([k,n])=>xpShort[k]+' +'+n).join('　')+'</small></div>';
+ }
+ function pendingPanel(w){
+  const s=Z.state(w),e=s.pending;if(!e)return '';
+  if(e.type==='drill'){const q=Z.currentQuestion(w);return '<div class="cw-event-panel"><b>'+esc(e.title)+'</b><p>'+esc(q?.[0])+'</p><div class="cw-grid">'+(q?.[1]||[]).map((label,i)=>act('success-choice',label,i)).join('')+'</div></div>';}
+  return '<div class="cw-event-panel"><b>'+esc(e.title)+'</b><p>'+esc(e.body)+'</p><div class="cw-choices">'+e.choices.map((option,i)=>act('success-choice',option.label,i)).join('')+'</div></div>';
+ }
+ function trainingDeck(w,compact=false){
+  const s=Z.state(w);if(s.pending)return pendingPanel(w);
+  const keys=w.pitching?M.pitching:M.batting;
+  const icons={contact:'打',power:'長',run:'走',field:'守',arm:'肩',velocity:'速',control:'制',movement:'変',stamina:'持'};
+  const cards=keys.map(k=>{
+   const p=Z.preview(w,k,s.specialTraining);
+   return button('train-direct',k,p.label+'練習','<div class="cw-tr-head"><i>'+icons[k]+'</i><strong>'+p.label+'</strong><small>−'+p.energy+'</small></div><div class="cw-tr-gains">'+Object.entries(p.gains).map(([x,n])=>'<span data-xp="'+x+'">'+xpShort[x]+'+'+n+'</span>').join('')+'</div><div class="cw-tr-foot"><span>'+esc(p.badge||'通常')+'</span><span>故障 '+(p.risk*100).toFixed(1)+'%</span></div>','cw-tr-card '+(p.event==='normal'?'':'cw-bonus-'+p.event),!p.enabled);
+  }).join('');
+  const rest=button('rest-direct','','休養','<div class="cw-tr-head"><i>休</i><strong>休養</strong><small>+31</small></div><div class="cw-tr-gains"><span>体力回復</span></div><div class="cw-tr-foot"><span>故障なし</span></div>','cw-tr-card cw-rest',!Z.available(w));
+  const event=s.inbox?act('success-event','イベント：'+s.inbox.title,'','cw-event-button'):'';
+  return '<div class="cw-training-deck"><div class="cw-tr-toolbar"><b>今週の練習</b><div>'+button('success-action','intensity-toggle','特訓切替','<span>'+(s.specialTraining?'特訓':'通常')+'</span>','cw-mini-toggle '+(s.specialTraining?'on':''))+button('success-action','quick-toggle','自動進行切替','<span>自動進行 '+(s.quickAdvance?'ON':'OFF')+'</span>','cw-mini-toggle '+(s.quickAdvance?'on':''))+'</div></div><div class="cw-tr-grid">'+cards+rest+'</div>'+(!Z.available(w)?'<small class="cw-week-done">今週の行動は完了</small>':'')+trainingResult(w)+'<div class="cw-tr-social">'+event+(Z.available(w)?act('success-action','交流','friend','cw-text-button')+act('success-action','遊ぶ','outing','cw-text-button'):'')+'</div></div>';
+ }
+ function gameDeck(w,f){
+  const role=w.usage(f),eligible=w.canPlay(f);
+  return '<div class="cw-game-deck"><div class="cw-game-kicker">GAME DAY</div><h3>'+esc(f.name)+'</h3><p>対 '+club(w,f.home===w.owningClub(f)?f.away:f.home)+' · '+esc(M.roleText[role]||'出場なし')+'</p>'+(w.currentGame?act('play','試合を再開','','primary-button'):eligible?'<div class="cw-grid">'+act('play','自分の出番','self','primary-button')+act('play','重要場面','key')+act('play','フル試合','full')+'</div>':'<p class="cw-note">'+(w.health.injury?'故障で欠場':'出場メンバー外')+'</p>')+'</div>';
+ }
  function dashboard(w,legacy){
   if(boardSeed!==w.seed||boardStage!==w.stage){boardSeed=w.seed;boardStage=w.stage;setTab('home');}
   const f=w.active,next=upcoming(w),p=w.player,s=Z.state(w),school=w.stage==='school',pro=w.stage==='pro',playing=school||pro||w.stage==='amateur';
-  const status=w.stage==='retired'?'引退':w.stage==='draft'?'ドラフト':w.stage==='offseason'?'契約・移籍':w.health.injury?'故障離脱':f?(f.kind==='farm'?'二軍・':'')+M.roleText[w.usage(f)]:w.selection?.level==='first'?'一軍':w.selection?.level==='farm'?'二軍':school?'出場選考中':'選考前';
+  if(s.pending)boardTab='home';
+  const status=w.stage==='retired'?'引退':w.stage==='draft'?'ドラフト':w.stage==='offseason'?'契約・移籍':w.health.injury?'故障 '+w.health.injury+'日':f?(f.kind==='farm'?'二軍・':'')+M.roleText[w.usage(f)]:w.selection?.level==='first'?'一軍':w.selection?.level==='farm'?'二軍':school?'選考中':'選考前';
   const morale=s.morale>=80?'絶好調':s.morale>=65?'好調':s.morale>=45?'普通':s.morale>=30?'不調':'絶不調';
-  const marks=NightTeams.get(w.club),logo=w.club&&marks.id===w.club&&marks.logo?'<img class="cw-board-logo" src="'+esc(marks.logo)+'" alt="">':'';
-  const grade=w.grade,objective=school?(grade===1?'ベンチ入り・レギュラーを狙う':grade===2?'全国大会を目指す':'最後の大会・ドラフトへ'):pro?(w.selection?.level==='farm'?'一軍昇格':w.proYear<=3?'一軍定着・初タイトル':w.age<33?'優勝・タイトル・代表':'世代交代に挑む'):w.stage==='amateur'?'ドラフト再挑戦':w.stage==='draft'?'プロへの道':w.stage==='offseason'?'来季の所属を決める':'野球人生の記録';
+  const grade=w.grade,objective=school?(grade===1?'レギュラー獲得':grade===2?'全国大会出場':'ドラフト指名'):pro?(w.selection?.level==='farm'?'一軍昇格':w.proYear<=3?'一軍定着':'優勝・タイトル'):w.stage==='amateur'?'ドラフト再挑戦':'';
   const days=next?Math.max(0,Math.round((Date.parse(next.day)-Date.parse(w.day))/86400000)):null;
-  const hero='<section class="cw-hero cw-board-hero"><div class="cw-board-date"><span>'+esc(w.yearLabel)+' · '+w.age+'歳</span><time>'+w.day.replaceAll('-','/')+'</time></div><div class="cw-board-profile">'+portrait(w)+'<div class="cw-board-person">'+logo+'<small>'+esc(countries[w.country].label)+' · '+esc(NightCareer.positionNames[p.pos]||p.pos)+'</small><h2>'+esc(w.name)+'</h2><p>'+esc(w.club?w.clubName(w.club):w.path||w.school)+'</p><div class="cw-board-tags"><b>'+esc(status)+'</b><b data-mood="'+morale+'">'+morale+'</b>'+(school?'<b>'+['弱小校','中堅校','強豪校'][w.schoolTier]+'</b>':'')+'</div></div></div><div class="cw-board-gauges"><div><span>体力</span><meter min="0" max="100" value="'+s.energy+'"></meter><b>'+Math.round(s.energy)+'</b></div><div><span>監督評価</span><meter min="0" max="100" value="'+w.ratings.manager+'"></meter><b>'+Math.round(w.ratings.manager)+'</b></div></div><div class="cw-board-abilities">'+bars(w)+'</div></section>';
-  const score=w.club?w.playerYear:w.schoolTotals;
-  const summary='<div class="cw-board-stats">'+stat(score,w.pitching)+'</div>';
-  const target='<div class="cw-board-target"><span>目標</span><b>'+esc(objective)+'</b>'+(next?'<small>'+esc(next.name)+' · '+(days===0?'本日':'あと'+days+'日')+'</small>':'')+'</div>';
-  const highlight=w.spotlight?'<div class="cw-spotlight '+(w.spotlight.kind==='gold'?'gold':'')+'"><span>CAREER MOMENT</span><strong>'+esc(w.spotlight.message)+'</strong>'+act('spotlight-dismiss','×','','cw-spotlight-close')+'</div>':'';
+  const date=w.day.replaceAll('-','/'),clubname=w.club?w.clubName(w.club):w.path||w.school;
+  const hero='<section class="cw-compact-profile"><div class="cw-cp-top"><span>'+esc(w.yearLabel)+' · '+w.age+'歳</span><time>'+date+'</time></div><div class="cw-cp-name"><strong>'+esc(w.name)+'</strong><small>'+esc(clubname)+' · '+esc(NightCareer.positionNames[p.pos]||p.pos)+'</small></div><div class="cw-cp-tags"><b>'+esc(status)+'</b><b data-mood="'+morale+'">'+morale+'</b>'+(school?'<b>'+['弱小校','中堅校','強豪校'][w.schoolTier]+'</b>':'')+'</div><div class="cw-cp-gauges"><label>体力 <meter min="0" max="100" value="'+s.energy+'"></meter><b>'+Math.round(s.energy)+'</b></label><label>監督 <meter min="0" max="100" value="'+w.ratings.manager+'"></meter><b>'+Math.round(w.ratings.manager)+'</b></label></div><div class="cw-board-abilities">'+bars(w)+'</div></section>';
+  const summary='<div class="cw-board-stats">'+stat(w.club?w.playerYear:w.schoolTotals,w.pitching)+'</div>';
+  const target=next?'<div class="cw-next-line"><span>'+esc(next.name)+'</span><b>'+(days===0?'本日':'あと'+days+'日')+'</b></div>':'';
+  const highlight=w.spotlight?'<div class="cw-compact-highlight"><span>'+esc(w.spotlight.message)+'</span>'+act('spotlight-dismiss','×','','cw-text-button')+'</div>':'';
   const tabs='<nav class="cw-board-tabs" aria-label="キャリアメニュー">'+[['home','⌂','ホーム'],['skills','↗','能力'],['stats','▥','成績'],['team','♟','チーム'],['schedule','▦','日程'],['history','★','記録']].map(([id,icon,label])=>'<button type="button" data-world-action="tab" data-value="'+id+'" aria-selected="'+(boardTab===id)+'"><span>'+icon+'</span>'+label+'</button>').join('')+'</nav>';
-  const body=boardTab==='home'?hero+target+highlight+(playing?daily(w,f,next):w.stage==='draft'?draft(w):w.stage==='offseason'?market(w):retired(w))+summary:
-   boardTab==='skills'?'<div class="cw-board-abilities standalone">'+bars(w)+'</div>'+trainingSettings(w)+skills(w):
-   boardTab==='stats'?stats(w):boardTab==='team'?squad(w):boardTab==='schedule'?schedule(w)+(w.club?international(w):''):history(w)+life(w);
-  return title('選手キャリア',legacy)+'<div class="cw-board '+(school?'cw-school-board':'cw-pro-board')+'"><main class="cw-board-body">'+body+'</main>'+tabs+'<div class="cw-board-secondary">'+act('detail','日程・大会','schedule','cw-link')+act('detail','生活・契約','life','cw-link')+act('music','応援歌設定','','cw-link')+(w.last?act('last-result','前回の試合','','cw-link'):'')+'</div></div>';
+  const overview='<div class="cw-pro-overview">'+summary+target+(w.last?'<div class="cw-last-game"><span>前回 '+esc(w.last.opponent)+'</span><b>'+w.last.score.join(' – ')+'</b>'+act('last-result','結果','','cw-text-button')+'</div>':'')+'<div class="cw-pro-actions">'+act('training-open','練習・休養','','cw-pro-train')+act('detail','契約・生活','life','cw-pro-train')+'</div></div>';
+  const gameplay=s.pending?pendingPanel(w):f?gameDeck(w,f):pro?overview:trainingDeck(w);
+  const home=hero+(pro?'':target)+highlight+(playing?gameplay:w.stage==='draft'?draft(w):w.stage==='offseason'?market(w):retired(w));
+  const body=boardTab==='home'?home:boardTab==='skills'?'<div class="cw-board-abilities standalone">'+bars(w)+'</div>'+trainingSettings(w)+skills(w):boardTab==='stats'?stats(w):boardTab==='team'?squad(w):boardTab==='schedule'?schedule(w)+(w.club?international(w):''):history(w)+life(w);
+  const progress=playing?'<div class="cw-fixed-progress">'+(s.pending?'<span class="cw-dock-note">イベントを選択してください</span>':w.currentGame?act('play','試合を再開','','cw-main-progress'):f?act('simulate','試合を自動進行','','cw-main-progress')+button('tab','home','試合画面','試合画面','cw-alt-progress'):act('advance',pro?'次の試合へ':'次の週へ',pro?'game':'week','cw-main-progress')+act('advance',pro?'1か月':'次の試合',pro?'month':'game','cw-alt-progress')+act('progress-menu','⋯','','cw-more-progress'))+'</div>':'';
+  const head='<div class="cw-mini-head">'+act('home','‹ 戻る','','career-back')+'<strong>選手キャリア</strong>'+act('slots','選手切替','','career-back')+act('career-options','⚙','','career-back')+'</div>';
+  return head+'<div class="cw-board cw-compact-board '+(school?'cw-school-board':'cw-pro-board')+'"><main class="cw-board-body">'+body+'</main><div class="cw-fixed-dock">'+progress+tabs+'</div></div>';
  }
- function successPanel(w){
-  const s=Z.state(w);
-  const meter='<div class="cw-success-meter"><div><span>体力</span><b>'+Math.round(s.energy)+'/100</b><meter min="0" max="100" value="'+s.energy+'"></meter></div>'+
-   '<div><span>気分</span><b>'+Math.round(s.morale)+'/100</b><meter min="0" max="100" value="'+s.morale+'"></meter></div></div>';
-  const xp=Object.entries({strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'}).map(([k,label])=>'<span>'+label+' <b>'+s.xp[k]+'</b></span>').join('');
-  const settings='<div class="cw-xp">'+xp+'</div><details class="cw-training-settings"><summary>育成方針・能力強化</summary><div class="cw-grid">'+act('success-action','自動育成 '+(s.autoTrain?'ON':'OFF'),'auto-toggle')+act('success-action','自動振り分け '+(s.autoAllocate?'ON':'OFF'),'allocate-toggle')+'</div><p class="cw-note">育成方針：'+NightCareerWorld.training[s.plan]+'</p><div class="cw-grid">'+(w.pitching?M.pitching:M.batting).map(key=>act('success-action',NightCareerWorld.training[key]+'を重点育成','plan:'+key)+act('success-action',NightCareerWorld.training[key]+' 強化 ('+Z.cost(w,key)+'pt)','boost:'+key)).join('')+'</div></details>';
-  if(s.pending){
-   const e=s.pending;
-   if(e.type==='drill'){
-    const q=Z.currentQuestion(w);
-    return meter+'<div class="cw-success-scene" role="group" aria-label="実戦練習"><p class="cw-scene-kicker">実戦特訓 · '+(e.index+1)+'/3回</p>'+
-     '<h3>'+esc(e.title)+'</h3><p>'+esc(q[0])+'</p><div class="cw-choices">'+q[1].map((label,i)=>act('success-choice',label,i,i===0?'primary-button':'secondary-button')).join('')+'</div>'+
-     '<p class="cw-note">成功 '+e.correct+'回 / 3回 · '+esc(e.results?.at(-1)?.message||'安全策と大胆な挑戦で成功率と成長量が変わります。')+'</p></div>';
-   }
-   return meter+'<div class="cw-success-scene" role="group" aria-label="キャリアイベント"><p class="cw-scene-kicker">今週のイベント</p>'+
-    '<h3>'+esc(e.title)+'</h3><p>'+esc(e.body)+'</p><div class="cw-choices">'+
-     e.choices.map((option,i)=>act('success-choice',option.label,i,i===0?'primary-button':'secondary-button')).join('')+'</div></div>';
-  }
-  if(s.menu){
-   const keys=w.pitching?M.pitching:M.batting;
-   return meter+'<div class="cw-success-scene"><p class="cw-scene-kicker">'+(s.menu==='special'?'実戦特訓':'基礎練習')+'</p>'+
-    '<h3>伸ばしたい能力を選ぶ</h3><p class="cw-note">'+(s.menu==='special'?'自動特訓。経験点が増えますが故障リスクも上がります。':'通常練習は選択後すぐに結果が出ます。好調・大成功だけでなく、伸び悩む週もあります。')+'</p>'+
-    '<div class="cw-grid">'+keys.map(key=>act('success-skill',NightCareerWorld.training[key]+' '+Math.round(w.player[key]),key)).join('')+
-    act('success-back','戻る')+'</div></div>';
-  }
-  const inbox=s.inbox?'<div class="cw-success-inbox"><strong>新しいイベント：'+esc(s.inbox.title)+'</strong><p>今週の出来事を確認できます。</p>'+act('success-event','イベントを見る','','primary-button')+act('success-dismiss','今回は見送る')+'</div>':'';
-  if(Z.available(w)){
-   return inbox+'<div class="cw-success-cmd"><h3>今週の行動</h3>'+
-    '<div class="cw-grid cw-command-grid">'+act('success-action','⚾ 練習','practice','primary-button')+
-    act('success-action','🔥 実戦特訓','special')+act('success-action','🛌 休む','rest')+
-    act('success-action','💬 交流','friend')+act('success-action','🌿 遊ぶ','outing')+act('tab','↗ 能力強化','skills')+'</div></div>'+
-    (s.last?'<p class="cw-last-action"><strong>前回：</strong>'+esc(s.last.title)+' · '+esc(s.last.summary)+'</p>':'');
-  }
-  return inbox+'<p class="cw-last-action"><strong>今週の行動は完了</strong>'+
-   (s.last?' · '+esc(s.last.title)+'：'+esc(s.last.summary):' · 次の週へ進めます')+'</p>';
- }
- function daily(w,f,next){
-  const elapsed=next?Math.max(0,Math.round((Date.parse(next.day)-Date.parse(w.day))/86400000)):null;
-  const park=next?.fixture?.park?NightPlayers.parks.find(x=>x.id===f.park)?.name:null;
-  const role=f?w.usage(f):null;
-  const eligible=w.canPlay(f);
-  const info=next?'<div class="cw-fixture"><div><p class="cw-fixture-date">'+esc(next.day)+' · '+(elapsed===0?'本日':elapsed+'日後')+'</p>'+
-   '<h3>'+esc(next.name)+'</h3><p>'+(next.opponent?'対 '+club(w,next.opponent):'対戦相手は抽選・進行後に決定')+(park?' · '+esc(park):'')+'</p></div></div>':'';
-  let contents;
-  if(f){
-   const reason=w.health.injury?'故障のため欠場':role==='bench'?'今日は登板予定なし':role==='inactive'?'出場メンバー外':'';
-   contents=info+(w.currentGame?act('play','試合を再開','','primary-button'):
-    eligible?'<p class="cw-note">'+esc(M.roleText[role])+(f.development?' · 今学年の出場機会':'')+'</p>'+
-      '<div class="cw-grid">'+act('play','自分の出番をプレー','self','primary-button')+act('play','フル試合をプレー','full')+
-      act('play','重要場面だけ','key')+act('simulate','この試合を自動進行')+'</div>':
-      '<p class="cw-note">'+reason+'</p>'+act('simulate','試合結果を確認する','','primary-button'));
-  }else{
-   const upcomingSchool=['school','amateur'].includes(w.stage)?
-    NightCareerWorldSchool.calendar(w).find(e=>e.format>=3&&e.day>=w.day):null;
-   contents=info+(upcomingSchool&&upcomingSchool.name!==next?.name?
-      '<p class="cw-note">次の節目 · '+esc(upcomingSchool.name)+' '+upcomingSchool.day+'</p>':'')+
-     (next?.opponent?'<p class="cw-note">'+(w.health.injury>elapsed?'故障のため欠場見込み':'出場予定は当日の選考で決定')+'</p>':'')+
-     successPanel(w)+
-     '<div class="cw-grid cw-next-buttons">'+act('advance','次の週へ','week','primary-button')+
-     act('advance','次の試合へ','game')+(w.stage==='pro'?act('advance','1か月進行','month'):act('advance','重要イベントへ','event'))+'</div>'+
-     '<details class="cw-batch"><summary>まとめて進める</summary>'+
-      '<p>通常試合を自動処理し、学年最初の出場機会や重要な大会では停止します。</p>'+
-      (w.stage==='pro'?'':act('advance','1か月を自動進行','month'))+act('advance','シーズンを自動進行','season')+act('advance','1日だけ進める','day')+'</details>';
-  }
-  return section(f?'今日の試合':'今日の行動',(w.success?.goal?'<p class="cw-goal"><strong>次戦の課題：</strong>'+esc(w.success.goal.label)+'</p>':'')+contents);
- }
+ function progressMenu(w){return '<div class="cw-grid">'+act('advance','1日進める','day')+act('advance','次の週へ','week')+act('advance','次の試合へ','game')+act('advance','1か月進める','month')+act('advance','重要イベントへ','event')+act('advance','シーズンを進める','season')+'</div>';}
+ function careerOptions(w){return '<div class="cw-grid">'+act('music','応援歌設定')+act('detail','生活・契約','life')+act('detail','日程・大会','schedule')+act('last-result','前回の試合')+act('legacy','従来キャリア')+'</div>';}
  const detailViews={schedule,skills,players:w=>squad(w)+stats(w),life:w=>market(w)+life(w),international,history};
  const detail=(w,id)=>detailViews[id]?.(w)||'';
  function rankOf(w){
@@ -327,5 +294,5 @@
    w.moves.map(x=>`<p>${x.day} · ${club(w,x.from)} → ${club(w,x.to)} · ${esc(x.type)}</p>`).join('')+
    act('new','OB記録を保存して新しいキャリアへ','','primary-button'))+history(w);
  }
- window.NightCareerWorldView={setup,dashboard,detail,matchResult,slots,setTab};
+ window.NightCareerWorldView={setup,dashboard,detail,matchResult,slots,setTab,trainingDeck,progressMenu,careerOptions};
 })();

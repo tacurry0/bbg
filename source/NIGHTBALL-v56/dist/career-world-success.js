@@ -123,7 +123,7 @@
   const s=w.success ||= {energy:76,morale:58,actionWeek:null,menu:null,pending:null,seen:{},stories:[],last:null,gameCount:0};
   s.energy=clamp(Number.isFinite(s.energy)?s.energy:76,0,100);
   s.morale=clamp(Number.isFinite(s.morale)?s.morale:58,0,100);
-  s.seen ||= {};s.stories ||= [];s.xp ||= {strength:0,skill:0,speed:0,mental:0};s.autoAllocate ??= true;s.autoTrain ??= false;s.plan ||= w.trainingPlan||(w.pitching?'control':'contact');
+  s.seen ||= {};s.stories ||= [];s.xp ||= {strength:0,skill:0,speed:0,mental:0};s.autoAllocate ??= true;s.autoTrain ??= false;s.quickAdvance ??= true;s.specialTraining ??= false;s.plan ||= w.trainingPlan||(w.pitching?'control':'contact');
   return s;
  }
  const usable=w=>isPlaying(w)&&!w.currentGame&&!w.queue;
@@ -170,6 +170,8 @@
   const s=state(w);
   if(kind==='allocate-toggle'){s.autoAllocate=!s.autoAllocate;return true;}
   if(kind==='auto-toggle'){s.autoTrain=!s.autoTrain;return true;}
+  if(kind==='quick-toggle'){s.quickAdvance=!s.quickAdvance;return true;}
+  if(kind==='intensity-toggle'){s.specialTraining=!s.specialTraining;return true;}
   if(kind.startsWith('boost:'))return allocate(w,kind.slice(6));
   if(kind.startsWith('plan:')){const key=kind.slice(5);if(!(w.pitching?arms:bats).includes(key))return false;s.plan=key;return true;}
   if(!available(w))return false;
@@ -217,6 +219,29 @@
   ['大胆に挑戦（失敗しやすい・大成長）',.40,3.6]
  ];
  const xpMap={contact:{skill:3,mental:1},power:{strength:4,skill:1},run:{speed:4},field:{skill:2,speed:2},arm:{strength:2,skill:2},velocity:{strength:4,skill:1},control:{skill:3,mental:2},movement:{skill:4},stamina:{strength:3,mental:2}};
+ const trainingNames={contact:'打撃',power:'長打',run:'走塁',field:'守備',arm:'肩力',velocity:'球速',control:'制球',movement:'変化球',stamina:'持久力'};
+ const xpLabels={strength:'筋',skill:'技',speed:'敏',mental:'精'};
+ function preview(w,key,hard=false){
+  const s=state(w),mix=xpMap[key];
+  if(!mix||!(w.pitching?arms:bats).includes(key))return null;
+  const rng=w.random('weekly-environment/'+week(w)+'/'+key);
+  const r=rng(),event=r<.21?'coach':r<.38?'rival':r<.53?'light':r<.60?'heavy':'normal';
+  const friend=w.members(w.player.club).some(p=>p.id!==w.player.id&&(p.relationship||0)>=70);
+  const multiplier=(event==='coach'?1.5:event==='rival'?1.3:event==='heavy'?1.2:1)*(friend?1.25:1);
+  const baseEnergy=hard?30:['power','velocity','stamina'].includes(key)?20:key==='run'?12:15;
+  const energy=Math.max(8,baseEnergy+(event==='light'?-5:event==='heavy'?4:0));
+  const environment=w.stage==='school'?(w.schoolTier-1)*.035:(w.ratings.coach-50)*.001;
+  const condition=clamp((s.energy-65)*.002+(s.morale-50)*.001+environment-(w.health.fatigue||0)*.0007,-.20,.14);
+  const risk=clamp((.02+(s.energy<40?(40-s.energy)*.003:0)+(hard?.025:0)+(event==='heavy'?.018:0)-(event==='light'?.008:0)+(key==='run'?-.008:0))/ (w.talent?.durability||1),.005,.22);
+  const gains=Object.fromEntries(Object.entries(mix).map(([k,n])=>[k,Math.round(n*1.8*multiplier*(hard?1.45:1)*(w.talent?.learning||1))]));
+  return {key,label:trainingNames[key],event,badge:{coach:'コーチ指導',rival:'ライバル練習',light:'体力消費↓',heavy:'高負荷',normal:''}[event],energy,risk,gains,condition,multiplier,friend,enabled:available(w)&&s.energy>=energy&&!w.health.injury};
+ }
+ function direct(w,key,hard=false){
+  const p=preview(w,key,hard);
+  if(!p?.enabled)return false;
+  state(w).menu=hard?'special':'practice';
+  return skill(w,key);
+ }
  const cost=(w,key)=>Math.max(6,Math.round((key==='velocity'?(w.player[key]-110)*.20:w.player[key]*.115)+4));
  function allocate(w,key){
   const s=state(w),mix=xpMap[key];
@@ -233,22 +258,19 @@
   if(!available(w)||!Object.hasOwn(xpMap,key))return false;
   const s=state(w),menu=s.menu;
   if(!['practice','special'].includes(menu)||!(w.pitching?arms:bats).includes(key))return false;
-  const hard=menu==='special',costEnergy=hard?30:['power','velocity','stamina'].includes(key)?20:15;
-  if(s.energy<costEnergy||w.health.injury>0)return false;
+  const hard=menu==='special',p=preview(w,key,hard);
+  if(!p?.enabled)return false;
+  const {energy:costEnergy,condition,risk,friend,multiplier}=p;
   const rng=w.random('success/weekly-practice/'+week(w)+'/'+key+'/'+menu);
-  const environment=w.stage==='school'?(w.schoolTier-1)*.035:(w.ratings.coach-50)*.001;
-  const condition=clamp((s.energy-65)*.002+(s.morale-50)*.001+environment-(w.health.fatigue||0)*.0007,-.20,.14);
-  const risk=clamp((.02+(s.energy<40?(40-s.energy)*.003:0)+(hard?.025:0))/(w.talent?.durability||1),.005,.22);
   const roll=rng(),q=rng();
   const awaken=clamp(.01+condition*.012+(hard?.004:0),.004,.018);
   const great=clamp(.09+condition*.20+(hard?.03:0),.035,.16);
   const poor=clamp(.20-condition*.35,.10,.32),failure=clamp(.08-condition*.20,.035,.15);
   const outcome=roll<risk?'怪我':q<awaken?'覚醒':q<awaken+great?'大成功':q>1-failure?'失敗':q>1-failure-poor?'不調':'成功';
   const mult={'怪我':0,'失敗':0,'不調':.5,'成功':1,'大成功':2.5,'覚醒':5}[outcome];
-  const friend=w.members(w.player.club).find(p=>p.id!==w.player.id&&(p.relationship||0)>=70);
   const gain={};
   for(const [k,n] of Object.entries(xpMap[key])){
-   gain[k]=Math.round(n*1.8*mult*(friend?1.25:1)*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
+   gain[k]=Math.round(n*1.8*mult*multiplier*(hard?1.45:1)*(w.talent?.learning||1));s.xp[k]+=gain[k];
   }
   w.trainingPlan=key;s.plan=key;
   if(outcome==='怪我')w.health.injury=Math.max(w.health.injury,5+Math.floor(rng()*24));
@@ -263,7 +285,8 @@
   s.goal={skill:key,label:goalLabels[key],day:w.day};
   s.lastOutcome=outcome;
   const labels={strength:'筋力',skill:'技術',speed:'敏捷',mental:'精神'};
-  mark(w,(hard?'実戦特訓':'通常練習')+' · '+NightCareerWorld.training[key],outcome+' · '+Object.entries(gain).map(([k,n])=>labels[k]+' +'+n).join(' / ')+(friend?' · 友情練習':''));
+  mark(w,(hard?'実戦特訓':'通常練習')+' · '+NightCareerWorld.training[key],outcome+' · '+Object.entries(gain).map(([k,n])=>labels[k]+' +'+n).join(' / ')+(p.badge?' · '+p.badge:'')+(friend?' · 友情練習':''));
+  s.trainingResult={day:w.day,key,label:p.label,outcome,gain,energy:costEnergy,badge:p.badge};
   return true;
  }
  function autoWeek(w){
@@ -271,7 +294,7 @@
   if(!s.autoTrain||!available(w)||s.menu)return false;
   if(w.health.injury||s.energy<45||w.health.fatigue>65)return action(w,'rest');
   const key=(w.pitching?arms:bats).includes(s.plan)?s.plan:(w.pitching?'control':'contact');
-  return action(w,'practice')&&skill(w,key);
+  return direct(w,key,false);
  }
  function openEvent(w){
   const s=state(w);
@@ -404,5 +427,5 @@
   const e=state(w).pending;
   return e?.type==='drill'?[challengeTexts[e.skill]?.[e.index]||'集中してプレーを決めよう',tactics.map(t=>t[0])]:null;
  };
- window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost};
+ window.NightCareerWorldSuccess={state,week,available,action,skill,choose,openEvent,afterGame,tick,semester,currentQuestion,autoWeek,allocate,cost,preview,direct};
 })();

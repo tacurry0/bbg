@@ -865,7 +865,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    world?NightCareerWorldView.dashboard(world,!!career):NightCareerWorldView.setup(worldCountry,!!career,worldAlumni);
   $('career').hidden=false;
   history.replaceState({nightball:'career'},'',location.href);
-  restorePageScroll(y);
+  restorePageScroll(world&&!worldPickerOpen?0:y);
  }
  $('career').addEventListener('submit',e=>{
   if(e.target.id!=='world-create'||world)return;
@@ -913,6 +913,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const w=world;
   if(!w)return;
   if(action==='tab'){NightCareerWorldView.setTab(v);worldDashboard();return;}
+  if(action==='progress-menu'||action==='career-options'||action==='training-open'){
+   const key=action==='progress-menu'?'progressMenu':action==='career-options'?'careerOptions':'trainingDeck';
+   modal(modalTitle('',action==='progress-menu'?'日程進行':action==='career-options'?'キャリア設定':'練習・休養')+NightCareerWorldView[key](w),'career-world-detail');return;
+  }
   if(action==='spotlight-dismiss'){w.spotlight=null;saveWorld();worldDashboard();return;}
   if(action==='music'){musicMenu('world-career');return;}
   if(action==='last-result'){if(w.last)showWorldResult();return;}
@@ -925,8 +929,12 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
     NightCareerWorldView.detail(w,v),'career-world-detail');
    return;
   }
+  const Z=NightCareerWorldSuccess;
+  const quick=()=>{if(Z.state(w).quickAdvance&&Z.state(w).lastOutcome!=='覚醒'&&!w.health.injury)w.run('training-week');return true;};
   const change={
-   advance:()=>w.run(v),simulate:()=>w.finishDay(),
+   'train-direct':()=>Z.direct(w,v,Z.state(w).specialTraining)&&quick(),
+   'rest-direct':()=>{if(!Z.action(w,'rest'))return false;if(Z.state(w).quickAdvance)w.run('training-week');return true;},
+   advance:()=>{NightCareerWorldView.setTab('home');return w.run(v);},simulate:()=>{NightCareerWorldView.setTab('home');return w.finishDay();},
    'success-action':()=>NightCareerWorldSuccess.action(w,v),
    'success-skill':()=>NightCareerWorldSuccess.skill(w,v),
    'success-choice':()=>NightCareerWorldSuccess.choose(w,v),
@@ -949,7 +957,9 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(action==='play'){playWorld(v||'self');return;}
   if(change[action]?.()){
    if(action!=='new'){
+    const reopenTraining=screen==='career'&&b.closest('#modal-content')&&action==='success-action'&&['quick-toggle','intensity-toggle'].includes(v);
     saveWorld();worldDashboard();
+    if(reopenTraining)modal(modalTitle('','練習・休養')+NightCareerWorldView.trainingDeck(w),'career-world-detail');
     if(action==='simulate'&&w.last)showWorldResult();
    }
   }else if(action!=='retire')toast('この操作は現在実行できません');
