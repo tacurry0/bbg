@@ -639,11 +639,11 @@ window.NightGame=class NightGame{
    }
    if(g.field?.manual&&g.mode==='career-bat'){
     g.field.manual.userControlled=!!g.manualRunning&&!g.defending;
-    g.field.manual.selection=g.field.runners.some(r=>r.id===career.playerId&&!r.out&&!r.scored)?career.playerId:null;
+    if(!Array.isArray(g.field.manual.selection))g.field.manual.selection=g.field.runners.some(r=>r.id===career.playerId&&!r.out&&!r.scored)?[career.playerId]:[];
    }
   }
   g.conditionSeed??=career?career.teamSeed+'/'+career.fixtureId:'legacy/'+g.teams.home.id+'/'+g.teams.away.id;
-  g._cutSubSeen??=(g.substitutions||[]).length;g.runningRevision=41;if(g.battingAssist===undefined)g.battingAssist=true;return g;
+  g._cutSubSeen??=(g.substitutions||[]).length;g.runningRevision=41;g.selectedRunnerIds();if(g.battingAssist===undefined)g.battingAssist=true;return g;
  }
 
  fixtureClub(id){
@@ -1588,14 +1588,14 @@ window.NightGame=class NightGame{
    // stay stable for the whole play or the camera jitters and never
    // follows the ball.
    this._mirrorFseq=cur.fsq;
-   this.field={...cf,ball:{...cf.ball,wetField:!NightGame.isIndoorPark(this.park)&&!!cf.ball.wetField},fielders:cf.fielders.map(p=>({...p})),runners:cf.runners.map(r=>({...r})),trail:[]};
+   this.field={...cf,manual:cf.manual?{...cf.manual,selection:[]}:cf.manual,ball:{...cf.ball,wetField:!NightGame.isIndoorPark(this.park)&&!!cf.ball.wetField},fielders:cf.fielders.map(p=>({...p})),runners:cf.runners.map(r=>({...r})),trail:[]};
    this._mirrorRunners=new Map(this.field.runners.map(r=>[r.id,r]));
   }else{
-   const F=this.field,pf=prev?prev.f:null,localSelection=F.manual?.selection;
+   const F=this.field,pf=prev?prev.f:null,localSelection=this.selectedRunnerIds();
    for(const k in cf){if(k!=='ball'&&k!=='fielders'&&k!=='runners'&&k!=='trail')F[k]=cf[k];}
    // The streamed manual block carries the host's selection; the guest's
    // own runner selection is local state and must survive snapshot merges.
-   if(localSelection&&F.manual)F.manual={...F.manual,selection:localSelection};
+   if(F.manual)F.manual={...F.manual,selection:localSelection};
    const pb=pf?pf.ball:cf.ball;
    F.ball.x=lerp(pb.x,cf.ball.x);F.ball.y=lerp(pb.y,cf.ball.y);F.ball.z=lerp(pb.z||0,cf.ball.z||0);
    for(const k in cf.ball){if(k!=='x'&&k!=='y'&&k!=='z')F.ball[k]=cf.ball[k];}
@@ -1606,6 +1606,7 @@ window.NightGame=class NightGame{
    for(const id of[...this._mirrorRunners.keys()])if(!cf.runners.some(r=>r.id===id)&&!(pf&&pf.runners.some(r=>r.id===id)))this._mirrorRunners.delete(id);
   }
   const F=this.field;
+  this.selectedRunnerIds();
   F.elapsed=prev?lerp(prev.f.elapsed,cf.elapsed):cf.elapsed;
   F.trail.push({x:F.ball.x,y:F.ball.y,z:F.ball.z});if(F.trail.length>40)F.trail.shift();
  }
@@ -1729,7 +1730,7 @@ window.NightGame=class NightGame{
   const candidate=fielders.map((f,i)=>({i,t:dist(f,landing)/(f.pickSpeed||f.speed)})).sort((a,b)=>a.t-b.t)[0]?.i??0;
   const runners=[{id:this.batter.id,start:0,progress:0,x:0,y:0,batter:true,speed:this.runnerSpeed}];this.bases.forEach((b,i)=>{if(b)runners.push({id:this.baseIds[i],start:i+1,progress:i+1,x:BASES[i+1].x,y:BASES[i+1].y,batter:false,speed:RUNNER_SPEED(this.runnerRating(this.lineups[this.side].find(p=>p.id===this.baseIds[i])))});});
   this.field={ball,landing,fielders,chaser:candidate,elapsed:0,foul,cpu,perfect,trail:[],runners:this.derby?[]:runners,outsAtContact:this.outs,throw:null,resolved:false,outcome:null,maxTravel:0,landingTime:landing.time||1, batterName:this.batter.name,runnerSpeed:this.runnerSpeed};
-  if((this.inMatch||this.mode==='practice')&&!foul){this.field.manual={userControlled:(this.isFixture||!!this.challenge||this.mode==='career-bat')&&this.runnersCommanded(),selection:this.mode==='career-bat'?this.career.playerId:null,secured:false,holder:null,bag:null,initialBases:this.bases.slice(),initialIds:this.baseIds.slice(),outs:[],lastOut:null,fly:false,recovery:0};for(const r of runners)Object.assign(r,{base:r.start,furthest:r.start,autoTarget:r.batter?1:r.start,command:r.batter?1:r.start,waiting:!r.batter,out:false,scored:false,needsTag:false,chargedPitcherId:r.batter?this.pitcher.id:this.basePitcherIds[r.start-1]||this.pitcher.id,touchedAt:{[r.start]:0}});}
+  if((this.inMatch||this.mode==='practice')&&!foul){this.field.manual={userControlled:(this.isFixture||!!this.challenge||this.mode==='career-bat')&&this.runnersCommanded(),selection:this.mode==='career-bat'?[this.career.playerId]:[],secured:false,holder:null,bag:null,initialBases:this.bases.slice(),initialIds:this.baseIds.slice(),outs:[],lastOut:null,fly:false,recovery:0};for(const r of runners)Object.assign(r,{base:r.start,furthest:r.start,autoTarget:r.batter?1:r.start,command:r.batter?1:r.start,waiting:!r.batter,out:false,scored:false,needsTag:false,chargedPitcherId:r.batter?this.pitcher.id:this.basePitcherIds[r.start-1]||this.pitcher.id,touchedAt:{[r.start]:0}});}
   this.field.trajectory=launch<8?'ground':launch<=22?'liner':launch>=36&&Math.hypot(landing.x,landing.y)<75?'blooper':'fly';this.field.wallHit=false;this.planIntercepts();
   if(this.field.manual)this.startForcedRunners();
   this.hit={distance:0,kind:'live',perfect,exitKmh:Math.round(speed*3.6),launchAngle:Math.round(launch),sprayAngle:Math.round(spray*180/Math.PI),spinBack};this.setPhase('field');this.emit('clear');this.emit('sound',perfect?'perfect':'hit');this.emit('field',this.field);this.notify();
@@ -2177,10 +2178,20 @@ window.NightGame=class NightGame{
   if(this.paused||this.field&&['field','result'].includes(this.phase))return false;
   this.manualRunning=!!manual;this.notify();return true;
  }
+ // Selection is local input state, independent of a runner's current command.
+ // Accept a scalar selection in v270 and earlier saved games.
+ selectedRunnerIds(){
+  const f=this.field,m=f?.manual;if(!m)return [];
+  const raw=Array.isArray(m.selection)?m.selection:m.selection==null?[]:[m.selection];
+  const valid=[...new Set(raw)].filter(id=>f.runners.some(r=>r.id===id&&!r.out&&!r.scored)&&this.canControlRunner(id));
+  if(!Array.isArray(m.selection)||valid.length!==raw.length||valid.some((id,i)=>id!==raw[i]))m.selection=valid;
+  return valid;
+ }
  selectRunner(id){
-  if(!this.manualPlay||!this.canControlRunner(id))return false;
-  if(id!=='all'&&!this.field.runners.some(r=>r.id===id&&!r.out&&!r.scored))return false;
-  this.field.manual.selection=id;this.notify();return true;
+  if(!this.manualPlay||this.paused||!this.canControlRunner(id)||!this.field.runners.some(r=>r.id===id&&!r.out&&!r.scored))return false;
+  const selected=this.selectedRunnerIds();
+  this.field.manual.selection=selected.includes(id)?selected.filter(x=>x!==id):[...selected,id];
+  this.notify();return true;
  }
  commandRunner(id,base){
   if(this.mirror){
@@ -2201,38 +2212,51 @@ window.NightGame=class NightGame{
   const forward=at?Math.round(r.progress)+1:Math.ceil(r.progress),backward=at?Math.round(r.progress)-1:Math.floor(r.progress);
   return !(base<1||base>4||base!==forward&&base!==backward||r.needsTag&&(base>=r.progress||base<r.start));
  }
- applyRunnerCommand(r,base){
+ applyRunnerCommand(r,base,notify=true){
   if(!this.runnerCommandValid(r,base))return false;
-  r.command=base;r.target=base;r.waiting=false;r.running=Math.abs(base-r.progress)>.001;this.field.manual.selection=r.id;this.notify();return true;
+  r.command=base;r.target=base;r.waiting=false;r.running=Math.abs(base-r.progress)>.001;
+  if(notify)this.notify();return true;
  }
  // Host side of online play: apply a baserunning command the guest sent
  // for the guest's own runners. Mirrors commandRunner's validation, but
  // the "user" at the controls is the remote batter, not the local player.
- remoteCommandRunner(id,base){
+ remoteCommandRunner(id,base){return this.remoteCommandRunners([{id,base}]);}
+ remoteCommandRunners(commands){
   if(this.paused||!this.remoteSide||!this.remoteBatter||this.umpireMode)return false;
   if(this.phase!=='field'||!this.field||this.field.resolved||!this.field.manual?.userControlled)return false;
-  if(!Number.isInteger(base))return false;
-  const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
-  return this.applyRunnerCommand(r,base);
+  if(!Array.isArray(commands)||commands.length<1||commands.length>4)return false;
+  const seen=new Set();let changed=false;
+  for(const command of commands){
+   if(!command||!Number.isInteger(command.base)||seen.has(command.id))continue;
+   const r=this.field.runners.find(x=>x.id===command.id&&!x.out&&!x.scored);if(!r)continue;
+   seen.add(r.id);
+   changed=this.applyRunnerCommand(r,command.base,false)||changed;
+  }
+  if(changed)this.notify();return changed;
  }
  commandRunners(action){
-  if(this.mirror){
-   // Guest: resolve the selected runner's advance/return against the
-   // mirrored state and forward it as an explicit runner command.
-   if(!this.manualPlay||!['advance','return'].includes(action)||this.paused)return false;
-   const r=this.field.runners.find(x=>x.id===this.field.manual.selection);if(!r)return false;
+  if(!this.manualPlay||this.paused||!['advance','return'].includes(action))return false;
+  const selected=new Set(this.selectedRunnerIds());
+  const runners=this.field.runners.filter(r=>selected.has(r.id)).sort((a,b)=>action==='advance'?b.progress-a.progress:a.progress-b.progress);
+  const commands=[];let changed=false;
+  for(const r of runners){
+   // Retain the existing career-only request for second while running to first.
+   if(!this.mirror&&this.mode==='career-bat'&&r.batter&&r.progress<1&&action==='advance'){
+    if(!r.requestNext){r.requestNext=2;changed=true;}continue;
+   }
+   if(!this.mirror&&action==='return'&&r.requestNext){delete r.requestNext;changed=true;}
    const at=Math.abs(r.progress-Math.round(r.progress))<.000001;
-   return this.commandRunner(r.id,action==='advance'?(at?Math.round(r.progress)+1:Math.ceil(r.progress)):(at?Math.round(r.progress)-1:Math.floor(r.progress)));
+   const base=action==='advance'?(at?Math.round(r.progress)+1:Math.ceil(r.progress)):(at?Math.round(r.progress)-1:Math.floor(r.progress));
+   if(this.runnerCommandValid(r,base))commands.push({id:r.id,base});
   }
-  if(!this.manualPlay||!['advance','return'].includes(action))return false;
-  const r=this.field.runners.find(x=>x.id===this.field.manual.selection);if(!r||this.paused)return false;
-  if(this.mode==='career-bat'&&r.batter&&r.progress<1&&action==='advance'){
-   if(r.requestNext)return false;
-   r.requestNext=2;return true;
+  if(this.mirror){
+   if(!commands.length||!this.mirrorSend)return false;
+   // The host applies a multi-runner command atomically in one simulation tick.
+   this.mirrorSend(commands.length===1?{t:'runner-command',...commands[0]}:{t:'runner-commands',commands});
+   return true;
   }
-  if(action==='return')delete r.requestNext;
-  const at=Math.abs(r.progress-Math.round(r.progress))<.000001;
-  return this.commandRunner(r.id,action==='advance'?(at?Math.round(r.progress)+1:Math.ceil(r.progress)):(at?Math.round(r.progress)-1:Math.floor(r.progress)));
+  for(const command of commands){const r=this.field.runners.find(x=>x.id===command.id);changed=this.applyRunnerCommand(r,command.base,false)||changed;}
+  if(changed)this.notify();return changed;
  }
  manualForceBase(r){
   const f=this.field,m=f.manual;if(m.fly)return 0;
@@ -2260,7 +2284,7 @@ window.NightGame=class NightGame{
   if(!r||r.out||this.outs>=this.outsNeeded)return;
   if(r.batter&&r.furthest<1&&type!=='catch')type='batter';
   // A close throw is adjudicated before committing an out (see reviewBaseArrival).
-  r.out=true;r.running=false;r.waiting=false;r.target=r.progress;r.scored=false;
+  r.out=true;r.running=false;r.waiting=false;r.target=r.progress;r.scored=false;this.selectedRunnerIds();
   const m=this.field.manual;const great=this.field.greatPlay,th=m.lastThrow;
   if(type!=='catch'&&type!=='appeal'&&th&&th.runnerId===r.id&&th.base===base&&this.field.elapsed-th.time<2.5){if(great?.type==='stop'&&great.fielder===th.fromIndex)great.confirmed=true;else if(th.fromIndex>=6&&th.distance>=42&&th.armRating>=76&&r.start>0)this.markGreat(th.fromIndex,'laser',true);}
   m.outs.push({id:r.id,type,time:this.field.elapsed});m.lastOut=m.outs.at(-1);
@@ -2400,6 +2424,7 @@ window.NightGame=class NightGame{
    }
    this.projectRunner(r);
   }
+  this.selectedRunnerIds();
  }
 
  secureManualBall(index,fly=false){

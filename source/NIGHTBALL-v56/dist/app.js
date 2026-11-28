@@ -3,7 +3,7 @@ import { AbsReview, absActorBounds } from './abs-review.js?v=3';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=260';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
-import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=56';
+import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=271';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=263';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
@@ -2463,7 +2463,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   const controls=`<div id="thumb-preview-wrap">${thumbPreview()}</div><div class="setting-slider"><label for="cursor-shift">指から横への距離 <output id="shift-output">${settings.cursorShift}px</output></label><input id="cursor-shift" type="range" min="0" max="140" step="4" value="${settings.cursorShift}"></div><div class="setting-slider"><label for="cursor-lift">指から上への距離 <output id="lift-output">${settings.cursorLift}px</output></label><input id="cursor-lift" type="range" min="0" max="160" step="4" value="${settings.cursorLift}"></div>${settingsControlRows(scope).map(settingsToggleRow).join('')}`;
   const display=`<section class="hud-settings"><h3 class="setting-label">試合画面のサイズ</h3>${scaleOptions}</section>`;
   const audio=`${settingsAudioRows.map(settingsToggleRow).join('')}<div class="audio-settings"><div class="setting-label">音量</div><div class="setting-slider"><label for="sound-volume">全体音量 <output id="sound-volume-output">${settings.soundVolume}%</output></label><input id="sound-volume" type="range" min="0" max="100" step="1" value="${settings.soundVolume}"></div><div class="setting-slider"><label for="crowd-volume">観客・歓声 <output id="crowd-volume-output">${settings.crowdVolume}%</output></label><input id="crowd-volume" type="range" min="0" max="100" step="1" value="${settings.crowdVolume}"></div>${musicVolumeControls()}${inGame?'':`<div class="audio-preview-buttons"><button data-audio-test="perfect">打球音を試す</button><button data-audio-test="catch">捕球音を試す</button><button data-audio-test="homer">歓声を試す</button></div><details class="audio-credits"><summary>サウンド素材</summary><p>録音：martinimeniscus（打球・捕球）、eeease（球場環境）、benfree（歓声）、soundpost（スイッシュ）。CC0 1.0。編集・音量調整済み。</p><a href="./assets/audio/credits.json" target="_blank" rel="noopener">素材の出典・ライセンス一覧 ↗</a></details>`}</div>`;
-  const running=`<div class="setting-label">${activeCareer?'キャリアの走塁':'走塁モード'}</div><div class="segmented">${[[false,'自動','状況に合わせて進塁'],[true,'手動',activeCareer?'自分の走者を操作':'走者を塁方向へスワイプ']].map(([value,label,sub])=>`<button data-running-mode="${value?'manual':'auto'}" class="${manual===value?'active':''}">${label}<small>${sub}</small></button>`).join('')}</div><p class="modal-note">${activeCareer?'手動では、自分が打った直後の打者走者に進塁・帰塁を指示します。味方走者は自動です。':'手動では走者を塁方向へスワイプします。'} ${inGame?'プレー中の切り替えは次の投球前に行えます。':''}</p>`;
+  const running=`<div class="setting-label">${activeCareer?'キャリアの走塁':'走塁モード'}</div><div class="segmented">${[[false,'自動','状況に合わせて進塁'],[true,'手動',activeCareer?'自分の走者を操作':'走者をタップして選択・解除']].map(([value,label,sub])=>`<button data-running-mode="${value?'manual':'auto'}" class="${manual===value?'active':''}">${label}<small>${sub}</small></button>`).join('')}</div><p class="modal-note">${activeCareer?'手動では、自分が打った直後の打者走者に進塁・帰塁を指示します。味方走者は自動です。':'手動では走者をタップして複数選択し、進塁・帰塁ボタンで操作します。スワイプも使用できます。'} ${inGame?'プレー中の切り替えは次の投球前に行えます。':''}</p>`;
   const speed=`<div class="setting-label">打球後の速度</div><div class="segmented">${[1,2].map(n=>`<button data-field-speed="${n}" class="${(inGame?game.fieldSpeed:settings.fieldSpeed)===n?'active':''}">×${n}<small>${n===1?'通常':'2倍速'}</small></button>`).join('')}</div>`;
   const gameDefaults=`${lightingField()}${settingsToggleRow(['tiebreak','延長タイブレーク','同点の延長は無死二塁から（最大3回まで）'])}<div class="setting-label">難易度（次のプレイから）</div><div class="segmented">${[['casual','カジュアル'],['standard','標準'],['pro','プロ']].map(([v,l])=>`<button data-difficulty="${v}" class="${settings.difficulty===v?'active':''}">${l}</button>`).join('')}</div><div class="setting-label">CPUの強さ（カスタム）</div>${[['bat','CPU打撃','打者の読みとタイミング'],['pitch','CPU投球','球速と変化のキレ'],['field','CPU守備','守備範囲と送球'],['run','CPU走塁','進塁の積極性と盗塁']].map(([k,l,d])=>`<div class="setting-slider"><label for="cd-${k}">${l}（${d}） <output id="cd-${k}-output">${settings.customDifficulty[k]>0?'+':''}${settings.customDifficulty[k]}</output></label><input id="cd-${k}" data-custom-diff="${k}" type="range" min="-10" max="10" step="1" value="${settings.customDifficulty[k]}"></div>`).join('')}<p class="modal-note">難易度プリセットに上乗せされます。0で無効、+でCPUが強く、−で弱くなります。</p><div class="setting-label">ペナントの故障発生</div><div class="segmented">${[['off','なし','故障は発生しない'],['low','少なめ','たまに離脱'],['normal','ふつう','現実的な頻度']].map(([v,l,d])=>`<button data-injury-rate="${v}" class="${(settings.injuries||'normal')===v?'active':''}">${l}<small>${d}</small></button>`).join('')}</div>${speed}`;
   const system=`<div class="setup-section"><label for="game-language">表示言語</label><select id="game-language" class="field-select" data-no-localize>${[['ja','日本語'],['zh-TW','台灣華語（繁體中文）'],['ko','한국어']].map(([code,label])=>`<option value="${code}" lang="${code}"${settings.language===code?' selected':''}>${label}</option>`).join('')}</select></div><button class="secondary-button" data-action="fullscreen">全画面でプレイ</button><button class="secondary-button" data-action="install">ホーム画面への追加方法</button><div class="setting-label">セーブデータ</div><button class="secondary-button" data-action="backup-export">データを書き出す（JSON）</button><button class="secondary-button" data-action="backup-import">データを読み込む</button><p class="modal-note">記録・ペナント・キャリアなど、この端末に保存された全データを1ファイルにまとめます。読み込むと現在のデータに上書きされます。</p>`;
@@ -2507,7 +2507,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function howto(){
   if(onlineMatchActive()&&!onlineOwnsMenu()){onlineRequestMenu('howto');return;}
   if(game&&screen==='game')game.paused=true;
-  modal(`${modalTitle('THUMB BASEBALL / VOL. 17','押して、狙って、離す。')}<div class="how-step"><span class="step-num">01</span><div><strong>右親指で、そのまま打つ</strong><p>球場を押したまま指を動かすと、指の左上に照準が出ます。ボールが来るコースへ合わせて、指を離すとスイング。下の操作パッドやスイングボタンを押す必要はありません。</p></div></div><div class="how-step"><span class="step-num">02</span><div><strong>リングが重なったら離す</strong><p>投球の後半に出る大きなリングが、ボールの到達位置の小さい円へ縮みます。リングが重なったら指を離そう。案内文字は表示しません。打撃アシストでは手前のボールが少しゆっくりになります。</p></div></div><div class="how-step"><span class="step-num">R</span><div><strong>親指でマニュアル走塁</strong><p>投球前に「走塁：手動」へ切替。大きいミニマップ上の丸や矢印を、進みたい塁へスワイプ。1回の指示で1つの塁まで走り、到着したら必ず停止します。次の塁への予約はできません。帰塁は戻りたい塁の方向へスワイプ。打者は最初に一塁へ走り、ほかの走者は指示待ちです。押し出される走者も自分で進塁させてください。フライ捕球後は元の塁へ戻ってから進塁。守備がボールを持ち、全員が塁で停止すると少し待って次の打者へ進みます。</p></div></div><div class="how-step"><span class="step-num">B</span><div><strong>バントで走者を送る</strong><p>縦に並ぶボタンでバントを選び、投球中に指を離します。90%で走者が1つ進塁して打者アウト、5%で進塁せずアウト、5%で打者もセーフのヒット。2アウトでは、打者アウトによる得点は入りません。</p></div></div><div class="how-step"><span class="step-num">03</span><div><strong>親指に合わせて設定</strong><p>右上の設定で、照準を指から左・上へどれだけ離すか個別に変えられます。左親指で遊ぶときは、照準を右上に切り替えられます。</p></div></div><p>打者と反対側のボタンでミートと強振を切り替え。選手、投手交代、履歴や練習設定は一時停止メニューから開けます。投手操作も球場で直接狙い、指を離すと投球。球種は球場内のボタンで選びます。守備回の自動進行は「守備を自動で進行」から開始。×1 / ×2で表示速度を切り替えられます。打球後の×1 / ×2も引き続き使えます。</p><button class="primary-button" data-action="close">プレイに戻る</button>`,'howto');
+  modal(`${modalTitle('THUMB BASEBALL / VOL. 17','押して、狙って、離す。')}<div class="how-step"><span class="step-num">01</span><div><strong>右親指で、そのまま打つ</strong><p>球場を押したまま指を動かすと、指の左上に照準が出ます。ボールが来るコースへ合わせて、指を離すとスイング。下の操作パッドやスイングボタンを押す必要はありません。</p></div></div><div class="how-step"><span class="step-num">02</span><div><strong>リングが重なったら離す</strong><p>投球の後半に出る大きなリングが、ボールの到達位置の小さい円へ縮みます。リングが重なったら指を離そう。案内文字は表示しません。打撃アシストでは手前のボールが少しゆっくりになります。</p></div></div><div class="how-step"><span class="step-num">R</span><div><strong>親指でマニュアル走塁</strong><p>投球前に「走塁：手動」へ切替。ミニマップ上の走者をタップすると白い丸が付き、複数選択できます。再タップで解除し、進塁・帰塁ボタンで選択中の走者をまとめて操作します。従来のスワイプによる個別操作もできます。1回の指示で隣の塁まで走り、到着したら停止します。フライ捕球後は元の塁へ帰ってから進塁してください。</p></div></div><div class="how-step"><span class="step-num">B</span><div><strong>バントで走者を送る</strong><p>縦に並ぶボタンでバントを選び、投球中に指を離します。90%で走者が1つ進塁して打者アウト、5%で進塁せずアウト、5%で打者もセーフのヒット。2アウトでは、打者アウトによる得点は入りません。</p></div></div><div class="how-step"><span class="step-num">03</span><div><strong>親指に合わせて設定</strong><p>右上の設定で、照準を指から左・上へどれだけ離すか個別に変えられます。左親指で遊ぶときは、照準を右上に切り替えられます。</p></div></div><p>打者と反対側のボタンでミートと強振を切り替え。選手、投手交代、履歴や練習設定は一時停止メニューから開けます。投手操作も球場で直接狙い、指を離すと投球。球種は球場内のボタンで選びます。守備回の自動進行は「守備を自動で進行」から開始。×1 / ×2で表示速度を切り替えられます。打球後の×1 / ×2も引き続き使えます。</p><button class="primary-button" data-action="close">プレイに戻る</button>`,'howto');
  }
  const ACHIEVEMENTS=[
   ['firstHit','◇','はじめの一打','初めてのヒットを記録'],
@@ -3497,8 +3497,8 @@ function start(mode,challengeId=null,fixedPark=null){
   const available=(g.isFixture||g.mode==='career-bat')&&!g.umpireMode,playing=!!g.field&&['field','result'].includes(g.phase);
   $('running-mode').hidden=!available;$('running-mode').textContent=`走塁：${g.manualRunning?'手動':'自動'}`;
   $('running-mode').setAttribute('aria-pressed',String(!!g.manualRunning));$('running-mode').disabled=playing||g.paused;
-  const active=g.manualPlay&&!review.playback;const selected=g.field?.manual?.selection;
-  $('run-actions').hidden=!active||!selected||selected==='all'||!g.field.runners.some(r=>r.id===selected&&!r.out&&!r.scored);
+  const active=g.manualPlay&&!review.playback;
+  $('run-actions').hidden=!active||!g.selectedRunnerIds().length;
   renderRunnerMap($('runner-map'),g);$('game').classList.toggle('manual-running',active);
  }
  function chooseRunningMode(manual){
@@ -3582,7 +3582,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=270,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=271,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
  const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
  const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected);
@@ -4128,6 +4128,7 @@ function start(mode,challengeId=null,fixedPark=null){
      else g.attempt({x:m.aim?.x||0,y:m.aim?.y||0},!!m.power,Math.max(-1.2,Math.min(1.2,Number(m.delta)||0)),false);
    }else if(m.t==='steal'&&g.remoteBatter){g.steal=!!m.on;}
    else if(m.t==='runner-command'&&g.remoteBatter){g.remoteCommandRunner(m.id,m.base);}
+   else if(m.t==='runner-commands'&&g.remoteBatter){g.remoteCommandRunners(m.commands);}
 
  }
  // Apply a substitution for the guest's team on the authoritative game:
@@ -4209,7 +4210,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineState(g,o){
    const fieldPhase=(['field','result','play-call','play-review'].includes(g.phase)||g.phase==='cinematic'&&g.broadcastCut?.resume==='result')&&g.field;
    let field=null;
-   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,closeCall:undefined}:g.field.manual};}
+   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,selection:undefined,closeCall:undefined}:g.field.manual};}
    let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
      epoch:o.sync?.epoch??0,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,cut:g.broadcastCut||null,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,

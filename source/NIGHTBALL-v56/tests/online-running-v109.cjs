@@ -89,7 +89,7 @@ function hostGame({remoteRunning=true,manualRunning=false,guestBats=true}={}){
  assert(lead.waiting);
  assert.equal(g.remoteCommandRunner(lead.id,3),true,'guest advance command applies on the host');
  assert.equal(lead.command,3);assert.equal(lead.target,3);assert.equal(lead.waiting,false);
- assert.equal(g.field.manual.selection,lead.id,'host tracks the commanded runner as selected');
+ assert.deepEqual(g.field.manual.selection,[],'remote commands do not change the host’s local selection');
 }
 { // guest bats + guest uses auto: the coach keeps control, commands rejected.
  const g=hostGame({remoteRunning:false});
