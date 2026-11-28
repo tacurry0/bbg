@@ -37,7 +37,7 @@ function makeHarness(community,transport){
 }
 async function run(community,transport){
  const H=makeHarness(community,transport),clients=Array.from({length:4},()=>H.client()),[A,B,C,D]=clients.map(x=>x.C);
- for(const c of [A,B,C,D])c.start();
+ for(const [i,c] of [A,B,C,D].entries()){check(c.setName('Player '+(i+1)),'register nickname');c.start();}
  await H.advance(2000);
  const profiles=clients.map(x=>x.C.profile());
  for(const c of [A,B,C,D])check(c.getSnapshot().members.length===4,'all participants discover each other');

@@ -8,6 +8,7 @@ on:
       - 'source/NIGHTBALL-v56/tests/online-*-v272.*'
       - 'source/NIGHTBALL-v56/tests/online-play-v273.cjs'
       - 'source/NIGHTBALL-v56/tests/community-v274.cjs'
+      - 'source/NIGHTBALL-v56/tests/community-*-v275.*'
       - 'source/NIGHTBALL-v56/server/**'
       - '.github/workflows/online-v272.yml'
   workflow_dispatch:
@@ -27,6 +28,7 @@ jobs:
       - name: Test compact wire, replay, loss, reconnect, relay, running
         run: |
           node tests/community-v274.cjs
+          node tests/community-name-v275.cjs
           node tests/online-stream-v272.cjs
           node tests/online-reconnect-v272.cjs
           node tests/online-play-v273.cjs
@@ -41,3 +43,5 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Verify native dual WebRTC channels in Chromium
         run: node tests/online-transport-browser-v272.mjs
+      - name: Verify mobile nickname setup and settings in Chromium
+        run: node tests/community-name-browser-v275.mjs
