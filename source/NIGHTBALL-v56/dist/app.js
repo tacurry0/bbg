@@ -302,6 +302,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    if(online.sync.lock){if(!onlineOwnsMenu())return;if(online.sync.subPending!=null){toast('交代内容を同期しています…');return;}closeModal(false);onlineFinishLocalLock();return;}
   }
   const previous=modalKind,backdrop=$('modal');
+  if(previous==='online'){globalThis.NightCommunity?.unmount();if(!online)globalThis.NightCommunity?.leaveIfIdle();}
   if(previous==='stadium-editor')disposeStadiumPreview();
   if(previous==='uniform'){disposeUniformPreview();uniformDraft=null;}
   pregameRoster=false;
@@ -3315,7 +3316,7 @@ function start(mode,challengeId=null,fixedPark=null){
    hideStageBanner();stageResultKey='';playFeedback.resultTime=0;
  }
  function onEvent(type,data){
-   if(!game?.onlineDerby&&online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='play-call'||type==='challenge-result')online.session.send({t:type,d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;}}
+   if(!game?.onlineDerby&&online?.role==='host'&&online.session?.open){if(type==='message')online.session.send({t:'msg',d:data});else if(type==='play-call'||type==='challenge-result')online.session.send({t:type,d:data});else if(type==='clear')online.session.send({t:'clear'});else if(type==='sound')online.session.send({t:'snd',d:data});else if(type==='cue')online.session.send({t:'cue',d:data});else if(type==='music-result')online.session.send({t:'music',d:data});else if(type==='scoring-walk')online.session.send({t:'walk-replay'});else if(type==='end'&&data){online.session.send({t:'end',hs:data.homeScore,as:data.awayScore,hn:data.teams.home.name,an:data.teams.away.name});online.endSent=true;refreshCommunityRoom();if(online.session?.spectators?.size)online.session.broadcastSpectators(globalThis.NightCommunity?.fieldFrame(game),true);}}
    if(type==='message'){
      if(game?.derby?.enhanced&&data?.en==='HOME RUN')return;
      // ABS already presented this exact pitch verdict in the review layer.
@@ -3852,7 +3853,7 @@ function start(mode,challengeId=null,fixedPark=null){
   o.session?.send({t:'sub',...msg,seq,idLock:o.sync.lock.id,epoch:o.sync.epoch});
   toast('交代内容を同期しています…');
  }
- function onlineCleanup(){hideNetDetail();if($('online-net-meter'))$('online-net-meter').hidden=true;if(online?.pingTimer)clearInterval(online.pingTimer);if(online?.delayQueue)online.delayQueue.clear();if(online?.session)online.session.destroy();online=null;}
+ function onlineCleanup(){globalThis.NightCommunity?.setRoom(null);hideNetDetail();if($('online-net-meter'))$('online-net-meter').hidden=true;if(online?.pingTimer)clearInterval(online.pingTimer);if(online?.delayQueue)online.delayQueue.clear();if(online?.session)online.session.destroy();online=null;}
  // v107 latency equalization: while hosting, hold the host's own timing
  // inputs for the estimated one-way delay (see online.js LatencyEstimator)
  // so they take effect as late as the guest's network-delayed inputs.
@@ -3862,7 +3863,12 @@ function start(mode,challengeId=null,fixedPark=null){
  function hostDelay(fn){const o=online,g=game,d=hostDelayMs(),epoch=o?.sync?.epoch;if(onlineInputBlocked())return 0;if(d<5||!o?.delayQueue){fn();return 0;}return o.delayQueue.push(d,()=>{if(game===g&&online===o&&(!o?.sync||o.sync.epoch===epoch&&!onlineInputBlocked()))fn();});}
  function startHostPing(){const o=online;if(!o||o.role!=='host'||o.pingTimer)return;const ping=()=>{if(online!==o||!o.session?.open)return;o.session.send({t:'ping',ts:Math.round(performance.now())});};ping();o.pingTimer=setInterval(ping,NightOnline.PING_INTERVAL_MS);}
  function onlineClubs(){return[...NightTeams.all,...(NightTeams.npb||[]),...(NightTeams.kbo||[])];}
- function onlineLobbyRefresh(){if(modalKind==='online')onlineModal();}
+ function refreshCommunityRoom(){
+  const o=online,C=globalThis.NightCommunity;if(!C)return;
+  if(!o||o.role!=='host'||!o.communityPublic||!o.communityReady||o.endSent||o.started&&game?.phase==='ended'||o.communityTournament&&!o.started){C.setRoom(null);return;}
+  C.setRoom({code:o.code,status:o.started?'playing':o.session?.open?'full':'waiting',mode:o.mode==='derby'?'derby':'match',club:NightTeams.get(o.myClub)?.name||'',guest:o.guestProfile?.name||'',innings:settings.innings,watch:o.mode!=='derby'&&!!o.session?.peer,rated:o.mode!=='derby'&&!Object.values(onlineHandicapWire()).some(v=>Number(v)>0)});
+ }
+ function onlineLobbyRefresh(){refreshCommunityRoom();if(modalKind==='online')onlineModal();}
  // v156 record room (checker item "personal-record-room"): cross-mode
  // personal W/L/D dashboard. commit() is the once-guarded result path
  // shared by every fixture finish (versus / pennant / online host /
@@ -3942,6 +3948,11 @@ function start(mode,challengeId=null,fixedPark=null){
  function saveOnlineRecord(r){try{localStorage.setItem('nightball.online',JSON.stringify(r));}catch{}}
  function recordOnlineResult(oppClubId,won,draw,hs,as){
   if(!oppClubId)return;
+  if(online?.communityMatch&&online.mode!=='derby'){
+   globalThis.NightCommunity?.finishMatch(online.communityMatch,hs,as);
+   if(online.role==='guest')online.session?.send({t:'community-profile',profile:globalThis.NightCommunity?.profile()});
+   else{refreshCommunityRoom();if(online.session?.spectators?.size)online.session.broadcastSpectators(globalThis.NightCommunity?.fieldFrame(game),true);}
+  }
   const r=loadOnlineRecord(),o=r.byOpponent[oppClubId]||(r.byOpponent[oppClubId]={w:0,l:0,d:0,streak:0});
   if(draw)o.d++;else if(won){o.w++;o.streak=o.streak>0?o.streak+1:1;}else{o.l++;o.streak=o.streak<0?o.streak-1:-1;}
   r.history.unshift({at:new Date().toISOString(),opp:oppClubId,hs,as,result:draw?'draw':won?'win':'loss'});
@@ -3966,6 +3977,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function onlineRematchButtons(){
   const o=online;if(!o||o.role!=='host')return '';
+  if(o.communityTournament)return '<p class="modal-note">大会の結果は両者の終了報告が一致すると確定します。大会画面で次の試合を確認してください。</p>';
   const rec=loadOnlineRecord().byOpponent[o.guestClub];
   const line=rec?`<p class="modal-note">対 ${NightTeams.get(o.guestClub)?.name||''} 通算 ${rec.w}勝 ${rec.l}敗 ${rec.d}分${rec.streak>1?' · '+rec.streak+'連勝中':rec.streak<-1?' · '+(-rec.streak)+'連敗中':''}</p>`:'';
   if(o.rematchState==='offered')return line+'<p class="modal-note">再戦を申し込みました。相手の返答を待っています…</p>';
@@ -3977,7 +3989,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const oppId=o.mySide==='home'?o.awayClub:o.homeClub;
   const mine=o.mySide==='home'?m.hs>m.as:m.as>m.hs,draw=m.as===m.hs;
   const rec=loadOnlineRecord().byOpponent[oppId];
-  const offer=o.rematchOffer;
+  const offer=o.communityMatch?.tournament?null:o.rematchOffer;
   modal(`${modalTitle('','試合終了')}<p class="career-status-line">${m.an} ${m.as} - ${m.hs} ${m.hn}</p><p class="career-status-line">${draw?'引き分け':mine?'あなたの勝利！':'あなたの敗戦'}</p>${rec?`<p class="modal-note">この相手との通算 ${rec.w}勝 ${rec.l}敗 ${rec.d}分</p>`:''}${offer?`<p class="career-status-line">ホストから再戦の申し込みが届きました${offer.swap?'（サイド入替）':''}</p><button class="primary-button" data-action="rematch-accept">再戦する</button><button class="secondary-button" data-action="rematch-decline">見送る</button>`:'<button class="primary-button" data-action="online-exit">ホームへ戻る</button>'}`,'online-result');
  }
  // Online pregame shares the normal match screen, player editor and picker.
@@ -3997,7 +4009,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(o.role==='host'){onlineSendLobbyConfig();return;}
    if(!o.session?.open)return;
    const {config}=lineupConfig('online');
-   o.session.send({t:'club',club:o.myClub,pitcher:config.pitcher,order:config.order,fielding:config.fielding,ready:!!o.myReady,derbyBatter:o.myDerbyBatter,derbyVersion:NightOnlineDerby.VERSION,uniforms:{home:NightUniforms.snapshot(NightTeams.get(o.myClub),'home'),away:NightUniforms.snapshot(NightTeams.get(o.myClub),'away')},syncVersion:ONLINE_SYNC_VERSION});
+   o.session.send({t:'club',club:o.myClub,pitcher:config.pitcher,order:config.order,fielding:config.fielding,ready:!!o.myReady,derbyBatter:o.myDerbyBatter,derbyVersion:NightOnlineDerby.VERSION,uniforms:{home:NightUniforms.snapshot(NightTeams.get(o.myClub),'home'),away:NightUniforms.snapshot(NightTeams.get(o.myClub),'away')},syncVersion:ONLINE_SYNC_VERSION,community:globalThis.NightCommunity?.profile()});
  }
  function onlineBeginEdit(){
    if(online?.role==='guest'&&online.myReady){online.myReady=false;onlineSendClub();}
@@ -4033,8 +4045,8 @@ function start(mode,challengeId=null,fixedPark=null){
    const card=(club,label,side,editable)=>`<button type="button" class="pf-team" ${editable?'data-action="online-teams-open"':'disabled'} style="--team-color:${pregameColor(club)}"><span class="pf-team-label">${label}</span><span class="pf-team-logo">${club?clubBadge(club.id):'<span class="pf-online-unknown">?</span>'}</span><b>${club?uiEscape(club.short):editable?'球団を選択':'選択待ち'}</b><span class="pf-team-side">${derby?'HRダービー':!host&&typeof o.config?.hostHome!=='boolean'?'—':side}</span>${editable?`<i class="pf-team-edit">${pfIcon('swap')}</i>`:''}</button>`;
    const matchup=`<div class="pf-matchup">${card(own,'自チーム',home?'後攻':'先攻',true)}<span class="pf-vs" aria-hidden="true">VS</span>${card(opp,'相手チーム',home?'先攻':'後攻',false)}</div>`;
    const park=(!host&&onlineParkDefinition(onlineParkId(),o.config?.parkSpec))||NightPlayers.parks.find(p=>p.id===onlineParkId())||NightPlayers.parks[0],innings=host?settings.innings:o.config?.innings;
-   const room=`<section class="pf-online-room"><div><small>${host?'ホスト':'ゲスト'} / 合言葉</small><b class="online-code">${uiEscape(o.code)}</b></div><div class="pf-online-share"><button class="pf-secondary" data-action="online-copy-code">コピー</button>${host?'<button class="pf-secondary" data-action="online-copy-link">招待リンク</button>':''}${host&&typeof navigator.share==='function'?'<button class="pf-secondary" data-action="online-share-link">共有</button>':''}</div><p class="pf-online-status" role="status">${uiEscape(o.status||'')}</p></section>`;
-   const mode=host?pfChoice([['match','通常対戦'],['derby','HRダービー']],o.mode,'data-online-mode'):`<p class="pf-online-mode">${derby?'HRダービー':'通常対戦'}（ホスト設定）</p>`;
+   const room=`<section class="pf-online-room"><div><small>${host?'ホスト':'ゲスト'} / 合言葉${host?(o.communityPublic?' · 公開':' · 非公開'):''}</small><b class="online-code">${uiEscape(o.code)}</b></div><div class="pf-online-share"><button class="pf-secondary" data-action="online-copy-code">コピー</button>${host?'<button class="pf-secondary" data-action="online-copy-link">招待リンク</button>':''}${host&&typeof navigator.share==='function'?'<button class="pf-secondary" data-action="online-share-link">共有</button>':''}</div><p class="pf-online-status" role="status">${uiEscape(o.status||'')}</p></section>`;
+   const mode=host?(o.communityTournament?'<p class="pf-online-mode">大会対戦（通常対戦）</p>':pfChoice([['match','通常対戦'],['derby','HRダービー']],o.mode,'data-online-mode')):`<p class="pf-online-mode">${derby?'HRダービー':'通常対戦'}（ホスト設定）</p>`;
    const conditions=derby?'':host?`<div class="pf-conditions"><div><label>先攻・後攻</label>${pfChoice([['away','先攻'],['home','後攻']],home?'home':'away','data-online-side')}</div><div><label>イニング</label>${pfChoice([3,5,9].map(n=>[n,n+'回']),innings,'data-online-innings')}</div></div>`:`<div class="pf-conditions"><div><label>先攻・後攻</label><b>${typeof o.config?.hostHome==='boolean'?(home?'後攻':'先攻'):'—'}</b></div><div><label>イニング</label><b>${innings?innings+'回':'—'}</b></div></div>`;
    const venue=`<section class="pf-venue"><button type="button" class="pf-venue-main" ${host?'data-action="online-park-open"':'disabled'}>${parkMiniSVG(park)}<span><b>${uiEscape(park.name)}</b><small>${host?'球場選択':'ホスト設定'}</small></span><span class="pf-chevron">${host?pfIcon('chevron'):''}</span></button>${derby?'':host?crowdChoice(true)+weatherChoice(park,true):'<div class="pf-light"><label>観客数</label><b>'+uiEscape(CROWD_CHOICES.find(([v])=>v===(o.config?.crowdAttendance||'full'))?.[1]||'満員')+'</b></div>'+weatherChoice(park,true,true,o.config?.matchWeather||'auto')}</section>`;
    let roster='';
@@ -4044,7 +4056,7 @@ function start(mode,challengeId=null,fixedPark=null){
      roster=`<div class="pf-roster">${pfLink('ball','先発投手',uiEscape(pitcher.name)+` <small class="pf-inline-stat">${pitcher.velocity} km/h</small>`,'online-pitchers-open')}<button type="button" class="pf-link pf-order-link" data-action="online-lineup-open"><span class="pf-link-icon">${pfIcon('lineup')}</span><span class="pf-link-copy"><small>オーダー編成</small><b>${players.length}人</b></span><span class="pf-chevron">${pfIcon('chevron')}</span>${preview}</button></div>`;
    }
    const options=derby?`<p class="modal-note">先攻・後攻を抽選。各2分間、同点の場合は1分延長。相手の打席はリアルタイム観戦できます。</p>${own?`<section class="dr-section"><h3>出場打者</h3><button class="dr-selected-player" data-action="online-derby-player-open">${derbySelectedPlayer(own,own.batters.find(b=>b.id===o.myDerbyBatter)||NightOnlineDerby.pickBatter(own))}<i>›</i></button></section>`:''}`:host?`<div class="pf-aux"><button data-action="online-options-open">${pfIcon('gear')}<span>詳細設定</span>${pfIcon('chevron')}</button></div>`:(o.config?`<p class="modal-note">対戦条件（ホスト設定）：${uiEscape(onlineConfigSummary(o.config.rules,o.config.handicap))}${o.config.tiebreak?' / タイブレーク':''}</p>`:'');
-   const canStart=connected&&!!o.guestClub&&o.guestReady===true&&(derby?o.guestDerbyVersion===NightOnlineDerby.VERSION:o.guestSyncVersion===ONLINE_SYNC_VERSION);
+   const canStart=connected&&!!o.guestClub&&o.guestReady===true&&(!o.communityTournament||o.guestProfile?.id===o.communityTournament.b)&&(derby?o.guestDerbyVersion===NightOnlineDerby.VERSION:o.guestSyncVersion===ONLINE_SYNC_VERSION);
    const launch=host?`<button class="pf-primary" data-action="online-start" ${canStart?'':'disabled'}>${pfIcon('play')}${canStart?(derby?'HRダービー開始':'対戦開始'):o.guestClub?'相手の準備を待っています':'相手の参加を待っています'}</button>`:`<button class="pf-primary" data-action="online-ready" ${own&&connected&&(derby?o.config?.derbyVersion===NightOnlineDerby.VERSION:o.conditionSeed&&o.config?.syncVersion===ONLINE_SYNC_VERSION)?'':'disabled'}>${o.myReady?'準備完了（変更する）':'準備完了'}</button>`;
    pfScreen('オンライン対戦',room+mode+matchup+conditions+venue+roster+options+(o.waitFailed?'<button class="pf-secondary pf-wide" data-action="online-rejoin">もう一度接続する</button>':''),'online',`<div class="pf-launch"><button class="pf-secondary" data-action="online-cancel">${host?'部屋を閉じる':'退出'}</button>${launch}</div>`,'online-cancel');
  }
@@ -4061,9 +4073,11 @@ function start(mode,challengeId=null,fixedPark=null){
      <button class="primary-button" data-action="online-join">部屋に入る（ゲスト）</button>
      <button class="secondary-button" data-action="close">閉じる</button>`;
    }else{
-     onlinePregame();return;
+     globalThis.NightCommunity?.unmount();onlinePregame();return;
    }
+   if(globalThis.NightCommunity){inner='<div id="online-community"></div><details data-ui-section="online-history"><summary>最近の部屋・対戦履歴</summary>'+onlineHistoryHTML()+recentRoomsHTML()+'</details><button class="secondary-button" data-action="close">閉じる</button>';}
    modal(`${modalTitle('','オンライン対戦')}${inner}`,'online');
+   if(!o&&globalThis.NightCommunity)globalThis.NightCommunity.mount($('online-community'),{invite:pendingInviteCode,host:(isPublic,cup)=>onlineCreateRoom(cup?.code,{publicRoom:isPublic,tournament:cup}),join:(code,cup)=>onlineJoinRoom(code,cup),copy:id=>copyText(id).then(ok=>toast(ok?'フレンドコードをコピーしました':'コピーできませんでした'))});
    if(!o&&pendingInviteCode){const input=$('online-code-input');if(input&&!input.value)input.value=pendingInviteCode;}
  }
  let pendingInviteCode='';
@@ -4076,43 +4090,49 @@ function start(mode,challengeId=null,fixedPark=null){
  // value). The room object only mirrors it for the guest-start record;
  // changing it in the lobby writes settings.innings and saves, so the
  // normal match setup shows the same value, and vice versa.
- async function onlineCreateRoom(codeOverride){
+ async function onlineCreateRoom(codeOverride,communityOptions={}){
    onlineCleanup();
-   const code=codeOverride||NightOnline.makeCode(),derby=derbyOnlineIntent;derbyOnlineIntent=false;
-   online={role:'host',code,session:null,myClub:onlineClubs().some(c=>c.id===(derby?settings.derbyClub:settings.matchTeam))?(derby?settings.derbyClub:settings.matchTeam):onlineClubs()[0].id,myDerbyBatter:derby?settings.derbyBatter:undefined,guestClub:null,myPitcher:0,guestPitcher:0,guestReady:false,conditionSeed:onlineSeed(),mode:derby?'derby':'match',innings:settings.innings,hostHome:true,park:derby?settings.derbyPark:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null};
+   const code=codeOverride||NightOnline.makeCode(),derby=derbyOnlineIntent&&!communityOptions.tournament;derbyOnlineIntent=false;
+   online={role:'host',code,session:null,myClub:onlineClubs().some(c=>c.id===(derby?settings.derbyClub:settings.matchTeam))?(derby?settings.derbyClub:settings.matchTeam):onlineClubs()[0].id,myDerbyBatter:derby?settings.derbyBatter:undefined,guestClub:null,myPitcher:0,guestPitcher:0,guestReady:false,conditionSeed:onlineSeed(),mode:derby?'derby':'match',innings:settings.innings,hostHome:true,park:derby?settings.derbyPark:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null,communityPublic:communityOptions.publicRoom===true,communityTournament:communityOptions.tournament||null,communityReady:false};
+   const created=online;globalThis.NightCommunity?.start();
    onlineModal();
    try{
-     online.session=await NightOnline.host(code,{
-       onReady:()=>{if(online?.code===code){NightOnline.rememberRoom({code,role:'host',club:online.myClub});online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
-       onOpen:()=>{if(online?.code===code){online.status='ゲストが接続しました。相手の準備を待っています…';online.session?.send({t:'lobby-mode',mode:online.mode});onlineSendLobbyConfig();onlineLobbyRefresh();startHostPing();}},
-       onData:m=>onlineHostData(m),
-       onInterrupt:()=>onlineConnectionInterrupted(),onResume:()=>onlineConnectionResumed(),onClose:()=>onlinePeerGone(),
-       onError:kind=>{if(online?.code===code&&!online.started){online.status=kind==='taken'?'合言葉が重複しました。部屋を作り直してください。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
+     created.session=await NightOnline.host(code,{
+       onReady:()=>{if(online===created){online.communityReady=true;NightOnline.rememberRoom({code,role:'host',club:online.myClub});online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
+       allowSpectator:()=>online===created&&created.communityPublic&&created.mode==='match'&&created.started&&!created.endSent,
+       allowGuest:meta=>!created.communityTournament||meta?.communityId===created.communityTournament.b,
+       onOpen:()=>{if(online===created){online.status='ゲストが接続しました。相手の準備を待っています…';online.session?.send({t:'lobby-mode',mode:online.mode});onlineSendLobbyConfig();onlineLobbyRefresh();startHostPing();}},
+       onData:m=>{if(online===created)onlineHostData(m);},
+       onInterrupt:()=>{if(online===created)onlineConnectionInterrupted();},onResume:()=>{if(online===created)onlineConnectionResumed();},onClose:()=>{if(online===created)onlinePeerGone();},
+       onError:kind=>{if(online===created&&!online.started){online.communityReady=false;online.status=kind==='taken'?'合言葉が重複しました。部屋を作り直してください。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
      });
-   }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
+     if(online!==created)created.session?.destroy();else refreshCommunityRoom();
+   }catch{if(online===created){online.communityReady=false;online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
  }
- async function onlineJoinRoom(codeOverride){
+ async function onlineJoinRoom(codeOverride,cup=null){
    const code=(codeOverride||($('online-code-input')?.value||'')).trim().toUpperCase();
    if(code.length<4){toast('合言葉を入力してください');return;}
    pendingInviteCode='';
    onlineCleanup();
-   online={role:'guest',code,session:null,myClub:null,myPitcher:0,myReady:false,conditionSeed:null,config:null,mode:'match',started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0,waiting:false,waitAttempts:0,waitFailed:false};
+   online={role:'guest',code,session:null,myClub:null,myPitcher:0,myReady:false,conditionSeed:null,config:null,mode:'match',started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0,waiting:false,waitAttempts:0,waitFailed:false,communityTournament:cup||globalThis.NightCommunity?.findAssignmentFor(code)||null};
+   const joined=online;globalThis.NightCommunity?.start();
    onlineModal();
    try{
      // Guests wait for the host (v112): if the room is not open yet, the
      // join retries in the background instead of failing, and connects
      // on its own once the host opens the room. 退出する cancels the wait.
-     online.session=await NightOnline.join(code,{
-       onOpen:()=>{if(online?.code===code){online.waiting=false;online.status='接続しました。自分の球団を選んでください。';if(online.myClub)onlineSendClub();onlineLobbyRefresh();}},
-       onData:m=>onlineGuestData(m),
-       onInterrupt:()=>onlineConnectionInterrupted(),onResume:()=>onlineConnectionResumed(),onClose:()=>onlinePeerGone(),
-       onWaiting:n=>{if(online?.code===code&&!online.started){online.waiting=true;online.waitAttempts=n;online.status='ホストを待っています…（自動で再接続を試みています · '+n+'回目）';onlineLobbyRefresh();}},
-       onError:kind=>{if(online?.code===code&&!online.started){online.waiting=false;if(kind==='notfound'){online.waitFailed=true;online.status='ホストが見つかりませんでした。ホストが部屋を開いてから、もう一度接続してください。';}else online.status='接続エラーが発生しました。';onlineLobbyRefresh();}}
-     },{wait:true,retryMs:3000,maxWaitMs:120000});
-   }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
+     joined.session=await NightOnline.join(code,{
+       onOpen:()=>{if(online===joined){online.waiting=false;online.status='接続しました。自分の球団を選んでください。';if(online.myClub)onlineSendClub();onlineLobbyRefresh();}},
+       onData:m=>{if(online===joined)onlineGuestData(m);},
+       onInterrupt:()=>{if(online===joined)onlineConnectionInterrupted();},onResume:()=>{if(online===joined)onlineConnectionResumed();},onClose:()=>{if(online===joined)onlinePeerGone();},
+       onWaiting:n=>{if(online===joined&&!online.started){online.waiting=true;online.waitAttempts=n;online.status='ホストを待っています…（自動で再接続を試みています · '+n+'回目）';onlineLobbyRefresh();}},
+       onError:kind=>{if(online===joined&&!online.started){online.waiting=false;if(kind==='notfound'){online.waitFailed=true;online.status='ホストが見つかりませんでした。ホストが部屋を開いてから、もう一度接続してください。';}else online.status='接続エラーが発生しました。';onlineLobbyRefresh();}}
+     },{wait:true,retryMs:3000,maxWaitMs:120000,communityId:globalThis.NightCommunity?.profile().id});
+     if(online!==joined)joined.session?.destroy();
+   }catch{if(online===joined){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
  }
  function onlinePeerGone(){
-   if(!online)return;online.session?.destroy?.();
+   if(!online)return;globalThis.NightCommunity?.setRoom(null);online.communityReady=false;online.session?.destroy?.();
    if(game?.onlineDerby){online.ended=true;game.paused=true;online.derbySpectator=null;modal(`${modalTitle('','接続が切れました')}<button class="primary-button" data-action="online-exit">ホームへ戻る</button>`,'online-gone');return;}
    if(online.sync){if(online.sync.disconnected)return;online.sync.disconnected=true;online.delayQueue?.clear();if(review.playback){review.close();$('game').classList.remove('replay-active');$('replay-label').hidden=true;}if(game)game.paused=true;}
 
@@ -4151,8 +4171,11 @@ function start(mode,challengeId=null,fixedPark=null){
    const o=online;if(!o||o.role!=='host')return;
    if(o.sync)o.sync.lastRx=performance.now();if(m.t==='sync-lost'){onlinePeerGone();return;}
    if(m.t==='pong'){if(o.latency){o.latency.add(performance.now()-Number(m.ts),Number(m.gt),Number(m.ts));o.peerJitter=Math.max(0,Math.min(150,Number(m.jitter)||0));if(game?.onlineGame&&!game.mirror)game.onlineRttMs=o.latency.ewma;const v=o.latency.oneWayMs();if(!o.started&&o._latShown!==v){o._latShown=v;o.session?.send({t:'latency',ms:v});}}return;}
+   if(m.t==='community-profile'){const p=globalThis.NightCommunity?.safeProfile(m.profile);if(p&&p.id===o.guestProfile?.id)o.guestProfile=p;return;}
    if(m.t==='club'){
      if(o.started)return;
+     o.guestProfile=globalThis.NightCommunity?.safeProfile(m.community)||null;
+     if(o.communityTournament&&o.guestProfile?.id!==o.communityTournament.b){o.status='大会の対戦相手が異なります。';onlineLobbyRefresh();return;}
      const club=onlineClubs().find(c=>c.id===m.club);if(!club)return;
      o.guestClub=club.id;o.guestUniforms={home:NightUniforms.cleanKit(m.uniforms?.home),away:NightUniforms.cleanKit(m.uniforms?.away)};o.guestLineup=onlineNormalizeLineup(club,m);o.guestPitcher=o.guestLineup.pitcher;o.guestReady=m.ready===true;o.guestSyncVersion=m.syncVersion;o.guestDerbyBatter=m.derbyBatter;o.guestDerbyVersion=m.derbyVersion;
      o.session?.send({t:'lobby-mode',mode:o.mode||'match'});onlineSendLobbyConfig();
@@ -4255,6 +4278,7 @@ function start(mode,challengeId=null,fixedPark=null){
    return {fullCount:!!settings.variantFullCount,metalBat:!!settings.variantMetalBat,lowReboundBat:!!settings.variantLowReboundBat,noBreaking:!!settings.variantNoBreaking,twoOuts:!!settings.variantTwoOuts};
  }
  function onlineHandicapWire(){
+   if(online?.communityTournament)return {homeRuns:0,awayRuns:0,homeOuts:0,awayOuts:0};
    return online?.hostHome
      ?{homeRuns:settings.handicapUserRuns,awayRuns:settings.handicapCpuRuns,homeOuts:settings.handicapUserOuts,awayOuts:settings.handicapCpuOuts}
      :{homeRuns:settings.handicapCpuRuns,awayRuns:settings.handicapUserRuns,homeOuts:settings.handicapCpuOuts,awayOuts:settings.handicapUserOuts};
@@ -4279,25 +4303,27 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function onlineSendLobbyConfig(){
    const o=online;if(!o||o.role!=='host')return;
-   o.session?.send({t:'lobby-config',matchWeather:settings.matchWeather,crowdAttendance:settings.crowdAttendance,rules:onlineRulesConfig(),handicap:onlineHandicapWire(),innings:settings.innings,club:o.myClub,hostHome:o.hostHome,park:onlineParkId(),parkSpec:onlineParkSpec(onlineParkId()),conditionSeed:o.conditionSeed,tiebreak:!!settings.tiebreak,derbyVersion:NightOnlineDerby.VERSION,syncVersion:ONLINE_SYNC_VERSION});
+   refreshCommunityRoom();o.session?.send({t:'lobby-config',matchWeather:settings.matchWeather,crowdAttendance:settings.crowdAttendance,rules:onlineRulesConfig(),handicap:onlineHandicapWire(),innings:settings.innings,club:o.myClub,hostHome:o.hostHome,park:onlineParkId(),parkSpec:onlineParkSpec(onlineParkId()),conditionSeed:o.conditionSeed,tiebreak:!!settings.tiebreak,derbyVersion:NightOnlineDerby.VERSION,syncVersion:ONLINE_SYNC_VERSION});
  }
  function startOnlineMatch(){
    const o=online;if(!o||o.role!=='host'||!o.guestClub||!o.session?.open)return;
+   if(o.communityTournament&&o.started)return;
    if(o.mode==='derby'){startOnlineDerby();return;}
    const homeId=o.hostHome?o.myClub:o.guestClub,awayId=o.hostHome?o.guestClub:o.myClub;
    const home=NightTeams.get(homeId),away=NightTeams.get(awayId),mine=NightTeams.get(o.myClub);
    if(!home||!away||!mine)return;
-   if(o.guestSyncVersion!==ONLINE_SYNC_VERSION||!o.guestReady&&!o.started)return;
+   if(o.guestSyncVersion!==ONLINE_SYNC_VERSION||!o.guestReady&&!o.started||o.communityTournament&&o.guestProfile?.id!==o.communityTournament.b)return;
    const park=o.park||home.park;
    const {config:hostLineup}=lineupConfig('online'),guestLineup=onlineNormalizeLineup(NightTeams.get(o.guestClub),o.guestLineup);
    if(o.started)o.conditionSeed=onlineSeed();
    const rules=onlineRulesConfig(),forecast=matchWeatherForecast(NightPlayers.parks.find(p=>p.id===park)||NightPlayers.parks[0]);
    const uniforms={home:o.hostHome?NightUniforms.snapshot(home,'home'):NightUniforms.resolvedKit(home,'home',o.guestUniforms?.home||{}),away:o.hostHome?NightUniforms.resolvedKit(away,'away',o.guestUniforms?.away||{}):NightUniforms.snapshot(away,'away')};
-   o.session?.send({t:'start',crowdAttendance:settings.crowdAttendance,home:homeId,away:awayId,uniforms,innings:settings.innings,difficulty:settings.difficulty,park,parkSpec:onlineParkSpec(park),weather:forecast.weather,wind:forecast.wind,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:hostLineup.pitcher,hostHome:o.hostHome,hostLineup,guestLineup,conditionSeed:o.conditionSeed,syncVersion:ONLINE_SYNC_VERSION});
+   o.communityMatch=globalThis.NightCommunity?.beginMatch(o.code,o.guestProfile,o.hostHome,{rated:o.communityPublic===true&&!Object.values(onlineHandicapWire()).some(v=>Number(v)>0),tournament:o.communityTournament})||null;
+   o.session?.send({t:'start',community:o.communityMatch,crowdAttendance:settings.crowdAttendance,home:homeId,away:awayId,uniforms,innings:settings.innings,difficulty:settings.difficulty,park,parkSpec:onlineParkSpec(park),weather:forecast.weather,wind:forecast.wind,rules,handicap:onlineHandicapWire(),tiebreak:!!settings.tiebreak,hostPitcher:hostLineup.pitcher,hostHome:o.hostHome,hostLineup,guestLineup,conditionSeed:o.conditionSeed,syncVersion:ONLINE_SYNC_VERSION});
    NightOnline.rememberRoom({code:o.code,role:'host',club:o.myClub,opp:o.guestClub});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
-   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:settings.innings,crowdAttendance:settings.crowdAttendance,park,weather:forecast.weather,wind:forecast.wind,pitcher:hostLineup.pitcher,opponentPitcher:guestLineup.pitcher,order:hostLineup.order,fielding:hostLineup.fielding,opponentOrder:guestLineup.order,opponentFielding:guestLineup.fielding,conditionSeed:o.conditionSeed,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home',variantRules:rules,handicap:{userRuns:settings.handicapUserRuns,cpuRuns:settings.handicapCpuRuns,userOuts:settings.handicapUserOuts,cpuOuts:settings.handicapCpuOuts},onlineMatch:true,tiebreak:!!settings.tiebreak,hardcore:!!settings.hardcore});
-   game.uniformKits=uniforms;game.onlineGame=true;game.onlineRttMs=o.latency?.ewma??180;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;onlineInitSync(o);
+   game=new NightGame('match',settings.difficulty,onEvent,{clubs:{home,away},homeTeamId:homeId,awayTeamId:awayId,userHome:o.hostHome,innings:settings.innings,crowdAttendance:settings.crowdAttendance,park,weather:forecast.weather,wind:forecast.wind,pitcher:hostLineup.pitcher,opponentPitcher:guestLineup.pitcher,order:hostLineup.order,fielding:hostLineup.fielding,opponentOrder:guestLineup.order,opponentFielding:guestLineup.fielding,conditionSeed:o.conditionSeed,defenseSpeed:settings.defenseSpeed,manualRunning:settings.manualRunning,fieldSpeed:settings.fieldSpeed,battingAssist:settings.battingAssist,remoteSide:o.hostHome?'away':'home',variantRules:rules,handicap:onlineHandicapLocal(onlineHandicapWire(),o.hostHome),onlineMatch:true,tiebreak:!!settings.tiebreak,hardcore:!!settings.hardcore});
+   game.uniformKits=uniforms;game.onlineGame=true;game.onlineRttMs=o.latency?.ewma??180;o.started=true;o.pitchSeq=0;o.lastPitchObj=null;o.lastStateAt=0;o.lastStatePhase='';o.endSent=false;o.rematchState='';o.resultRecorded=false;onlineInitSync(o);refreshCommunityRoom();
    activateGame();updateStyle();updateUI();
  }
  // Full render state for the guest's mirror game (see NightGame.applyMirror).
@@ -4323,7 +4349,9 @@ function start(mode,challengeId=null,fixedPark=null){
    };
  }
  function onlineTick(g,force=false){
-  const o=online;if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame||g.onlineDerby)return;
+  const o=online;
+  if(o?.role==='host'&&g?.onlineGame&&!g.onlineDerby&&o.session?.spectators?.size&&performance.now()-o.session.lastSpectatorAt>=250&&(!o.session.open||o.session.canSendState()))o.session.broadcastSpectators(globalThis.NightCommunity?.fieldFrame(g));
+  if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame||g.onlineDerby)return;
   if(g.pitch&&g.pitch!==o.lastPitchObj){o.lastPitchObj=g.pitch;o.pitchSeq=(o.pitchSeq||0)+1;}
   const now=performance.now(),sync=o.sync;
   const stateKey=[sync?.epoch,!!sync?.recovering,sync?.lock?.id,sync?.lock?.releasing,sync?.decision?.id,g.phase,o.pitchSeq,g.inning,g.half,g.outs,g.balls,g.strikes,g.homeScore,g.awayScore,g.baseIds.join(','),+!!g.steal,g.field?.resolved,g.field?.runners?.map(r=>[r.id,+!!r.out,+!!r.scored,r.base,r.command].join(':')).join(',')].join('|');
@@ -4462,6 +4490,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(!home||!away)return;
    const guestHome=typeof m.hostHome==='boolean'?!m.hostHome:m.home===o.myClub,mine=guestHome?home:away,other=guestHome?away:home;
    const guestLineup=onlineNormalizeLineup(mine,m.guestLineup||{pitcher:o.myPitcher}),hostLineup=onlineNormalizeLineup(other,m.hostLineup||{pitcher:Number(m.hostPitcher)||0});
+   o.communityMatch=globalThis.NightCommunity?.acceptMatch(m.community,o.code)||null;
    o.started=true;o.ended=false;o.lastUiKey='';o.homeClub=m.home;o.awayClub=m.away;o.innings=m.innings;o.mySide=guestHome?'home':'away';o.rematchOffer=null;o.lastEnd=null;
    NightOnline.rememberRoom({code:o.code,role:'guest',club:o.myClub,opp:guestHome?m.away:m.home});
    closeModal(false);unlockAudio();lastMode='match';saved=false;clearCheckpoint();
@@ -4485,7 +4514,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const m={t:'start-derby',derbyVersion:NightOnlineDerby.VERSION,contestId:onlineSeed(),first:Math.random()<.5?0:1,hostClub:hc.id,guestClub:gc.id,hostBatter:hb.id,guestBatter:gb.id,park,parkSpec:onlineParkSpec(park),difficulty:settings.difficulty,battingAssist:settings.battingAssist,uniforms:{host:{home:NightUniforms.snapshot(hc,'home')},guest:{home:NightUniforms.resolvedKit(gc,'home',o.guestUniforms?.home||{})}}};
   if(!o.session.send(m))return;
   NightOnline.rememberRoom({code:o.code,role:'host',club:hc.id,opp:gc.id});
-  setupOnlineDerby(m,true);
+  setupOnlineDerby(m,true);o.communityMatch=null;refreshCommunityRoom();
  }
  function startOnlineGuestDerby(m){
   if(online?.role!=='guest')return;
@@ -4581,7 +4610,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function onlineDerbyFinish(){
   const o=online,c=o?.derbyContest;if(!c?.done||o.derbyOver)return;
-  o.derbyOver=true;o.ended=true;o.endSent=true;o.derbySpectator=null;$('derby-watch-bar').hidden=true;
+  o.derbyOver=true;o.ended=true;o.endSent=true;refreshCommunityRoom();o.derbySpectator=null;$('derby-watch-bar').hidden=true;
   game.paused=true;game.setPhase('ended');
   const me=c.players[o.derbyMyIndex],op=c.players[1-o.derbyMyIndex],w=c.winner;
   records.hr+=me.hr;records.hits+=me.hr;records.maxDistance=Math.max(records.maxDistance,me.maxDistance);derbyRecord(game,me.results,'online');saved=true;recordOnlineResult(op.clubId,w===o.derbyMyIndex,w==='draw',me.hr,op.hr);updateUI();
@@ -4637,7 +4666,7 @@ function start(mode,challengeId=null,fixedPark=null){
   stopReplay();
   if(online?.started){
    if(!online.endSent)online.session?.send({t:online.role==='guest'?'guest-left':'host-left'});
-   onlineCleanup();hideOnlineGuest();
+   onlineCleanup();globalThis.NightCommunity?.leaveIfIdle();hideOnlineGuest();
   }
   review.reset();resetPlayFeedback();updatePlayTools();updateChallenge();resetCareerOverlay();queuedBench=false;stadiumAudio.stopEffects();
   if(game&&!saved){if(game.isFixture||game.career||game.worldFixture)checkpoint();else commit(game,true);}
@@ -5086,8 +5115,8 @@ function start(mode,challengeId=null,fixedPark=null){
    case'online-lobby-back':onlineModal();break;
    case'online-ready':if(online?.role==='guest'&&online.myClub&&online.session?.open){online.myReady=!online.myReady;online.status=online.myReady?'準備完了。ホストの開始を待っています…':'編成を変更できます。';onlineSendClub();onlineModal();}break;
    case'online-start':startOnlineMatch();break;
-   case'online-cancel':onlineCleanup();closeModal();break;
-   case'online-exit':onlineCleanup();hideOnlineGuest();home();break;
+   case'online-cancel':onlineCleanup();globalThis.NightCommunity?.leaveIfIdle();closeModal();break;
+   case'online-exit':onlineCleanup();globalThis.NightCommunity?.leaveIfIdle();hideOnlineGuest();home();break;
    case'draft-step':if(league?.draftCpuPick()){saveLeague();draftModal();}break;
    case'draft-skip':if(league){league.runCpuPicks();saveLeague();draftModal();}break;
    case'draft-finish':if(league?.startNextSeason()){saveLeague();closeModal(false);leagueDashboard();toast((league.season)+'年目のシーズンが始まりました');}break;
