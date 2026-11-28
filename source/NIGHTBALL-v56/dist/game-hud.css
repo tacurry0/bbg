@@ -171,6 +171,12 @@
 .bat-action-icon[data-bat-icon=bunt]::before{background:linear-gradient(90deg,#c58137,#f7ce84 50%,#fff1b3 72%,#ba7230)}
 
 .game-stage .bench-chip,.game-stage .running-mode-chip{display:none}
+/* The legacy bench-chip selector hid the intentional walk action as well. */
+.game-stage #ibb:not([hidden]){
+ display:flex;align-items:center;justify-content:center;top:calc(41px + 70 * var(--hud-u));right:var(--hud-edge);
+ min-height:calc(25 * var(--btn-u));padding:.35em .75em;font-size:calc(12 * var(--btn-u));font-weight:850;
+ color:#fff;border-color:#a2dcff;border-radius:999px;background:linear-gradient(#176ab1,#072044);box-shadow:0 2px 4px #001b3d80;
+}
 .game-stage .speed-chip{right:var(--hud-edge);top:calc(41px + 70 * var(--hud-u));min-height:calc(23 * var(--btn-u));padding:.26em .56em;font-size:calc(10 * var(--btn-u))}
 .game-screen:not(.in-play):not(.auto-defense) .speed-chip{display:none}
 .game-stage .auto-defense-chip{right:var(--hud-edge);top:calc(68px + 70 * var(--hud-u));font-size:calc(10 * var(--btn-u));min-height:calc(27 * var(--btn-u));padding:.36em .55em}

@@ -2893,7 +2893,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const absBtn=$('abs-challenge');
   absBtn.hidden=!interactive||!!g.umpireMode;
   if(!absBtn.hidden){setAbsText('abs-challenge-count',copy.remaining(g.absRemaining));absBtn.disabled=false;}
-  if(g.phase==='abs-call'&&call!==absShownCall){
+  if(g.phase==='abs-call'&&call&&call!==absShownCall){
    absShownCall=call;absLastTap=null;
    const en=call.umpireStrike?'STRIKE':'BALL',speech=call.umpireStrike?'ストライク':'ボール';
    if(calledK){
@@ -2913,7 +2913,7 @@ function start(mode,challengeId=null,fixedPark=null){
   // Explicit ABS challenge button: same entry point as the double-tap on
   // the actor overlay, shown only while a challenge is actually available.
   const opening=panel.hidden;
-  panel.hidden=g.phase!=='abs-review'||!$('modal').hidden;
+  panel.hidden=g.phase!=='abs-review'||!call||!$('modal').hidden;
   if(panel.hidden)return;
   if(opening){
    const challenger=$('abs-challenger');
@@ -3049,7 +3049,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function updatePlaySkip(){
   const btn=$('replay-skip');
-  const trot=!onlineMatchActive()&&screen==='game'&&game?.homeRunRunning&&!game.paused&&!playFeedback.pendingReplay&&$('modal').hidden;
+  const trot=screen==='game'&&game?.homeRunRunning&&!game.paused&&!onlineInputBlocked()&&(onlineMatchActive()||!playFeedback.pendingReplay)&&$('modal').hidden;
   const mode=review.playback?'replay':trot?'home-run':'';
   if(btn.dataset.mode===mode)return;
   btn.dataset.mode=mode;btn.hidden=!mode;
@@ -3057,7 +3057,8 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  $('replay-skip').onclick=()=>{
   if(review.playback){if(onlineMatchActive())onlineSkipReplay();else stopReplay();}
-  else if(!onlineMatchActive()&&game?.skipHomeRunRun()){
+  else if(onlineMatchActive())onlineSkipHomeRun();
+  else if(game?.skipHomeRunRun()){
    playFeedback.scoreTime=0;$('scoring-chip').hidden=true;
    updatePlaySkip();
   }
@@ -3482,10 +3483,10 @@ function start(mode,challengeId=null,fixedPark=null){
    $('action-label').textContent=def?'PITCH':'SWING';$('action-hint').textContent=def?'離して投球':'離してスイング';$('swing-icon').innerHTML=svg(def?'ball':'bat');
    $('pitch-status').textContent=field?(g.field.throw?'ボールが送球されました':'野手が打球を追っています'):g.phase==='aim'?'球種を選び、コースを指定':g.phase==='pitch'?(def?'投球中 · 打者との勝負':'カーソルをボールのコースへ！'):g.phase==='windup'?'投球モーション…':'次の1球へ';
    g.battingAssist=(g.onlineDerby?online?.derbyConfig?.battingAssist:settings.battingAssist)&&g.career?.difficulty!=='expert';$('game').classList.toggle('batting-touch',!def);$('game').classList.toggle('pitching-touch',def);$('game').classList.toggle('in-play',field);$('thumb-hint').hidden=field||halfDone;$('release-label').textContent=def?'離して投げる':'離して打つ';$('game-canvas').setAttribute('aria-label',def?'球場を押したままコースを狙い、指を離して投球':'球場を押したまま狙い、指を離してスイング');
-   const readOnly=!def,showPitchDeck=!field&&!g.broadcastIntro&&!g.umpireMode&&!g.spectate&&!g.derby&&(def?g.phase==='aim'&&!g.autoDefense:['aim','windup','pitch','miss'].includes(g.phase)&&!g.autoBatting);if(showPitchDeck)renderPitchDirections(g);$('pitch-deck').classList.toggle('opponent-repertoire',readOnly);$('pitch-deck').hidden=!showPitchDeck;$('pitch-types').hidden=false;$('pitch-types').style.setProperty('--pitch-count',g.pitcher.pitches.length);$('pitch-deck-status').textContent=g.phase==='aim'?'コースを狙って離す':g.phase==='windup'?'投球モーション中':g.phase==='pitch'?'投球中':'次の1球へ';$('pitch-types').classList.toggle('four',g.pitcher.pitches.length===4);$('bat-options').hidden=!!g.derby||halfDone||def||!!g.umpireMode||!!g.spectate||!!g.autoBatting;$('ibb').hidden=!def||!g.inMatch||g.phase!=='aim'||g.autoDefense||g.spectate||g.fastForward||!!g.umpireMode;$('bat-options').dataset.batterHand=g.battingHand;document.querySelector('.controls').classList.toggle('defending',def);
+   const readOnly=!def,showPitchDeck=!field&&!g.broadcastIntro&&!g.umpireMode&&!g.spectate&&!g.derby&&(def?g.phase==='aim'&&!g.autoDefense:['aim','windup','pitch','miss'].includes(g.phase)&&!g.autoBatting);if(showPitchDeck)renderPitchDirections(g);$('pitch-deck').classList.toggle('opponent-repertoire',readOnly);$('pitch-deck').hidden=!showPitchDeck;$('pitch-types').hidden=false;$('pitch-types').style.setProperty('--pitch-count',g.pitcher.pitches.length);$('pitch-deck-status').textContent=g.phase==='aim'?'コースを狙って離す':g.phase==='windup'?'投球モーション中':g.phase==='pitch'?'投球中':'次の1球へ';$('pitch-types').classList.toggle('four',g.pitcher.pitches.length===4);$('bat-options').hidden=!!g.derby||halfDone||def||!!g.umpireMode||!!g.spectate||!!g.autoBatting;$('ibb').hidden=!g.canIntentionalWalk||onlineInputBlocked();$('bat-options').dataset.batterHand=g.battingHand;document.querySelector('.controls').classList.toggle('defending',def);
    document.querySelectorAll('[data-pitch]').forEach(b=>{b.classList.toggle('active',def&&b.dataset.pitch===g.pitchType);if(def)b.setAttribute('aria-pressed',String(b.dataset.pitch===g.pitchType));else b.removeAttribute('aria-pressed');b.querySelector('small').textContent=Math.round(NightGame.pitchSpec(g.pitcher,b.dataset.pitch).speed)+'km/h';b.disabled=!def||g.phase!=='aim'||!g.pitcher.pitches.includes(b.dataset.pitch)||!!(g.variantRules&&g.variantRules.noBreaking&&b.dataset.pitch!=='fast');b.hidden=def&&!g.pitcher.pitches.includes(b.dataset.pitch);});
    if(g.derby){g.power=true;g.bunt=false;}
-   const power=!!g.power,bunt=!!g.bunt;$('bunt').hidden=g.mode==='derby';const stealable=!def&&g.inMatch&&(g.bases[0]&&!g.bases[1]||g.bases[1]&&!g.bases[2]);$('steal').hidden=!stealable;$('steal').classList.toggle('selected',!!g.steal);$('steal').setAttribute('aria-pressed',String(!!g.steal));$('bunt').classList.toggle('selected',bunt);$('bunt').setAttribute('aria-pressed',String(bunt));$('contact').classList.toggle('selected',!power&&!bunt);$('power').classList.toggle('selected',power);$('power').classList.toggle('power-mode',power);$('contact').setAttribute('aria-pressed',String(!power&&!bunt));$('power').setAttribute('aria-pressed',String(power));$('swing').classList.toggle('power-active',power&&!def);updatePad();
+   const power=!!g.power,bunt=!!g.bunt;$('bunt').hidden=g.mode==='derby';const stealable=!def&&g.stealAvailable;$('steal').hidden=!stealable;$('steal').classList.toggle('selected',!!g.steal);$('steal').setAttribute('aria-pressed',String(!!g.steal));$('bunt').classList.toggle('selected',bunt);$('bunt').setAttribute('aria-pressed',String(bunt));$('contact').classList.toggle('selected',!power&&!bunt);$('power').classList.toggle('selected',power);$('power').classList.toggle('power-mode',power);$('contact').setAttribute('aria-pressed',String(!power&&!bunt));$('power').setAttribute('aria-pressed',String(power));$('swing').classList.toggle('power-active',power&&!def);updatePad();
    updateRunningUI(g);
    const auto=g.autoDefense&&def,speed=auto?g.defenseSpeed:g.fieldSpeed;$('field-speed').hidden=!!g.derby||!!g.umpireMode;$('field-speed').textContent=`${auto?'自動守備':'打球後'} ×${speed}`;$('field-speed').classList.toggle('active',speed===2);$('field-speed').setAttribute('aria-pressed',String(speed===2));$('field-speed').setAttribute('aria-label',auto?'自動守備の速度を切り替え':'打球後の速度を切り替え');$('auto-defense').hidden=!!g.onlineGame||!g.isFixture||!def||g.phase==='ended'||!!g.umpireMode;$('auto-defense').textContent=auto?'手動に戻す':'守備を自動で進行';$('auto-defense').setAttribute('aria-pressed',String(!!auto));$('game').classList.toggle('auto-defense',!!auto);document.querySelector('.controls').classList.toggle('left-handed',settings.leftHanded);
    $('game').classList.toggle('career-running-match',g.mode==='career-bat');
@@ -3582,7 +3583,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=272,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=273,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
  const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&!online.sync.recovering&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
  const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected||!!online.sync.recovering);
@@ -3710,6 +3711,18 @@ function start(mode,challengeId=null,fixedPark=null){
   l.done.host=l.done.guest=true;l.releasing=true;
   o.session?.send({t:'sync-replay-skip',id:l.id,epoch:o.sync.epoch});
   onlineWait('同期を確認しています…');onlineTick(game,true);
+ }
+
+ // Live home-run trot is separate from the synchronized replay lock. The
+ // host moves the already-scored runners; the guest never simulates runs.
+ function onlineSkipHomeRun(){
+  const o=online,g=game;
+  if(!onlineMatchActive()||onlineInputBlocked()||g.paused||!g.homeRunRunning)return false;
+  if(o.role==='guest')return onlineSendGameInput({t:'home-run-skip',fsq:o.remoteState?.fsq});
+  if(!g.skipHomeRunRun())return false;
+  playFeedback.scoreTime=0;playFeedback.resultTime=0;$('scoring-chip').hidden=true;hideImpact();hideStageBanner();
+  onlineTick(g,true);updatePlaySkip();
+  return true;
  }
 
  function onlineDecisionVisible(kind){
@@ -4188,15 +4201,27 @@ function start(mode,challengeId=null,fixedPark=null){
      if(d?.id!==m.decision||d.owner!=='guest'||d.kind!==kind||d.seenAt==null)return;
      if(kind==='abs')g.requestAbsChallenge(true);else if(g.baseCall?.cpu)g.requestPlayChallenge(true);return;
    }
+   if(m.t==='home-run-skip'){
+    if(m.pitchSeq===o.pitchSeq&&m.fsq===o.fieldBaseSeq)onlineSkipHomeRun();
+    return;
+   }
+   if(m.t==='steal'){
+    // A guest can tap while the host has just started the next windup.
+    // Accept that one aim->windup race only for the same plate appearance.
+    const current=m.pitchSeq===o.pitchSeq||m.phase==='aim'&&g.phase==='windup'&&m.pitchSeq+1===o.pitchSeq;
+    if(current&&g.remoteBatter&&m.atBat===g.plateAppearanceKey&&typeof m.on==='boolean'&&g.setStealIntent(m.on,true)){
+     onlineTick(g,true);updateUI();
+    }
+    return;
+   }
    if(m.pitchSeq!==o.pitchSeq)return;
    if(m.t==='pitch-decision'&&g.phase==='aim'&&g.remotePitching){
-     if(m.ibb){g.intentionalWalk(false);return;}
+     if(m.ibb){if(m.atBat===g.plateAppearanceKey&&g.intentionalWalk(false,true))onlineTick(g,true);return;}
      const kx=g.cursor.x,ky=g.cursor.y;g.pitchType=m.pitchType;g.setCursor(m.aim?.x||0,m.aim?.y||0);g.shift=m.shift?'pull':'none';g.remoteThrowPitch();g.cursor.x=kx;g.cursor.y=ky;
    }else if(m.t==='swing'&&g.phase==='pitch'&&g.remoteBatter&&g.pitch&&!g.pitch.swung){
      if(m.bunt){g.bunt=true;g.buntBall();}
      else g.attempt({x:m.aim?.x||0,y:m.aim?.y||0},!!m.power,Math.max(-1.2,Math.min(1.2,Number(m.delta)||0)),false);
-   }else if(m.t==='steal'&&g.remoteBatter){g.steal=!!m.on;}
-   else if(m.t==='runner-command'&&g.remoteBatter){g.remoteCommandRunner(m.id,m.base);}
+   }else if(m.t==='runner-command'&&g.remoteBatter){g.remoteCommandRunner(m.id,m.base);}
    else if(m.t==='runner-commands'&&g.remoteBatter){g.remoteCommandRunners(m.commands);}
 
  }
@@ -4284,7 +4309,7 @@ function start(mode,challengeId=null,fixedPark=null){
    return {
      epoch:o.sync?.epoch??0,recovering:!!o.sync?.recovering,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,cut:g.broadcastCut||null,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
      hs:g.homeScore,as:g.awayScore,home:g.home.slice(),away:g.away.slice(),hh:g.homeHits,ah:g.awayHits,he:g.homeErrors,ae:g.awayErrors,
-     bases:g.bases.map(b=>b?1:0),baseIds:g.baseIds.slice(),bi:{...g.battingIndex},batFin:g.batFinished?1:0,
+     bases:g.bases.map(b=>b?1:0),baseIds:g.baseIds.slice(),steal:!!g.steal,bi:{...g.battingIndex},batFin:g.batFinished?1:0,
      lu:{home:g.lineups.home.map(p=>[p.id,p.fieldPos||p.pos]),away:g.lineups.away.map(p=>[p.id,p.fieldPos||p.pos])},
      pi:{u:g.homePitcherIndex,c:g.awayPitcherIndex},usedU:g.usedPitchers.slice(),usedC:g.usedCpuPitchers.slice(),
      ps:g.pitchingStats,box:g.box,pitch:g.pitch||null,pitchSeq:o.pitchSeq,
@@ -4301,7 +4326,7 @@ function start(mode,challengeId=null,fixedPark=null){
   const o=online;if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame||g.onlineDerby)return;
   if(g.pitch&&g.pitch!==o.lastPitchObj){o.lastPitchObj=g.pitch;o.pitchSeq=(o.pitchSeq||0)+1;}
   const now=performance.now(),sync=o.sync;
-  const stateKey=[sync?.epoch,!!sync?.recovering,sync?.lock?.id,sync?.lock?.releasing,sync?.decision?.id,g.phase,o.pitchSeq,g.inning,g.half,g.outs,g.balls,g.strikes,g.homeScore,g.awayScore,g.baseIds.join(','),g.field?.resolved,g.field?.runners?.map(r=>[r.id,+!!r.out,+!!r.scored,r.base,r.command].join(':')).join(',')].join('|');
+  const stateKey=[sync?.epoch,!!sync?.recovering,sync?.lock?.id,sync?.lock?.releasing,sync?.decision?.id,g.phase,o.pitchSeq,g.inning,g.half,g.outs,g.balls,g.strikes,g.homeScore,g.awayScore,g.baseIds.join(','),+!!g.steal,g.field?.resolved,g.field?.runners?.map(r=>[r.id,+!!r.out,+!!r.scored,r.base,r.command].join(':')).join(',')].join('|');
   const changed=stateKey!==o.lastStateKey||g.phase==='field'&&g.field&&o._ofield!==g.field;
   const playing=g.phase==='field',fast=o.session.poseOpen&&!sync?.lock&&!sync?.recovering;
   const congestion=Math.max(o.peerJitter||0,o.session.metrics?.jitter||0);
@@ -4405,7 +4430,7 @@ function start(mode,challengeId=null,fixedPark=null){
       g.applyMirror(s,skipField);
      o.remotePitchSeq=s.pitchSeq;o.sync.decision=s.decision;
      onlineApplyRemoteLock(s);
-     const key=[s.epoch,s.lock?.id,s.lock?.releasing,s.decision?.id,s.phase,s.inning,s.half,s.outs,s.balls,s.strikes,s.bases.join(''),s.hs,s.as,s.batId,s.pitId,s.absU,s.absCpu,s.playU,s.playCpu,s.baseCall?s.baseCall.base+'/'+s.baseCall.batSide:'',s.lu.home.map(x=>x[0]).join(','),s.lu.away.map(x=>x[0]).join(',')].join('|');
+     const key=[s.epoch,s.lock?.id,s.lock?.releasing,s.decision?.id,s.phase,s.inning,s.half,s.outs,s.balls,s.strikes,s.bases.join(''),+!!s.steal,s.hs,s.as,s.batId,s.pitId,s.absU,s.absCpu,s.playU,s.playCpu,s.baseCall?s.baseCall.base+'/'+s.baseCall.batSide:'',s.lu.home.map(x=>x[0]).join(','),s.lu.away.map(x=>x[0]).join(',')].join('|');
      if(key!==o.lastUiKey){o.lastUiKey=key;updateUI();}
      $('distance').textContent=s.hit?.distance?s.hit.distance+' m':'';
    }
@@ -4861,8 +4886,8 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  $('bench-button').onclick=requestBench;$('sub').onclick=requestBench;
  $('bunt').onclick=()=>{if(game&&!game.umpireMode&&!game.spectate&&game.mode!=='derby'){game.bunt=true;game.power=false;updateStyle();sound('tap');}};
- $('steal').onclick=()=>{if(game&&!onlineInputBlocked()&&!game.umpireMode&&!game.spectate&&game.inMatch){const g=game,target=!g.steal;const apply=()=>{g.steal=target;updateStyle();};apply();sound('tap');}};
- $('ibb').onclick=()=>{if(game&&!game.umpireMode){const g=game;if(g.intentionalWalk()){sound('tap');updateUI();}}};
+ $('steal').onclick=()=>{if(game&&!onlineInputBlocked()&&game.setStealIntent(!game.steal)){updateStyle();sound('tap');if(onlineMatchActive()&&online.role==='host')onlineTick(game,true);}};
+ $('ibb').onclick=()=>{if(game&&!onlineInputBlocked()&&game.intentionalWalk()){sound('tap');updateUI();if(onlineMatchActive()&&online.role==='host')onlineTick(game,true);}};
  $('contact').onclick=()=>{if(game&&!game.derby&&!game.umpireMode&&!game.spectate){game.power=false;game.bunt=false;updateStyle();sound('tap');}};$('power').onclick=()=>{if(game&&!game.derby&&!game.umpireMode&&!game.spectate){game.power=true;game.bunt=false;updateStyle();sound('tap');}};
  $('sound').onclick=()=>{unlockAudio();settings.sound=!settings.sound;save();if(settings.sound)sound('tap');};
  $('settings').onclick=settingsModal;$('pause').onclick=pause;$('react').onclick=()=>{const p=$('react-panel');p.hidden=!p.hidden;};$('react-panel').innerHTML=REACTIONS.map(e=>`<button type="button" data-react="${e}" aria-label="リアクション ${e}">${e}</button>`).join('')+`<div class="chat-list">${NightOnline.QUICK_CHATS.map((t,i)=>`<button type="button" data-chat="${i}">${t}</button>`).join('')}</div>`;$('react-panel').addEventListener('click',ev=>{const b=ev.target.closest('[data-react]');if(b){sendReaction(b.dataset.react);return;}const c=ev.target.closest('[data-chat]');if(c)sendQuickChat(Number(c.dataset.chat));});$('brand').onclick=()=>utilityTab?leaveUtilityPage():screen==='game'?(game?.domeScene?home():pause()):['pennant','apbc-cup','career'].includes(screen)?home():window.scrollTo({top:0,behavior:'smooth'});$('records').onclick=()=>recordModal();$('menu-settings').onclick=settingsModal;
