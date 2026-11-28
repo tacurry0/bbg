@@ -90,6 +90,10 @@ const legSpeed=(runner,target)=>runner.speed*(runner.batter&&target===2?1.10:1);
 const runTime=(runner,base,progress=runner.progress)=>Math.abs(base-progress)*BASE_PATH/legSpeed(runner,base);
 const catchReach=player=>player.catchReach??Math.min(1.15,player.reach);
 const gloveHeight=player=>1.85+catchReach(player)*.22;
+// Receiving a ball and touching the base are separate physical checks.
+const throwCatchReach=player=>clamp(catchReach(player)+.10,.70,1.20);
+const canReceiveThrow=(player,to)=>!!player&&dist(player,to)<=throwCatchReach(player);
+const chaseSpeed=(p,i,target)=>p.speed*(i<6&&target.y>p.startY+2?.6:i>=6?1.15:1);
 const athleticReach=player=>clamp(((player.fieldRating??0)-25)/75,0,1);
 const SPECIAL_LABELS={dive:['DIVING CATCH','ダイビングキャッチ'],jump:['JUMPING CATCH','ジャンピングキャッチ'],wall:['GREAT CATCH','フェンス際の好捕'],robbery:['HOME RUN ROBBERY','ホームラン阻止'],stop:['DIVING STOP','ダイビングストップ'],laser:['LASER BEAM','レーザービーム']};
 function specialFieldChance(p,difficulty=1,wet=false){
@@ -1707,7 +1711,7 @@ window.NightGame=class NightGame{
   const fielders=this.derby?[]:NightGame.positions(this.park).map(([name,x,y],i)=>{const profile=this.fielder(name);
    if((this.defending||this.challenge)&&this.defense==='in')y-=i>=6?9:i>1?5:0;if(this.defending&&this.defense==='deep')y+=i>=6?10:0;
    const fieldRating=profile.field,run=profile.run,outfielder=i>=6,condition=clamp(this.conditionFor(profile),-2,2),catchRating=clamp((profile.catch??profile.catching??fieldRating)+condition*2,20,99);
-   let reaction=Math.max(FIELD_READ_DELAY,(outfielder?.64:.24)+(70-fieldRating)*.009-condition*.018);
+   let reaction=Math.max(FIELD_READ_DELAY,(outfielder?.58:.22)+(70-fieldRating)*.009-condition*.018);
    let speedMul=1;
    if(i>=2&&(this.defending?this.shift==='pull':!!this.cpuShiftNow)&&launch<25&&Math.abs(spray)>.08){
     const toPull=(spray>0)===(this.battingHand==='L');
@@ -1737,16 +1741,22 @@ window.NightGame=class NightGame{
    if(b.bounces)break;
    if(b.vz<0&&(!f.foul||NightPlayers.insideFoul(this.park,b.x,b.y)))samples.push({x:b.x,y:b.y,z:b.z,t});
   }
-  let best=null;
+  let routine=null,special=null,fallback=null;
   f.fielders.forEach((p,i)=>{
-   // Infielders turn and run back toward the outfield much slower than they
-   // charge in, so a hard liner over their head drops instead of being run
-   // down at full sprint speed.
-   const backSpeed=q=>i<6&&q.y>p.startY+2?.6:1;
-   const point=samples.find(q=>q.t>p.reaction&&catchType(p,q,Math.max(0,dist(p,q)-fielderTravel(p,p.speed*backSpeed(q),q.t-p.reaction)),!f.foul));
-   p.intercept=point?{x:point.x,y:point.y,time:point.t}:{...f.landing,time:f.landingTime+Math.max(0,dist(p,f.landing)-p.reach)/(p.speed*backSpeed(f.landing))};
-   if(!best||p.intercept.time<best.t)best={i,t:p.intercept.time,air:!!point};
+   // Plan an ordinary catch first; a dive/jump is a last resort, not the
+   // earliest possible intercept. Use the same chase speed as live movement.
+   const reachable=(q,allowSpecial)=>q.t>p.reaction&&catchType(p,q,Math.max(0,dist(p,q)-fielderTravel(p,chaseSpeed(p,i,q),q.t-p.reaction)),allowSpecial);
+   const ordinary=samples.find(q=>reachable(q,false));
+   const acrobatic=!ordinary&&!f.foul?samples.find(q=>reachable(q,true)):null;
+   const point=ordinary||acrobatic;
+   p.intercept=point?{x:point.x,y:point.y,time:point.t}:{...f.landing,time:f.landingTime+fielderETA(p,f.landing,chaseSpeed(p,i,f.landing),p.reach)};
+   const candidate={i,t:p.intercept.time,air:!!point};
+   if(ordinary){if(!routine||candidate.t<routine.t)routine=candidate;}
+   else if(acrobatic){if(!special||candidate.t<special.t)special=candidate;}
+   else if(!fallback||candidate.t<fallback.t)fallback=candidate;
   });
+  const best=routine||special||fallback;
+  f.routineCatch=routine;
   f.chaser=best?.i??f.chaser;
   f.catchable=!!best?.air;
  }
@@ -1767,13 +1777,13 @@ window.NightGame=class NightGame{
    const t=i*.1;
    if(b.z<1.25&&(b.bounces||f.wallHit)){
     f.fielders.forEach((p,index)=>{
-     const eta=fielderETA(p,b,p.speed,p.reach)+Math.max(0,Math.max(p.reaction,p.recoverAt??0)-f.elapsed);
+     const eta=fielderETA(p,b,chaseSpeed(p,index,b),p.reach)+Math.max(0,Math.max(p.reaction,p.recoverAt??0)-f.elapsed);
      if(eta<=t+.04&&(!best||eta<best.eta))best={x:b.x,y:b.y,index,t,eta};
     });
    }
    if(!best)for(let j=0;j<6;j++)moveBattedBall(b,1/60,wind,this.park);
   }
-  if(!best){const p=f.fielders[f.chaser];best={x:b.x,y:b.y,index:f.chaser,t:Math.max(3.6,dist(p,b)/p.speed)};}
+  if(!best){for(let index=0;index<f.fielders.length;index++){const p=f.fielders[index],eta=fielderETA(p,b,chaseSpeed(p,index,b),p.reach)+Math.max(0,Math.max(p.reaction,p.recoverAt??0)-f.elapsed);if(!best||eta<best.eta)best={x:b.x,y:b.y,index,t:Math.max(3.6,eta),eta};}}
   return f.groundRead={...best,at:f.elapsed+best.t,until:f.elapsed+.12};
  }
  landingIndicator(){
@@ -1829,7 +1839,8 @@ window.NightGame=class NightGame{
   if(f.specialAttempts[index]!==undefined)return false;
   const pass=Math.random()<specialFieldChance(p,difficulty,this.weather==='rain');
   f.specialAttempts[index]=pass?type:'failed';
-  if(!pass){this.fieldingAction(index,type,false);p.recoverAt=f.elapsed+.48;p.running=false;}
+  // An unsuccessful optional reach must not disable normal pursuit/catches.
+  // Actual drops and bobbles still have their separate recovery penalties.
   return pass;
  }
  markGreat(index,type,confirmed=false){
@@ -1926,12 +1937,12 @@ window.NightGame=class NightGame{
    const th=f.throw,arrived=this.stepReturn(th,b,dt);
    f.fielders.forEach((p,i)=>{if(i!==th.fromIndex)move(p,i===th.receiver?th.to:p.target,p.speed);else p.running=false;});
    if(arrived){
-    const caught=!!f.fielders[th.receiver]&&dist(f.fielders[th.receiver],th.to)<=BAG_REACH;
+    const receiver=f.fielders[th.receiver],caught=canReceiveThrow(receiver,th.to);
     if(caught)this.emit('sound','catch');
     const base=th.base??BASES.findIndex((bag,i)=>i>0&&dist(bag,th.to)<.01);
     const runner=f.runners.find(r=>base===2?r.start===1:r.batter);
     const force=['groundout','forceout','doubleplay','buntout','sacrifice'].includes(th.result);
-    if(force&&(!caught||!runner||runner.out||runner.progress>=base-1e-6)){
+    if(force&&(!caught||!BASES[base]||dist(receiver,BASES[base])>BAG_REACH||!runner||runner.out||runner.progress>=base-1e-6)){
      if(runner&&!runner.out&&runner.progress>=base-1e-6)this.playCall('safe',base);
      this.finishBall(f.forceOutRecorded?'forceout':f.buntResult?'buntsingle':'single');return;
     }
@@ -2003,7 +2014,7 @@ window.NightGame=class NightGame{
    f.fielders.forEach((p,i)=>{
     let dest={x:p.startX,y:p.startY};
     if(i===f.chaser){dest=grounded?target:p.intercept||target;
-     if(!grounded&&f.elapsed<p.reaction+.30&&p.fieldRating<78){const read=clamp((78-p.fieldRating)/55,0,.45)*(1-clamp((f.elapsed-p.reaction)/.30,0,1));dest={x:dest.x+(f.ball.x-dest.x)*read,y:dest.y+(f.ball.y-dest.y)*read};}
+     if(!grounded&&f.elapsed<p.reaction+.20&&p.fieldRating<78){const read=clamp((78-p.fieldRating)/75,0,.25)*(1-clamp((f.elapsed-p.reaction)/.20,0,1));dest={x:dest.x+(f.ball.x-dest.x)*read,y:dest.y+(f.ball.y-dest.y)*read};}
     }
     else if(i===2)dest=BASES[1];
     else if(i===second)dest=BASES[2];
@@ -2012,12 +2023,15 @@ window.NightGame=class NightGame{
     else if(i===0&&target.y>48)dest={x:0,y:-3};
     else if(i>=6){const drift=grounded&&target.y>45?.5:.18;dest={x:p.startX+(target.x-p.startX)*drift,y:p.startY+(target.y-p.startY)*drift};if(f.chaser>=6&&Math.abs(i-f.chaser)===1&&target.y>55){dest={x:target.x*.65+p.startX*.35,y:Math.max(p.startY,target.y+5)};}}
     if(!f.foul&&dest.y>0&&Math.abs(dest.x)<=dest.y){const a=Math.atan2(dest.x,dest.y),limit=NightPlayers.wallDistance(this.park,a)-.75,range=Math.hypot(dest.x,dest.y);if(range>limit&&limit>0)dest={x:dest.x*limit/range,y:dest.y*limit/range};}
-    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,p.speed*(i<6&&dest.y>p.startY+2?.6:i>=6&&i===f.chaser?1.15:1));else p.running=false;
+    p.target=dest;if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,dest,i===f.chaser?chaseSpeed(p,i,dest):p.speed*(i<6&&dest.y>p.startY+2?.6:1));else p.running=false;
    });
+   // Allow a difficult reach only if the ordinary-catch window is gone.
+   const normalAir=!!f.routineCatch&&f.elapsed<f.routineCatch.t+.025;
+   const normalGround=grounded&&b.z<1.3&&f.fielders.some(p=>f.elapsed>=Math.max(p.reaction,p.recoverAt??0)&&dist(p,b)<=p.reach);
    for(let i=0;i<f.fielders.length;i++){
     const p=f.fielders[i];if(f.elapsed<Math.max(p.reaction,p.recoverAt??0))continue;
     const distance=dist(p,b);
-    const catchKind=!f.buntResult&&!grounded&&b.vz<0?catchType(p,b,distance,i===f.chaser&&!f.foul):null;
+    const catchKind=!f.buntResult&&!grounded&&b.vz<0?catchType(p,b,distance,i===f.chaser&&!f.foul&&!normalAir):null;
 
     if(catchKind){
      const gap=NightPlayers.wallDistance(this.park,Math.atan2(b.x,b.y))-Math.hypot(b.x,b.y);
@@ -2028,7 +2042,7 @@ window.NightGame=class NightGame{
      if(special)this.markGreat(i,special,true);
      if(f.manual&&!f.foul)this.secureManualBall(i,true);else this.finishBall('flyout');return;
     }
-    const diveStop=grounded&&!f.buntResult&&!f.foul&&i===f.chaser&&i>=2&&i<6&&b.z<.65&&distance>p.reach&&distance<=p.reach+.65*athleticReach(p)&&Math.hypot(b.vx,b.vy)>13&&this.specialAttempt(i,'stop',1.2);
+    const diveStop=grounded&&!normalGround&&target.at-f.elapsed>.15&&!f.buntResult&&!f.foul&&i===f.chaser&&i>=2&&i<6&&b.z<.65&&distance>p.reach&&distance<=p.reach+.65*athleticReach(p)&&Math.hypot(b.vx,b.vy)>13&&this.specialAttempt(i,'stop',1.2);
     if(grounded&&b.z<1.3&&(distance<=p.reach||diveStop)){
      if(f.manual&&!f.foul){
       if(!this.bobbleGrounder(i)){this.fieldingAction(i,diveStop?'stop':'pickup');if(diveStop)this.markGreat(i,'stop');this.secureManualBall(i);}
@@ -2081,7 +2095,7 @@ window.NightGame=class NightGame{
   // Give the covering player time to arrive by holding the release briefly.
   // The actual arrival still requires the ball to meet the receiving glove.
   const extraHold=base==null?.8:outfieldPickup(holder,from)?.48:1.2;
-  const windup=release+clamp(coverTime+.05-release-flight,0,extraHold);
+  const windup=release+clamp(coverTime+.09-release-flight,0,extraHold);
   return {to:{...to},base,receiver,duration:Math.max(.05,windup+flight),release:windup,fromIndex:holder};
  }
  stepReturn(th,b,dt){
@@ -2488,14 +2502,14 @@ window.NightGame=class NightGame{
    f.fielders.forEach((p,i)=>{if(i!==(th.fromIndex??m.holder))move(p,i===th.receiver?(th.coverAt||th.to):p.target,p.speed);else p.running=false;});
    if(arrived){
     const receiver=f.fielders[th.receiver],runner=th.runnerId==null?null:f.runners.find(r=>r.id===th.runnerId);
-    f.throw=null;m.lastThrow={fromIndex:th.fromIndex,runnerId:th.runnerId,base:th.base,time:f.elapsed,distance:dist(th.from,th.to),armRating:f.fielders[th.fromIndex]?.armRating||0};this.playEvents.push({type:'throw-arrival',base:th.base,time:f.elapsed,caught:!!receiver&&dist(receiver,th.to)<=BAG_REACH});
-    if(!receiver||dist(receiver,th.to)>BAG_REACH){
+    f.throw=null;m.lastThrow={fromIndex:th.fromIndex,runnerId:th.runnerId,base:th.base,time:f.elapsed,distance:dist(th.from,th.to),armRating:f.fielders[th.fromIndex]?.armRating||0};this.playEvents.push({type:'throw-arrival',base:th.base,time:f.elapsed,caught:canReceiveThrow(receiver,th.to)});
+    if(!canReceiveThrow(receiver,th.to)){
      m.secured=false;m.holder=null;m.bag=null;f.groundRead=null;
      if(receiver)f.chaser=th.receiver;
      this.safeOnThrow(runner,th.base);
      b.vx=0;b.vy=0;b.vz=0;b.z=.04;b.bounces=Math.max(1,b.bounces);return;
     }
-    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=th.base??null;m.recovery=th.base==null?.85:.22;m.outfield=false;
+    this.fieldingAction(th.receiver,'catch');this.emit('sound','catch');m.holder=th.receiver;m.bag=Number.isInteger(th.base)&&dist(receiver,BASES[th.base])<=BAG_REACH?th.base:null;m.recovery=th.base==null?.85:.22;m.outfield=false;
     if(runner&&!runner.out&&!runner.scored){
      const onBag=dist(receiver,BASES[th.base])<=BAG_REACH;
      if(this.reviewBaseArrival(runner,th,receiver,onBag)){if(this.phase!=='play-call')this.playCall(m.closeCall.called,th.base);this.notify();return;}
@@ -2512,10 +2526,19 @@ window.NightGame=class NightGame{
   const holder=f.fielders[m.holder];b.x=holder.x;b.y=holder.y;b.z=2;m.recovery-=dt;
   for(const p of f.fielders)p.running=false;
   const cover=m.outfield?this.secondBaseCover(m.holder,holder):null;
-  if(cover!==null){
-   const receiver=f.fielders[cover];receiver.target=BASES[2];
-   if(f.elapsed>Math.max(receiver.reaction,receiver.recoverAt??0))move(receiver,receiver.target,receiver.speed);
+  if(cover!==null)f.fielders[cover].target=BASES[2];
+  // Cover bases while the ball-holder gathers, rather than waiting for the
+  // arm animation to finish. Assign only one available player to each base.
+  const used=new Set([m.holder]);if(cover!==null)used.add(cover);
+  const required=new Set();
+  for(const r of f.runners){if(r.out||r.scored)continue;const base=this.manualForceBase(r)||(r.needsTag?r.start:0);if(base)required.add(base);}
+  for(const base of required){
+   if(base===2&&cover!==null)continue;
+   const candidate=COVER[base].filter(i=>!used.has(i)&&f.fielders[i]).sort((a,b)=>fielderETA(f.fielders[a],BASES[base],f.fielders[a].speed)-fielderETA(f.fielders[b],BASES[base],f.fielders[b].speed))[0];
+   if(candidate!=null){used.add(candidate);f.fielders[candidate].target=BASES[base];}
   }
+  used.delete(m.holder);
+  for(const i of used){const p=f.fielders[i];if(f.elapsed>Math.max(p.reaction,p.recoverAt??0))move(p,p.target,p.speed);}
   const settled=f.runners.every(r=>r.out||r.scored||
    !r.needsTag&&!r.running&&Math.abs(r.progress-r.base)<.015&&(r.command??r.base)===r.base);
   const tagDrill=this.challenge==='tag'&&m.fly&&f.elapsed-m.pickupAt<1.8;
