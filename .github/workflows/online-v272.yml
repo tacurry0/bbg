@@ -6,6 +6,7 @@ on:
       - 'source/NIGHTBALL-v56/dist/app.js'
       - 'source/NIGHTBALL-v56/dist/game.js'
       - 'source/NIGHTBALL-v56/tests/online-*-v272.*'
+      - 'source/NIGHTBALL-v56/tests/online-play-v273.cjs'
       - 'source/NIGHTBALL-v56/server/**'
       - '.github/workflows/online-v272.yml'
   workflow_dispatch:
@@ -26,6 +27,7 @@ jobs:
         run: |
           node tests/online-stream-v272.cjs
           node tests/online-reconnect-v272.cjs
+          node tests/online-play-v273.cjs
           node tests/online-relay-v272.mjs
           node tests/online-sync-v236.mjs
           node tests/online-running-v109.cjs
