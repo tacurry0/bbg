@@ -2,7 +2,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const root=path.resolve(__dirname,'../dist'),dir=path.join(root,'assets/menu/motion-v277');
 const names=['hero','match','season','online','career'];
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),sw=fs.readFileSync(path.join(root,'sw.js'),'utf8');
-assert(html.includes('home-motion.js?v=277')&&sw.includes('home-motion.js?v=277'));
+assert(html.includes('home-motion.js?v=278')&&sw.includes('home-motion.js?v=278'));
 let bytes=0;
 for(const key of names){
  const file=path.join(dir,key+'.mp4'),gif=fs.readFileSync(path.join(dir,key+'-animated.webp'));

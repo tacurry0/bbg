@@ -56,11 +56,16 @@ try {
  await page.locator('#modal-content [data-action="close"]').last().tap();await page.locator('#modal').waitFor({state:'hidden'});
  await page.evaluate(()=>window.scrollTo(0,0));await ready();
  await page.emulateMedia({reducedMotion:'reduce'});
- await page.waitForFunction(()=>[...document.querySelectorAll('video[data-home-clip]')].every(v=>v.paused&&!v.parentElement.classList.contains('nb-home-motion-ready')));
+ try{await page.waitForFunction(()=>matchMedia('(prefers-reduced-motion: reduce)').matches&&[...document.querySelectorAll('video[data-home-clip]')].every(v=>v.paused&&!v.parentElement.classList.contains('nb-home-motion-ready')),null,{timeout:12000});}
+ catch(e){console.log('reduced-motion diagnostics',await page.evaluate(()=>({reduced:matchMedia('(prefers-reduced-motion: reduce)').matches,homeHidden:document.getElementById('home').hidden,homePaused:document.getElementById('home').classList.contains('nb-home-motion-paused'),clips:[...document.querySelectorAll('video[data-home-clip]')].map(v=>({key:v.dataset.homeClip,paused:v.paused,ready:v.readyState,hostReady:v.parentElement.classList.contains('nb-home-motion-ready'),src:v.getAttribute('src')}))})));throw e;}
  const reduced=await snapshot();
  assert(!reduced.icon.includes('nb-mini-swing'));
  assert.deepEqual(reduced.rects,before.rects,'reduced motion should restore original layout');
  assert.equal(reduced.overflow,false);assert.deepEqual(errors,[],'no uncaught JS errors');
+ await page.emulateMedia({reducedMotion:'no-preference'});
+ await ready();
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.waitForFunction(()=>[...document.querySelectorAll('video[data-home-clip]')].every(v=>v.paused&&!v.parentElement.classList.contains('nb-home-motion-ready')),null,{timeout:12000});
  await context.close();
 
  // Browser with blocked media still gets genuine animated WebP, and the
