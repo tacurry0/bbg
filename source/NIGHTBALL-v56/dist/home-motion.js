@@ -9,13 +9,15 @@
   const key=video.dataset.homeClip,host=video.parentElement;
   video.muted=true;video.defaultMuted=true;video.playsInline=true;
   const fallback=document.createElement('img');fallback.className='nb-home-clip nb-home-clip-fallback';fallback.alt='';fallback.setAttribute('aria-hidden','true');fallback.decoding='async';host.insertBefore(fallback,video.nextSibling);
-  return {video,key,host,fallback,visible:false,enabled:false,mode:'video',loading:false,playing:false,failed:false,url:null};
+  return {video,key,host,fallback,visible:false,enabled:false,mode:'video',loading:false,playing:false,failed:false,url:null,playToken:0,playPending:false};
  });
  let disposed=false;
- const active=()=>!disposed&&!reduced.matches&&!document.hidden&&!home.hidden&&(!modal||modal.hidden);
+ const reducedNow=()=>matchMedia('(prefers-reduced-motion: reduce)').matches;
+ const active=()=>!disposed&&!reducedNow()&&!document.hidden&&!home.hidden&&(!modal||modal.hidden);
+ function stopVideo(s){s.playToken++;s.playPending=false;s.playing=false;s.video.pause();}
  function fallback(s){
   if(s.mode==='image')return;
-  s.mode='image';s.video.pause();s.video.classList.remove('nb-home-clip-show');s.playing=false;
+  s.mode='image';stopVideo(s);s.video.classList.remove('nb-home-clip-show');s.playing=false;
   if(s.url){URL.revokeObjectURL(s.url);s.url=null;s.video.removeAttribute('src');}
   s.host.classList.remove('nb-home-motion-ready');updateOne(s);
  }
@@ -27,17 +29,20 @@
  function stopImage(s){
   if(!s.fallback.getAttribute('src'))return;
   // Swap to a still or remove the source so off-screen image playback stops.
-  if(s.host.classList.contains('nb-home-motion-ready')&&!reduced.matches){
+  if(s.host.classList.contains('nb-home-motion-ready')&&!reducedNow()){
    const src=root+s.key+'.webp';if(s.fallback.getAttribute('src')!==src)s.fallback.src=src;
   }else s.fallback.removeAttribute('src');
  }
  function play(s){
-  if(!s.enabled||s.mode!=='video'||!s.url||s.playing||s.loading)return;
-  s.playing=true;
-  Promise.resolve(s.video.play()).catch(err=>{
+  if(!active()||!s.enabled||!s.visible||s.mode!=='video'||!s.url||s.playPending||!s.video.paused||s.loading)return;
+  const token=++s.playToken;s.playPending=true;
+  Promise.resolve(s.video.play()).then(()=>{
+   if(!active()||!s.enabled||!s.visible)stopVideo(s);
+  }).catch(err=>{
+   if(token!==s.playToken)return;
    s.playing=false;
-   if(s.enabled&&err?.name!=='AbortError')fallback(s);
-  });
+   if(active()&&s.enabled&&err?.name!=='AbortError')fallback(s);
+  }).finally(()=>{if(token===s.playToken)s.playPending=false;});
  }
  async function load(s){
   if(s.loading||s.url||s.mode!=='video')return;
@@ -56,24 +61,25 @@
  }
  function updateOne(s){
   s.enabled=active()&&s.visible;
-  if(reduced.matches){
-   s.video.pause();s.playing=false;s.video.classList.remove('nb-home-clip-show');
+  if(reducedNow()){
+   stopVideo(s);s.video.classList.remove('nb-home-clip-show');
    s.fallback.classList.remove('nb-home-clip-show');s.host.classList.remove('nb-home-motion-ready');stopImage(s);return;
   }
   if(!s.enabled){
-   s.video.pause();s.playing=false;stopImage(s);return;
+   stopVideo(s);stopImage(s);return;
   }
   if(s.mode==='image'){showImage(s);return;}
   if(s.url)play(s);else load(s);
  }
  for(const s of videoStates){
   s.video.addEventListener('playing',()=>{
-   if(!s.enabled||s.mode!=='video'){s.video.pause();s.playing=false;return;}
+   if(!active()||!s.enabled||!s.visible||s.mode!=='video'){updateOne(s);return;}
    s.playing=true;s.video.classList.add('nb-home-clip-show');s.fallback.classList.remove('nb-home-clip-show');s.host.classList.add('nb-home-motion-ready');
   });
+  s.video.addEventListener('play',()=>{if(!active()||!s.enabled||!s.visible)updateOne(s);});
   s.video.addEventListener('error',()=>{if(s.mode==='video'&&s.url)fallback(s);});
   s.fallback.addEventListener('load',()=>{
-   if(s.mode!=='image'||reduced.matches)return;
+   if(s.mode!=='image'||reducedNow())return;
    s.fallback.classList.add('nb-home-clip-show');s.host.classList.add('nb-home-motion-ready');
   });
   s.fallback.addEventListener('error',()=>{s.failed=true;s.fallback.classList.remove('nb-home-clip-show');s.host.classList.remove('nb-home-motion-ready');});
@@ -92,10 +98,20 @@
  document.addEventListener('visibilitychange',sync);
  if(reduced.addEventListener)reduced.addEventListener('change',sync);else reduced.addListener?.(sync);
  window.addEventListener('pagehide',e=>{
-  for(const s of videoStates){s.video.pause();s.playing=false;stopImage(s);if(!e.persisted&&s.url)URL.revokeObjectURL(s.url);}
+  for(const s of videoStates){stopVideo(s);stopImage(s);if(!e.persisted&&s.url)URL.revokeObjectURL(s.url);}
   if(!e.persisted)disposed=true;
  });
  window.addEventListener('pageshow',sync);
+ // Some WebViews deliver the media-query change asynchronously while
+ // resuming a pending play() request. Reconcile only on the visible
+ // home screen, not through any per-frame rendering loop.
+ let lastReduced=reducedNow();
+ const policyTimer=setInterval(()=>{
+  if(disposed||document.hidden||home.hidden)return;
+  const now=reducedNow();
+  if(now!==lastReduced||(now&&videoStates.some(s=>!s.video.paused||s.host.classList.contains('nb-home-motion-ready')))){lastReduced=now;sync();}
+ },750);
+ window.addEventListener('pagehide',e=>{if(!e.persisted)clearInterval(policyTimer);});
 
  // Native vector mini-actions: preserve each button's original icon as the
  // reduced-motion fallback, and leave the existing labels and hit areas.
@@ -140,7 +156,7 @@
   sync();
   const next=pages.find(p=>!p.hidden);
   if(next!==lastPage){
-   if(next&&!reduced.matches&&(next===home||lastPage===home)){
+   if(next&&!reducedNow()&&(next===home||lastPage===home)){
     const target=next===home?home.querySelector('.menu-content'):next;
     target?.classList.remove('nb-home-page-in');
     if(target){void target.offsetWidth;target.classList.add('nb-home-page-in');}
