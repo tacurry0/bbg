@@ -10,7 +10,7 @@
   if(loadPromise)return loadPromise;
   loadPromise=new Promise((resolve,reject)=>{
    const s=document.createElement('script');
-   s.src=CDN;s.onload=()=>resolve();s.onerror=()=>reject(new Error('peer-load-failed'));
+   s.src=CDN;s.onload=()=>resolve();s.onerror=()=>{loadPromise=null;s.remove?.();reject(new Error('peer-load-failed'));};
    document.head.appendChild(s);
   });
   return loadPromise;
@@ -138,8 +138,21 @@
  // disposable, independently decodable pose packets.
  const POSE_ID=62,RECOVERY_MS=15000;
  class Session{
-  constructor(handlers,role,code){this.handlers=handlers;this.role=role;this.code=code;this.peer=null;this.conn=null;this.open=false;this.dead=false;this.recovering=false;this.metrics={jitter:0,missing:0,received:0,bytesSent:0,bytesReceived:0};this.relayUrl=networkConfig().relayUrl||'';}
+  constructor(handlers,role,code){this.handlers=handlers;this.role=role;this.code=code;this.peer=null;this.conn=null;this.open=false;this.dead=false;this.recovering=false;this.metrics={jitter:0,missing:0,received:0,bytesSent:0,bytesReceived:0};this.relayUrl=networkConfig().relayUrl||'';this.spectators=new Set();this.lastSpectatorAt=0;this.lastSpectatorFrame=null;}
   send(data){if(this.open&&this.conn){try{this.conn.send(data);return true;}catch{}}return false;}
+  addSpectator(conn){
+   if(this.dead||this.role!=='host'||!this.handlers.allowSpectator?.()||this.spectators.size>=4){try{conn.close();}catch{}return;}
+   this.spectators.add(conn);const remove=()=>this.spectators.delete(conn);
+   conn.on('close',remove);conn.on('error',remove);conn.on('open',()=>{if(this.lastSpectatorFrame&&this.spectators.has(conn))try{conn.send({t:'spectate-frame',frame:this.lastSpectatorFrame});}catch{remove();}});
+   // Spectator messages are deliberately not wired to handlers.onData.
+  }
+  broadcastSpectators(frame,force=false){
+   if(!frame||this.dead||!this.spectators.size)return;
+   const now=performance.now();if(!force&&now-this.lastSpectatorAt<250)return;
+   if(!force&&this.open&&!this.canSendState())return;
+   this.lastSpectatorAt=now;this.lastSpectatorFrame=frame;
+   for(const c of this.spectators)try{if(c.open&&!c.bufferSize&&!(c.dataChannel?.bufferedAmount>8192))c.send({t:'spectate-frame',frame});}catch{try{c.close();}catch{}this.spectators.delete(c);}
+  }
   // Never enqueue periodic data behind an existing backlog.
   canSendState(){const c=this.conn;return !!(this.open&&c&&!(c.bufferSize>0)&&!((c.dataChannel||c._dc)?.bufferedAmount>32768));}
   get poseOpen(){return !!(this.open&&this.pose?.readyState==='open');}
@@ -205,7 +218,7 @@
    }
    const peer=this.peer;
    if(peer&&!peer.destroyed&&!peer.disconnected){
-    try{const prev=this.conn;this.conn=null;prev?.close();const conn=peer.connect(PREFIX+this.code,{reliable:true,metadata:{resume:this.token,protocol:272}});this.wireConn(conn);}catch{}
+    try{const prev=this.conn;this.conn=null;prev?.close();const conn=peer.connect(PREFIX+this.code,{reliable:true,metadata:{resume:this.token,protocol:272,communityId:this.communityId}});this.wireConn(conn);}catch{}
    }else if(peer&&!peer.destroyed&&peer.disconnected){try{peer.reconnect();}catch{}}
    this.retryTimer=setTimeout(()=>this.reconnect(),3000);
   }
@@ -256,6 +269,7 @@
    this.dead=true;this.open=false;this.recovering=false;this._clearRecovery();this._cancelWait?.();
    try{this.pose?.close();}catch{}
    try{this.conn?.close();}catch{}
+   for(const c of this.spectators){try{c.close();}catch{}}this.spectators.clear();
    try{this.peer?.destroy();}catch{}
    try{if(this.standby!==this.conn)this.standby?.close();}catch{}
    this.conn=null;this.peer=null;this.pose=null;
@@ -270,7 +284,9 @@
   session.peer=peer;session.startHostRelay();
   peer.on('disconnected',()=>{if(!session.dead)try{peer.reconnect();}catch{}});
   peer.on('connection',conn=>{
+   if(conn.metadata?.kind==='spectator-v274'){session.addSpectator(conn);return;}
    const token=conn.metadata?.resume;
+   if(session.handlers.allowGuest?.(conn.metadata)===false){try{conn.close();}catch{}return;}
    if(session.dead||session.open&&session.conn?.isRelay||session.conn&&(!session.token||token!==session.token)){try{conn.close();}catch{}return;}
    if(session.conn){session.interrupt();const old=session.conn;session.conn=null;try{old.close();}catch{}}
    session.token=typeof token==='string'&&token.length===32?token:null;
@@ -284,7 +300,7 @@
   return session;
  }
  async function join(code,handlers,options={}){
-  const session=new Session(handlers,'guest',code);session.token=roomToken();
+  const session=new Session(handlers,'guest',code);session.token=roomToken();session.communityId=options.communityId;
   try{await loadPeer();}catch(e){if(session.startGuestRelay()){session.recoveryTimer=setTimeout(()=>{if(!session.open)session.fail();},RECOVERY_MS);return session;}throw e;}
   const opts=await peerOptions();
   /* Guest waiting (v112): when the host has not opened the room yet, the
@@ -306,7 +322,7 @@
    session.peer=peer;
    peer.on('open',()=>{
     if(session.dead||session.usingRelay){try{peer.destroy();}catch{}return;}
-    const conn=peer.connect(PREFIX+code,{reliable:true,metadata:{resume:session.token,protocol:272}});
+    const conn=peer.connect(PREFIX+code,{reliable:true,metadata:{resume:session.token,protocol:272,communityId:session.communityId}});
     session.wireConn(conn);
    });
    peer.on('error',err=>{
@@ -329,6 +345,18 @@
   attempt();
   if(session.relayUrl)session.relayFallbackTimer=setTimeout(()=>{if(!session.open&&!session.dead){session._cancelWait?.();if(session.startGuestRelay()){session.recoveryTimer=setTimeout(()=>{if(!session.open)session.fail();},wait?maxWaitMs:RECOVERY_MS);}}},6500);
   return session;
+ }
+ async function watch(code,handlers){
+  await loadPeer();const options=await peerOptions();const peer=new Peer(options);let conn=null,dead=false,opened=false;
+  const destroy=()=>{if(dead)return;dead=true;clearTimeout(timer);try{conn?.close();}catch{}try{peer.destroy();}catch{}};
+  const fail=()=>{if(dead)return;destroy();if(opened)handlers.onClose?.();else handlers.onError?.();};
+  const timer=setTimeout(fail,12000);
+  peer.on('open',()=>{if(dead)return;try{conn=peer.connect(PREFIX+code,{reliable:true,metadata:{kind:'spectator-v274'}});}catch{fail();return;}
+   conn.on('open',()=>{if(dead)return;opened=true;clearTimeout(timer);handlers.onOpen?.();});
+   conn.on('data',m=>{if(!dead&&m?.t==='spectate-frame')handlers.onData?.(m);});
+   conn.on('close',fail);conn.on('error',fail);
+  });
+  peer.on('error',fail);peer.on('disconnected',fail);return {destroy};
  }
  /* ---- quick chat (v114): preset phrases only, sent by index ----
     Free text is deliberately not supported: the phrases are fixed, so the
@@ -356,5 +384,5 @@
   if(!full&&!previous)return null;
   return {...(full?{}:previous),...patch};
  }
- window.NightOnline={Session,stateDelta,mergeState,loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
+ window.NightOnline={Session,stateDelta,mergeState,loadPeer,peerOptions,makeCode,host,join,watch,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
 })();
