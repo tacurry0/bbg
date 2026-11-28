@@ -1,0 +1,168 @@
+/* v276 — ambience for the existing home menu only.
+   Animate paint layers with transform/opacity; never move the layout,
+   replace the card art, add hit targets or run a background game loop. */
+@media (prefers-reduced-motion: no-preference) {
+  #home .menu-hero .menu-key-art {
+    animation: nb-home-hero-drift 9s ease-in-out infinite alternate;
+    transform-origin: 58% 46%;
+  }
+  #home .menu-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 20%, #8ae9ff00 32%, #baf5ff52 49%, #f6ffff65 51%, #8ae9ff00 66%, transparent 80%);
+    z-index: 0;
+    animation: nb-home-hero-light 7s ease-in-out infinite;
+  }
+  #home .menu-hero h1 .nightball-logo {
+    animation: nb-home-logo 4.8s ease-in-out infinite;
+    transform-origin: 45% 50%;
+  }
+
+  /* Each mode has its own pace and highlight color, with long quiet
+     intervals between sweeps. The labels and chevrons stay above the effect. */
+  #home .menu-card {
+    --nb-home-glint: #e7fcff80;
+    --nb-home-glint-duration: 5.5s;
+    --nb-home-glint-delay: 0s;
+  }
+  #home .menu-card.menu-season {
+    --nb-home-glint: #fffbd5a6;
+    --nb-home-glint-delay: .85s;
+    --nb-home-glint-duration: 6.5s;
+  }
+  #home .menu-card.menu-online {
+    --nb-home-glint: #e6d8ffb0;
+    --nb-home-glint-delay: 1.65s;
+    --nb-home-glint-duration: 5.2s;
+  }
+  #home .menu-card.menu-career {
+    --nb-home-glint: #d9ffcd91;
+    --nb-home-glint-delay: 2.35s;
+    --nb-home-glint-duration: 6s;
+  }
+  #home .menu-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(112deg, transparent 24%, var(--nb-home-glint) 49%, transparent 68%);
+    animation: nb-home-card-sweep var(--nb-home-glint-duration) ease-in-out var(--nb-home-glint-delay) infinite backwards;
+  }
+  #home .menu-trophy {
+    animation: nb-home-trophy 3.8s ease-in-out infinite;
+    transform-origin: 50% 85%;
+  }
+  #home .menu-online-art {
+    animation: nb-home-online 3.4s ease-in-out infinite;
+  }
+  #home .menu-training .menu-mini svg {
+    animation: nb-home-icon 5.2s ease-in-out infinite;
+  }
+  #home .menu-training .menu-mini:nth-child(3) svg { animation-delay: .6s; }
+  #home .menu-training .menu-mini:nth-child(4) svg { animation-delay: 1.2s; }
+  #home .menu-training .menu-mini:nth-child(5) svg { animation-delay: 1.8s; }
+
+  /* The notice already switches real release entries with a directional
+     text transition. Add a light pass on its artwork and smooth page dots. */
+  #home .notice-card { position: relative; isolation: isolate; }
+  #home .notice-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(110deg, transparent 22%, #d5f5ff00 31%, #ffffff85 51%, #d5f5ff00 68%, transparent 80%);
+    animation: nb-home-card-sweep 5.8s ease-in-out .4s infinite backwards;
+  }
+  #home .notice-card-copy { position: relative; z-index: 1; }
+  #home .notice-pages button::after {
+    transition: transform 200ms ease, opacity 200ms ease, background-color 200ms ease;
+    opacity: .75;
+  }
+  #home .notice-pages button[aria-current="true"]::after {
+    transform: scale(1.45);
+    opacity: 1;
+  }
+  #home #resume-game .resume-play { animation: nb-home-resume 2.8s ease-in-out infinite; }
+
+  /* Quick entrance on return to the menu. Section transforms don't
+     change document height or scroll position; final style is unchanged. */
+  #home .menu-modes,
+  #home .menu-training,
+  #home .menu-other,
+  #home .menu-notices {
+    animation: nb-home-enter 340ms cubic-bezier(.2,.72,.25,1) both;
+  }
+  #home .menu-training { animation-delay: 55ms; }
+  #home .menu-other { animation-delay: 100ms; }
+  #home .menu-notices { animation-delay: 145ms; }
+
+  /* Touch feedback for every menu control without delaying navigation. */
+  #home :is(.menu-card, .menu-mini, .menu-resume, .menu-utilities > button, .notice-step) {
+    transition: transform 160ms cubic-bezier(.18,.88,.32,1.35), filter 140ms ease, box-shadow 140ms ease;
+  }
+  #home :is(.menu-card, .menu-mini, .menu-resume, .menu-utilities > button, .notice-step):active {
+    transform: translateY(2px) scale(.97);
+    filter: brightness(1.09);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    #home :is(.menu-card,.menu-mini,.menu-utilities > button):hover:not(:active) {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+  }
+
+  /* No extra activity while a menu modal covers the home screen.
+     Hidden screens and background tabs are also suspended by CSS/browser. */
+  #app:has(> #modal:not([hidden])) #home *,
+  #app:has(> #modal:not([hidden])) #home *::before,
+  #app:has(> #modal:not([hidden])) #home *::after {
+    animation-play-state: paused;
+  }
+
+  @keyframes nb-home-hero-drift {
+    from { transform: scale(1.015) translate3d(0,0,0); }
+    to { transform: scale(1.095) translate3d(-1%,.8%,0); }
+  }
+  @keyframes nb-home-hero-light {
+    0%, 9% { transform: translate3d(-95%,0,0); opacity: 0; }
+    15% { opacity: .85; }
+    37% { transform: translate3d(95%,0,0); opacity: 0; }
+    100% { transform: translate3d(95%,0,0); opacity: 0; }
+  }
+  @keyframes nb-home-logo {
+    0%, 60%, 100% { transform: scale(1); }
+    73% { transform: scale(1.034); }
+    86% { transform: scale(1.01); }
+  }
+  @keyframes nb-home-card-sweep {
+    0%, 5% { transform: translate3d(-120%,0,0); opacity: 0; }
+    10% { opacity: .8; }
+    26% { transform: translate3d(120%,0,0); opacity: 0; }
+    100% { transform: translate3d(120%,0,0); opacity: 0; }
+  }
+  @keyframes nb-home-trophy {
+    0%, 100% { transform: translate3d(0,0,0) rotate(-2deg); }
+    50% { transform: translate3d(0,-4px,0) rotate(3deg); }
+  }
+  @keyframes nb-home-online {
+    0%, 100% { transform: rotate(-12deg) scale(.97); opacity: .58; }
+    50% { transform: rotate(-4deg) scale(1.07); opacity: .88; }
+  }
+  @keyframes nb-home-icon {
+    0%, 70%, 100% { transform: translate3d(0,0,0); }
+    77% { transform: translate3d(0,-3px,0) rotate(-5deg); }
+    85% { transform: translate3d(0,0,0) rotate(3deg); }
+    91% { transform: translate3d(0,-1px,0); }
+  }
+  @keyframes nb-home-resume {
+    0%, 100% { transform: translate3d(0,0,0); }
+    50% { transform: translate3d(3px,0,0); }
+  }
+  @keyframes nb-home-enter {
+    from { transform: translate3d(0,7px,0); opacity: .72; }
+    to { transform: translate3d(0,0,0); opacity: 1; }
+  }
+}
