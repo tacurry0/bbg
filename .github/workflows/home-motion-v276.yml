@@ -1,0 +1,32 @@
+name: Home menu animation regression (v276)
+on:
+  push:
+    paths:
+      - 'source/NIGHTBALL-v56/dist/home-motion.css'
+      - 'source/NIGHTBALL-v56/dist/home-menu.css'
+      - 'source/NIGHTBALL-v56/dist/index.html'
+      - 'source/NIGHTBALL-v56/tests/home-motion-v276.mjs'
+      - '.github/workflows/home-motion-v276.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  home-motion:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: source/NIGHTBALL-v56
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify release notice
+        run: node tests/release-notes.cjs
+      - name: Install Chromium
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify actual mobile home motion and accessibility
+        run: node tests/home-motion-v276.mjs
