@@ -1,168 +1,56 @@
-/* v276 — ambience for the existing home menu only.
-   Animate paint layers with transform/opacity; never move the layout,
-   replace the card art, add hit targets or run a background game loop. */
-@media (prefers-reduced-motion: no-preference) {
-  #home .menu-hero .menu-key-art {
-    animation: nb-home-hero-drift 9s ease-in-out infinite alternate;
-    transform-origin: 58% 46%;
-  }
-  #home .menu-hero::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(110deg, transparent 20%, #8ae9ff00 32%, #baf5ff52 49%, #f6ffff65 51%, #8ae9ff00 66%, transparent 80%);
-    z-index: 0;
-    animation: nb-home-hero-light 7s ease-in-out infinite;
-  }
-  #home .menu-hero h1 .nightball-logo {
-    animation: nb-home-logo 4.8s ease-in-out infinite;
-    transform-origin: 45% 50%;
-  }
-
-  /* Each mode has its own pace and highlight color, with long quiet
-     intervals between sweeps. The labels and chevrons stay above the effect. */
-  #home .menu-card {
-    --nb-home-glint: #e7fcff80;
-    --nb-home-glint-duration: 5.5s;
-    --nb-home-glint-delay: 0s;
-  }
-  #home .menu-card.menu-season {
-    --nb-home-glint: #fffbd5a6;
-    --nb-home-glint-delay: .85s;
-    --nb-home-glint-duration: 6.5s;
-  }
-  #home .menu-card.menu-online {
-    --nb-home-glint: #e6d8ffb0;
-    --nb-home-glint-delay: 1.65s;
-    --nb-home-glint-duration: 5.2s;
-  }
-  #home .menu-card.menu-career {
-    --nb-home-glint: #d9ffcd91;
-    --nb-home-glint-delay: 2.35s;
-    --nb-home-glint-duration: 6s;
-  }
-  #home .menu-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    background: linear-gradient(112deg, transparent 24%, var(--nb-home-glint) 49%, transparent 68%);
-    animation: nb-home-card-sweep var(--nb-home-glint-duration) ease-in-out var(--nb-home-glint-delay) infinite backwards;
-  }
-  #home .menu-trophy {
-    animation: nb-home-trophy 3.8s ease-in-out infinite;
-    transform-origin: 50% 85%;
-  }
-  #home .menu-online-art {
-    animation: nb-home-online 3.4s ease-in-out infinite;
-  }
-  #home .menu-training .menu-mini svg {
-    animation: nb-home-icon 5.2s ease-in-out infinite;
-  }
-  #home .menu-training .menu-mini:nth-child(3) svg { animation-delay: .6s; }
-  #home .menu-training .menu-mini:nth-child(4) svg { animation-delay: 1.2s; }
-  #home .menu-training .menu-mini:nth-child(5) svg { animation-delay: 1.8s; }
-
-  /* The notice already switches real release entries with a directional
-     text transition. Add a light pass on its artwork and smooth page dots. */
-  #home .notice-card { position: relative; isolation: isolate; }
-  #home .notice-card::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background: linear-gradient(110deg, transparent 22%, #d5f5ff00 31%, #ffffff85 51%, #d5f5ff00 68%, transparent 80%);
-    animation: nb-home-card-sweep 5.8s ease-in-out .4s infinite backwards;
-  }
-  #home .notice-card-copy { position: relative; z-index: 1; }
-  #home .notice-pages button::after {
-    transition: transform 200ms ease, opacity 200ms ease, background-color 200ms ease;
-    opacity: .75;
-  }
-  #home .notice-pages button[aria-current="true"]::after {
-    transform: scale(1.45);
-    opacity: 1;
-  }
-  #home #resume-game .resume-play { animation: nb-home-resume 2.8s ease-in-out infinite; }
-
-  /* Quick entrance on return to the menu. Section transforms don't
-     change document height or scroll position; final style is unchanged. */
-  #home .menu-modes,
-  #home .menu-training,
-  #home .menu-other,
-  #home .menu-notices {
-    animation: nb-home-enter 340ms cubic-bezier(.2,.72,.25,1) both;
-  }
-  #home .menu-training { animation-delay: 55ms; }
-  #home .menu-other { animation-delay: 100ms; }
-  #home .menu-notices { animation-delay: 145ms; }
-
-  /* Touch feedback for every menu control without delaying navigation. */
-  #home :is(.menu-card, .menu-mini, .menu-resume, .menu-utilities > button, .notice-step) {
-    transition: transform 160ms cubic-bezier(.18,.88,.32,1.35), filter 140ms ease, box-shadow 140ms ease;
-  }
-  #home :is(.menu-card, .menu-mini, .menu-resume, .menu-utilities > button, .notice-step):active {
-    transform: translateY(2px) scale(.97);
-    filter: brightness(1.09);
-  }
-  @media (hover: hover) and (pointer: fine) {
-    #home :is(.menu-card,.menu-mini,.menu-utilities > button):hover:not(:active) {
-      transform: translateY(-1px);
-      filter: brightness(1.05);
-    }
-  }
-
-  /* No extra activity while a menu modal covers the home screen.
-     Hidden screens and background tabs are also suspended by CSS/browser. */
-  #app:has(> #modal:not([hidden])) #home *,
-  #app:has(> #modal:not([hidden])) #home *::before,
-  #app:has(> #modal:not([hidden])) #home *::after {
-    animation-play-state: paused;
-  }
-
-  @keyframes nb-home-hero-drift {
-    from { transform: scale(1.015) translate3d(0,0,0); }
-    to { transform: scale(1.095) translate3d(-1%,.8%,0); }
-  }
-  @keyframes nb-home-hero-light {
-    0%, 9% { transform: translate3d(-95%,0,0); opacity: 0; }
-    15% { opacity: .85; }
-    37% { transform: translate3d(95%,0,0); opacity: 0; }
-    100% { transform: translate3d(95%,0,0); opacity: 0; }
-  }
-  @keyframes nb-home-logo {
-    0%, 60%, 100% { transform: scale(1); }
-    73% { transform: scale(1.034); }
-    86% { transform: scale(1.01); }
-  }
-  @keyframes nb-home-card-sweep {
-    0%, 5% { transform: translate3d(-120%,0,0); opacity: 0; }
-    10% { opacity: .8; }
-    26% { transform: translate3d(120%,0,0); opacity: 0; }
-    100% { transform: translate3d(120%,0,0); opacity: 0; }
-  }
-  @keyframes nb-home-trophy {
-    0%, 100% { transform: translate3d(0,0,0) rotate(-2deg); }
-    50% { transform: translate3d(0,-4px,0) rotate(3deg); }
-  }
-  @keyframes nb-home-online {
-    0%, 100% { transform: rotate(-12deg) scale(.97); opacity: .58; }
-    50% { transform: rotate(-4deg) scale(1.07); opacity: .88; }
-  }
-  @keyframes nb-home-icon {
-    0%, 70%, 100% { transform: translate3d(0,0,0); }
-    77% { transform: translate3d(0,-3px,0) rotate(-5deg); }
-    85% { transform: translate3d(0,0,0) rotate(3deg); }
-    91% { transform: translate3d(0,-1px,0); }
-  }
-  @keyframes nb-home-resume {
-    0%, 100% { transform: translate3d(0,0,0); }
-    50% { transform: translate3d(3px,0,0); }
-  }
-  @keyframes nb-home-enter {
-    from { transform: translate3d(0,7px,0); opacity: .72; }
-    to { transform: translate3d(0,0,0); opacity: 1; }
-  }
+/* v277 — actual pre-rendered character motions, with original art fallback.
+   Only decorative layers move; the menu's dimensions and hit targets stay. */
+#home .nb-home-clip {
+ position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;
+ pointer-events:none;opacity:0;z-index:1;transition:opacity 180ms ease;
+}
+#home .menu-hero .nb-home-clip {z-index:0;object-position:center 54%;}
+#home .nb-home-clip-show {opacity:1;}
+#home .menu-card.nb-home-motion-ready :is(.menu-trophy,.menu-online-art) {visibility:hidden;}
+#home .nb-mini-action {display:none;}
+#home .nb-home-notice-art {
+ position:absolute;right:0;top:0;bottom:0;width:45%;pointer-events:none;
+ background-size:cover;background-position:center right;mask-image:linear-gradient(90deg,transparent,#000 50%);
+ opacity:.78;z-index:0;
+}
+#home .notice-card {position:relative;isolation:isolate;}
+#home .notice-card-copy {position:relative;z-index:1;}
+@media (prefers-reduced-motion:no-preference) {
+ #home .nb-mini-original {display:none;}
+ #home .nb-mini-action {display:block;overflow:visible;pointer-events:none;}
+ #home .nb-mini-bat {transform-box:view-box;transform-origin:14px 30px;animation:nb-mini-swing 2.3s ease-in-out infinite;}
+ #home .nb-mini-hit-ball {animation:nb-mini-hit 2.3s ease-in-out infinite;}
+ #home .nb-mini-hr-ball {animation:nb-mini-homer 2.35s ease-in-out infinite;}
+ #home .nb-mini-action-derby .nb-mini-bat {animation-duration:2.35s;}
+ #home .nb-mini-firework {transform-box:view-box;transform-origin:31px 10px;animation:nb-mini-firework 2.35s ease-out infinite;}
+ #home .nb-mini-pitch-ball {animation:nb-mini-pitch 1.95s ease-in-out infinite;}
+ #home .nb-mini-spin {transform-box:view-box;transform-origin:20px 20px;animation:nb-mini-spin .8s linear infinite;}
+ #home .nb-mini-bullpen-ball {animation:nb-mini-bullpen 2.05s ease-in-out infinite;}
+ #home .nb-mini-target {transform-box:view-box;transform-origin:28px 15px;animation:nb-mini-target 2.05s ease-in-out infinite;}
+ #home .nb-mini-flag {transform-box:fill-box;transform-origin:left center;animation:nb-mini-flag 1.15s ease-in-out var(--flag-delay,0s) infinite alternate;}
+ #home.nb-home-motion-paused .nb-mini-action * {animation-play-state:paused;}
+ #home:not([hidden]) .nb-home-page-in,.nb-home-page-in {animation:nb-home-page-in 260ms cubic-bezier(.19,.68,.23,1) both;}
+ #home :is(.menu-card,.menu-mini,.menu-resume,.menu-utilities>button,.notice-step) {
+  transition:transform 160ms cubic-bezier(.18,.88,.32,1.35),filter 140ms ease,box-shadow 140ms ease;
+ }
+ #home :is(.menu-card,.menu-mini,.menu-resume,.menu-utilities>button,.notice-step):active {transform:translateY(2px) scale(.97);filter:brightness(1.06);}
+ #home .notice-pages button::after {transition:transform 200ms ease,opacity 200ms ease;}
+ #home .notice-pages button[aria-current="true"]::after {transform:scale(1.45);}
+ @media(hover:hover) and (pointer:fine) {
+  #home :is(.menu-card,.menu-mini,.menu-utilities>button):hover:not(:active) {transform:translateY(-1px);filter:brightness(1.04);}
+ }
+ @keyframes nb-mini-swing {0%,19%{transform:rotate(-35deg)} 39%{transform:rotate(-47deg)} 53%,62%{transform:rotate(78deg)} 84%,100%{transform:rotate(-35deg)}}
+ @keyframes nb-mini-hit {0%,8%{transform:translate(-15px,-5px);opacity:0} 15%{opacity:1} 45%{transform:translate(-4px,4px);opacity:1} 62%{transform:translate(16px,-15px);opacity:1} 72%,100%{transform:translate(23px,-21px);opacity:0}}
+ @keyframes nb-mini-homer {0%,8%{transform:translate(-16px,0);opacity:0} 14%{opacity:1} 46%{transform:translate(-3px,5px)} 65%{transform:translate(11px,-13px);opacity:1} 73%,100%{transform:translate(15px,-20px);opacity:0}}
+ @keyframes nb-mini-firework {0%,63%{opacity:0;transform:scale(.1)} 72%{opacity:1;transform:scale(.85)} 88%,100%{opacity:0;transform:scale(1.4)}}
+ @keyframes nb-mini-pitch {0%,12%{transform:translate(-11px,4px);opacity:1} 48%{transform:translate(12px,-7px);opacity:1} 63%{transform:translate(17px,-10px);opacity:0} 100%{transform:translate(-11px,4px);opacity:0}}
+ @keyframes nb-mini-spin {from{transform:rotate(0)} to{transform:rotate(360deg)}}
+ @keyframes nb-mini-bullpen {0%,15%{transform:translate(-13px,10px);opacity:1} 47%{transform:translate(8px,-5px);opacity:1} 58%,100%{transform:translate(8px,-5px);opacity:0}}
+ @keyframes nb-mini-target {0%,45%,100%{transform:scale(1)} 54%{transform:scale(1.18)} 67%{transform:scale(1)}}
+ @keyframes nb-mini-flag {from{transform:skewY(-7deg) scaleX(.92)} to{transform:skewY(8deg) scaleX(1.0)}}
+ @keyframes nb-home-page-in {from{opacity:.65;transform:translate3d(0,8px,0)} to{opacity:1;transform:translate3d(0,0,0)}}
+}
+@media(prefers-reduced-motion:reduce) {
+ #home .nb-home-clip,#home .nb-home-notice-art {display:none!important;transition:none;}
+ #home .menu-card.nb-home-motion-ready :is(.menu-trophy,.menu-online-art) {visibility:visible;}
 }
