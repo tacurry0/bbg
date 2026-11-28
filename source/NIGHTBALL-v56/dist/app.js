@@ -3,11 +3,11 @@ import { AbsReview, absActorBounds } from './abs-review.js?v=3';
 import { PlayReview, CHALLENGES, challengeWon, hitReadout } from './play-review.js?v=260';
 import {playoffHTML} from './playoff-view.js?v=77';
 import {buildMatchReport,resultReportHTML,playerBoxHTML,lineScoreHTML,heroInterviewHTML,finalScoreCard,resultHighlightsHTML,halfBreakScoreHTML} from './results.js?v=222';
-import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=271';
+import { renderRunnerMap, bindRunnerMap } from './runner-map.js?v=272';
 import {careerUsage, careerScoreboard, careerResult, careerSetup, careerDashboardHTML, updateCareerSetup} from './career-view.js?v=77';
 import { BallparkMusic, SongVault, musicSettings, MUSIC_SLOTS, PRESETS, DEFAULT_CAREER_CHEER, defaultTeamCheer, defaultTeamResult, teamMusicKey, playerMusicKey, careerMusicKey, trackForEvent } from './music.js?v=263';
 import {updateScoreCube,updatePlayerHUD} from './game-hud.js?v=76';
-import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=269';
+import { StadiumRenderer, UniformPreview } from './stadium3d.js?v=272';
 import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74';
 (()=>{
  'use strict';
@@ -298,7 +298,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   if(resume&&modalKind==='derby-draw'&&game?.derby){derbyRoundPreview(game);return;}
   if(resume&&returnFromEditModal())return;
   if(resume&&onlineMatchActive()){
-   if(online.sync.disconnected||modalKind==='online-gone')return;
+   if(online.sync.disconnected||online.sync.recovering||modalKind==='online-gone')return;
    if(online.sync.lock){if(!onlineOwnsMenu())return;if(online.sync.subPending!=null){toast('交代内容を同期しています…');return;}closeModal(false);onlineFinishLocalLock();return;}
   }
   const previous=modalKind,backdrop=$('modal');
@@ -3582,11 +3582,11 @@ function start(mode,challengeId=null,fixedPark=null){
  let online=null;
  // v218: the host owns all transitions; a lock carries a monotonic
  // epoch so late inputs and delayed host controls cannot cross a stop.
- const ONLINE_SYNC_VERSION=271,ONLINE_CHALLENGE_MS=3000;
+ const ONLINE_SYNC_VERSION=272,ONLINE_CHALLENGE_MS=3000;
  const onlineMatchActive=()=>!!(online?.started&&online.sync&&game?.onlineGame&&!game.onlineDerby&&game.phase!=='ended');
- const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
- const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected);
- function onlineInitSync(o){o.stateCache=null;o.remoteState=null;o.stateSeq=0;o.lastRemoteSeq=0;o.lastFullAt=0;o.lastStateAt=0;o.lastStatePhase='';o.sync={epoch:0,serial:0,lock:null,request:null,localIntent:null,decision:null,localDecision:null,subPending:null,subSerial:0,lastRx:performance.now()};game.onlineDecisionManaged=true;}
+ const onlineOwnsMenu=()=>onlineMatchActive()&&!online.sync.disconnected&&!online.sync.recovering&&online.sync.lock?.kind==='menu'&&online.sync.lock.owner===online.role&&!online.sync.lock.done?.[online.role]&&!online.sync.lock.releasing;
+ const onlineInputBlocked=()=>onlineMatchActive()&&(!!online.sync.lock||!!online.sync.disconnected||!!online.sync.recovering);
+ function onlineInitSync(o){o.stateCache=null;o.remoteState=null;o.stateSeq=0;o.lastRemoteSeq=0;o.lastFullAt=0;o.lastStateAt=0;o.lastStatePhase='';o.fieldBase=null;o.fieldBaseSeq=0;o.remoteFieldBase=null;o.remoteFieldBaseSeq=0;o.lastPoseAt=0;o.poseSeq=0;o.lastPoseStamp=-Infinity;o.lastPoseKey='';o.lastStateKey='';o.sync={epoch:0,serial:0,lock:null,request:null,localIntent:null,decision:null,localDecision:null,subPending:null,subSerial:0,lastRx:performance.now()};game.onlineDecisionManaged=true;}
  function onlineWait(label){
   if(modalKind==='online-hold'&&$('modal-content').querySelector('[role=status]')?.textContent===label)return;
   modal(`${modalTitle('','試合一時停止',false)}<p class="career-status-line" role="status">${label}</p><p class="modal-note">試合は停止中です。</p>`,'online-hold');
@@ -3597,7 +3597,7 @@ function start(mode,challengeId=null,fixedPark=null){
   if(k==='box')boxModal(...(intent.args||[]));else if(k==='bench')benchModal();else if(k==='settings')settingsModal();else if(k==='roster')rosterModal(...(intent.args||[]));else if(k==='history')historyModal();else if(k==='tactics')tacticsModal();else if(k==='howto')howto();else pause();
  }
  function onlineRequestMenu(kind,args=[]){
-  const o=online;if(!onlineMatchActive()||o.sync.disconnected||o.sync.lock||o.sync.request||o.sync.localIntent)return;
+  const o=online;if(!onlineMatchActive()||o.sync.disconnected||o.sync.recovering||o.sync.lock||o.sync.request||o.sync.localIntent)return;
   o.sync.localIntent={kind,args};const request={kind,owner:o.role};
   if(o.role==='host'){o.sync.request=request;onlineSyncTick();}else o.session?.send({t:'sync-menu',kind,epoch:o.sync.epoch});
   if(!o.sync.lock)toast('プレー終了後にタイムを取ります');
@@ -3637,9 +3637,10 @@ function start(mode,challengeId=null,fixedPark=null){
   const o=online,sync=o.sync;if(!sync||!Number.isInteger(s.epoch)||s.epoch<sync.epoch)return;
   const prev=sync.lock,l=s.lock||null,changed=prev?.id!==l?.id;
   if(l&&prev?.id===l.id&&prev.done.guest)l.done.guest=true;
-  sync.epoch=s.epoch;sync.lock=l;game.paused=!!l||!!sync.disconnected;
+  sync.epoch=s.epoch;sync.lock=l;sync.recovering=!!s.recovering||!!sync.awaitResume;game.paused=!!l||!!sync.disconnected||sync.recovering;
   if(!l){
-   if(prev){sync.replayStart=null;sync.localIntent=null;sync.subPending=null;if(prev.kind==='replay'){stopReplay(false);review.clip=null;game.paused=!!sync.disconnected;}if(modalKind==='online-hold')closeModal(false);}
+   if(!sync.recovering&&modalKind==='online-reconnecting')closeModal(false);
+   if(prev){sync.replayStart=null;sync.localIntent=null;sync.subPending=null;if(prev.kind==='replay'){stopReplay(false);review.clip=null;game.paused=!!sync.disconnected||sync.recovering;}if(modalKind==='online-hold')closeModal(false);}
    return;
   }
   if(changed){
@@ -3661,7 +3662,19 @@ function start(mode,challengeId=null,fixedPark=null){
   o.sync.replayPreparedAt=performance.now();
   playFeedback.pendingReplay=false;
   onlineWait('リプレイを準備しています…');
-  o.session?.send({t:'sync-replay',id:o.sync.lock.id,epoch:o.sync.epoch,clip:wire});
+  const id=o.sync.lock.id,epoch=o.sync.epoch;
+  NightOnlineCodec.replayAsync('pack',wire).then(packed=>{
+   if(online!==o||o.sync.lock?.id!==id||o.sync.lock.releasing||o.sync.recovering||o.sync.disconnected)return;
+   const payload=JSON.stringify(packed),parts=payload.match(/[\s\S]{1,10000}/gu)||[];
+   if(parts.length>100){onlineSkipReplay();return;}
+   let index=0;
+   const send=()=>{
+    if(online!==o||o.sync.lock?.id!==id||o.sync.lock.releasing||o.sync.recovering||o.sync.disconnected)return;
+    if(!o.session?.canSendState()){setTimeout(send,45);return;}
+    if(o.session.send({t:'sync-replay-part',id,epoch,i:index,n:parts.length,data:parts[index]}))index++;
+    if(index<parts.length)setTimeout(send,12);
+   };send();
+  }).catch(()=>{if(online===o&&o.sync.lock?.id===id)onlineSkipReplay();});
   return true;
  }
  function onlineBeginReplay(id){
@@ -3673,7 +3686,7 @@ function start(mode,challengeId=null,fixedPark=null){
  }
  function onlineReplayTick(now){
   const o=online,s=o.sync,l=s.lock;
-  if(!l||l.kind!=='replay'||l.releasing||s.disconnected)return;
+  if(!l||l.kind!=='replay'||l.releasing||s.disconnected||s.recovering)return;
   const start=s.replayStart;
   if(!start){
    if(o.role==='host'&&now-s.replayPreparedAt>12000)onlineSkipReplay();
@@ -3690,7 +3703,7 @@ function start(mode,challengeId=null,fixedPark=null){
   if(!l||l.kind!=='replay'||l.releasing)return;
   if(o.role==='guest'){
    o.session?.send({t:'sync-replay-skip',id:l.id,epoch:o.sync.epoch});
-   o.sync.replayStart=null;stopReplay(false);review.clip=null;
+   o.sync.replayStart=null;o.sync.replaySkippedId=l.id;o.sync.replayParts=null;stopReplay(false);review.clip=null;
    onlineWait('同期を確認しています…');return;
   }
   o.sync.replayStart=null;stopReplay(false);review.clip=null;
@@ -3702,7 +3715,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineDecisionVisible(kind){
   if(!onlineMatchActive())return true;
   const o=online,d=o.sync.decision;
-  if(!d||d.kind!==kind||d.owner!==o.role||o.sync.lock||o.sync.disconnected||game.paused||game.phase!==(kind==='abs'?'abs-call':'play-call')||document.hidden)return false;
+  if(!d||d.kind!==kind||d.owner!==o.role||o.sync.lock||o.sync.disconnected||o.sync.recovering||game.paused||game.phase!==(kind==='abs'?'abs-call':'play-call')||document.hidden)return false;
   const now=performance.now();let local=o.sync.localDecision;
   if(!local||local.id!==d.id){local=o.sync.localDecision={id:d.id,shown:now,sent:false};if(o.role==='guest')o.session?.send({t:'sync-call-seen',id:d.id,epoch:o.sync.epoch});else d.seenAt=now;}
   if(local.sent)return false;
@@ -3726,7 +3739,7 @@ function start(mode,challengeId=null,fixedPark=null){
   // 150 ms); the guest gets 3 seconds after it actually sees the call,
   // plus transport grace for the decision packet.
   const grace=d.owner==='guest'?Math.min(2500,Math.max(500,Math.ceil((o.latency?.ewma||350)*1.5))):0;
-  if(sync.lock||g.paused)return;
+  if(sync.lock||sync.recovering||g.paused)return;
   if(d.owner==='host'&&d.seenAt!=null&&now-d.seenAt>=ONLINE_CHALLENGE_MS){
    onlinePassDecision(d);
   }else if(d.seenAt==null&&now-d.openedAt>15000||d.owner==='guest'&&d.seenAt!=null&&now-d.seenAt>ONLINE_CHALLENGE_MS+grace+12000){
@@ -3739,20 +3752,70 @@ function start(mode,challengeId=null,fixedPark=null){
   online.sync.decision=null;online.sync.localDecision=null;
  }
  function onlineSyncLost(){if(!onlineMatchActive()||online.sync.disconnected)return;online.session?.send({t:'sync-lost'});onlinePeerGone();}
- let netMeterAt=0,netFrameMs=16.7;
+ let netMeterAt=0,netFrameMs=16.7,netStatsAt=0,netStatsBusy=false;
+ function hideNetDetail(){const el=$('online-net-meter'),detail=$('online-net-detail');if(detail)detail.hidden=true;el?.setAttribute('aria-expanded','false');}
+ function netDiagnosticsActive(){return !!(online?.started&&online.session&&game?.onlineGame&&!online.ended&&game.phase!=='ended'&&screen==='game');}
  function updateNetMeter(now,dt){
   const el=$('online-net-meter');if(!el)return;
-  el.hidden=!onlineMatchActive();
-  if(el.hidden)return;
+  el.hidden=!netDiagnosticsActive();
+  if(el.hidden){hideNetDetail();netFrameMs=16.7;return;}
   if(dt>0&&dt<1000)netFrameMs=netFrameMs*.92+dt*.08;
   if(now-netMeterAt<500)return;netMeterAt=now;
-  const rtt=online.role==='host'?Math.round(online.latency?.ewma??0):online.lastRtt||0;
-  el.textContent=(rtt?rtt+' ms':'— ms')+' · '+Math.round(1000/Math.max(1,netFrameMs))+' FPS';
-  el.dataset.quality=rtt>220||netFrameMs>40?'poor':rtt>110||netFrameMs>25?'fair':'good';
+  const o=online,rtt=o.role==='host'?Math.round(o.latency?.ewma??0):o.lastRtt||0,stats=o.netStats||{};
+  const ping=rtt||stats.rtt||0,jitter=Math.max(stats.jitter||0,o.peerJitter||0);
+  el.dataset.quality=!o.session.open||ping>220||jitter>70?'poor':ping>110||jitter>30?'fair':ping?'good':'unknown';
+  if(!$('online-net-detail').hidden){
+   $('net-rtt').textContent=ping?ping+' ms':'—';
+   $('net-fps').textContent=Math.round(1000/Math.max(1,netFrameMs));
+   $('net-path').textContent=stats.path==='unknown'||!stats.path?'—':stats.path+(stats.fast?' · Fast':'');
+   $('net-jitter').textContent=Math.round(jitter)+' ms';
+   const kb=v=>Number.isFinite(v)?(v/1024).toFixed(1):'—';
+   $('net-rate').textContent=kb(stats.txRate)+' / '+kb(stats.rxRate)+' KB/s';
+   $('net-queue').textContent=kb(stats.queue)+' KB';
+  }
+  // Query browser ICE statistics only when the user opens the small panel.
+  if(!$('online-net-detail').hidden&&!netStatsBusy&&now-netStatsAt>900&&o.session.sampleStats){
+   netStatsAt=now;netStatsBusy=true;
+   o.session.sampleStats().then(v=>{if(online===o)o.netStats=v;}).catch(()=>{}).finally(()=>{netStatsBusy=false;});
+  }
  }
- function onlineHeartbeat(){if(onlineMatchActive()&&!online.sync.disconnected&&performance.now()-online.sync.lastRx>20000)onlineSyncLost();}
+ $('online-net-meter').onclick=e=>{e.stopPropagation();const detail=$('online-net-detail');detail.hidden=!detail.hidden;$('online-net-meter').setAttribute('aria-expanded',String(!detail.hidden));netStatsAt=-Infinity;netMeterAt=0;};
+ $('online-net-close').onclick=hideNetDetail;
+ document.addEventListener('pointerdown',e=>{if(!$('online-net-detail').hidden&&!$('online-net-detail').contains(e.target)&&!$('online-net-meter').contains(e.target))hideNetDetail();});
+ function onlineConnectionInterrupted(){
+  const o=online;if(!o)return;
+  if(!onlineMatchActive()){if(game?.onlineDerby)onlinePeerGone();else{o.status='再接続しています…';onlineLobbyRefresh();}return;}
+  const sync=o.sync;if(sync.disconnected||sync.recovering)return;
+  sync.recovering=true;sync.awaitResume=o.role==='guest';sync.lastRx=performance.now();sync.recoveryAt=performance.now();
+  o.delayQueue?.clear();game.paused=true;game.touch=null;if(game.mirror)game._sentSteal=undefined;
+  if(review.playback)stopReplay(false);
+  modal(`${modalTitle('','再接続中',false)}<p class="career-status-line">通信が一時的に切断されました。試合を停止して再接続しています。</p><button class="secondary-button" data-action="online-exit">ホームへ戻る</button>`,'online-reconnecting');
+ }
+ function onlineConnectionResumed(){
+  const o=online;if(!o)return;
+  if(!onlineMatchActive()){if(!o.started){o.status='再接続しました';if(o.role==='host')onlineSendLobbyConfig();else if(o.myClub)onlineSendClub();onlineLobbyRefresh();}return;}
+  const sync=o.sync;if(sync.disconnected)return;
+  if(!sync.recovering)onlineConnectionInterrupted();
+  sync.lastRx=performance.now();sync.recoveryAt=performance.now();
+  if(o.role!=='host'){o.session?.send({t:'sync-resume-request',epoch:sync.epoch});return;}
+  // Discard transient menus/replays, not the game state. No play or
+  // decision can continue until the guest has applied the new epoch.
+  const replay=sync.lock?.kind==='replay';
+  if(replay&&game.phase==='play-review')game.phaseTime=Math.max(game.phaseTime,1400);
+  sync.lock=null;sync.request=null;sync.localIntent=null;sync.subPending=null;sync.replayStart=null;sync.replayParts=null;sync.decision=null;sync.localDecision=null;
+  sync.epoch++;sync.resumeEpoch=sync.epoch;review.clip=null;playFeedback.pendingReplay=false;game.paused=true;
+  o.stateCache=null;o.fieldBase=null;o.lastStateKey='';o.lastPoseAt=0;
+  onlineTick(game,true);
+  o.session?.send({t:'sync-resume',epoch:sync.epoch});
+ }
+ function onlineHeartbeat(){
+  if(!onlineMatchActive()||online.sync.disconnected)return;
+  const o=online,sync=o.sync,now=performance.now();
+  if(sync.recovering){if(now-(sync.recoveryAt||now)>21000)onlinePeerGone();return;}
+  if(now-sync.lastRx>6500){if(o.session?.interrupt)o.session.interrupt();else onlineSyncLost();}
+ }
  function onlineSyncTick(){
-  if(!onlineMatchActive()||online.role!=='host')return;
+  if(!onlineMatchActive()||online.role!=='host'||online.sync.recovering)return;
   const o=online,g=game;onlineDecisionTick();
   if(o.sync.lock||o.sync.disconnected)return;
   if(g.phase==='play-review'&&review.clip&&!review.playback&&$('modal').hidden){onlineStartReplay();return;}
@@ -3760,15 +3823,15 @@ function start(mode,challengeId=null,fixedPark=null){
   const r=o.sync.request;if(r&&onlineSafeMenu(g,r.kind)){o.sync.request=null;onlineAcquire('menu',r.owner,r.kind);}
  }
  function onlineSendGameInput(msg){
-  const o=online,sync=o?.sync;if(!o?.session?.open||!sync)return;
+  const o=online,sync=o?.sync;if(!o?.session?.open||!sync||sync.recovering)return false;
   if(msg.t==='abs-challenge'||msg.t==='play-challenge'){
    const kind=msg.t==='abs-challenge'?'abs':'play';
-   if(!onlineDecisionVisible(kind))return;
+   if(!onlineDecisionVisible(kind))return false;
    sync.localDecision.sent=true;msg={...msg,decision:sync.decision.id};
   }
   // Mode changes inside an owned menu are allowed; live input never is.
-  if(onlineInputBlocked()&&!(msg.t==='running-mode'&&onlineOwnsMenu()))return;
-  o.session.send({...msg,epoch:sync.epoch,pitchSeq:o.remotePitchSeq||0,ct:Math.round(performance.now())});
+  if(onlineInputBlocked()&&!(msg.t==='running-mode'&&onlineOwnsMenu()))return false;
+  return o.session.send({...msg,epoch:sync.epoch,pitchSeq:o.remotePitchSeq||0,ct:Math.round(performance.now())});
  }
  function onlineRequestSub(msg){
   const o=online;if(!onlineOwnsMenu()||o.role!=='guest'||o.sync.subPending!=null)return;
@@ -3776,7 +3839,7 @@ function start(mode,challengeId=null,fixedPark=null){
   o.session?.send({t:'sub',...msg,seq,idLock:o.sync.lock.id,epoch:o.sync.epoch});
   toast('交代内容を同期しています…');
  }
- function onlineCleanup(){if($('online-net-meter'))$('online-net-meter').hidden=true;if(online?.pingTimer)clearInterval(online.pingTimer);if(online?.delayQueue)online.delayQueue.clear();if(online?.session)online.session.destroy();online=null;}
+ function onlineCleanup(){hideNetDetail();if($('online-net-meter'))$('online-net-meter').hidden=true;if(online?.pingTimer)clearInterval(online.pingTimer);if(online?.delayQueue)online.delayQueue.clear();if(online?.session)online.session.destroy();online=null;}
  // v107 latency equalization: while hosting, hold the host's own timing
  // inputs for the estimated one-way delay (see online.js LatencyEstimator)
  // so they take effect as late as the guest's network-delayed inputs.
@@ -4010,7 +4073,7 @@ function start(mode,challengeId=null,fixedPark=null){
        onReady:()=>{if(online?.code===code){NightOnline.rememberRoom({code,role:'host',club:online.myClub});online.status='合言葉を相手に伝えてください。接続を待っています…';onlineLobbyRefresh();}},
        onOpen:()=>{if(online?.code===code){online.status='ゲストが接続しました。相手の準備を待っています…';online.session?.send({t:'lobby-mode',mode:online.mode});onlineSendLobbyConfig();onlineLobbyRefresh();startHostPing();}},
        onData:m=>onlineHostData(m),
-       onClose:()=>onlinePeerGone(),
+       onInterrupt:()=>onlineConnectionInterrupted(),onResume:()=>onlineConnectionResumed(),onClose:()=>onlinePeerGone(),
        onError:kind=>{if(online?.code===code&&!online.started){online.status=kind==='taken'?'合言葉が重複しました。部屋を作り直してください。':'接続エラーが発生しました。';onlineLobbyRefresh();}}
      });
    }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
@@ -4029,14 +4092,14 @@ function start(mode,challengeId=null,fixedPark=null){
      online.session=await NightOnline.join(code,{
        onOpen:()=>{if(online?.code===code){online.waiting=false;online.status='接続しました。自分の球団を選んでください。';if(online.myClub)onlineSendClub();onlineLobbyRefresh();}},
        onData:m=>onlineGuestData(m),
-       onClose:()=>onlinePeerGone(),
+       onInterrupt:()=>onlineConnectionInterrupted(),onResume:()=>onlineConnectionResumed(),onClose:()=>onlinePeerGone(),
        onWaiting:n=>{if(online?.code===code&&!online.started){online.waiting=true;online.waitAttempts=n;online.status='ホストを待っています…（自動で再接続を試みています · '+n+'回目）';onlineLobbyRefresh();}},
        onError:kind=>{if(online?.code===code&&!online.started){online.waiting=false;if(kind==='notfound'){online.waitFailed=true;online.status='ホストが見つかりませんでした。ホストが部屋を開いてから、もう一度接続してください。';}else online.status='接続エラーが発生しました。';onlineLobbyRefresh();}}
      },{wait:true,retryMs:3000,maxWaitMs:120000});
    }catch{if(online?.code===code){online.status='通信ライブラリを読み込めませんでした。ネット接続を確認してください。';onlineLobbyRefresh();}}
  }
  function onlinePeerGone(){
-   if(!online)return;
+   if(!online)return;online.session?.destroy?.();
    if(game?.onlineDerby){online.ended=true;game.paused=true;online.derbySpectator=null;modal(`${modalTitle('','接続が切れました')}<button class="primary-button" data-action="online-exit">ホームへ戻る</button>`,'online-gone');return;}
    if(online.sync){if(online.sync.disconnected)return;online.sync.disconnected=true;online.delayQueue?.clear();if(review.playback){review.close();$('game').classList.remove('replay-active');$('replay-label').hidden=true;}if(game)game.paused=true;}
 
@@ -4074,7 +4137,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineHostData(m){
    const o=online;if(!o||o.role!=='host')return;
    if(o.sync)o.sync.lastRx=performance.now();if(m.t==='sync-lost'){onlinePeerGone();return;}
-   if(m.t==='pong'){if(o.latency){o.latency.add(performance.now()-Number(m.ts),Number(m.gt),Number(m.ts));if(game?.onlineGame&&!game.mirror)game.onlineRttMs=o.latency.ewma;const v=o.latency.oneWayMs();if(!o.started&&o._latShown!==v){o._latShown=v;o.session?.send({t:'latency',ms:v});}}return;}
+   if(m.t==='pong'){if(o.latency){o.latency.add(performance.now()-Number(m.ts),Number(m.gt),Number(m.ts));o.peerJitter=Math.max(0,Math.min(150,Number(m.jitter)||0));if(game?.onlineGame&&!game.mirror)game.onlineRttMs=o.latency.ewma;const v=o.latency.oneWayMs();if(!o.started&&o._latShown!==v){o._latShown=v;o.session?.send({t:'latency',ms:v});}}return;}
    if(m.t==='club'){
      if(o.started)return;
      const club=onlineClubs().find(c=>c.id===m.club);if(!club)return;
@@ -4086,7 +4149,7 @@ function start(mode,challengeId=null,fixedPark=null){
    if(m.t==='guest-left'){onlinePeerGone();return;}
    if(m.t==='rematch-yes'&&o.rematchState==='offered'){o.rematchState='';if(o.rematchSwap)o.hostHome=!o.hostHome;startOnlineMatch();return;}
    if(m.t==='rematch-no'&&o.rematchState==='offered'){o.rematchState='declined';if(game&&modalKind==='result')finish(game);else if(modalKind==='online-derby-result')onlineDerbyResultModal();return;}
-   if(m.t==='derby-view-v2'){onlineDerbyApplyFrame(m);return;}
+   if(m.t==='derby-view-v2'||m.t==='derby-pose'){onlineDerbyApplyFrame(m);return;}
    if(m.t==='derby-ball-v2'){onlineDerbyPeerBall(m);return;}
    if(m.t==='derby-turn-v2'){onlineDerbyPeerTurn(m);return;}
    const g=game;if(!g||!o.started)return;
@@ -4094,8 +4157,14 @@ function start(mode,challengeId=null,fixedPark=null){
    if(m.t==='chat'){const t=NightOnline.quickChatText(m.i);if(t)showQuickChat(t,false);return;}
    if(Number.isFinite(m.ct)&&o.latency)o.lastGuestAgeMs=o.latency.ageMs(m.ct,performance.now());
    const sync=o.sync;if(!sync||sync.disconnected)return;
+   if(m.t==='sync-resume-request'){if(Number.isInteger(m.epoch)&&m.epoch<=sync.epoch&&(!sync.recovering||sync.resumeEpoch==null))onlineConnectionResumed();return;}
    if(m.epoch!==sync.epoch)return;
-   if(m.t==='cut-skip'){if(g.phase==='cinematic'&&g.broadcastCut?.id===m.id&&!sync.lock&&g.endBroadcastCut())onlineTick(g,true);return;}
+    if(m.t==='sync-resume-ack'&&sync.recovering&&sync.resumeEpoch===m.epoch){
+     sync.recovering=false;sync.resumeEpoch=null;sync.lastRx=performance.now();game.paused=false;
+     if(modalKind==='online-reconnecting')closeModal(false);onlineTick(g,true);updateUI();return;
+    }
+    if(sync.recovering)return;
+    if(m.t==='cut-skip'){if(g.phase==='cinematic'&&g.broadcastCut?.id===m.id&&!sync.lock&&g.endBroadcastCut())onlineTick(g,true);return;}
    if(m.t==='intro-skip'){if(g.broadcastIntro&&!sync.lock&&g.skipIntro())onlineTick(g,true);return;}
    if(m.t==='sync-menu'){
      if(!sync.lock&&!sync.request&&['pause','bench','settings','roster','history','box','tactics','howto'].includes(m.kind)){sync.request={kind:m.kind,owner:'guest'};onlineSyncTick();}
@@ -4210,10 +4279,10 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineState(g,o){
    const fieldPhase=(['field','result','play-call','play-review'].includes(g.phase)||g.phase==='cinematic'&&g.broadcastCut?.resume==='result')&&g.field;
    let field=null;
-   if(fieldPhase){field={...g.field,trail:undefined,manual:g.field.manual?{...g.field.manual,selection:undefined,closeCall:undefined}:g.field.manual};}
+   if(fieldPhase)field=NightOnlineCodec.fieldWire(g.field);
    let fsq=0;if(field){if(o._ofield!==g.field){o._ofield=g.field;o._fseq=(o._fseq||0)+1;}fsq=o._fseq;}
    return {
-     epoch:o.sync?.epoch??0,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,cut:g.broadcastCut||null,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
+     epoch:o.sync?.epoch??0,recovering:!!o.sync?.recovering,lock:o.sync?.lock||null,decision:o.sync?.decision?{id:o.sync.decision.id,kind:o.sync.decision.kind,owner:o.sync.decision.owner}:null,removed:g.removedPlayers,substitutions:g.substitutions,phase:g.phase,cut:g.broadcastCut||null,pt:g.phaseTime,inning:g.inning,half:g.half,outs:g.outs,balls:g.balls,strikes:g.strikes,
      hs:g.homeScore,as:g.awayScore,home:g.home.slice(),away:g.away.slice(),hh:g.homeHits,ah:g.awayHits,he:g.homeErrors,ae:g.awayErrors,
      bases:g.bases.map(b=>b?1:0),baseIds:g.baseIds.slice(),bi:{...g.battingIndex},batFin:g.batFinished?1:0,
      lu:{home:g.lineups.home.map(p=>[p.id,p.fieldPos||p.pos]),away:g.lineups.away.map(p=>[p.id,p.fieldPos||p.pos])},
@@ -4229,19 +4298,47 @@ function start(mode,challengeId=null,fixedPark=null){
    };
  }
  function onlineTick(g,force=false){
-   const o=online;if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame||g.onlineDerby)return;
-   if(g.pitch&&g.pitch!==o.lastPitchObj){o.lastPitchObj=g.pitch;o.pitchSeq=(o.pitchSeq||0)+1;}
-   const now=performance.now();
-   const changed=g.phase!==o.lastStatePhase;
-   const interval=o.sync?.lock?200:g.phase==='field'||g.phase==='result'?40:g.phase==='pitch'||g.phase==='windup'?50:100;
-   if(!force&&!changed&&(now-(o.lastStateAt||0)<interval||!o.session.canSendState()))return;
-   try{
-    const full=force||!o.stateCache||now-o.lastFullAt>5000;
-    const state={...onlineState(g,o),stamp:now,seq:o.stateSeq+1};
+  const o=online;if(!o||o.role!=='host'||!o.session?.open||!g||!g.onlineGame||g.onlineDerby)return;
+  if(g.pitch&&g.pitch!==o.lastPitchObj){o.lastPitchObj=g.pitch;o.pitchSeq=(o.pitchSeq||0)+1;}
+  const now=performance.now(),sync=o.sync;
+  const stateKey=[sync?.epoch,!!sync?.recovering,sync?.lock?.id,sync?.lock?.releasing,sync?.decision?.id,g.phase,o.pitchSeq,g.inning,g.half,g.outs,g.balls,g.strikes,g.homeScore,g.awayScore,g.baseIds.join(','),g.field?.resolved,g.field?.runners?.map(r=>[r.id,+!!r.out,+!!r.scored,r.base,r.command].join(':')).join(',')].join('|');
+  const changed=stateKey!==o.lastStateKey||g.phase==='field'&&g.field&&o._ofield!==g.field;
+  const playing=g.phase==='field',fast=o.session.poseOpen&&!sync?.lock&&!sync?.recovering;
+  const congestion=Math.max(o.peerJitter||0,o.session.metrics?.jitter||0);
+  const interval=sync?.lock||sync?.recovering?250:playing?(fast?150:Math.min(100,50+congestion)):g.phase==='pitch'||g.phase==='windup'?100:150;
+  const reliable=force||changed||now-(o.lastStateAt||0)>=interval&&o.session.canSendState();
+  const poseInterval=Math.max(40,Math.min(85,40+congestion*.5));
+  const poseDue=playing&&fast&&now-(o.lastPoseAt||0)>=poseInterval;
+  if(!reliable&&!poseDue)return;
+  try{
+   const state=reliable?{...onlineState(g,o),stamp:now,seq:o.stateSeq+1}:{phase:g.phase,fs:g.fieldSpeed,fsq:o.fieldBaseSeq,field:NightOnlineCodec.fieldWire(g.field)},field=state.field;
+   let base=o.fieldBase,newBase=!!field&&(!base||o.fieldBaseSeq!==state.fsq);
+   if(newBase)base=NightOnlineCodec.clone(field);
+   if(reliable){
+    const full=force||!o.stateCache||now-o.lastFullAt>5000||newBase;
+    if(field){state.field=NightOnlineCodec.encode(base,field);if(full)state.fbase=base;}
     const {patch,next}=NightOnline.stateDelta(state,o.stateCache,full);
-    if(!o.session.send({t:'state',s:patch,full}))return;
-    o.stateSeq=state.seq;o.stateCache=next;o.lastStateAt=now;o.lastStatePhase=g.phase;if(full)o.lastFullAt=now;
-   }catch{}
+    if(o.session.send({t:'state',s:patch,full})){
+     o.stateSeq=state.seq;o.stateCache=next;o.lastStateAt=now;o.lastStatePhase=g.phase;o.lastStateKey=stateKey;if(full)o.lastFullAt=now;
+     o.fieldBase=field?base:null;o.fieldBaseSeq=state.fsq;
+    }
+   }
+   if(poseDue&&field&&o.fieldBase&&o.fieldBaseSeq===state.fsq&&o.lastStateKey===stateKey){
+    const m={t:'pose',n:(o.poseSeq||0)+1,epoch:sync?.epoch??0,phase:state.phase,fsq:state.fsq,stamp:now,fs:state.fs,d:NightOnlineCodec.encode(o.fieldBase,field)};
+    if(o.session.sendPose(m)){o.poseSeq=m.n;o.lastPoseAt=now;}
+   }
+  }catch{}
+ }
+ function onlineReceivePose(o,g,m){
+  const s=o.remoteState;
+  if(!g?.mirror||!s||o.sync?.disconnected||o.sync?.recovering||o.sync?.lock||m.epoch!==s.epoch||m.fsq!==s.fsq||m.phase!==s.phase||m.phase!=='field'||!o.remoteFieldBase||!Number.isFinite(m.stamp)||m.stamp<=o.lastPoseStamp)return false;
+  try{
+   const field=NightOnlineCodec.decode(o.remoteFieldBase,m.d);
+   if(!field?.ball||!Array.isArray(field.fielders)||!Array.isArray(field.runners))return false;
+   o.lastPoseStamp=m.stamp;
+   g.applyMirrorField({field,stamp:m.stamp,fs:m.fs,fsq:m.fsq},true);
+   return true;
+  }catch{return false;}
  }
  // ----- guest side: a mirror NightGame renders the real game screen -----
  function onlineGuestData(m){
@@ -4252,20 +4349,33 @@ function start(mode,challengeId=null,fixedPark=null){
    if(m.t==='lobby-mode'){const mode=m.mode==='derby'?'derby':'match',changed=o.mode!==mode;o.mode=mode;if(changed&&!o.started){o.myReady=false;onlineSendClub();if((mode==='derby'&&(modalKind==='online-pitchers'||(modalKind==='lineup'&&lineupContext==='online'))))onlineModal();else onlineLobbyRefresh();}return;}
    if(m.t==='lobby-config'){o.config={matchWeather:m.matchWeather,crowdAttendance:m.crowdAttendance,rules:m.rules,handicap:m.handicap,innings:m.innings,club:m.club,hostHome:m.hostHome,park:m.park,parkSpec:m.parkSpec,tiebreak:m.tiebreak,derbyVersion:m.derbyVersion,syncVersion:m.syncVersion};if(typeof m.conditionSeed==='string')o.conditionSeed=m.conditionSeed;if(!o.started){if(o.mode!=='derby'&&m.syncVersion!==ONLINE_SYNC_VERSION)o.status='ホストとゲストを最新版に更新してください';onlineLobbyRefresh();}return;}
    if(m.t==='host-left'){onlinePeerGone();return;}
-   if(m.t==='ping'){o.session?.send({t:'pong',ts:m.ts,gt:Math.round(performance.now())});return;}
+   if(m.t==='ping'){o.session?.send({t:'pong',ts:m.ts,gt:Math.round(performance.now()),jitter:o.session?.metrics?.jitter||0});return;}
    if(m.t==='latency'){o.lastLat=Number(m.ms)||0;return;}
    if(!o.started)return;
-   if(m.t==='derby-view-v2'){onlineDerbyApplyFrame(m);return;}
+   if(m.t==='derby-view-v2'||m.t==='derby-pose'){onlineDerbyApplyFrame(m);return;}
    if(m.t==='derby-ball-v2'){onlineDerbyPeerBall(m);return;}
    if(m.t==='derby-turn-v2'){onlineDerbyPeerTurn(m);return;}
    if(m.t==='sync-menu-denied'){o.sync.localIntent=null;return;}
-   if(m.t==='sync-replay'){
-     const l=o.sync?.lock;if(o.sync.disconnected||!l||l.kind!=='replay'||l.id!==m.id||m.epoch!==o.sync.epoch||l.releasing)return;
-     playFeedback.pendingReplay=false;
-     if(m.clip?.pitch||m.clip?.frames?.length>1){review.save(game,m.clip);o.session?.send({t:'sync-replay-ready',id:l.id,epoch:o.sync.epoch});}
-     else{o.session?.send({t:'sync-replay-skip',id:l.id,epoch:o.sync.epoch});}
+    if(m.t==='pose'){onlineReceivePose(o,game,m);return;}
+    if(m.t==='sync-resume'){
+     if(o.sync?.recovering&&o.sync.epoch===m.epoch){o.sync.awaitResume=false;o.session?.send({t:'sync-resume-ack',epoch:m.epoch});}
      return;
-   }
+    }
+    if(m.t==='sync-replay-part'){
+     const l=o.sync?.lock,sync=o.sync;if(sync.disconnected||sync.recovering||!l||l.kind!=='replay'||l.id!==m.id||m.epoch!==sync.epoch||l.releasing||sync.replaySkippedId===m.id||!Number.isInteger(m.i)||!Number.isInteger(m.n)||m.n<1||m.n>100||m.i<0||m.i>=m.n||typeof m.data!=='string'||m.data.length>20000)return;
+     let packet=sync.replayParts;
+     if(!packet||packet.id!==m.id){if(m.i!==0)return;packet=sync.replayParts={id:m.id,n:m.n,parts:[]};}
+     if(packet.n!==m.n||m.i!==packet.parts.length)return;
+     packet.parts.push(m.data);if(packet.parts.length!==packet.n)return;
+     sync.replayParts=null;
+     const fail=()=>{if(online===o&&sync.lock?.id===m.id&&!sync.lock.releasing)o.session?.send({t:'sync-replay-skip',id:l.id,epoch:sync.epoch});};
+     try{NightOnlineCodec.replayAsync('unpack',JSON.parse(packet.parts.join(''))).then(clip=>{
+      if(online!==o||sync.lock?.id!==m.id||sync.lock.releasing||sync.recovering||sync.replaySkippedId===m.id)return;
+      playFeedback.pendingReplay=false;
+      if(clip?.pitch||clip?.frames?.length>1){review.save(game,clip);o.session?.send({t:'sync-replay-ready',id:l.id,epoch:sync.epoch});}else fail();
+     }).catch(fail);}catch{fail();}
+     return;
+    }
    if(m.t==='sync-replay-start'){
     const l=o.sync?.lock;if(l?.id!==m.id||l.kind!=='replay'||l.releasing||m.epoch!==o.sync.epoch||!review.clip)return;
     o.sync.replayStart={id:l.id,at:Number.isFinite(m.at)?m.at:performance.now()+(m.lead||100)};return;
@@ -4281,11 +4391,18 @@ function start(mode,challengeId=null,fixedPark=null){
    }
    if(m.t==='state'){
      const g=game;if(!g||!g.mirror||!m.s||m.s.seq<=o.lastRemoteSeq)return;
-     const s=NightOnline.mergeState(o.remoteState,m.s,m.full);if(!s)return;
-     if(o.sync&&(o.sync.disconnected||s.epoch<o.sync.epoch))return;
-     o.lastRemoteSeq=s.seq;o.remoteState=s;o.lastLat=s.lat||0;o.lastRtt=s.rtt||0;
-     if(o.sync&&(o.sync.disconnected||s.epoch<o.sync.epoch))return;
-     g.applyMirror(s);
+      const wire=NightOnline.mergeState(o.remoteState,m.s,m.full);if(!wire)return;
+      if(o.sync&&(o.sync.disconnected||wire.epoch<o.sync.epoch||o.sync.awaitResume&&!wire.recovering&&wire.epoch===o.sync.epoch))return;
+      if(m.s.fbase){o.remoteFieldBase=m.s.fbase;o.remoteFieldBaseSeq=wire.fsq;}
+      if(wire.field!==null&&(!o.remoteFieldBase||o.remoteFieldBaseSeq!==wire.fsq))return;
+      let field;try{field=wire.field===null?null:NightOnlineCodec.decode(o.remoteFieldBase,wire.field);}catch{return;}
+      const s={...wire,field};
+      const keyPose=[s.epoch,s.fsq,s.phase,!!s.lock,!!s.recovering].join('|'),samePose=keyPose===o.lastPoseKey;
+      const skipField=!!field&&samePose&&!s.lock&&!s.recovering&&s.stamp<=o.lastPoseStamp;
+      if(!samePose||!skipField){o.lastPoseKey=keyPose;o.lastPoseStamp=s.stamp;}
+      o.lastRemoteSeq=s.seq;o.remoteState=wire;o.lastLat=s.lat||0;o.lastRtt=s.rtt||0;
+      g.networkJitter=Math.max(0,Math.min(150,o.session?.metrics?.jitter||0));g.networkRtt=s.rtt;
+      g.applyMirror(s,skipField);
      o.remotePitchSeq=s.pitchSeq;o.sync.decision=s.decision;
      onlineApplyRemoteLock(s);
      const key=[s.epoch,s.lock?.id,s.lock?.releasing,s.decision?.id,s.phase,s.inning,s.half,s.outs,s.balls,s.strikes,s.bases.join(''),s.hs,s.as,s.batId,s.pitId,s.absU,s.absCpu,s.playU,s.playCpu,s.baseCall?s.baseCall.base+'/'+s.baseCall.batSide:'',s.lu.home.map(x=>x[0]).join(','),s.lu.away.map(x=>x[0]).join(',')].join('|');
@@ -4374,7 +4491,7 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineDerbySyncTurn(){
   const o=online,c=o?.derbyContest;if(!c||!game?.onlineDerby)return;
   if(c.done){onlineDerbyFinish();return;}
-  const local=onlineDerbyMyTurn();o.derbySpectator=local?null:o.derbyGames[1-o.derbyMyIndex];o.derbyRemoteClock=NightOnlineDerby.duration(c);o.derbyFrameAt=0;o.derbyFrameSeq=0;o.derbyRxSeq=-1;o.derbyLastFrame=null;o.derbyLastPhase=null;derbyCountdown=-1;
+  const local=onlineDerbyMyTurn();o.derbySpectator=local?null:o.derbyGames[1-o.derbyMyIndex];o.derbyRemoteClock=NightOnlineDerby.duration(c);o.derbyFrameAt=0;o.derbyFrameSeq=0;o.derbyRxSeq=-1;o.derbyLastFrame=null;o.derbyLastPhase=null;o.derbyViewBase=null;o.derbyViewKey=null;o.derbyRemoteBase=null;o.derbyRemoteKey=null;o.derbyReliableAt=0;o.derbyLastFullAt=0;derbyCountdown=-1;
   if(modalKind==='online-derby-wait'||modalKind==='online-derby-turn')closeModal(false);
   if(local){
    game.paused=false;game.power=true;game.derby.remaining=NightOnlineDerby.duration(c);game.derby.turnHR=0;game.derby.turnHistory=[];game.derby.streak=0;game.derby.extra=!!c.round;game.derby.round=c.round;game.derby.target=NightOnlineDerby.target(c);game.derby.pendingFinish=false;game.pitch=null;game.hit=null;game.field=null;game.cursor={x:0,y:0};game.swingAge=9999;game.setPhase('intro');game.next='pitch';
@@ -4393,16 +4510,27 @@ function start(mode,challengeId=null,fixedPark=null){
  function onlineDerbyOnHit(data){onlineDerbyRecord(data?.derbyResult);}
  function onlineDerbyFrame(now){
   const o=online,c=o?.derbyContest,g=game;if(!onlineDerbyMyTurn()||!o?.session?.open)return;
-  // Throttle redundant snapshots and respect the data-channel backpressure.
-  const interval=g.phase==='field'||g.phase==='pitch'?40:65;
-  if(o.derbyLastPhase===g.phase&&now-(o.derbyFrameAt||0)<interval)return;
-  if(o.session.canSendState&&!o.session.canSendState())return;
-  const f=g.field,field=f?{ball:f.ball,landing:f.landing,fielders:[],runners:[],trail:f.trail,elapsed:f.elapsed,landingTime:f.landingTime,trajectory:f.trajectory,perfect:f.perfect,foul:f.foul,resolved:f.resolved,outcome:f.outcome,overFence:f.overFence,maxTravel:f.maxTravel,batterName:f.batterName,impact:f.impact,homerCelebration:f.homerCelebration,wallHit:f.wallHit,wallAt:f.wallAt}:null;
-  o.session.send({t:'derby-view-v2',id:o.derbyConfig.contestId,turn:c.turn,seq:o.derbyFrameSeq++,phase:g.phase,phaseTime:g.phaseTime,time:g.time,swingAge:g.swingAge,power:g.power,cursor:g.cursor,pitch:g.pitch,field,hit:g.hit,remaining:g.derby.remaining,hr:g.derby.turnHR,walkoff:!!g.derby.pendingFinish});
+  const interval=g.phase==='field'||g.phase==='pitch'?40:65,changed=o.derbyLastPhase!==g.phase;
+  if(!changed&&now-(o.derbyFrameAt||0)<interval)return;
+  const fast=o.session.poseOpen&&['field','pitch'].includes(g.phase);
+  const full=changed||!o.derbyViewBase||now-(o.derbyLastFullAt||0)>5000;
+  const reliable=full||!fast||now-(o.derbyReliableAt||0)>150;
+  if(reliable&&!full&&o.session.canSendState&&!o.session.canSendState())return;
+  const f=g.field,field=f?{ball:f.ball,landing:f.landing,fielders:[],runners:[],trail:f.trail?.slice(-8)||[],elapsed:f.elapsed,landingTime:f.landingTime,trajectory:f.trajectory,perfect:f.perfect,foul:f.foul,resolved:f.resolved,outcome:f.outcome,overFence:f.overFence,maxTravel:f.maxTravel,batterName:f.batterName,impact:f.impact,homerCelebration:f.homerCelebration,wallHit:f.wallHit,wallAt:f.wallAt}:null;
+  const view={phase:g.phase,phaseTime:g.phaseTime,time:g.time,swingAge:g.swingAge,power:g.power,cursor:g.cursor,pitch:g.pitch,field,hit:g.hit,remaining:g.derby.remaining,hr:g.derby.turnHR,walkoff:!!g.derby.pendingFinish};
+  const seq=o.derbyFrameSeq++,k=full?seq:o.derbyViewKey,base=full?NightOnlineCodec.clone(view):o.derbyViewBase;
+  const packet={id:o.derbyConfig.contestId,turn:c.turn,seq,k,stamp:now,d:NightOnlineCodec.encode(base,view)};
+  if(reliable){
+   if(!o.session.send({t:'derby-view-v2',...packet,...(full?{base}:{})}))return;
+   o.derbyReliableAt=now;if(full){o.derbyViewKey=k;o.derbyViewBase=base;o.derbyLastFullAt=now;}
+  }else if(!o.session.sendPose({t:'derby-pose',...packet,n:(o.derbyPoseSerial=(o.derbyPoseSerial||0)+1)}))return;
   o.derbyFrameAt=now;o.derbyLastPhase=g.phase;
  }
  function onlineDerbyApplyFrame(m){
   const o=online,c=o?.derbyContest,v=o?.derbySpectator;if(!c||c.done||!v||onlineDerbyMyTurn()||m.id!==o.derbyConfig.contestId||m.turn!==c.turn||!Number.isInteger(m.seq)||m.seq<=o.derbyRxSeq)return;
+  if(m.base&&m.t==='derby-view-v2'){o.derbyRemoteBase=m.base;o.derbyRemoteKey=m.k;}
+  if(!o.derbyRemoteBase||o.derbyRemoteKey!==m.k)return;
+  try{m={...m,...NightOnlineCodec.clone(NightOnlineCodec.decode(o.derbyRemoteBase,m.d))};}catch{return;}
   if(!['intro','windup','pitch','field','miss','result','derby-break'].includes(m.phase))return;
   const old=v.phase;o.derbyRxSeq=m.seq;v.phase=m.phase;v.phaseTime=Math.max(0,Number(m.phaseTime)||0);v.time=Number(m.time)||0;v.swingAge=Number(m.swingAge)||0;v.power=true;v.cursor=m.cursor||{x:0,y:0};
   v.pitch=m.pitch||null;
@@ -4491,7 +4619,7 @@ function start(mode,challengeId=null,fixedPark=null){
   closeModal(false);game=null;finalResultState=null;onEvent('clear');trackHome();
   const y=changeScreen('home');matchContext='match';
   for(const id of ['career','apbc-cup','pennant','game','pause','sub','react','react-panel'])$(id).hidden=true;
-  $('home').hidden=false;$('settings').hidden=false;$('online-net-meter').hidden=true;
+  $('home').hidden=false;$('settings').hidden=false;$('online-net-meter').hidden=true;hideNetDetail();
   history.replaceState({nightball:'home'},'',location.href);
   renderMenuClubs();updateResume();restorePageScroll(y);
  }
@@ -5238,7 +5366,7 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
   const rs=rainState,dt=Math.min(.055,Math.max(0,(now-rs.last)/1000));rs.last=now;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
   ctx.fillStyle='rgba(22,33,48,'+(.035+level*.025)+')';ctx.fillRect(0,0,w,h);
   const wind=g.windVector?.()??0,dx=typeof wind==='number'?wind:wind.x;
-  const slant=.08+Math.max(-.4,Math.min(.4,(dx||0)*.045)),count=Math.min(rs.drops.length,Math.round(22+level*35));
+  const slant=.08+Math.max(-.4,Math.min(.4,(dx||0)*.045)),count=Math.min(rs.drops.length,Math.round((22+level*35)*(g.onlineGame&&netFrameMs>31?.58:1)));
   for(let i=0;i<count;i++){const p=rs.drops[i],speed=(350+570*p.z)*(1+level*.14);p.y+=speed*dt;p.x+=speed*slant*dt;if(p.y>h+30||p.x<-35||p.x>w+35){p.y=-Math.random()*h*.5;p.x=Math.random()*w;}
    const len=5+21*p.z;ctx.strokeStyle='rgba(200,225,245,'+(.10+p.z*.27)+')';ctx.lineWidth=.45+p.z*.8;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x-len*slant,p.y-len);ctx.stroke();
    const t=(now*.0012+p.phase)%1;if(i<level*8&&t<.23){const x=((i*91.7)%w),y=h*(.66+((i*.137)% .30));ctx.strokeStyle='rgba(205,230,246,'+(.19*(1-t/.23))+')';ctx.lineWidth=.7;ctx.beginPath();ctx.ellipse(x,y,1+t*10,.55+t*3,0,0,Math.PI*2);ctx.stroke();}
@@ -5265,9 +5393,10 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
     renderer.render(game,game.time+v.elapsed);return;
    }
    if(derbyWatch){const cpu=derbyWatchFrame(document.hidden?0:dt);if(cpu){renderDerbyIntro(cpu);renderer.render(cpu,cpu.time);}return;}
-   if(game.onlineDerby&&!onlineDerbyMyTurn()&&online?.derbySpectator&&!online.ended){const view=online.derbySpectator;renderDerbyIntro(view);renderer.render(view,view.time);updateDerbyClock(game);return;}
+   if(game.onlineDerby)updateNetMeter(now,dt);
+    if(game.onlineDerby&&!onlineDerbyMyTurn()&&online?.derbySpectator&&!online.ended){const view=online.derbySpectator;renderer.adaptOnlineQuality?.(dt,true);renderDerbyIntro(view);renderer.render(view,view.time);updateDerbyClock(game);return;}
    updatePlaySkip();
-   if(onlineMatchActive()){onlineHeartbeat();if(online.role==='host')onlineSyncTick();if(online.sync.lock||online.sync.disconnected)game.paused=true;onlineReplayTick(now);}
+   if(onlineMatchActive()){onlineHeartbeat();if(online.role==='host')onlineSyncTick();if(online.sync.lock||online.sync.disconnected||online.sync.recovering)game.paused=true;onlineReplayTick(now);}
    updateNetMeter(now,dt);
    if(review.playback){
     if(onlineMatchActive())onlineTick(game);
@@ -5303,7 +5432,7 @@ window.addEventListener('popstate',()=>{if(screen==='game'&&game?.phase!=='ended
     if(game.timeAttack)updateTimeAttackClock(game);
     if(!review.playback&&!playFeedback.pendingReplay&&!playFeedback.scoreTime&&!playFeedback.callTime&&!playFeedback.resultTime&&queuedBench&&game.substitutionWindow&&!(game.defending&&game.phase==='windup')){queuedBench=false;benchModal();updateUI();}
     if(game.phase==='ended')queuedBench=false;
-    if(game.phase==='field')renderer.adaptResolution?.(dt);
+    if(game.onlineGame){renderer.adaptOnlineQuality?.(dt,true);if(!renderer.adaptOnlineQuality)renderer.adaptResolution?.(dt);}else{renderer.adaptOnlineQuality?.(dt,false);if(game.phase==='field')renderer.adaptResolution?.(dt);}
     if(!['abs-review','change','ended'].includes(game.phase)&&(game.phase!=='abs-call'||absFrozenCall!==game.absCall||game.absCalledStrikeout)){
      absFrozenCall=game.absCall;
      renderer.render(game,game.time);

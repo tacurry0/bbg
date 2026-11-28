@@ -1125,6 +1125,29 @@ export class StadiumRenderer {
   this.gl.setPixelRatio(this.graphicsRatio);
   this.gl.setSize(this.width,this.height,false);
  }
+ // Online rendering may be made cheaper without changing simulation,
+ // weather, attendance rules, stadium choice or opponent presentation.
+ adaptOnlineQuality(ms,active){
+  if(!active){
+   if(this.onlineQuality){this.gl.shadowMap.enabled=this.onlineQuality.shadow;this.graphicsRatio=this.onlineQuality.ratio;this.gl.setPixelRatio(this.graphicsRatio);if(this.width&&this.height)this.gl.setSize(this.width,this.height,false);this.onlineQuality=null;this.crowdQuality=1;for(const b of this.supporterMeshes||[])b.mesh.count=b.visibleCount||0;}
+   return;
+  }
+  if(this.hero||this.gl.isSoftwareRenderer||!this.width||ms<=0||ms>240)return;
+  if(!this.onlineQuality)this.onlineQuality={avg:16.7,slow:0,good:0,level:0,shadow:this.gl.shadowMap.enabled,ratio:this.graphicsRatio};
+  const q=this.onlineQuality;q.avg=q.avg*.94+ms*.06;
+  this.adaptResolution(ms);
+  if(q.avg>30){q.slow+=ms;q.good=0;}else if(q.avg<20){q.good+=ms;q.slow=0;}else{q.slow=Math.max(0,q.slow-ms);q.good=0;}
+  if(q.slow>2200&&q.level<2){
+   q.slow=0;q.level++;
+   this.crowdQuality=q.level===1?.78:.58;
+   for(const b of this.supporterMeshes||[])b.mesh.count=Math.round((b.visibleCount||0)*this.crowdQuality);
+   if(q.level===2)this.gl.shadowMap.enabled=false;
+  }else if(q.good>9000&&q.level>0){
+   q.good=0;q.level--;this.crowdQuality=q.level?.78:1;
+   for(const b of this.supporterMeshes||[])b.mesh.count=Math.round((b.visibleCount||0)*this.crowdQuality);
+   this.gl.shadowMap.enabled=q.shadow;
+  }
+ }
  resetCamera(){
   if(this.hero){this.camera.position.set(18,22,35);this.camera.lookAt(0,1,-36);}
   else{this.camera.position.set(.18,3.6,8.8);this.camera.lookAt(0,1.05,-18.4);}

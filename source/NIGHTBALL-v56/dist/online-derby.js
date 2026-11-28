@@ -64,7 +64,7 @@
   return 'draw';
  }
  // v262 full timed turns (legacy alternating API retained for old saves/tests).
- const VERSION=3;
+ const VERSION=4;
  function createTimed({host,guest,first=0}={}){
   return {timed:true,players:[entrant(host),entrant(guest)],round:0,first:first===1?1:0,active:first===1?1:0,turn:0,taken:0,rounds:[[null,null]],done:false,winner:null,walkOff:false};
  }

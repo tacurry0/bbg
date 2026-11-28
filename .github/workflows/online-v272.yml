@@ -1,0 +1,39 @@
+name: Online transport regression (v272)
+on:
+  push:
+    paths:
+      - 'source/NIGHTBALL-v56/dist/online*.js'
+      - 'source/NIGHTBALL-v56/dist/app.js'
+      - 'source/NIGHTBALL-v56/dist/game.js'
+      - 'source/NIGHTBALL-v56/tests/online-*-v272.*'
+      - 'source/NIGHTBALL-v56/server/**'
+      - '.github/workflows/online-v272.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  online:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: source/NIGHTBALL-v56
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test compact wire, replay, loss, reconnect, relay, running
+        run: |
+          node tests/online-stream-v272.cjs
+          node tests/online-reconnect-v272.cjs
+          node tests/online-relay-v272.mjs
+          node tests/online-sync-v236.mjs
+          node tests/online-running-v109.cjs
+          node tests/multi-running-v271.cjs
+          node tests/release-notes.cjs
+      - name: Install real browser
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.1
+          npx playwright install --with-deps chromium
+      - name: Verify native dual WebRTC channels in Chromium
+        run: node tests/online-transport-browser-v272.mjs

@@ -1,0 +1,14 @@
+name = "nightball-online-relay"
+main = "online-relay.mjs"
+compatibility_date = "2026-01-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://tacurry0.github.io"
+
+[[durable_objects.bindings]]
+name = "ROOMS"
+class_name = "OnlineRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["OnlineRoom"]

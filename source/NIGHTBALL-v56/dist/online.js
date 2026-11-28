@@ -113,54 +113,180 @@
  }
  // Optional self-hosted PeerServer override (used by automated tests):
  // localStorage 'nightball.peerConfig' = {"host":"...","port":9000,"path":"/","secure":false}
- function peerOptions(){
-  try{const cfg=JSON.parse(localStorage.getItem('nightball.peerConfig')||'null');return cfg&&cfg.host?cfg:undefined;}catch{return undefined;}
+ function networkConfig(){
+  let local={};try{local=JSON.parse(localStorage.getItem('nightball.peerConfig')||'{}')||{};}catch{}
+  return {...(globalThis.NightOnlineConfig||{}),...local};
  }
+ async function peerOptions(){
+  const cfg=networkConfig(),{relayUrl,iceEndpoint,...options}=cfg;
+  if(iceEndpoint){
+   try{
+    const url=new URL(iceEndpoint,location.href);
+    if(url.protocol!=='https:'&&!['localhost','127.0.0.1'].includes(url.hostname))throw Error('insecure ICE credential endpoint');
+    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),3500);
+    try{
+     const res=await fetch(url,{cache:'no-store',signal:ctrl.signal});
+     if(!res.ok)throw Error('ICE endpoint');
+     const data=await res.json();if(Array.isArray(data.iceServers)&&data.iceServers.length)options.config={...(options.config||{}),iceServers:data.iceServers};
+    }finally{clearTimeout(timer);}
+   }catch{}
+  }
+  return options.host||options.config?options:undefined;
+ }
+ // The app's ordered stream carries game decisions and keyframes. A second
+ // *negotiated* native channel on the same SCTP association carries only
+ // disposable, independently decodable pose packets.
+ const POSE_ID=62,RECOVERY_MS=15000;
  class Session{
-  constructor(handlers){this.handlers=handlers;this.peer=null;this.conn=null;this.open=false;this.dead=false;}
+  constructor(handlers,role,code){this.handlers=handlers;this.role=role;this.code=code;this.peer=null;this.conn=null;this.open=false;this.dead=false;this.recovering=false;this.metrics={jitter:0,missing:0,received:0,bytesSent:0,bytesReceived:0};this.relayUrl=networkConfig().relayUrl||'';}
   send(data){if(this.open&&this.conn){try{this.conn.send(data);return true;}catch{}}return false;}
-  // Do not queue obsolete periodic snapshots behind reliable game events.
+  // Never enqueue periodic data behind an existing backlog.
   canSendState(){const c=this.conn;return !!(this.open&&c&&!(c.bufferSize>0)&&!((c.dataChannel||c._dc)?.bufferedAmount>32768));}
+  get poseOpen(){return !!(this.open&&this.pose?.readyState==='open');}
+  sendPose(data){
+   if(!this.poseOpen||this.pose.bufferedAmount>4096)return false;
+   try{this.pose.send(JSON.stringify(data));return true;}catch{return false;}
+  }
+  setupPose(conn){
+   try{
+    if(this.pose){this.pose.close();this.pose=null;}
+    const pc=conn.peerConnection;
+    if(!pc?.createDataChannel||(conn.dataChannel||conn._dc)?.id===POSE_ID)return;
+    const dc=pc.createDataChannel('nightball-pose-v272',{negotiated:true,id:POSE_ID,ordered:false,maxRetransmits:0});
+    this.pose=dc;this.poseConn=conn;this.lastPoseRx=null;this.lastPoseSeq=null;
+    dc.onmessage=e=>{if(this.conn!==conn||!this.open||this.pose!==dc||typeof e.data!=='string'||e.data.length>65536)return;
+     try{const m=JSON.parse(e.data);if(m?.t!=='pose'&&m?.t!=='derby-pose')return;
+      const now=performance.now(),prev=this.lastPoseRx;
+      if((!Number.isInteger(m.n)||this.lastPoseSeq==null||m.n>this.lastPoseSeq)&&prev!=null&&Number.isFinite(m.stamp)&&Number.isFinite(this.lastPoseStamp))this.metrics.jitter=this.metrics.jitter*.86+Math.abs((now-prev)-(m.stamp-this.lastPoseStamp))*.14;
+      if(Number.isInteger(m.n)&&(this.lastPoseSeq==null||m.n>this.lastPoseSeq)){
+       this.lastPoseRx=now;this.lastPoseStamp=m.stamp;
+       if(this.lastPoseSeq!=null)this.metrics.missing+=Math.max(0,m.n-this.lastPoseSeq-1);
+       this.lastPoseSeq=m.n;this.metrics.received++;
+      }
+      this.handlers.onData?.(m);
+     }catch{}
+    };
+    dc.onclose=()=>{if(this.pose===dc)this.pose=null;};
+   }catch{this.pose=null;}
+  }
+  async sampleStats(){
+   const conn=this.conn,pc=conn?.peerConnection,c=conn?.dataChannel||conn?._dc;
+   const result={...this.metrics,queue:(c?.bufferedAmount||0)+(this.pose?.bufferedAmount||0),fast:this.poseOpen,path:'unknown'};
+   if(conn?.isRelay){const now=performance.now(),prev=this._bytes,tx=conn.tx||0,rx=conn.rx||0;result.path='WebSocket';if(prev&&now>prev.at){result.txRate=Math.max(0,(tx-prev.tx)*1000/(now-prev.at));result.rxRate=Math.max(0,(rx-prev.rx)*1000/(now-prev.at));}this._bytes={tx,rx,at:now};return result;}
+   if(!pc?.getStats)return result;
+   try{
+    const stats=await pc.getStats();let pair,transport,tx=0,rx=0;
+    stats.forEach(s=>{if(s.type==='transport'&&s.selectedCandidatePairId)transport=s;if(s.type==='candidate-pair'&&s.nominated&&s.state==='succeeded')pair=s;if(s.type==='data-channel'){tx+=s.bytesSent||0;rx+=s.bytesReceived||0;}});
+    pair=transport?stats.get(transport.selectedCandidatePairId)||pair:pair;
+    if(pair){
+     const l=stats.get(pair.localCandidateId),r=stats.get(pair.remoteCandidateId);
+     result.path=l?.candidateType==='relay'||r?.candidateType==='relay'?'TURN':l?.candidateType==='host'&&r?.candidateType==='host'?'LAN/P2P':'P2P';
+     result.protocol=l?.protocol||r?.protocol||'';
+     if(Number.isFinite(pair.currentRoundTripTime))result.rtt=Math.round(pair.currentRoundTripTime*1000);
+    }
+    const now=performance.now(),prev=this._bytes;
+    if(prev&&now>prev.at){result.txRate=Math.max(0,(tx-prev.tx)*1000/(now-prev.at));result.rxRate=Math.max(0,(rx-prev.rx)*1000/(now-prev.at));}
+    this._bytes={tx,rx,at:now};result.bytesSent=tx;result.bytesReceived=rx;
+   }catch{}
+   return result;
+  }
+  _clearRecovery(){clearTimeout(this.recoveryTimer);clearTimeout(this.retryTimer);clearTimeout(this.relayFallbackTimer);this.recoveryTimer=this.retryTimer=this.relayFallbackTimer=null;}
+  fail(){if(this.dead)return;this.dead=true;this.open=false;this.recovering=false;this._clearRecovery();this.handlers.onClose?.();}
+  interrupt(){
+   if(this.dead||this.recovering)return;
+   this.open=false;this.recovering=true;this.interruptedAt=performance.now();this.handlers.onInterrupt?.();if(this.dead)return;
+   this.recoveryTimer=setTimeout(()=>this.fail(),RECOVERY_MS);
+   if(this.role==='guest')this.retryTimer=setTimeout(()=>this.reconnect(),1600);
+  }
+  reconnect(){
+   if(this.dead||!this.recovering||this.role!=='guest')return;
+   if(this.relayUrl&&(this.conn?.isRelay||performance.now()-this.interruptedAt>4800)){
+    this.startGuestRelay();this.retryTimer=setTimeout(()=>this.reconnect(),3000);return;
+   }
+   const peer=this.peer;
+   if(peer&&!peer.destroyed&&!peer.disconnected){
+    try{const prev=this.conn;this.conn=null;prev?.close();const conn=peer.connect(PREFIX+this.code,{reliable:true,metadata:{resume:this.token,protocol:272}});this.wireConn(conn);}catch{}
+   }else if(peer&&!peer.destroyed&&peer.disconnected){try{peer.reconnect();}catch{}}
+   this.retryTimer=setTimeout(()=>this.reconnect(),3000);
+  }
+  startHostRelay(){
+   if(!this.relayUrl||!globalThis.NightOnlineRelay||this.dead)return;
+   try{
+    const c=new NightOnlineRelay(this.relayUrl,this.code,'host',this.relayHostToken??=roomToken());this.standby=c;
+    c.on('open',()=>{
+     if(this.dead||this.conn===c)return;
+     const token=c.metadata.resume;
+     // Only the same paired guest can migrate a live match to the relay.
+     if(this.token&&token!==this.token){c.close();return;}
+     if(this.conn){this.interrupt();const old=this.conn;this.conn=null;old.close();}
+     this.token=token;this.wireConn(c);
+    });
+    c.on('error',()=>{if(this.conn!==c&&this.standby===c)this.standby=null;});
+   }catch{}
+  }
+  startGuestRelay(){
+   if(!this.relayUrl||!globalThis.NightOnlineRelay||this.dead||this.open)return false;
+   try{
+    const old=this.conn;this.conn=null;old?.close();
+    const c=new NightOnlineRelay(this.relayUrl,this.code,'guest',this.token);this.usingRelay=true;this.wireConn(c);return true;
+   }catch{return false;}
+  }
   wireConn(conn){
    this.conn=conn;
    let opened=false;
-   conn.on('open',()=>{opened=true;this.open=true;this._cancelWait?.();this.handlers.onOpen?.();});
-   conn.on('data',data=>{if(data&&typeof data==='object')this.handlers.onData?.(data);});
-   // While a guest session is waiting for the host to appear (v112), a
-   // failed attempt's connection may report error/close before it ever
-   // opened: that is the retry loop's business, not a disconnect.
-   const gone=()=>{if(this.dead)return;if(this.waitMode&&!opened)return;this.dead=true;this.open=false;this.handlers.onClose?.();};
-   conn.on('close',gone);
-   conn.on('error',gone);
-   conn.on('iceStateChanged',state=>{if(state==='disconnected'||state==='closed')gone();});
+   const current=()=>!this.dead&&this.conn===conn;
+   const ready=()=>{
+    if(!current())return;
+    const resume=this.recovering;
+    opened=true;this.open=true;this.recovering=false;this._clearRecovery();this._cancelWait?.();
+    if(!this.poseOpen||this.poseConn!==conn)this.setupPose(conn);
+    if(resume)this.handlers.onResume?.();else this.handlers.onOpen?.();
+   };
+   conn.on('open',ready);
+   conn.on('data',data=>{if(current()&&this.open&&data&&typeof data==='object')this.handlers.onData?.(data);});
+   const gone=()=>{if(!current())return;if(this.waitMode&&!opened&&!this.recovering&&!conn.isRelay)return;this.interrupt();};
+   conn.on('close',gone);conn.on('error',gone);
+   conn.on('iceStateChanged',state=>{
+    if(!current())return;
+    if(state==='disconnected'||state==='failed'||state==='closed')gone();
+    else if((state==='connected'||state==='completed')&&this.recovering&&conn.open&&opened)ready();
+   });
   }
   destroy(){
-   this.dead=true;this.open=false;
-   this._cancelWait?.();
+   this.dead=true;this.open=false;this.recovering=false;this._clearRecovery();this._cancelWait?.();
+   try{this.pose?.close();}catch{}
    try{this.conn?.close();}catch{}
    try{this.peer?.destroy();}catch{}
-   this.conn=null;this.peer=null;
+   try{if(this.standby!==this.conn)this.standby?.close();}catch{}
+   this.conn=null;this.peer=null;this.pose=null;
   }
  }
+ function roomToken(){const bytes=new Uint8Array(16);if(globalThis.crypto?.getRandomValues)globalThis.crypto.getRandomValues(bytes);else for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');}
  async function host(code,handlers){
-  await loadPeer();
-  const session=new Session(handlers);
-  const peer=new Peer(PREFIX+code,peerOptions());
-  session.peer=peer;
+  const session=new Session(handlers,'host',code);
+  try{await loadPeer();}catch(e){if(session.relayUrl&&globalThis.NightOnlineRelay){session.startHostRelay();setTimeout(()=>{if(!session.dead)handlers.onReady?.();},0);return session;}throw e;}
+  const options=await peerOptions();
+  const peer=new Peer(PREFIX+code,options);
+  session.peer=peer;session.startHostRelay();
+  peer.on('disconnected',()=>{if(!session.dead)try{peer.reconnect();}catch{}});
   peer.on('connection',conn=>{
-   if(session.conn){try{conn.close();}catch{}return;}
+   const token=conn.metadata?.resume;
+   if(session.dead||session.open&&session.conn?.isRelay||session.conn&&(!session.token||token!==session.token)){try{conn.close();}catch{}return;}
+   if(session.conn){session.interrupt();const old=session.conn;session.conn=null;try{old.close();}catch{}}
+   session.token=typeof token==='string'&&token.length===32?token:null;
    session.wireConn(conn);
   });
   peer.on('error',err=>{
    if(err?.type==='unavailable-id')handlers.onError?.('taken');
-   else if(!session.open)handlers.onError?.(err?.type||'error');
+   else if(!session.open){if(session.standby){if(!session.signalReady){session.signalReady=true;handlers.onReady?.();}}else handlers.onError?.(err?.type||'error');}
   });
-  peer.on('open',()=>handlers.onReady?.());
+  peer.on('open',()=>{if(!session.signalReady){session.signalReady=true;handlers.onReady?.();}});
   return session;
  }
  async function join(code,handlers,options={}){
-  await loadPeer();
-  const session=new Session(handlers);
+  const session=new Session(handlers,'guest',code);session.token=roomToken();
+  try{await loadPeer();}catch(e){if(session.startGuestRelay()){session.recoveryTimer=setTimeout(()=>{if(!session.open)session.fail();},RECOVERY_MS);return session;}throw e;}
+  const opts=await peerOptions();
   /* Guest waiting (v112): when the host has not opened the room yet, the
      broker answers 'peer-unavailable'. With wait enabled, retry on an
      interval until the host appears, the wait budget runs out (then the
@@ -176,17 +302,17 @@
   session._cancelWait=()=>{if(timer){clearTimeout(timer);timer=null;}};
   const attempt=()=>{
    if(session.dead)return;
-   const peer=new Peer(peerOptions());
+   const peer=new Peer(opts);
    session.peer=peer;
    peer.on('open',()=>{
-    if(session.dead){try{peer.destroy();}catch{}return;}
-    const conn=peer.connect(PREFIX+code,{reliable:true});
+    if(session.dead||session.usingRelay){try{peer.destroy();}catch{}return;}
+    const conn=peer.connect(PREFIX+code,{reliable:true,metadata:{resume:session.token,protocol:272}});
     session.wireConn(conn);
    });
    peer.on('error',err=>{
-    if(session.dead||session.open)return;
+    if(session.dead||session.open||session.recovering||session.usingRelay)return;
     if(err?.type==='peer-unavailable'){
-     if(!wait){handlers.onError?.('notfound');return;}
+     if(!wait){if(!session.startGuestRelay())handlers.onError?.('notfound');return;}
      if(!waitStartedAt)waitStartedAt=Date.now();
      if(Date.now()-waitStartedAt<maxWaitMs){
       attempts++;
@@ -201,6 +327,7 @@
    });
   };
   attempt();
+  if(session.relayUrl)session.relayFallbackTimer=setTimeout(()=>{if(!session.open&&!session.dead){session._cancelWait?.();if(session.startGuestRelay()){session.recoveryTimer=setTimeout(()=>{if(!session.open)session.fail();},wait?maxWaitMs:RECOVERY_MS);}}},6500);
   return session;
  }
  /* ---- quick chat (v114): preset phrases only, sent by index ----
@@ -229,5 +356,5 @@
   if(!full&&!previous)return null;
   return {...(full?{}:previous),...patch};
  }
- window.NightOnline={stateDelta,mergeState,loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
+ window.NightOnline={Session,stateDelta,mergeState,loadPeer,makeCode,host,join,PREFIX,LatencyEstimator,InputDelayQueue,clampDelay,LATENCY_MAX_MS,PING_INTERVAL_MS,loadRooms,rememberRoom,forgetRoom,ROOMS_MAX,ROOMS_TTL_MS,QUICK_CHATS,quickChatText};
 })();

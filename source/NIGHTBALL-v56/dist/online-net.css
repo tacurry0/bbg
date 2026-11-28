@@ -1,0 +1,15 @@
+/* Keep the match header clear: no latency/FPS labels until the antenna is tapped. */
+#online-net-meter{flex:0 0 29px;width:29px;height:32px;padding:5px;background:transparent;border:0;color:#c9d6d4;display:grid;place-items:center;position:relative}
+#online-net-meter svg{width:20px;height:20px;fill:currentColor}
+#online-net-meter[data-quality="good"]{color:#8ae1a1}
+#online-net-meter[data-quality="fair"]{color:#f3cf70}
+#online-net-meter[data-quality="poor"]{color:#fa8c8c}
+#online-net-meter[data-quality="fair"] rect:nth-child(n+3),#online-net-meter[data-quality="poor"] rect:nth-child(n+2){opacity:.22}
+#online-net-meter[data-quality="unknown"] rect{opacity:.45}
+#online-net-meter[aria-expanded="true"]{background:#ffffff15;border-radius:6px}
+#online-net-detail{position:absolute;top:calc(100% + 6px);right:12px;z-index:31;max-width:calc(100vw - 24px);width:238px;padding:12px;background:#182523f5;border:1px solid #a6c5be44;border-radius:9px;box-shadow:0 8px 25px #0008;color:#eef7f3;font:500 12px/1.4 system-ui,sans-serif;text-align:left}
+#online-net-detail header{display:flex;align-items:center;justify-content:space-between;font-weight:750;margin-bottom:7px}
+#online-net-detail button{background:transparent;color:inherit;font-size:18px;padding:0 4px;line-height:1}
+#online-net-detail dl{display:grid;grid-template-columns:1fr auto;gap:6px;margin:0}
+#online-net-detail dt{color:#b3c8c1}
+#online-net-detail dd{margin:0;text-align:right;font-variant-numeric:tabular-nums}

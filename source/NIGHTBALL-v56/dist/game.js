@@ -1457,7 +1457,7 @@ window.NightGame=class NightGame{
 
  throwPitch(autoTarget=null){
   if(this.umpireMode&&!autoTarget)return false;
-  if(this.mirror){if(this.paused||!this.defending||this.phase!=='aim'||this._mirrorThrew)return false;this._mirrorThrew=true;this.mirrorSend?.({t:'pitch-decision',pitchType:this.pitchType,aim:{x:this.cursor.x,y:this.cursor.y},shift:this.shift==='pull'});return true;}
+  if(this.mirror){if(this.paused||!this.defending||this.phase!=='aim'||this._mirrorThrew)return false;this._mirrorThrew=true;if(this.mirrorSend?.({t:'pitch-decision',pitchType:this.pitchType,aim:{x:this.cursor.x,y:this.cursor.y},shift:this.shift==='pull'})===false){this._mirrorThrew=false;return false;}return true;}
   if(this.paused||!this.defending||this.phase!=='aim')return false;
   if(!this.pitcher.pitches.includes(this.pitchType))this.pitchType=this.pitcher.pitches[0];
   if(this.variantRules?.noBreaking&&this.pitchType!=='fast')this.pitchType='fast';
@@ -1500,7 +1500,7 @@ window.NightGame=class NightGame{
  // Online guest mirror: the host streams render state; this instance never
  // simulates. applyMirror stores the latest host state, mirrorTick advances
  // local clocks and interpolates field positions between snapshots.
- applyMirror(s){
+ applyMirror(s,skipField=false){
   const now=performance.now(),samePhase=this.phase===s.phase&&this._mirrorPitchSeq===s.pitchSeq;
   // A stable presentation clock prevents a late packet from rewinding
   // the visible pitch, while a new phase starts on its authoritative time.
@@ -1546,17 +1546,24 @@ window.NightGame=class NightGame{
   }
   else if(this.absCall)delete this.absCall;
   const mp=this.pitcher;if(mp)this.session.thrown=this.pitchingStats[mp.id]?.pitches||0;
-  if(s.field){
-   const stamp=Number.isFinite(s.stamp)?s.stamp:now;
+   if(!skipField)this.applyMirrorField(s,samePhase);
+  }
+  // Independent live-pose channel never changes authoritative match metadata.
+  applyMirrorField(s,samePhase=true){
+   const now=performance.now();
+   if(s.field){
+    const stamp=Number.isFinite(s.stamp)?s.stamp:now;
    const observed=now-stamp;
    this._mirrorOffset=this._mirrorOffset==null?observed:Math.min(observed,this._mirrorOffset+.15);
    let buffer=this._fieldFrames;
    if(!buffer||buffer.at(-1)?.fsq!==s.fsq||!samePhase||s.lock)buffer=this._fieldFrames=[];
    const t=stamp+this._mirrorOffset;
-   const previous=buffer.at(-1);
-   if(previous&&t<=previous.t)buffer.pop();
-   buffer.push({t,f:s.field,fs:s.fs||1,fsq:s.fsq});
-   while(buffer.length>8)buffer.shift();
+    const previous=buffer.at(-1);
+    if(previous&&stamp<=previous.stamp)return;
+    if(previous){const gap=stamp-previous.stamp;if(gap>0&&gap<300)this._mirrorFrameGap=(this._mirrorFrameGap||40)*.9+gap*.1;}
+    if(previous&&t<=previous.t)buffer.pop();
+   buffer.push({t,stamp,f:s.field,fs:s.fs||1,fsq:s.fsq});
+   while(buffer.length>12)buffer.shift();
    this._fieldCurr=buffer.at(-1);
   }else{this._fieldFrames=[];this._fieldCurr=null;}
  }
@@ -1566,14 +1573,15 @@ window.NightGame=class NightGame{
    this.time+=dt;this.swingAge+=dt;
    if(this._ptAt!=null)this.phaseTime=Math.min(this._ptBase+(now-this._ptAt),this._ptBase+5000);
    if(this.phase==='pitch'&&this.pitch)this.pitch.progress=Math.min(1.24,this.phaseTime/this.pitch.duration);
-   if(this.mirrorSend&&this.steal!==this._sentSteal){this._sentSteal=this.steal;this.mirrorSend({t:'steal',on:!!this.steal});}
+   if(this.mirrorSend&&this.steal!==this._sentSteal){if(this.mirrorSend({t:'steal',on:!!this.steal})!==false)this._sentSteal=this.steal;}
   }
   const buffer=this._fieldFrames||[],latest=buffer.at(-1);
   if(!latest){this.field=null;this._mirrorFseq=-1;return;}
   // Interpolate on the host's packet timestamps rather than arrival gaps.
   // Keep a short buffer for jitter; extrapolate for at most 25 ms.
   let cur=latest,prev=null;
-  const target=now-50;
+  const delay=Math.max(50,Math.min(155,(this._mirrorFrameGap||40)+10+(this.networkJitter||0)*1.3));
+   const target=now-delay;
   if(!this.paused&&buffer.length>1){
    const i=buffer.findIndex(v=>v.t>=target);
    if(i===0){cur=buffer[0];}
@@ -1589,25 +1597,46 @@ window.NightGame=class NightGame{
    // follows the ball.
    this._mirrorFseq=cur.fsq;
    this.field={...cf,manual:cf.manual?{...cf.manual,selection:[]}:cf.manual,ball:{...cf.ball,wetField:!NightGame.isIndoorPark(this.park)&&!!cf.ball.wetField},fielders:cf.fielders.map(p=>({...p})),runners:cf.runners.map(r=>({...r})),trail:[]};
-   this._mirrorRunners=new Map(this.field.runners.map(r=>[r.id,r]));
+   this._mirrorRunners=new Map(this.field.runners.map(r=>[r.id,r]));this._mirrorMetaFrame=cur;this._pendingRunnerCommands=new Map();
   }else{
-   const F=this.field,pf=prev?prev.f:null,localSelection=this.selectedRunnerIds();
-   for(const k in cf){if(k!=='ball'&&k!=='fielders'&&k!=='runners'&&k!=='trail')F[k]=cf[k];}
-   // The streamed manual block carries the host's selection; the guest's
-   // own runner selection is local state and must survive snapshot merges.
-   if(F.manual)F.manual={...F.manual,selection:localSelection};
-   const pb=pf?pf.ball:cf.ball;
-   F.ball.x=lerp(pb.x,cf.ball.x);F.ball.y=lerp(pb.y,cf.ball.y);F.ball.z=lerp(pb.z||0,cf.ball.z||0);
-   for(const k in cf.ball){if(k!=='x'&&k!=='y'&&k!=='z')F.ball[k]=cf.ball[k];}
-   cf.fielders.forEach((p,i)=>{const tf=F.fielders[i];if(!tf){F.fielders[i]={...p};return;}const q=pf?pf.fielders[i]:null;if(q){tf.x=lerp(q.x,p.x);tf.y=lerp(q.y,p.y);}for(const k in p){if(k!=='x'&&k!=='y')tf[k]=p[k];}});
-   const order=[];
-   for(const r of cf.runners){let tr=this._mirrorRunners.get(r.id);const q=pf?pf.runners.find(x=>x.id===r.id):null;if(!tr){tr={...r};this._mirrorRunners.set(r.id,tr);}else{if(q){tr.x=lerp(q.x,r.x);tr.y=lerp(q.y,r.y);tr.progress=lerp(q.progress||0,r.progress||0);}for(const k in r){if(k!=='x'&&k!=='y'&&k!=='progress')tr[k]=r[k];}}order.push(tr);}
-   F.runners=order;
-   for(const id of[...this._mirrorRunners.keys()])if(!cf.runners.some(r=>r.id===id)&&!(pf&&pf.runners.some(r=>r.id===id)))this._mirrorRunners.delete(id);
+    const F=this.field,pf=prev?prev.f:null,refresh=this._mirrorMetaFrame!==cur;
+    this._mirrorMetaFrame=cur;
+    if(refresh){
+     const selection=this.selectedRunnerIds();
+     for(const k in F)if(!['ball','fielders','runners','trail','elapsed'].includes(k)&&!(k in cf))delete F[k];
+     for(const k in cf)if(!['ball','fielders','runners','trail'].includes(k))F[k]=cf[k];
+     if(F.manual)F.manual={...F.manual,selection};
+     for(const k in F.ball)if(!['x','y','z'].includes(k)&&!(k in cf.ball))delete F.ball[k];
+     for(const k in cf.ball)if(!['x','y','z'].includes(k))F.ball[k]=cf.ball[k];
+    }
+    const pb=pf?pf.ball:cf.ball;
+    F.ball.x=lerp(pb.x,cf.ball.x);F.ball.y=lerp(pb.y,cf.ball.y);F.ball.z=lerp(pb.z||0,cf.ball.z||0);
+    cf.fielders.forEach((p,i)=>{
+     let tf=F.fielders[i];if(!tf)tf=F.fielders[i]={...p};
+     const q=pf?.fielders[i]||p;tf.x=lerp(q.x,p.x);tf.y=lerp(q.y,p.y);
+     if(refresh){for(const k in tf)if(k!=='x'&&k!=='y'&&!(k in p))delete tf[k];for(const k in p)if(k!=='x'&&k!=='y')tf[k]=p[k];}
+    });
+    if(refresh)F.fielders.length=cf.fielders.length;
+    const order=refresh?[]:F.runners;
+    for(const r of cf.runners){
+     let tr=this._mirrorRunners.get(r.id);const q=pf?.runners.find(x=>x.id===r.id)||r;
+     if(!tr){tr={...r};this._mirrorRunners.set(r.id,tr);}
+     tr.x=lerp(q.x,r.x);tr.y=lerp(q.y,r.y);tr.progress=lerp(q.progress||0,r.progress||0);
+     if(refresh){
+      for(const k in tr)if(!['x','y','progress'].includes(k)&&!(k in r))delete tr[k];
+      for(const k in r)if(!['x','y','progress'].includes(k))tr[k]=r[k];
+      order.push(tr);
+     }
+    }
+    if(refresh){F.runners=order;for(const id of this._mirrorRunners.keys())if(!cf.runners.some(r=>r.id===id))this._mirrorRunners.delete(id);}
   }
   const F=this.field;
   this.selectedRunnerIds();
-  F.elapsed=prev?lerp(prev.f.elapsed,cf.elapsed):cf.elapsed;
+   if(this._pendingRunnerCommands)for(const [id,c] of this._pendingRunnerCommands){
+    const r=F.runners.find(x=>x.id===id);
+    if(!r||r.out||r.scored||r.command===c.base||now>=c.until||this.paused)this._pendingRunnerCommands.delete(id);
+   }
+   F.elapsed=prev?lerp(prev.f.elapsed,cf.elapsed):cf.elapsed;
   F.trail.push({x:F.ball.x,y:F.ball.y,z:F.ball.z});if(F.trail.length>40)F.trail.shift();
  }
  pitchAt(u){
@@ -1639,7 +1668,7 @@ window.NightGame=class NightGame{
   const remainingBreak=1-t*t*(3-2*t);
   return {x:p.targetX-p.bx*remainingBreak,y:p.targetY-p.by*remainingBreak};
  }
- swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung||this.phaseTime>this.pitch.duration*1.24+30)return false;this._mirrorSwung=true;this.swingAge=0;this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt});return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung)return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
+ swing(){if(this.umpireMode)return false;if(this.mirror){if(this.paused||this.defending||this.phase!=='pitch'||!this.pitch||this.pitch.swung||this._mirrorSwung||this.phaseTime>this.pitch.duration*1.24+30)return false;this._mirrorSwung=true;const prevSwingAge=this.swingAge;this.swingAge=0;if(this.mirrorSend?.({t:'swing',aim:{x:this.cursor.x,y:this.cursor.y},power:!!this.power,delta:Math.max(-1.2,Math.min(1.2,this.pitch.progress-1)),bunt:!!this.bunt})===false){this._mirrorSwung=false;this.swingAge=prevSwingAge;return false;}return true;}if(this.paused||this.defending||this.phase!=='pitch'||this.pitch.swung)return false;if(this.bunt&&this.mode!=='derby')this.buntBall();else this.attempt(this.cursor,this.power,this.pitch.progress-1,false);return true;}
  buntBall(){
   this.pitch.swung=true;this.swingAge=0;this.session.swings++;this.session.contacts++;
   // One roll per bunt: 90% sacrifice, 5% failed advance, 5% bunt hit.
@@ -2201,7 +2230,7 @@ window.NightGame=class NightGame{
    if(!this.manualPlay||!this.canControlRunner(id)||this.paused||!Number.isInteger(base))return false;
    const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
    if(!this.runnerCommandValid(r,base))return false;
-   this.mirrorSend?.({t:'runner-command',id,base});return true;
+   if(this.mirrorSend?.({t:'runner-command',id,base})===false)return false;this.noteMirrorRunnerCommands([{id,base}]);return true;
   }
   if(!this.manualPlay||!this.canControlRunner(id)||this.paused||!Number.isInteger(base))return false;
   const r=this.field.runners.find(x=>x.id===id&&!x.out&&!x.scored);if(!r)return false;
@@ -2252,12 +2281,18 @@ window.NightGame=class NightGame{
   if(this.mirror){
    if(!commands.length||!this.mirrorSend)return false;
    // The host applies a multi-runner command atomically in one simulation tick.
-   this.mirrorSend(commands.length===1?{t:'runner-command',...commands[0]}:{t:'runner-commands',commands});
-   return true;
+   if(this.mirrorSend(commands.length===1?{t:'runner-command',...commands[0]}:{t:'runner-commands',commands})===false)return false;
+   this.noteMirrorRunnerCommands(commands);return true;
   }
   for(const command of commands){const r=this.field.runners.find(x=>x.id===command.id);changed=this.applyRunnerCommand(r,command.base,false)||changed;}
   if(changed)this.notify();return changed;
  }
+ noteMirrorRunnerCommands(commands){
+  const until=performance.now()+Math.max(250,Math.min(800,(this.networkRtt||160)+180));
+  this._pendingRunnerCommands??=new Map();
+  for(const c of commands)this._pendingRunnerCommands.set(c.id,{base:c.base,until});
+ }
+ pendingRunnerCommand(id){const c=this._pendingRunnerCommands?.get(id);return c&&performance.now()<c.until&&!this.paused?c.base:null;}
  manualForceBase(r){
   const f=this.field,m=f.manual;if(m.fly)return 0;
   const base=r.batter?1:m.initialBases.slice(0,r.start).every(Boolean)?r.start+1:0;

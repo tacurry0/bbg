@@ -12,6 +12,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="preload" as="image" href="./assets/menu/clubhouse-v18.webp">
   <link rel="stylesheet" href="./style.css?v=260">
+  <link rel="stylesheet" href="./online-net.css?v=272">
 <link rel="stylesheet" href="./arcade.css?v=269">
   <link rel="stylesheet" href="./player-directory.css?v=1">
   <link rel="stylesheet" href="./career.css?v=56">
@@ -35,7 +36,7 @@
 <div class="app" id="app">
   <header class="topbar">
     <button class="wordmark" id="brand" aria-label="ホーム"><img class="nightball-logo" src="./assets/menu/nightball-logo-v226.png" width="1851" height="556" alt="NIGHTBALL"></button>
-    <span id="online-net-meter" title="往復通信遅延 / 描画FPS" hidden></span><div class="top-actions"><button class="icon-button" id="menu-notices" type="button" data-unread="true" aria-label="お知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bell"></use></svg></button><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
+    <button id="online-net-meter" type="button" aria-label="通信品質" aria-expanded="false" aria-controls="online-net-detail" data-quality="unknown" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="17" width="4" height="5" rx="1"/><rect x="8" y="12" width="4" height="10" rx="1"/><rect x="14" y="7" width="4" height="15" rx="1"/><rect x="20" y="2" width="3" height="20" rx="1"/></svg></button><section id="online-net-detail" aria-label="通信の詳細" hidden><header><span>通信の詳細</span><button id="online-net-close" type="button" aria-label="閉じる">×</button></header><dl><dt>Ping</dt><dd id="net-rtt">—</dd><dt>FPS</dt><dd id="net-fps">—</dd><dt>接続方式</dt><dd id="net-path">—</dd><dt>遅延の揺らぎ</dt><dd id="net-jitter">—</dd><dt>送受信量</dt><dd id="net-rate">—</dd><dt>送信待ち</dt><dd id="net-queue">—</dd></dl></section><div class="top-actions"><button class="icon-button" id="menu-notices" type="button" data-unread="true" aria-label="お知らせ"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#home-bell"></use></svg></button><button class="icon-button" id="sound" aria-label="サウンドを切り替え"></button><button class="icon-button" id="pause" aria-label="一時停止" hidden></button><button class="icon-button react-button" id="react" aria-label="リアクション" hidden>😊</button><button class="icon-button sub-button" id="sub" aria-label="選手交代" hidden>交代</button><button class="icon-button" id="settings" aria-label="設定"></button></div>
   </header>
   <div class="react-panel" id="react-panel" hidden></div>
 
@@ -216,7 +217,7 @@
 </div>
   <button id="replay-skip" class="replay-skip" data-replay-hint="タップで走塁をスキップ" aria-label="リプレイをスキップ" type="button" hidden></button>
 <script defer src="./i18n-catalog.js?v=228"></script>
-<script defer src="./release-notes.js?v=271"></script>
+<script defer src="./release-notes.js?v=272"></script>
 <script defer src="./i18n.js?v=1"></script>
 <script defer src="./ratings-data.js?v=56"></script>
 <script defer src="./pitching-expansion-2026.js?v=196"></script>
@@ -250,7 +251,7 @@
 <script defer src="./matchup-data.js?v=56"></script>
 <script defer src="./audio.js?v=252"></script>
 <script defer src="./derby.js?v=269"></script>
-<script defer src="./game.js?v=271"></script>
+<script defer src="./game.js?v=272"></script>
 <script defer src="./career-leagues.js?v=56"></script>
 <script defer src="./career-development.js?v=57"></script>
 <script defer src="./career-life.js?v=56"></script>
@@ -270,9 +271,12 @@
 <script defer src="./renderer.js?v=238"></script>
 <script defer src="./squad.js?v=56"></script>
 <script defer src="./pwa-update.js?v=2"></script>
-<script defer src="./online.js?v=236"></script>
-<script defer src="./online-derby.js?v=263"></script>
-<script type="module" src="./app.js?v=271"></script>
+<script defer src="./online-config.js?v=272"></script>
+<script defer src="./online-relay.js?v=272"></script>
+<script defer src="./online-codec.js?v=272"></script>
+<script defer src="./online.js?v=272"></script>
+<script defer src="./online-derby.js?v=272"></script>
+<script type="module" src="./app.js?v=272"></script>
 </body>
 </html>
 

@@ -7,7 +7,7 @@ export function runnerMapState(g){
  return g.field.runners.filter(r=>!r.out&&!r.scored&&(r.progress<3.999999||r.needsTag)).map(r=>{
   const progress=clamp(r.progress,0,4),leg=Math.min(3,Math.floor(progress)),u=progress-leg;
   const x=MAP_BASES[leg][0]+(MAP_BASES[leg+1][0]-MAP_BASES[leg][0])*u,y=MAP_BASES[leg][1]+(MAP_BASES[leg+1][1]-MAP_BASES[leg][1])*u;
-  const delta=(r.target??r.command??progress)-progress,moving=!!r.running;
+  const pending=g.pendingRunnerCommand?.(r.id),delta=(pending??r.target??r.command??progress)-progress,moving=pending!=null?Math.abs(delta)>.001:!!r.running;
   const next=delta>0?Math.min(4,Math.floor(progress+.000001)+1):Math.max(0,Math.ceil(progress-.000001)-1);
   const angle=moving?Math.atan2(MAP_BASES[next][1]-y,MAP_BASES[next][0]-x)*180/Math.PI+90:0;
   const name=g.lineups[g.side].find(p=>p.id===r.id)?.name||(r.batter?'打者':r.start+'塁走者');
