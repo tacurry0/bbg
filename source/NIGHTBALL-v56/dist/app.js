@@ -303,6 +303,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
   }
   const previous=modalKind,backdrop=$('modal');
   if(previous==='online'){globalThis.NightCommunity?.unmount();if(!online)globalThis.NightCommunity?.leaveIfIdle();}
+  if(previous==='online-name')derbyOnlineIntent=false;
   if(previous==='stadium-editor')disposeStadiumPreview();
   if(previous==='uniform'){disposeUniformPreview();uniformDraft=null;}
   pregameRoster=false;
@@ -2427,7 +2428,7 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  }
  const settingsSectionState={home:{},match:{},online:{}};
  let settingsSectionScope='home';
- const settingsIcons={game:'home-ball',controls:'home-target',display:'home-sliders',sound:'home-note',system:'home-gear',speed:'home-clock',running:'home-flag'};
+ const settingsIcons={game:'home-ball','online-profile':'home-online',controls:'home-target',display:'home-sliders',sound:'home-note',system:'home-gear',speed:'home-clock',running:'home-flag'};
  function settingsSection(id,title,body){
   const open=!!settingsSectionState[settingsSectionScope][id];
   return `<div class="settings-section"><button type="button" class="settings-section-head" data-settings-section="${id}" aria-expanded="${open}"><span class="settings-section-name"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#${settingsIcons[id]}"></use></svg><span>${title}</span></span><span class="settings-section-chevron" aria-hidden="true">${open?'▾':'▸'}</span></button><div class="settings-section-body" data-settings-body="${id}"${open?'':' hidden'}>${body}</div></div>`;
@@ -2452,6 +2453,26 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
  function musicVolumeControls(){
   return [['cheer','応援歌'],['results','結果曲'],['overlap','相手の応援と重なるとき']].map(([id,label])=>`<div class="setting-slider"><label for="music-${id}">${label}<output id="music-${id}-value">${settings.music[id]}%</output></label><input id="music-${id}" data-music-volume="${id}" type="range" min="0" max="100" value="${settings.music[id]}"></div>`).join('');
  }
+ function onlineNameFields(first=false){
+  const C=globalThis.NightCommunity,name=C?.hasName()?C.profile().name:'',id=first?'online-first-name':'online-settings-name';
+  return `<form class="cl-name-form" id="${id}-form" novalidate><label for="${id}">ニックネーム</label><input id="${id}" type="text" maxlength="24" required autocomplete="nickname" placeholder="ニックネームを入力" value="${uiEscape(name)}"><p class="cl-name-help">${first?'オンライン対戦で使用する名前を設定してください。後からホームの設定で変更できます。':'オンライン対戦で表示される名前を変更します。'}</p><p class="cl-name-error" id="${id}-error" role="alert" hidden></p><button type="submit" class="primary-button">${first?'登録して進む':'名前を保存'}</button></form>`;
+ }
+ function bindOnlineNameForm(first=false){
+  const id=first?'online-first-name':'online-settings-name',form=$(id+'-form'),input=$(id),error=$(id+'-error');
+  if(!form||!input||!error)return;
+  const clearError=()=>{error.hidden=true;input.removeAttribute('aria-invalid');};input.addEventListener('input',clearError);
+  form.addEventListener('submit',e=>{
+   e.preventDefault();
+   if(!globalThis.NightCommunity?.setName(input.value)){error.textContent=localize('ニックネームを1〜24文字で入力してください。');error.hidden=false;input.setAttribute('aria-invalid','true');input.focus();return;}
+   clearError();input.value=globalThis.NightCommunity.profile().name;
+   if(first){onlineModal();}else toast('名前を保存しました');
+  });
+ }
+ function onlineNameSetup(){
+  globalThis.NightCommunity?.unmount();
+  modal(`${modalTitle('','ニックネーム設定')}${onlineNameFields(true)}<button class="secondary-button" data-action="close">戻る</button>`,'online-name');
+  bindOnlineNameForm(true);
+ }
  function settingsModal(){
   const scope=settingsScope(),inGame=scope!=='home';
   if(inGame&&onlineMatchActive()&&!onlineOwnsMenu()){onlineRequestMenu('settings');return;}
@@ -2472,9 +2493,10 @@ import { GAME_LIGHTING_OPTIONS, gameLightingMode } from './game-lighting.js?v=74
    ['controls','操作',controls],['display','画面表示',display],['sound','サウンド',audio],
    ...(scope==='match'?[['speed','プレイ速度',speed],['running','走塁方式',running]]:[])
   ]:[
-   ['game','ゲーム',gameDefaults],['controls','操作',controls+running],['display','画面表示',display],['sound','サウンド',audio],['system','システム',system]
+   ['game','ゲーム',gameDefaults],['controls','操作',controls+running],['display','画面表示',display],['sound','サウンド',audio],...(globalThis.NightCommunity?[['online-profile','オンライン対戦',onlineNameFields()]]:[]),['system','システム',system]
   ];
   modal(`${modalTitle('',inGame?'試合中設定':'設定')}<div class="settings-page" data-settings-scope="${scope}">${sections.map(row=>settingsSection(...row)).join('')}</div><button class="primary-button" data-action="close">${inGame?'試合に戻る':'OK'}</button>`,'settings');
+  if(!inGame)bindOnlineNameForm();
  }
  // The edit hub owns just the entry/return navigation, never the edit data.
  let editHubChild='',leagueEditorFromHub=false;
@@ -4063,6 +4085,7 @@ function start(mode,challengeId=null,fixedPark=null){
  let derbyOnlineIntent=false;
  function onlineModal(){
    const o=online;let inner='';
+   if(!o&&globalThis.NightCommunity&&!globalThis.NightCommunity.hasName()){onlineNameSetup();return;}
    if(!o){
      inner=`<p class="career-status-line">離れた相手と1対1で対戦できます。ホストが部屋を作って合言葉（6文字）を相手に伝え、ゲストがその合言葉で入ります。招待リンクを送れば、開くだけで合言葉が入力された状態になります。接続の仲介にはPeerJSの無料サービスを使います（サーバー代・アカウント不要、要インターネット接続）。</p>
      ${onlineHistoryHTML()}
@@ -4091,6 +4114,7 @@ function start(mode,challengeId=null,fixedPark=null){
  // changing it in the lobby writes settings.innings and saves, so the
  // normal match setup shows the same value, and vice versa.
  async function onlineCreateRoom(codeOverride,communityOptions={}){
+   if(globalThis.NightCommunity&&!globalThis.NightCommunity.hasName()){onlineNameSetup();return;}
    onlineCleanup();
    const code=codeOverride||NightOnline.makeCode(),derby=derbyOnlineIntent&&!communityOptions.tournament;derbyOnlineIntent=false;
    online={role:'host',code,session:null,myClub:onlineClubs().some(c=>c.id===(derby?settings.derbyClub:settings.matchTeam))?(derby?settings.derbyClub:settings.matchTeam):onlineClubs()[0].id,myDerbyBatter:derby?settings.derbyBatter:undefined,guestClub:null,myPitcher:0,guestPitcher:0,guestReady:false,conditionSeed:onlineSeed(),mode:derby?'derby':'match',innings:settings.innings,hostHome:true,park:derby?settings.derbyPark:null,started:false,endSent:false,status:'接続を準備中…',pitchSeq:0,lastPitchObj:null,lastStateAt:0,lastStatePhase:'',latency:new NightOnline.LatencyEstimator(),delayQueue:new NightOnline.InputDelayQueue(),pingTimer:null,lastGuestAgeMs:null,communityPublic:communityOptions.publicRoom===true,communityTournament:communityOptions.tournament||null,communityReady:false};
@@ -4112,6 +4136,7 @@ function start(mode,challengeId=null,fixedPark=null){
  async function onlineJoinRoom(codeOverride,cup=null){
    const code=(codeOverride||($('online-code-input')?.value||'')).trim().toUpperCase();
    if(code.length<4){toast('合言葉を入力してください');return;}
+   if(globalThis.NightCommunity&&!globalThis.NightCommunity.hasName()){pendingInviteCode=code;onlineNameSetup();return;}
    pendingInviteCode='';
    onlineCleanup();
    online={role:'guest',code,session:null,myClub:null,myPitcher:0,myReady:false,conditionSeed:null,config:null,mode:'match',started:false,status:'接続中…',ended:false,lastUiKey:'',lastLat:0,waiting:false,waitAttempts:0,waitFailed:false,communityTournament:cup||globalThis.NightCommunity?.findAssignmentFor(code)||null};

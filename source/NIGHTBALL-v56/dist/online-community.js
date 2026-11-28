@@ -10,22 +10,30 @@ const validCode=v=>typeof v==='string'&&/^[A-HJ-KM-NP-Z2-9]{6}$/.test(v);
 const cleanName=v=>String(v??'').replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,24);
 const int=(v,min,max)=>Number.isInteger(v)?Math.min(max,Math.max(min,v)):min;
 const token=()=>{const bytes=new Uint8Array(10);if(G.crypto?.getRandomValues)G.crypto.getRandomValues(bytes);else for(let i=0;i<bytes.length;i++)bytes[i]=Math.floor(Math.random()*256);return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('');};
+const defaultName=id=>'Player-'+id.slice(-5);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const tr=s=>G.NightI18n?.text(s)||s;
 const t=s=>esc(tr(s));
 function safeProfile(v){
  if(!v||!validId(v.id))return null;
- return {id:v.id,name:cleanName(v.name)||'Player-'+v.id.slice(-5),rating:Number.isInteger(v.rating)?int(v.rating,100,4000):1500,games:int(v.games,0,100000),w:int(v.w,0,100000),l:int(v.l,0,100000),d:int(v.d,0,100000),streak:Number.isInteger(v.streak)?int(v.streak,-100000,100000):0};
+ return {id:v.id,name:cleanName(v.name)||defaultName(v.id),rating:Number.isInteger(v.rating)?int(v.rating,100,4000):1500,games:int(v.games,0,100000),w:int(v.w,0,100000),l:int(v.l,0,100000),d:int(v.d,0,100000),streak:Number.isInteger(v.streak)?int(v.streak,-100000,100000):0};
 }
 let memory;
 function state(){
  if(memory)return memory;
- try{const raw=JSON.parse(localStorage.getItem(KEY)||'null');if(raw&&validId(raw.id))memory={...raw,...safeProfile(raw),friends:Array.isArray(raw.friends)?raw.friends.filter(f=>validId(f.id)).slice(0,100):[],seen:Array.isArray(raw.seen)?raw.seen.filter(validId).slice(-500):[],pending:Array.isArray(raw.pending)?raw.pending.slice(-20):[]};}catch{}
- if(!memory){const id=token();memory={id,name:'Player-'+id.slice(-5),rating:1500,games:0,w:0,l:0,d:0,streak:0,friends:[],seen:[],pending:[]};persist();}
+ try{const raw=JSON.parse(localStorage.getItem(KEY)||'null');if(raw&&validId(raw.id))memory={...raw,...safeProfile(raw),nameSet:raw.nameSet===true||raw.nameSet!==false&&!!cleanName(raw.name)&&cleanName(raw.name)!==defaultName(raw.id),friends:Array.isArray(raw.friends)?raw.friends.filter(f=>validId(f.id)).slice(0,100):[],seen:Array.isArray(raw.seen)?raw.seen.filter(validId).slice(-500):[],pending:Array.isArray(raw.pending)?raw.pending.slice(-20):[]};}catch{}
+ if(!memory){const id=token();memory={id,name:defaultName(id),nameSet:false,rating:1500,games:0,w:0,l:0,d:0,streak:0,friends:[],seen:[],pending:[]};persist();}
  return memory;
 }
 function persist(){try{localStorage.setItem(KEY,JSON.stringify(memory));}catch{}}
 function profile(){return safeProfile(state());}
+// Legacy v274 generated names are not an explicit registration; preserve a custom name and the same ID, friends and rating.
+function hasName(){return state().nameSet===true;}
+function setName(value){
+ if(typeof value!=='string')return false;
+ const name=cleanName(value);if(!name||value.trim().length>24||/[\u0000-\u001f\u007f]/.test(value))return false;
+ const st=state();st.name=name;st.nameSet=true;persist();heartbeat();render();return true;
+}
 function ratedResult(p,op,result){
  const expected=1/(1+10**((op.rating-p.rating)/400)),actual=result==='win'?1:result==='draw'?.5:0;
  return {...p,rating:Math.max(100,Math.min(4000,p.rating+Math.round(32*(actual-expected)))),games:p.games+1,w:p.w+(result==='win'),l:p.l+(result==='loss'),d:p.d+(result==='draw'),streak:result==='draw'?0:result==='win'?Math.max(0,p.streak)+1:Math.min(0,p.streak)-1};
@@ -169,7 +177,7 @@ async function connect(){
  }catch{fail(gen);}
 }
 function ready(){retryDelay=1200;lastSnapshot=Date.now();setStatus('ready');heartbeat();clearTimeout(timer);timer=setTimeout(pulse,8500);}
-function start(){if(started)return;started=true;connect();}
+function start(){if(started||!hasName())return;started=true;connect();}
 function pulse(){
  if(!started||status!=='ready')return;
  if(!leader&&Date.now()-lastSnapshot>30000){fail(generation);return;}
@@ -225,7 +233,6 @@ function leaveIfIdle(){if(!room&&!state().pending.length&&!snapshot.tournaments.
 function stop(){started=false;cancelNetwork();status='idle';room=null;snapshot={members:[],rooms:[],tournaments:[]};}
 function addFriend(id){const st=state();if(!validId(id)||id===st.id||st.friends.some(f=>f.id===id)||st.friends.length>=100)return false;const p=snapshot.members.find(p=>p.id===id);st.friends.push({id,name:p?.name||'Player-'+id.slice(-5)});persist();return true;}
 function removeFriend(id){const st=state();st.friends=st.friends.filter(f=>f.id!==id);persist();}
-function rename(name){const st=state();const n=cleanName(name);if(n){st.name=n;persist();heartbeat();return true;}return false;}
 function findAssignmentFor(code){for(const c of snapshot.tournaments){const a=assignment(c,profile().id);if(a?.code===code)return a;}return null;}
 // Lightweight spectator canvas (separate connection, no control input).
 function fieldFrame(g){
@@ -292,20 +299,19 @@ function render(force=false){
  resolvePending();
  if(!root?.isConnected)return;
  if(!force&&root.contains(document.activeElement)&&/^(INPUT|SELECT|TEXTAREA)$/.test(document.activeElement.tagName))return;
- const code=root.querySelector('#online-code-input')?.value||handlers?.invite||'',nameValue=root.querySelector('#cl-name')?.value||state().name;
+ const code=root.querySelector('#online-code-input')?.value||handlers?.invite||'';
  const tabs=[['rooms','ルーム'],['friends','フレンド'],['cups','大会'],['ranking','ランキング']];
- root.innerHTML='<section class="cl-shell"><header class="cl-header"><span>'+t('ONLINE COMMUNITY')+'</span><small class="'+(status==='ready'?'connected':'')+'">'+t(status==='ready'?'ロビー接続済み':status==='idle'?'未接続':status==='retry'?'再接続中':'接続準備中')+'</small></header>'+(tab==='watch'?renderWatch():'<div class="cl-profile"><input id="cl-name" maxlength="24" aria-label="'+t('公開ニックネーム')+'" value="'+esc(nameValue)+'">'+button('名前変更','rename')+'</div><nav class="cl-tabs">'+tabs.map(([id,label])=>button(label,'tab',id,tab===id?'selected':'')).join('')+'</nav>'+(message?'<p class="cl-message" role="status">'+t(message)+'</p>':'')+(tab==='friends'?renderFriends():tab==='cups'?renderCups():tab==='ranking'?renderRanking():renderRooms())+'<p class="cl-hint">'+t('ニックネーム・参考レートはオンライン中のみ公開。ロビーは接続中の端末が管理するため、全員の退出や通信状態により一覧・大会が消えることがあります。')+'</p>')+'</section>';
+ root.innerHTML='<section class="cl-shell"><header class="cl-header"><span>'+t('ONLINE COMMUNITY')+'</span><small class="'+(status==='ready'?'connected':'')+'">'+t(status==='ready'?'ロビー接続済み':status==='idle'?'未接続':status==='retry'?'再接続中':'接続準備中')+'</small></header>'+(tab==='watch'?renderWatch():'<div class="cl-profile-summary"><small>'+t('ニックネーム')+'</small><b data-no-localize>'+esc(profile().name)+'</b></div><nav class="cl-tabs">'+tabs.map(([id,label])=>button(label,'tab',id,tab===id?'selected':'')).join('')+'</nav>'+(message?'<p class="cl-message" role="status">'+t(message)+'</p>':'')+(tab==='friends'?renderFriends():tab==='cups'?renderCups():tab==='ranking'?renderRanking():renderRooms())+'<p class="cl-hint">'+t('ニックネーム・参考レートはオンライン中のみ公開。ロビーは接続中の端末が管理するため、全員の退出や通信状態により一覧・大会が消えることがあります。')+'</p>')+'</section>';
  const el=root.querySelector('#online-code-input');if(el&&code)el.value=code;
 }
 function mount(el,callbacks){
- if(!el)return;root=el;handlers=callbacks;message='';if(tab==='watch'||callbacks.invite)tab='rooms';start();
+ if(!el||!hasName())return;root=el;handlers=callbacks;message='';if(tab==='watch'||callbacks.invite)tab='rooms';start();
  el.addEventListener('click',e=>{
   const b=e.target.closest('[data-cl-action]');if(!b)return;e.stopPropagation();const action=b.dataset.clAction,id=b.dataset.id,read=k=>el.querySelector('#'+k)?.value||'';
   if(action==='tab'){tab=id;message='';endWatch();}
   else if(action==='host-public'||action==='host-private'){handlers.host(action==='host-public');return;}
   else if(action==='join-room'){handlers.join(id);return;}
   else if(action==='code-join'){const code=read('online-code-input').trim().toUpperCase();if(!validCode(code)){message='合言葉を確認してください';render(true);return;}handlers.join(code);return;}
-  else if(action==='rename'){rename(read('cl-name'));message='名前を保存しました';}
   else if(action==='copy-id'){handlers.copy(profile().id);return;}
   else if(action==='add-friend'||action==='add-by-code'){message=addFriend(action==='add-friend'?id:read('cl-friend').trim().toLowerCase())?'フレンドを登録しました':'コードを確認してください';}
   else if(action==='remove-friend'){removeFriend(id);}
@@ -320,5 +326,5 @@ function mount(el,callbacks){
  render(true);
 }
 function unmount(){root=null;handlers=null;endWatch();if(tab==='watch')tab='rooms';}
-G.NightCommunity={profile,safeProfile,safeRoom,safeTournament,ratedResult,newTournament,enroll,drawBracket,reportTournament,assignment,beginMatch,acceptMatch,finishMatch,findAssignmentFor,fieldFrame,start,stop,setRoom,mount,unmount,render,leaveIfIdle,getSnapshot:()=>JSON.parse(JSON.stringify(snapshot)),command:transmit};
+G.NightCommunity={profile,hasName,setName,safeProfile,safeRoom,safeTournament,ratedResult,newTournament,enroll,drawBracket,reportTournament,assignment,beginMatch,acceptMatch,finishMatch,findAssignmentFor,fieldFrame,start,stop,setRoom,mount,unmount,render,leaveIfIdle,getSnapshot:()=>JSON.parse(JSON.stringify(snapshot)),command:transmit};
 })();
